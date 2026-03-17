@@ -1,26 +1,84 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* 🔥 RESET */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #343541;
+  color: white;
+}
+
+/* 🔥 INPUT + BUTTON */
+input {
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+}
+
+button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* 🔥 CHAT BUBBLES */
+.chat-user {
+  background: #007bff;
+  color: white;
+}
+
+.chat-ai {
+  background: #e5e5e5;
+  color: black;
+}
+
+/* 🔥 SIDEBAR */
+.sidebar {
+  background: #202123;
+  color: white;
+}
+
+/* 🔥 SCROLLBAR */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+}
+
+/* 🔥 COPY POPUP */
+.copy-popup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: black;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+}
+
+/* 🔥 AI THINKING ANIMATION */
+.dots::after {
+  content: "...";
+  animation: dots 1s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: ".";
+  }
+  33% {
+    content: "..";
+  }
+  66% {
+    content: "...";
+  }
 }

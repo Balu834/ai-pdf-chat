@@ -1,37 +1,28 @@
-import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import fs from "fs"
+import path from "path"
 
 export async function POST(req) {
 
   try {
 
-    const { document } = await req.json()
+    const body = await req.json()
+    const id = body.id
 
-    const { data } = await supabase.auth.getUser()
-
-    if (!data?.user) {
-      return NextResponse.json({ error: "Not authenticated" })
+    if (!id) {
+      return Response.json({ error: "Missing id" }, { status: 400 })
     }
 
-    const userId = data.user.id
+    const filePath = path.join(process.cwd(), "public", "uploads", id)
 
-    const { error } = await supabase
-      .from("documents")
-      .delete()
-      .eq("user_id", userId)
-      .eq("document_name", document)
-
-    if (error) {
-      return NextResponse.json({ error: "Delete failed" })
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath)
     }
 
-    return NextResponse.json({ success: true })
+    return Response.json({ success: true })
 
   } catch (error) {
 
-    console.error(error)
-
-    return NextResponse.json({ error: "Server error" })
+    return Response.json({ error: "Delete failed" }, { status: 500 })
 
   }
 

@@ -1,81 +1,79 @@
-import { NextResponse } from "next/server"
-import OpenAI from "openai"
-
-import { vectorStore } from "@/lib/vectorStore"
+import { NextResponse } from "next/server";
+import OpenAI from "openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const embeddings = new OpenAIEmbeddings({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+});
+
+// split text
+function chunkText(text, size = 1000) {
+  const chunks = [];
+  for (let i = 0; i < text.length; i += size) {
+    chunks.push(text.slice(i, i + size));
+  }
+  return chunks;
+}
+
+// cosine similarity
+function cosineSimilarity(a, b) {
+  const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
+  const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+  const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+  return dot / (magA * magB);
+}
 
 export async function POST(req) {
-
   try {
+    const { question, context } = await req.json();
 
-    const { question } = await req.json()
+    const chunks = chunkText(context);
 
-    if (!question) {
-      return NextResponse.json(
-        { error: "No question provided" },
-        { status: 400 }
-      )
-    }
+    // 🔥 embeddings for chunks
+    const chunkEmbeddings = await embeddings.embedDocuments(chunks);
 
-    const docs = vectorStore.similaritySearch(question)
+    // 🔥 embedding for question
+    const questionEmbedding = await embeddings.embedQuery(question);
 
-    let context = docs.map(doc => doc.text).join("\n")
+    // 🔥 similarity search
+    const scoredChunks = chunks.map((chunk, i) => ({
+      chunk,
+      score: cosineSimilarity(questionEmbedding, chunkEmbeddings[i]),
+    }));
 
-    if (!context || context.length < 50) {
+    const topChunks = scoredChunks
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((item) => item.chunk);
 
-      const allDocs = vectorStore.getAllDocuments()
+    const finalContext = topChunks.join("\n");
 
-      context = allDocs
-        .map(doc => doc.text)
-        .join("\n")
-
-    }
-
-    const prompt = `
-Use the document text below to answer the question.
-
-DOCUMENT TEXT:
-${context}
-
-QUESTION:
-${question}
-
-If the document contains the answer, explain clearly.
-If not, say:
-"The document does not contain that information."
-`
-
-    const response = await openai.chat.completions.create({
-
+    // 🔥 AI answer
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-
       messages: [
         {
+          role: "system",
+          content:
+            "Answer clearly using the document. Be helpful and concise.",
+        },
+        {
           role: "user",
-          content: prompt
-        }
-      ]
-
-    })
-
-    const answer = response.choices[0].message.content
+          content: `Document:\n${finalContext}\n\nQuestion: ${question}`,
+        },
+      ],
+    });
 
     return NextResponse.json({
-      answer
-    })
+      answer: completion.choices[0].message.content,
+    });
 
-  } catch (error) {
-
-    console.error("Ask Error:", error)
-
-    return NextResponse.json(
-      { error: "Failed to generate answer" },
-      { status: 500 }
-    )
-
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "AI failed" }, { status: 500 });
   }
-
 }
