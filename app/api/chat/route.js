@@ -1,36 +1,33 @@
-import { createClient } from "@supabase/supabase-js"
-import { createEmbedding } from "@/lib/createEmbedding"
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req) {
+  try {
+    // ✅ MOVE INSIDE (IMPORTANT FIX)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
 
-  const { question, documentId } = await req.json()
+    const { message, role } = await req.json();
 
-  // convert question → embedding (fake for now)
-  const queryEmbedding = await createEmbedding(question)
+    // insert into DB
+    const { error } = await supabase.from("chats").insert([
+      {
+        message,
+        role,
+      },
+    ]);
 
-  // search similar chunks
-  const { data: matches } = await supabase.rpc("match_embeddings", {
-    query_embedding: queryEmbedding,
-    match_count: 5,
-    doc_id: documentId
-  })
+    if (error) {
+      console.error(error);
+      return NextResponse.json({ error: "DB error" }, { status: 500 });
+    }
 
-  const context = matches?.map(m => m.content).join("\n") || ""
+    return NextResponse.json({ success: true });
 
-  // TEMPORARY ANSWER (no OpenAI needed)
-  const answer = `
-Question: ${question}
-
-Relevant content from the document:
-
-${context.slice(0, 800)}
-`
-
-  return Response.json({ answer })
-
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }
