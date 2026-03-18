@@ -10,5 +10,9 @@ export default function Home() {
     router.push("/dashboard");
   }, []);
 
-  return null;
+  return (
+    <div style={{ color: "white", textAlign: "center", marginTop: 100 }}>
+      Redirecting...
+    </div>
+  );
 }
