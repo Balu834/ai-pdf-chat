@@ -15,7 +15,7 @@
     "@napi-rs/canvas": "^0.1.95",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.98.0",
+    "@supabase/supabase-js": "^2.99.2",
     "langchain": "^1.2.33",
     "next": "16.1.6",
     "openai": "^6.31.0",
