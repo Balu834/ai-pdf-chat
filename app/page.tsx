@@ -1,3 +1,7 @@
 export default function Page() {
-  return <div>OK ✅</div>;
+  return (
+    <div style={{ padding: 20 }}>
+      OK FINAL FIX ✅
+    </div>
+  );
 }
