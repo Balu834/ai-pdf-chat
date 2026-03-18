@@ -1,18 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-
-export default function Home() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.push("/dashboard");
-  }, []);
-
+export default function Page() {
   return (
-    <div style={{ color: "white", textAlign: "center", marginTop: 100 }}>
-      Redirecting...
+    <div style={{ textAlign: "center", marginTop: 100 }}>
+      Home Page Working ✅
     </div>
   );
 }
