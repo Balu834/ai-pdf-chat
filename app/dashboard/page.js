@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import supabase from "@/lib/supabase";
+import supabase from "@/lib/supabase"; // ✅ IMPORTANT (NO {})
 import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
@@ -47,8 +47,9 @@ export default function Dashboard() {
       .from("pdfs")
       .upload(fileName, file);
 
-    if (error) alert(error.message);
-    else {
+    if (error) {
+      alert(error.message);
+    } else {
       alert("Uploaded!");
       setFile(null);
       loadPdfs();
@@ -79,11 +80,16 @@ export default function Dashboard() {
     });
 
     const data = await res.json();
+
     setAnswer(data.answer);
     setLoading(false);
 
+    // Save to DB
     await supabase.from("chat_history").insert([
-      { question, answer: data.answer },
+      {
+        question,
+        answer: data.answer,
+      },
     ]);
 
     loadHistory();
@@ -95,7 +101,7 @@ export default function Dashboard() {
     router.push("/login");
   };
 
-  // Copy
+  // Copy Answer
   const copyAnswer = () => {
     navigator.clipboard.writeText(answer);
     setCopyMsg("Copied!");
@@ -108,28 +114,32 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#0f172a",
-      padding: 20,
-      color: "white",
-      fontFamily: "Arial"
-    }}>
-
-      <div style={{
-        maxWidth: 1000,
-        margin: "auto",
-        background: "#1e293b",
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0f172a",
         padding: 20,
-        borderRadius: 12
-      }}>
-
+        color: "white",
+        fontFamily: "Arial",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1000,
+          margin: "auto",
+          background: "#1e293b",
+          padding: 20,
+          borderRadius: 12,
+        }}
+      >
         {/* Header */}
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: 20
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: 20,
+          }}
+        >
           <h1>📄 AI PDF Chat</h1>
           <button onClick={logout}>Logout</button>
         </div>
@@ -146,14 +156,17 @@ export default function Dashboard() {
         <h3>Your PDFs</h3>
         <div style={{ marginBottom: 20 }}>
           {pdfs.map((pdf) => (
-            <div key={pdf.name} style={{
-              display: "flex",
-              justifyContent: "space-between",
-              background: "#334155",
-              padding: 10,
-              borderRadius: 6,
-              marginBottom: 5
-            }}>
+            <div
+              key={pdf.name}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                background: "#334155",
+                padding: 10,
+                borderRadius: 6,
+                marginBottom: 5,
+              }}
+            >
               <span
                 onClick={() => setSelectedPdf(pdf.name)}
                 style={{ cursor: "pointer" }}
@@ -188,22 +201,25 @@ export default function Dashboard() {
             height: 100,
             borderRadius: 8,
             padding: 10,
-            marginBottom: 10
+            marginBottom: 10,
           }}
         />
 
         <button onClick={askQuestion}>Ask</button>
 
+        {/* Loading */}
         {loading && <p>🤖 AI is thinking...</p>}
 
         {/* Answer */}
         {answer && (
-          <div style={{
-            background: "#020617",
-            padding: 15,
-            borderRadius: 10,
-            marginTop: 10
-          }}>
+          <div
+            style={{
+              background: "#020617",
+              padding: 15,
+              borderRadius: 10,
+              marginTop: 10,
+            }}
+          >
             <strong>Answer:</strong>
             <p>{answer}</p>
 
@@ -215,17 +231,23 @@ export default function Dashboard() {
         {/* History */}
         <h3 style={{ marginTop: 30 }}>Chat History</h3>
         {history.map((item, i) => (
-          <div key={i} style={{
-            background: "#020617",
-            padding: 10,
-            borderRadius: 6,
-            marginBottom: 10
-          }}>
-            <p><strong>Q:</strong> {item.question}</p>
-            <p><strong>A:</strong> {item.answer}</p>
+          <div
+            key={i}
+            style={{
+              background: "#020617",
+              padding: 10,
+              borderRadius: 6,
+              marginBottom: 10,
+            }}
+          >
+            <p>
+              <strong>Q:</strong> {item.question}
+            </p>
+            <p>
+              <strong>A:</strong> {item.answer}
+            </p>
           </div>
         ))}
-
       </div>
     </div>
   );
