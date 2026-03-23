@@ -1,44 +1,49 @@
 import { NextResponse } from "next/server";
+import pdf from "pdf-parse";
 import OpenAI from "openai";
-import supabase from "@/lib/supabase";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function POST(req) {
   try {
-    const { question } = await req.json();
+    const formData = await req.formData();
+    const file = formData.get("file");
+    const question = formData.get("question");
 
-    if (!question) {
-      return NextResponse.json({ error: "No question provided" }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // ✅ Call OpenAI
-    const response = await openai.chat.completions.create({
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Extract PDF text
+    const data = await pdf(buffer);
+    const text = data.text;
+
+    // OpenAI
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
+          role: "system",
+          content: "Answer based on the PDF content only",
+        },
+        {
           role: "user",
-          content: question,
+          content: `PDF Content:\n${text}\n\nQuestion: ${question}`,
         },
       ],
     });
 
-    const answer = response.choices[0].message.content;
-
-    // ✅ Save to Supabase
-    await supabase.from("chat_history").insert([
-      {
-        question,
-        answer,
-      },
-    ]);
-
-    return NextResponse.json({ answer });
-
+    return NextResponse.json({
+      answer: completion.choices[0].message.content,
+    });
   } catch (error) {
-    console.error("ERROR:", error);
+    console.error(error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }
