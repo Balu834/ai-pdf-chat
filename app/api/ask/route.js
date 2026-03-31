@@ -1,49 +1,42 @@
 import { NextResponse } from "next/server";
-import pdf from "pdf-parse";
-import OpenAI from "openai";
+import fs from "fs";
+import pdfParse from "pdf-parse";
 
 export async function POST(req) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file");
-    const question = formData.get("question");
+    const body = await req.json();
 
-    if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    const { question, filePath } = body;
+
+    // ❌ SAFETY CHECK
+    if (!filePath) {
+      return NextResponse.json(
+        { error: "No file uploaded yet" },
+        { status: 400 }
+      );
     }
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // ✅ READ PDF
+    const dataBuffer = fs.readFileSync(filePath);
 
-    // Extract PDF text
-    const data = await pdf(buffer);
-    const text = data.text;
+    // ✅ EXTRACT TEXT
+    const pdfData = await pdfParse(dataBuffer);
 
-    // OpenAI
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const text = pdfData.text;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "Answer based on the PDF content only",
-        },
-        {
-          role: "user",
-          content: `PDF Content:\n${text}\n\nQuestion: ${question}`,
-        },
-      ],
-    });
+    // ✅ SIMPLE ANSWER (NO OPENAI YET)
+    const answer = text.slice(0, 1000);
 
     return NextResponse.json({
-      answer: completion.choices[0].message.content,
+      answer,
     });
+
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    console.error("ASK API ERROR:", error);
+
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }

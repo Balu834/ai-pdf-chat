@@ -1,197 +1,242 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import supabase from "@/lib/supabase";
+import { useState, useEffect, useRef } from "react";
 
 export default function Dashboard() {
-  const [file, setFile] = useState(null);
-  const [pdfs, setPdfs] = useState([]);
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [history, setHistory] = useState([]);
+  const [docs, setDocs] = useState([]);
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
 
-  // 📥 LOAD PDFs
-  const fetchPDFs = async () => {
-    const { data } = await supabase.storage.from("pdfs").list();
-    setPdfs(data || []);
-  };
+  const chatEndRef = useRef(null);
 
-  // 📥 LOAD CHAT HISTORY
-  const fetchHistory = async () => {
-    const { data } = await supabase
-      .from("chat_history")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    setHistory(data || []);
+  // 📚 Fetch docs
+  const fetchDocs = async () => {
+    const res = await fetch("/api/docs");
+    const data = await res.json();
+    setDocs(data || []);
   };
 
   useEffect(() => {
-    fetchPDFs();
-    fetchHistory();
+    fetchDocs();
   }, []);
 
-  // 📤 UPLOAD PDF
-  const uploadPdf = async () => {
-    if (!file) return alert("Select a PDF");
+  // auto scroll
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-    const { error } = await supabase.storage
-      .from("pdfs")
-      .upload(file.name, file);
+  // 📤 Upload
+  const handleUpload = async () => {
+    if (!selectedFile) return alert("Choose file");
 
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Uploaded!");
-      fetchPDFs();
-    }
-  };
+    const formData = new FormData();
+    formData.append("file", selectedFile);
 
-  // ❌ DELETE PDF
-  const deletePdf = async (name) => {
-    await supabase.storage.from("pdfs").remove([name]);
-    fetchPDFs();
-  };
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-  // 💾 SAVE CHAT
-  const saveChat = async (question, answer) => {
-    if (!question || !answer) return;
+    const data = await res.json();
 
-    const { error } = await supabase
-      .from("chat_history")
-      .insert([{ question, answer }]);
+    if (data.url) {
+      await fetchDocs();
 
-    if (error) {
-      console.error(error.message);
-    } else {
-      fetchHistory();
-    }
-  };
-
-  // 🤖 ASK AI
-  const askQuestion = async () => {
-    if (!question) return alert("Please enter a question");
-
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        body: JSON.stringify({ question }),
+      setSelectedDoc({
+        name: selectedFile.name,
+        file_url: data.url,
       });
 
-      const data = await res.json();
-
-      setAnswer(data.answer);
-
-      // ✅ SAVE TO SUPABASE
-      await saveChat(question, data.answer);
-    } catch (err) {
-      console.error(err);
+      setSelectedFile(null);
+      alert("Uploaded!");
     }
-
-    setLoading(false);
   };
 
-  // 📋 COPY
-  const copyText = () => {
-    navigator.clipboard.writeText(answer);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // 💬 Chat
+  const handleAsk = async () => {
+    if (!selectedDoc) return alert("Select PDF");
+    if (!input) return;
+
+    const userMsg = { role: "user", text: input };
+    setMessages((prev) => [...prev, userMsg]);
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: input,
+        fileUrl: selectedDoc.file_url,
+      }),
+    });
+
+    const data = await res.json();
+
+    setMessages((prev) => [
+      ...prev,
+      { role: "ai", text: data.answer || "Error" },
+    ]);
+
+    setInput("");
+  };
+
+  // 🗑 Delete
+  const handleDelete = async (doc) => {
+    const res = await fetch("/api/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: doc.id,
+        fileUrl: doc.file_url,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      fetchDocs();
+      if (selectedDoc?.id === doc.id) {
+        setSelectedDoc(null);
+        setMessages([]);
+      }
+    } else {
+      alert("Delete failed");
+      console.error(data);
+    }
+  };
+
+  // copy
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    alert("Copied!");
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 900,
-        margin: "40px auto",
-        padding: 20,
-        color: "white",
-        fontFamily: "Arial",
-      }}
-    >
-      <h1>📄 AI PDF Chat</h1>
+    <div style={{ display: "flex", height: "100vh", background: "#0f172a", color: "white" }}>
+      
+      {/* SIDEBAR */}
+      <div style={{ width: "260px", padding: "15px", borderRight: "1px solid #1e293b" }}>
+        <h3>📄 PDFs</h3>
 
-      {/* 📤 Upload */}
-      <div style={{ marginBottom: 20 }}>
-        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        <button onClick={uploadPdf} style={{ marginLeft: 10 }}>
-          Upload
+        {/* FILE INPUT (HYDRATION SAFE) */}
+        <input
+          type="file"
+          accept="application/pdf"
+          suppressHydrationWarning
+          autoComplete="off"
+          onChange={(e) => setSelectedFile(e.target.files[0])}
+        />
+
+        <button
+          onClick={handleUpload}
+          style={{
+            marginTop: "5px",
+            width: "100%",
+            background: "#2563eb",
+            padding: "10px",
+            border: "none",
+            borderRadius: "8px",
+            color: "white",
+          }}
+        >
+          Upload PDF
         </button>
+
+        {/* LIST */}
+        <div style={{ marginTop: "15px" }}>
+          {docs.map((doc) => (
+            <div
+              key={doc.id}
+              style={{
+                padding: "10px",
+                background: selectedDoc?.id === doc.id ? "#1e293b" : "#020617",
+                borderRadius: "8px",
+                marginBottom: "10px",
+              }}
+            >
+              <p
+                onClick={() => {
+                  setSelectedDoc(doc);
+                  setMessages([]);
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                📄 {doc.name}
+              </p>
+
+              <button
+                onClick={() => handleDelete(doc)}
+                style={{
+                  background: "#dc2626",
+                  border: "none",
+                  padding: "5px",
+                  borderRadius: "5px",
+                  color: "white",
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 📂 PDF LIST */}
-      <h3>Your PDFs</h3>
-      {pdfs.map((pdf) => (
-        <div key={pdf.name} style={{ marginBottom: 5 }}>
-          {pdf.name}
-          <button
-            onClick={() => deletePdf(pdf.name)}
-            style={{ marginLeft: 10 }}
-          >
-            Delete
-          </button>
+      {/* MAIN */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px" }}>
+        <h2>AI PDF Chat</h2>
+
+        {/* PREVIEW */}
+        {selectedDoc && (
+          <iframe
+            src={selectedDoc.file_url}
+            width="100%"
+            height="250px"
+          />
+        )}
+
+        {/* CHAT */}
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {messages.map((msg, i) => (
+            <div key={i} style={{ margin: "10px 0" }}>
+              <div
+                style={{
+                  background: msg.role === "user" ? "#2563eb" : "#334155",
+                  padding: "10px",
+                  borderRadius: "10px",
+                }}
+              >
+                {msg.text}
+
+                {msg.role === "ai" && (
+                  <button onClick={() => handleCopy(msg.text)}>
+                    Copy
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          <div ref={chatEndRef} />
         </div>
-      ))}
 
-      {/* ❓ QUESTION */}
-      <textarea
-        placeholder="Ask something about your PDF..."
-        value={question}
-        onChange={(e) => setQuestion(e.target.value)}
-        style={{
-          width: "100%",
-          height: 100,
-          marginTop: 20,
-          padding: 10,
-        }}
-      />
+        {/* INPUT (HYDRATION SAFE) */}
+        <div style={{ display: "flex" }}>
+          <input
+            suppressHydrationWarning
+            autoComplete="off"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about your PDF..."
+            style={{ flex: 1, padding: "10px" }}
+          />
 
-      <button onClick={askQuestion} style={{ marginTop: 10 }}>
-        Ask
-      </button>
-
-      {/* ⏳ LOADING */}
-      {loading && <p>AI is thinking...</p>}
-
-      {/* 💬 ANSWER */}
-      {answer && (
-        <div
-          style={{
-            background: "#222",
-            padding: 15,
-            borderRadius: 10,
-            marginTop: 10,
-          }}
-        >
-          <p>{answer}</p>
-          <button onClick={copyText}>Copy</button>
-          {copied && <span style={{ marginLeft: 10 }}>Copied!</span>}
+          <button onClick={handleAsk}>Send</button>
         </div>
-      )}
-
-      {/* 🕘 HISTORY */}
-      <h3 style={{ marginTop: 30 }}>Chat History</h3>
-      {history.map((chat) => (
-        <div
-          key={chat.id}
-          style={{
-            background: "#111",
-            padding: 10,
-            marginTop: 10,
-            borderRadius: 8,
-          }}
-        >
-          <p>
-            <b>Q:</b> {chat.question}
-          </p>
-          <p>
-            <b>A:</b> {chat.answer}
-          </p>
-        </div>
-      ))}
+      </div>
     </div>
   );
 }

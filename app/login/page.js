@@ -1,74 +1,64 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import supabase from "@/lib/supabase";
 
-export default function LoginPage() {
-  const router = useRouter();
-
+export default function Login() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const handleAuth = async (type) => {
-    setLoading(true);
+  const handleLogin = async () => {
+    try {
+      if (!email) {
+        setMessage("❌ Please enter email");
+        return;
+      }
 
-    let result;
-
-    if (type === "login") {
-      result = await supabase.auth.signInWithPassword({
-        email,
-        password
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email: email,
       });
-    } else {
-      result = await supabase.auth.signUp({
-        email,
-        password
-      });
-    }
 
-    if (result.error) {
-      alert(result.error.message);
-    } else {
-      alert(type === "login" ? "Login success!" : "Signup success!");
-      router.push("/dashboard");
+      if (error) {
+        console.error(error);
+        setMessage("❌ Login failed");
+      } else {
+        setMessage("✅ Check your email for login link");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Something went wrong");
     }
-
-    setLoading(false);
   };
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Login / Signup</h1>
+    <div style={{ padding: 40, textAlign: "center" }}>
+      <h1>Login</h1>
 
       <input
         type="email"
-        placeholder="Email"
+        placeholder="Enter your email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        style={{
+          padding: 10,
+          width: "250px",
+          marginBottom: "10px",
+        }}
       />
 
-      <br /><br />
+      <br />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={() => handleAuth("login")}>
-        Login
+      <button
+        onClick={handleLogin}
+        style={{
+          padding: "10px 20px",
+          cursor: "pointer",
+        }}
+      >
+        Send Magic Link
       </button>
 
-      <button onClick={() => handleAuth("signup")}>
-        Signup
-      </button>
-
-      {loading && <p>Loading...</p>}
+      <p style={{ marginTop: 20 }}>{message}</p>
     </div>
   );
 }

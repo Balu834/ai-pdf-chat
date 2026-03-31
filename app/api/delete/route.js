@@ -1,29 +1,45 @@
-import fs from "fs"
-import path from "path"
+import { NextResponse } from "next/server";
+import supabase from "@/lib/supabase";
 
 export async function POST(req) {
-
   try {
+    const { id, fileUrl } = await req.json();
 
-    const body = await req.json()
-    const id = body.id
+    console.log("DELETE REQUEST:", { id, fileUrl });
 
-    if (!id) {
-      return Response.json({ error: "Missing id" }, { status: 400 })
+    if (!id || !fileUrl) {
+      return NextResponse.json(
+        { error: "Missing id or fileUrl" },
+        { status: 400 }
+      );
     }
 
-    const filePath = path.join(process.cwd(), "public", "uploads", id)
+    // extract filename
+    const fileName = fileUrl.split("/").pop();
 
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath)
+    // 🗑 delete from storage
+    const { error: storageError } = await supabase.storage
+      .from("pdfs")
+      .remove([fileName]);
+
+    if (storageError) {
+      console.error("Storage delete error:", storageError);
     }
 
-    return Response.json({ success: true })
+    // 🗑 delete from DB
+    const { error: dbError } = await supabase
+      .from("documents")
+      .delete()
+      .eq("id", id);
 
-  } catch (error) {
+    if (dbError) {
+      console.error("DB delete error:", dbError);
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    }
 
-    return Response.json({ error: "Delete failed" }, { status: 500 })
-
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("DELETE ERROR:", err);
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
-
 }

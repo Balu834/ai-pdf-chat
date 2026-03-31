@@ -1,59 +1,46 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-import supabase from "@/lib/supabase"; // ✅ FIXED IMPORT (NO {})
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import pdf from "pdf-parse";
 
 export async function POST(req) {
   try {
-    const { question, context } = await req.json();
+    const { message, fileUrl } = await req.json();
 
-    if (!question) {
+    if (!fileUrl) {
       return NextResponse.json(
-        { error: "Question is required" },
+        { error: "No file URL" },
         { status: 400 }
       );
     }
 
-    // 🤖 Ask OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "Answer only from the provided PDF content.",
-        },
-        {
-          role: "user",
-          content: `Context:\n${context}\n\nQuestion:\n${question}`,
-        },
-      ],
+    const fileRes = await fetch(fileUrl);
+    const buffer = Buffer.from(await fileRes.arrayBuffer());
+
+    const pdfData = await pdf(buffer);
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: `PDF:\n${pdfData.text}\n\nQ: ${message}`,
+          },
+        ],
+      }),
     });
 
-    const answer = completion.choices[0].message.content;
+    const data = await response.json();
 
-    // 💾 OPTIONAL: Save to Supabase (safe)
-    try {
-      await supabase.from("chat_history").insert([
-        {
-          question,
-          answer,
-        },
-      ]);
-    } catch (err) {
-      console.log("Supabase save skipped:", err.message);
-    }
-
-    return NextResponse.json({ answer });
-
+    return NextResponse.json({
+      answer: data.choices?.[0]?.message?.content || "No answer",
+    });
   } catch (err) {
-    console.error("Chat error:", err);
-
-    return NextResponse.json(
-      { error: "Chat failed" },
-      { status: 500 }
-    );
+    console.error(err);
+    return NextResponse.json({ error: "Chat failed" }, { status: 500 });
   }
 }

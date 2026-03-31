@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pdfParse from "pdf-parse";
+import supabase from "@/lib/supabase";
 
 export async function POST(req) {
   try {
@@ -7,17 +7,50 @@ export async function POST(req) {
     const file = formData.get("file");
 
     if (!file) {
-      return NextResponse.json({ error: "No file" }, { status: 400 });
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const data = await pdfParse(buffer);
+    const fileName = `${Date.now()}-${file.name}`;
+
+    // 📤 Upload to Supabase
+    const { error } = await supabase.storage
+      .from("pdfs")
+      .upload(fileName, file);
+
+    if (error) {
+      console.error("UPLOAD ERROR:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // 🌐 Get public URL
+    const { data } = supabase.storage
+      .from("pdfs")
+      .getPublicUrl(fileName);
+
+    const fileUrl = data.publicUrl;
+
+    // 💾 Save to DB
+    const { error: dbError } = await supabase.from("documents").insert([
+      {
+        name: file.name,
+        file_url: fileUrl,
+      },
+    ]);
+
+    if (dbError) {
+      console.error("DB ERROR:", dbError);
+    }
 
     return NextResponse.json({
-      text: data.text,
-      name: file.name,
+      success: true,
+      url: fileUrl,
     });
   } catch (err) {
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    console.error("SERVER ERROR:", err);
+
+    return NextResponse.json(
+      { error: "Upload failed" },
+      { status: 500 }
+    );
   }
 }
