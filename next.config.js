@@ -1,13 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      canvas: false, // ✅ FIXES ERROR
-    };
-
-    return config;
-  },
+  turbopack: {}, // ✅ Fix Turbopack vs Webpack conflict
 };
 
 module.exports = nextConfig;
