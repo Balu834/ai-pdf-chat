@@ -84,6 +84,12 @@ const Icon = {
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
     </svg>
   ),
+  Bell: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  ),
 };
 
 /* ─────────────────────────────────────────────
@@ -434,9 +440,13 @@ export default function Dashboard() {
   const [insightsLoading, setInsightsLoading] = useState(false);
 
   // Agent (cross-document)
-  const [agentJob, setAgentJob] = useState(null);       // latest ai_job row
+  const [agentJob, setAgentJob] = useState(null);
   const [agentLoading, setAgentLoading] = useState(false);
   const [agentDismissed, setAgentDismissed] = useState(false);
+
+  // Alerts
+  const [alerts, setAlerts] = useState([]);
+  const [alertsOpen, setAlertsOpen] = useState(false);
 
   // Voice
   const [isRecording, setIsRecording] = useState(false);
@@ -596,6 +606,23 @@ export default function Dashboard() {
     }
   }, [selectedDoc, compareQuestion, showSnackbar]);
 
+  /* ── Alerts ── */
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/alerts");
+      if (!res.ok) return;
+      const data = await res.json();
+      setAlerts(Array.isArray(data) ? data : []);
+    } catch {}
+  }, []);
+
+  const markAlertsRead = useCallback(async () => {
+    try {
+      await fetch("/api/alerts", { method: "PATCH" });
+      setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
+    } catch {}
+  }, []);
+
   /* ── Agent: fetch latest job ── */
   const fetchAgentJob = useCallback(async () => {
     try {
@@ -687,13 +714,14 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDocs();
     fetchUsage();
-    fetchAgentJob(); // load latest agent analysis on mount
+    fetchAgentJob();
+    fetchAlerts();
     const params = new URLSearchParams(window.location.search);
     if (params.get("upgraded") === "1") {
       showSnackbar("Welcome to Pro! Limits removed.");
       window.history.replaceState({}, "", "/dashboard");
     }
-  }, [fetchDocs, fetchUsage, fetchAgentJob, showSnackbar]);
+  }, [fetchDocs, fetchUsage, fetchAgentJob, fetchAlerts, showSnackbar]);
 
   /* ── Load history + insights when document changes ── */
   useEffect(() => {
@@ -1132,6 +1160,65 @@ export default function Dashboard() {
             >
               <Icon.Speaker />
             </button>
+
+            {/* BELL — alerts */}
+            <div style={{ position: "relative" }}>
+              <button
+                className="icon-btn"
+                title="Alerts"
+                onClick={() => {
+                  setAlertsOpen(v => !v);
+                  if (!alertsOpen && alerts.some(a => !a.read)) markAlertsRead();
+                }}
+                style={{ background: alertsOpen ? "#fef9c3" : undefined, borderColor: alertsOpen ? "#fde047" : undefined }}
+              >
+                <Icon.Bell />
+                {alerts.some(a => !a.read) && (
+                  <span style={{
+                    position: "absolute", top: 4, right: 4,
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: "#dc2626", border: "2px solid #fff",
+                  }} />
+                )}
+              </button>
+
+              {/* ALERTS DROPDOWN */}
+              {alertsOpen && (
+                <div style={s.alertsDropdown}>
+                  <div style={s.alertsHeader}>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: "#24292f" }}>🔔 Alerts</span>
+                    <button onClick={() => setAlertsOpen(false)}
+                      style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", fontSize: 16 }}>✕</button>
+                  </div>
+                  {alerts.length === 0 ? (
+                    <div style={{ padding: "16px 14px", fontSize: 13, color: "#9ca3af", textAlign: "center" }}>
+                      No alerts yet. AI analysis runs every 6 hours.
+                    </div>
+                  ) : (
+                    <div style={{ overflowY: "auto", maxHeight: 320 }}>
+                      {alerts.map((alert) => (
+                        <div key={alert.id} style={{
+                          padding: "10px 14px",
+                          borderBottom: "1px solid #f3f4f6",
+                          background: alert.read ? "transparent" : "#fffbeb",
+                          display: "flex", gap: 10, alignItems: "flex-start",
+                        }}>
+                          <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>
+                            {alert.type === "warning" ? "⚠️" : alert.type === "success" ? "✅" : "ℹ️"}
+                          </span>
+                          <div>
+                            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5 }}>{alert.message}</p>
+                            <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>
+                              {new Date(alert.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -1920,6 +2007,19 @@ const s = {
   chipX: {
     background: "none", border: "none", color: "#57606a",
     cursor: "pointer", fontSize: 13, padding: "0 2px", lineHeight: 1,
+  },
+
+  /* ── Alerts dropdown ── */
+  alertsDropdown: {
+    position: "absolute", top: "calc(100% + 8px)", right: 0,
+    width: 320, background: "#fff",
+    border: "1px solid #e5e7eb", borderRadius: 12,
+    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+    zIndex: 200, overflow: "hidden",
+  },
+  alertsHeader: {
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "12px 14px", borderBottom: "1px solid #f3f4f6",
   },
 
   /* ── Compare panel ── */

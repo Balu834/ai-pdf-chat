@@ -120,6 +120,53 @@ drop policy if exists "ai_jobs_update_own" on ai_jobs;
 create policy "ai_jobs_update_own" on ai_jobs
   for update using (auth.uid() = user_id);
 
+-- ai_insights: periodic scheduled analysis snapshots per user
+create table if not exists ai_insights (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  summary     text,
+  data        jsonb,                     -- full structured result from GPT
+  doc_count   int default 0,
+  created_at  timestamptz default now()
+);
+
+create index if not exists ai_insights_user_idx on ai_insights (user_id, created_at desc);
+
+-- alerts: in-app notifications created by the cron agent
+create table if not exists alerts (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  message     text not null,
+  type        text not null default 'info' check (type in ('info', 'warning', 'success')),
+  read        boolean not null default false,
+  created_at  timestamptz default now()
+);
+
+create index if not exists alerts_user_unread_idx on alerts (user_id, read, created_at desc);
+
+alter table ai_insights enable row level security;
+alter table alerts       enable row level security;
+
+drop policy if exists "ai_insights_select_own" on ai_insights;
+create policy "ai_insights_select_own" on ai_insights
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "ai_insights_insert_own" on ai_insights;
+create policy "ai_insights_insert_own" on ai_insights
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "alerts_select_own" on alerts;
+create policy "alerts_select_own" on alerts
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "alerts_insert_own" on alerts;
+create policy "alerts_insert_own" on alerts
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "alerts_update_own" on alerts;
+create policy "alerts_update_own" on alerts
+  for update using (auth.uid() = user_id);
+
 -- ─────────────────────────────────────────────
 -- 2. RLS – Row Level Security
 -- ─────────────────────────────────────────────
