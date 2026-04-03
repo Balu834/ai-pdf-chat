@@ -1,39 +1,38 @@
 import { NextResponse } from "next/server";
-import supabase from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server-client";
 
 export async function POST(req) {
   try {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id, fileUrl } = await req.json();
 
-    console.log("DELETE REQUEST:", { id, fileUrl });
-
-    if (!id || !fileUrl) {
-      return NextResponse.json(
-        { error: "Missing id or fileUrl" },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
 
-    // extract filename
-    const fileName = fileUrl.split("/").pop();
-
-    // 🗑 delete from storage
-    const { error: storageError } = await supabase.storage
-      .from("pdfs")
-      .remove([fileName]);
-
-    if (storageError) {
-      console.error("Storage delete error:", storageError);
+    // Delete from storage
+    if (fileUrl) {
+      const fileName = fileUrl.split("/").pop();
+      const { error: storageError } = await supabase.storage
+        .from("pdfs")
+        .remove([fileName]);
+      if (storageError) console.error("Storage delete error:", storageError);
     }
 
-    // 🗑 delete from DB
+    // Delete from DB — scoped to this user
     const { error: dbError } = await supabase
       .from("documents")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", user.id);
 
     if (dbError) {
-      console.error("DB delete error:", dbError);
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 

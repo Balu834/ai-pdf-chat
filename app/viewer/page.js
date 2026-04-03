@@ -1,40 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-// ✅ Disable SSR
-const Document = dynamic(
-  () => import("react-pdf").then((mod) => mod.Document),
-  { ssr: false }
-);
+function PDFViewerContent() {
+  const searchParams = useSearchParams();
+  const fileUrl = searchParams.get("url");
 
-const Page = dynamic(
-  () => import("react-pdf").then((mod) => mod.Page),
-  { ssr: false }
-);
-
-// ✅ Worker fix
-import { pdfjs } from "react-pdf";
-
-pdfjs.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-export default function PDFViewer({ fileUrl }) {
-  const [numPages, setNumPages] = useState(null);
-
-  function onLoadSuccess({ numPages }) {
-    setNumPages(numPages);
-  }
+  if (!fileUrl) return <p>No PDF URL provided.</p>;
 
   return (
     <div>
-      <Document file={fileUrl} onLoadSuccess={onLoadSuccess}>
-        {numPages &&
-          Array.from(new Array(numPages), (_, i) => (
-            <Page key={i} pageNumber={i + 1} />
-          ))}
-      </Document>
+      <iframe
+        src={fileUrl}
+        width="100%"
+        height="800px"
+        style={{ border: "none" }}
+        title="PDF Viewer"
+      />
     </div>
+  );
+}
+
+export default function ViewerPage() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <PDFViewerContent />
+    </Suspense>
   );
 }

@@ -1,15 +1,30 @@
 import { NextResponse } from "next/server";
-import supabase from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server-client";
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from("documents")
-    .select("*")
-    .order("created_at", { ascending: false });
+  try {
+    const supabase = await createClient();
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data, error } = await supabase
+      .from("documents")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.warn("[/api/docs] DB error:", error.message);
+      // Return empty array instead of 500 — table may not exist yet
+      return NextResponse.json([]);
+    }
+
+    return NextResponse.json(data || []);
+  } catch (err) {
+    console.error("[/api/docs] Unhandled error:", err);
+    return NextResponse.json([]);
   }
-
-  return NextResponse.json(data);
 }
