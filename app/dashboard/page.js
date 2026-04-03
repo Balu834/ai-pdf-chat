@@ -318,6 +318,23 @@ export default function Dashboard() {
     setTimeout(() => textareaRef.current?.focus(), 50);
   }, []);
 
+  /* ── Snackbar ── */
+  const showSnackbar = useCallback((message, type = "success") => {
+    if (snackbarTimer.current) clearTimeout(snackbarTimer.current);
+    setSnackbar({ message, type });
+    snackbarTimer.current = setTimeout(() => setSnackbar(null), 3000);
+  }, []);
+
+  /* ── TTS: speak text ── */
+  const speak = useCallback((text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text.slice(0, 800));
+    utterance.rate = 1.05;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
   /* ── Voice: start/stop recording ── */
   const toggleRecording = useCallback(async () => {
     if (isRecording) {
@@ -364,16 +381,6 @@ export default function Dashboard() {
     }
   }, [isRecording, showSnackbar]);
 
-  /* ── TTS: speak text ── */
-  const speak = useCallback((text) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text.slice(0, 800));
-    utterance.rate = 1.05;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
-  }, []);
-
   /* ── Compare two documents ── */
   const handleCompare = useCallback(async (secondDoc) => {
     if (!selectedDoc || !secondDoc) return;
@@ -407,13 +414,6 @@ export default function Dashboard() {
       setCompareDoc(null);
     }
   }, [selectedDoc, compareQuestion, showSnackbar]);
-
-  /* ── Snackbar ── */
-  const showSnackbar = useCallback((message, type = "success") => {
-    if (snackbarTimer.current) clearTimeout(snackbarTimer.current);
-    setSnackbar({ message, type });
-    snackbarTimer.current = setTimeout(() => setSnackbar(null), 3000);
-  }, []);
 
   /* ── Data ── */
   const fetchDocs = useCallback(async () => {
