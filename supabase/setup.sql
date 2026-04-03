@@ -78,6 +78,20 @@ create table if not exists insights (
 
 create index if not exists insights_document_idx on insights (document_id);
 
+-- jobs: tracks background agent work per document
+create table if not exists jobs (
+  id          bigint primary key generated always as identity,
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  document_id uuid references documents(id) on delete cascade not null,
+  type        text not null check (type in ('summary', 'extraction', 'insights')),
+  status      text not null default 'pending' check (status in ('pending', 'running', 'done', 'failed')),
+  result      jsonb,
+  created_at  timestamptz default now()
+);
+
+create index if not exists jobs_doc_idx on jobs (document_id);
+create index if not exists jobs_user_idx on jobs (user_id, created_at desc);
+
 -- ─────────────────────────────────────────────
 -- 2. RLS – Row Level Security
 -- ─────────────────────────────────────────────

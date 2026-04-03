@@ -56,6 +56,34 @@ const Icon = {
       <polyline points="14 2 14 8 20 8" />
     </svg>
   ),
+  Mic: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="9" y="2" width="6" height="11" rx="3" />
+      <path d="M19 10a7 7 0 0 1-14 0" /><line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="8" y1="22" x2="16" y2="22" />
+    </svg>
+  ),
+  MicOff: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <line x1="1" y1="1" x2="23" y2="23" />
+      <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+      <path d="M17 16.95A7 7 0 0 1 5 10v-1m14 0v1a7 7 0 0 1-.11 1.23" />
+      <line x1="12" y1="19" x2="12" y2="22" /><line x1="8" y1="22" x2="16" y2="22" />
+    </svg>
+  ),
+  Compare: () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="2" y="3" width="8" height="18" rx="1" />
+      <rect x="14" y="3" width="8" height="18" rx="1" />
+      <line x1="10" y1="12" x2="14" y2="12" />
+    </svg>
+  ),
+  Speaker: () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    </svg>
+  ),
 };
 
 /* ─────────────────────────────────────────────
@@ -229,12 +257,25 @@ export default function Dashboard() {
   const [insights, setInsights] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
+  // Voice
+  const [isRecording, setIsRecording] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false); // auto-speak AI responses
+  const [transcribing, setTranscribing] = useState(false);
+
+  // Compare
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareDoc, setCompareDoc] = useState(null);
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareQuestion, setCompareQuestion] = useState("");
+
   const [selectionBubble, setSelectionBubble] = useState(null); // {x, y, text}
 
   const chatEndRef = useRef(null);
   const snackbarTimer = useRef(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   /* ── Responsive ── */
   useEffect(() => {
@@ -276,6 +317,96 @@ export default function Dashboard() {
     setInput(prompt);
     setTimeout(() => textareaRef.current?.focus(), 50);
   }, []);
+
+  /* ── Voice: start/stop recording ── */
+  const toggleRecording = useCallback(async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setIsRecording(false);
+        setTranscribing(true);
+        try {
+          const blob = new Blob(audioChunksRef.current, { type: mimeType });
+          const form = new FormData();
+          form.append("audio", blob);
+          const res = await fetch("/api/transcribe", { method: "POST", body: form });
+          const data = await res.json();
+          if (data.text) {
+            setInput(data.text);
+            setTimeout(() => textareaRef.current?.focus(), 50);
+          } else {
+            showSnackbar("Could not transcribe audio", "error");
+          }
+        } catch {
+          showSnackbar("Transcription failed", "error");
+        } finally {
+          setTranscribing(false);
+        }
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+    } catch {
+      showSnackbar("Microphone access denied", "error");
+    }
+  }, [isRecording, showSnackbar]);
+
+  /* ── TTS: speak text ── */
+  const speak = useCallback((text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text.slice(0, 800));
+    utterance.rate = 1.05;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  /* ── Compare two documents ── */
+  const handleCompare = useCallback(async (secondDoc) => {
+    if (!selectedDoc || !secondDoc) return;
+    setCompareLoading(true);
+    setCompareMode(false);
+    const q = compareQuestion.trim() || "";
+    try {
+      const res = await fetch("/api/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doc1Id: selectedDoc.id, doc2Id: secondDoc.id, question: q }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showSnackbar(data.error, "error");
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "ai",
+            text: `📊 **Comparing "${data.doc1.name}" vs "${data.doc2.name}"**\n\n${data.result}`,
+            isCompare: true,
+          },
+        ]);
+      }
+    } catch {
+      showSnackbar("Comparison failed", "error");
+    } finally {
+      setCompareLoading(false);
+      setCompareQuestion("");
+      setCompareDoc(null);
+    }
+  }, [selectedDoc, compareQuestion, showSnackbar]);
 
   /* ── Snackbar ── */
   const showSnackbar = useCallback((message, type = "success") => {
@@ -489,6 +620,8 @@ export default function Dashboard() {
       setTypingText("");
       setMessages((prev) => [...prev, { role: "ai", text: fullText }]);
       fetchUsage();
+      // Auto-speak in voice mode
+      if (voiceMode) speak(fullText);
 
       // Fetch follow-up suggestions in background (non-blocking)
       const recentForSuggestions = [
@@ -515,7 +648,7 @@ export default function Dashboard() {
     } finally {
       textareaRef.current?.focus();
     }
-  }, [selectedDoc, input, loading, isTyping, messages, showSnackbar, fetchUsage]);
+  }, [selectedDoc, input, loading, isTyping, messages, voiceMode, speak, showSnackbar, fetchUsage]);
 
   /* ── Delete ── */
   const handleDelete = async (e, doc) => {
@@ -564,11 +697,18 @@ export default function Dashboard() {
   };
 
   const selectDoc = (doc) => {
+    // In compare mode, the second click picks the compare target
+    if (compareMode && selectedDoc && doc.id !== selectedDoc.id) {
+      setCompareDoc(doc);
+      return;
+    }
     setSelectedDoc(doc);
     setMessages([]);
     setSuggestions([]);
     setInsights(null);
     setInsightsLoading(false);
+    setCompareMode(false);
+    setCompareDoc(null);
     setPreviewOpen(false);
     setDrawerOpen(false);
   };
@@ -639,7 +779,9 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <p style={s.drawerLabel}>Your PDFs</p>
+        <p style={s.drawerLabel}>
+          {compareMode ? "📊 Pick document to compare" : "Your PDFs"}
+        </p>
 
         <nav style={s.drawerNav}>
           {docs.length === 0 && (
@@ -650,14 +792,20 @@ export default function Dashboard() {
           )}
           {docs.map((doc) => {
             const active = selectedDoc?.id === doc.id;
+            const isCompareTarget = compareDoc?.id === doc.id;
+            const isCompareSource = compareMode && active;
             return (
-              <div key={doc.id} className={`nav-item ${active ? "nav-item-active" : ""}`}
+              <div key={doc.id}
+                className={`nav-item ${active && !compareMode ? "nav-item-active" : ""}`}
+                style={isCompareTarget ? { background: "#dcfce7", borderColor: "#86efac" } : isCompareSource ? { background: "#dbeafe", borderColor: "#93c5fd" } : undefined}
                 onClick={() => selectDoc(doc)}>
                 <span style={s.navIcon}><Icon.PDF /></span>
                 <span style={s.navText} title={doc.name}>{doc.name}</span>
-                <button className="trash-btn" onClick={(e) => handleDelete(e, doc)} title="Delete">
-                  <Icon.Trash />
-                </button>
+                {!compareMode && (
+                  <button className="trash-btn" onClick={(e) => handleDelete(e, doc)} title="Delete">
+                    <Icon.Trash />
+                  </button>
+                )}
               </div>
             );
           })}
@@ -738,17 +886,29 @@ export default function Dashboard() {
                   style={{ color: previewOpen ? "#fff" : undefined }}>
                   <Icon.Eye on={previewOpen} />
                 </button>
-                <button className="icon-btn" onClick={handleCopyLink} title="Copy link">
-                  <Icon.Copy />
-                </button>
-                <button className="icon-btn" onClick={() => window.open(selectedDoc.file_url, "_blank")} title="Open in new tab">
-                  <Icon.External />
-                </button>
-                <button className="icon-btn" onClick={handleDownload} title="Download">
-                  <Icon.Download />
-                </button>
+                <button className="icon-btn" onClick={handleCopyLink} title="Copy link"><Icon.Copy /></button>
+                <button className="icon-btn" onClick={() => window.open(selectedDoc.file_url, "_blank")} title="Open in new tab"><Icon.External /></button>
+                <button className="icon-btn" onClick={handleDownload} title="Download"><Icon.Download /></button>
               </>
             )}
+            {selectedDoc && docs.length > 1 && !isMobile && (
+              <button
+                className="icon-btn"
+                title={compareMode ? "Exit compare mode" : "Compare with another document"}
+                onClick={() => { setCompareMode(v => !v); setCompareDoc(null); if (!compareMode) setDrawerOpen(true); }}
+                style={{ background: compareMode ? "#dbeafe" : undefined, borderColor: compareMode ? "#93c5fd" : undefined }}
+              >
+                <Icon.Compare />
+              </button>
+            )}
+            <button
+              className="icon-btn"
+              title={voiceMode ? "Voice mode on — click to turn off" : "Enable voice mode (auto-speak)"}
+              onClick={() => { setVoiceMode(v => !v); window.speechSynthesis?.cancel(); }}
+              style={{ background: voiceMode ? "#dcfce7" : undefined, borderColor: voiceMode ? "#86efac" : undefined }}
+            >
+              <Icon.Speaker />
+            </button>
           </div>
         </header>
 
@@ -770,6 +930,62 @@ export default function Dashboard() {
           {/* CHAT AREA */}
           <div style={s.chatScroll}>
             <div style={s.chatInner}>
+
+              {/* COMPARE MODE PANEL */}
+              {compareMode && selectedDoc && (
+                <div style={s.comparePanel}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8" }}>
+                      <Icon.Compare /> &nbsp;Compare with another document
+                    </span>
+                    <button onClick={() => { setCompareMode(false); setCompareDoc(null); }}
+                      style={{ background: "none", border: "none", color: "#93c5fd", cursor: "pointer", fontSize: 16 }}>✕</button>
+                  </div>
+                  <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 10 }}>
+                    Click a document in the sidebar, or pick one below:
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                    {docs.filter(d => d.id !== selectedDoc.id).map((d) => (
+                      <button key={d.id} onClick={() => setCompareDoc(d)}
+                        style={{
+                          background: compareDoc?.id === d.id ? "#dbeafe" : "#f8faff",
+                          border: `1px solid ${compareDoc?.id === d.id ? "#93c5fd" : "#e5e7eb"}`,
+                          borderRadius: 20, padding: "5px 12px",
+                          fontSize: 12, color: compareDoc?.id === d.id ? "#1d4ed8" : "#374151",
+                          cursor: "pointer", fontFamily: "inherit",
+                          maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>
+                        {d.name}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={compareQuestion}
+                    onChange={(e) => setCompareQuestion(e.target.value)}
+                    placeholder="Custom question (optional) — e.g. 'which has better pricing?'"
+                    style={{
+                      width: "100%", padding: "8px 12px",
+                      border: "1px solid #d0d7de", borderRadius: 8,
+                      fontSize: 13, color: "#24292f", outline: "none",
+                      marginBottom: 10, fontFamily: "inherit", background: "#fff",
+                    }}
+                  />
+                  <button
+                    onClick={() => handleCompare(compareDoc)}
+                    disabled={!compareDoc || compareLoading}
+                    style={{
+                      background: compareDoc ? "linear-gradient(135deg,#2563eb,#1d4ed8)" : "#e5e7eb",
+                      color: compareDoc ? "#fff" : "#9ca3af",
+                      border: "none", borderRadius: 8, padding: "9px 20px",
+                      fontSize: 13, fontWeight: 600, cursor: compareDoc ? "pointer" : "not-allowed",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {compareLoading ? "Comparing…" : compareDoc ? `Compare with "${compareDoc.name}"` : "Select a document above"}
+                  </button>
+                </div>
+              )}
 
               {/* AI INSIGHTS PANEL */}
               {selectedDoc && (insights || insightsLoading) && (
@@ -818,13 +1034,18 @@ export default function Dashboard() {
                     <div style={msg.role === "user" ? s.userBubble : s.aiBubble}>
                       <p style={{ ...s.msgText, color: msg.role === "user" ? "#fff" : "#24292f" }}>{msg.text}</p>
                       {msg.role === "ai" && (
-                        <button className="copy-btn" onClick={() => handleCopy(msg.text, i)}>
-                          {copiedIdx === i ? (
-                            <span style={{ color: "#4ade80" }}>✓ Copied</span>
-                          ) : (
-                            <><Icon.Copy /> Copy</>
-                          )}
-                        </button>
+                        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                          <button className="copy-btn" onClick={() => handleCopy(msg.text, i)}>
+                            {copiedIdx === i ? (
+                              <span style={{ color: "#4ade80" }}>✓ Copied</span>
+                            ) : (
+                              <><Icon.Copy /> Copy</>
+                            )}
+                          </button>
+                          <button className="copy-btn" onClick={() => speak(msg.text)} title="Read aloud">
+                            <Icon.Speaker /> Listen
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}
@@ -919,6 +1140,14 @@ export default function Dashboard() {
                 {label}
               </button>
             ))}
+            {docs.length > 1 && (
+              <button
+                style={{ ...s.quickBtn, borderColor: compareMode ? "#93c5fd" : undefined, background: compareMode ? "#dbeafe" : undefined, color: compareMode ? "#1d4ed8" : undefined }}
+                onClick={() => { setCompareMode(v => !v); setCompareDoc(null); if (!compareMode) window.scrollTo(0,0); }}
+              >
+                ⚖ Compare Docs
+              </button>
+            )}
           </div>
         )}
 
@@ -932,14 +1161,34 @@ export default function Dashboard() {
               <Icon.Plus />
             </button>
 
+            <button
+              className={`plus-btn ${isRecording ? "mic-active" : ""}`}
+              onClick={toggleRecording}
+              disabled={!selectedDoc || transcribing}
+              title={isRecording ? "Stop recording" : "Record voice question"}
+              style={{ flexShrink: 0, color: isRecording ? "#dc2626" : undefined }}
+            >
+              {transcribing ? (
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#6b7280" }}>…</span>
+              ) : isRecording ? (
+                <Icon.MicOff />
+              ) : (
+                <Icon.Mic />
+              )}
+            </button>
+
             <textarea
               ref={textareaRef}
               suppressHydrationWarning autoComplete="off"
               value={input} rows={1}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={selectedDoc ? "Ask anything about this PDF…" : "Upload a PDF to start chatting…"}
-              disabled={!selectedDoc || loading || isTyping}
+              placeholder={
+                isRecording ? "🔴 Listening… click mic to stop" :
+                transcribing ? "Transcribing…" :
+                selectedDoc ? "Ask anything about this PDF…" : "Upload a PDF to start chatting…"
+              }
+              disabled={!selectedDoc || loading || isTyping || isRecording}
               style={{ ...s.textarea, opacity: !selectedDoc ? 0.45 : 1 }}
             />
 
@@ -1137,6 +1386,18 @@ const CSS = `
   }
   .plus-btn:hover { background: #eaeef2; border-color: #b0b8c1; transform: scale(1.05); }
   .plus-btn:active { transform: scale(0.95); }
+
+  /* Mic recording state */
+  .mic-active {
+    background: #fef2f2 !important;
+    border-color: #fca5a5 !important;
+    color: #dc2626 !important;
+    animation: micPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes micPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.3); }
+    50%      { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+  }
 
   /* Send button */
   .send-btn {
@@ -1416,6 +1677,13 @@ const s = {
   chipX: {
     background: "none", border: "none", color: "#57606a",
     cursor: "pointer", fontSize: 13, padding: "0 2px", lineHeight: 1,
+  },
+
+  /* ── Compare panel ── */
+  comparePanel: {
+    background: "linear-gradient(135deg, #eff6ff, #f0fdf4)",
+    border: "1px solid #bfdbfe",
+    borderRadius: 14, padding: "16px 18px", width: "100%",
   },
 
   /* ── Suggestions ── */
