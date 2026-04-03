@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase-browser";
 
 /* ─────────────────────────────────────────────
@@ -159,6 +159,182 @@ function ExtractionCard({ data, onCopy, copied }) {
 }
 
 /* ─────────────────────────────────────────────
+   AGENT PANEL COMPONENT  (cross-document)
+───────────────────────────────────────────── */
+function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
+  const [tab, setTab] = React.useState("overview");
+
+  if (!loading && !job) return null;
+
+  const r = job?.result || {};
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    { id: "differences", label: "Differences" },
+    { id: "actions", label: "Actions" },
+    { id: "questions", label: "Ask" },
+  ];
+
+  return (
+    <div style={{
+      background: "linear-gradient(135deg,#fafafa,#f0f4ff)",
+      border: "1px solid #c7d2fe", borderRadius: 14,
+      padding: "16px 18px", width: "100%",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 15 }}>🤖</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#4338ca" }}>
+            AI Agent Analysis
+          </span>
+          {job?.doc_count > 0 && (
+            <span style={{ fontSize: 11, background: "#e0e7ff", color: "#4338ca", borderRadius: 20, padding: "2px 9px", fontWeight: 600 }}>
+              {job.doc_count} docs
+            </span>
+          )}
+          {job?.status === "running" && (
+            <span style={{ fontSize: 11, background: "#fef9c3", color: "#854d0e", borderRadius: 20, padding: "2px 9px", fontWeight: 600 }}>
+              Processing…
+            </span>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {job?.status === "done" && onRerun && (
+            <button onClick={onRerun} style={{ background: "none", border: "1px solid #c7d2fe", borderRadius: 6, padding: "2px 9px", fontSize: 11, color: "#6366f1", cursor: "pointer", fontFamily: "inherit" }}>
+              Refresh
+            </button>
+          )}
+          {!loading && (
+            <button onClick={onDismiss} style={{ background: "none", border: "none", color: "#a5b4fc", cursor: "pointer", fontSize: 16 }}>✕</button>
+          )}
+        </div>
+      </div>
+
+      {/* Loading skeleton */}
+      {loading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontSize: 12, color: "#6366f1", marginBottom: 4 }}>🤖 Analyzing your documents…</div>
+          {[90, 70, 80, 55].map((w, i) => (
+            <div key={i} style={{
+              height: 12, borderRadius: 6, width: `${w}%`,
+              background: "linear-gradient(90deg,#e0e7ff 25%,#c7d2fe 50%,#e0e7ff 75%)",
+              backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite",
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Failed state */}
+      {!loading && job?.status === "failed" && (
+        <p style={{ fontSize: 13, color: "#dc2626" }}>⚠ {job.error || "Analysis failed. Try refreshing."}</p>
+      )}
+
+      {/* Done: tabbed content */}
+      {!loading && job?.status === "done" && (
+        <>
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 4, marginBottom: 14, borderBottom: "1px solid #e0e7ff", paddingBottom: 8 }}>
+            {tabs.map((t) => (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                background: tab === t.id ? "#6366f1" : "none",
+                color: tab === t.id ? "#fff" : "#6366f1",
+                border: tab === t.id ? "none" : "1px solid #c7d2fe",
+                borderRadius: 20, padding: "3px 12px",
+                fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Overview tab */}
+          {tab === "overview" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {r.overview && <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.65 }}>{r.overview}</p>}
+              {r.themes?.length > 0 && (
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Common Themes</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {r.themes.map((t, i) => (
+                      <span key={i} style={{ background: "#e0e7ff", color: "#4338ca", borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 500 }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {r.document_summaries?.length > 0 && (
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Documents</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                    {r.document_summaries.map((d, i) => (
+                      <div key={i} style={{ fontSize: 12, color: "#374151", display: "flex", gap: 8 }}>
+                        <span style={{ color: "#6366f1", fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
+                        <span><strong>{d.name}</strong> — {d.one_liner}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Differences tab */}
+          {tab === "differences" && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Key Differences</p>
+              {r.key_differences?.length > 0 ? (
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+                  {r.key_differences.map((d, i) => (
+                    <li key={i} style={{ fontSize: 13, color: "#374151", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <span style={{ color: "#dc2626", fontWeight: 700, flexShrink: 0 }}>≠</span>{d}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ fontSize: 13, color: "#9ca3af" }}>No major differences found.</p>
+              )}
+            </div>
+          )}
+
+          {/* Actions tab */}
+          {tab === "actions" && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Action Items</p>
+              {r.action_items?.length > 0 ? (
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+                  {r.action_items.map((a, i) => (
+                    <li key={i} style={{ fontSize: 13, color: "#374151", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <span style={{ color: "#16a34a", fontWeight: 700, flexShrink: 0 }}>→</span>{a}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ fontSize: 13, color: "#9ca3af" }}>No action items found.</p>
+              )}
+            </div>
+          )}
+
+          {/* Suggested questions tab */}
+          {tab === "questions" && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Ask across all documents</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {r.suggested_questions?.map((q, i) => (
+                  <button key={i} onClick={() => onQuestionClick(q)} style={{
+                    background: "#fff", border: "1px solid #c7d2fe",
+                    borderRadius: 20, padding: "5px 13px",
+                    fontSize: 12, color: "#4338ca", cursor: "pointer", fontFamily: "inherit",
+                  }}>{q}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    INSIGHTS PANEL COMPONENT
 ───────────────────────────────────────────── */
 function InsightsPanel({ insights, loading, onQuestionClick, onDismiss }) {
@@ -256,6 +432,11 @@ export default function Dashboard() {
   const [suggestions, setSuggestions] = useState([]);
   const [insights, setInsights] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
+
+  // Agent (cross-document)
+  const [agentJob, setAgentJob] = useState(null);       // latest ai_job row
+  const [agentLoading, setAgentLoading] = useState(false);
+  const [agentDismissed, setAgentDismissed] = useState(false);
 
   // Voice
   const [isRecording, setIsRecording] = useState(false);
@@ -415,6 +596,45 @@ export default function Dashboard() {
     }
   }, [selectedDoc, compareQuestion, showSnackbar]);
 
+  /* ── Agent: fetch latest job ── */
+  const fetchAgentJob = useCallback(async () => {
+    try {
+      const res = await fetch("/api/agent/status");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data) { setAgentJob(data); setAgentDismissed(false); }
+    } catch {}
+  }, []);
+
+  /* ── Agent: trigger cross-document analysis ── */
+  const runAgent = useCallback(async () => {
+    setAgentLoading(true);
+    setAgentDismissed(false);
+    try {
+      const res = await fetch("/api/agent/run", { method: "POST" });
+      const data = await res.json();
+      if (data.jobId && !data.skipped) {
+        // Poll until done (max 30s, every 2s)
+        let attempts = 0;
+        const poll = setInterval(async () => {
+          attempts++;
+          const s = await fetch("/api/agent/status").then((r) => r.json()).catch(() => null);
+          if (s?.status === "done" || s?.status === "failed" || attempts > 15) {
+            clearInterval(poll);
+            setAgentJob(s);
+            setAgentLoading(false);
+          }
+        }, 2000);
+      } else {
+        // Skipped (already ran recently) — just fetch existing result
+        await fetchAgentJob();
+        setAgentLoading(false);
+      }
+    } catch {
+      setAgentLoading(false);
+    }
+  }, [fetchAgentJob]);
+
   /* ── Data ── */
   const fetchDocs = useCallback(async () => {
     try {
@@ -467,12 +687,13 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDocs();
     fetchUsage();
+    fetchAgentJob(); // load latest agent analysis on mount
     const params = new URLSearchParams(window.location.search);
     if (params.get("upgraded") === "1") {
       showSnackbar("Welcome to Pro! Limits removed.");
       window.history.replaceState({}, "", "/dashboard");
     }
-  }, [fetchDocs, fetchUsage, showSnackbar]);
+  }, [fetchDocs, fetchUsage, fetchAgentJob, showSnackbar]);
 
   /* ── Load history + insights when document changes ── */
   useEffect(() => {
@@ -545,6 +766,8 @@ export default function Dashboard() {
           .catch(() => {})
           .finally(() => setInsightsLoading(false));
       }
+      // Trigger cross-document agent if user has multiple docs
+      if (docs.length >= 2) runAgent();
     } else if (data.limitExceeded) {
       showSnackbar(`PDF limit reached (${data.error})`, "error");
     } else {
@@ -931,6 +1154,17 @@ export default function Dashboard() {
           <div style={s.chatScroll}>
             <div style={s.chatInner}>
 
+              {/* AGENT PANEL — cross-document analysis */}
+              {!agentDismissed && docs.length >= 2 && (agentJob || agentLoading) && (
+                <AgentPanel
+                  job={agentJob}
+                  loading={agentLoading}
+                  onQuestionClick={(q) => injectPrompt(q)}
+                  onDismiss={() => setAgentDismissed(true)}
+                  onRerun={runAgent}
+                />
+              )}
+
               {/* COMPARE MODE PANEL */}
               {compareMode && selectedDoc && (
                 <div style={s.comparePanel}>
@@ -1146,6 +1380,15 @@ export default function Dashboard() {
                 onClick={() => { setCompareMode(v => !v); setCompareDoc(null); if (!compareMode) window.scrollTo(0,0); }}
               >
                 ⚖ Compare Docs
+              </button>
+            )}
+            {docs.length >= 2 && (
+              <button
+                style={{ ...s.quickBtn, borderColor: "#c7d2fe", background: agentLoading ? "#e0e7ff" : undefined, color: "#4338ca" }}
+                onClick={() => { setAgentDismissed(false); runAgent(); }}
+                disabled={agentLoading}
+              >
+                {agentLoading ? "🤖 Analyzing…" : "🤖 AI Analysis"}
               </button>
             )}
           </div>

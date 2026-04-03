@@ -92,6 +92,34 @@ create table if not exists jobs (
 create index if not exists jobs_doc_idx on jobs (document_id);
 create index if not exists jobs_user_idx on jobs (user_id, created_at desc);
 
+-- ai_jobs: cross-document agent analysis (user-level, not per-document)
+create table if not exists ai_jobs (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  status      text not null default 'pending' check (status in ('pending', 'running', 'done', 'failed')),
+  doc_count   int default 0,
+  result      jsonb,
+  error       text,
+  created_at  timestamptz default now(),
+  completed_at timestamptz
+);
+
+create index if not exists ai_jobs_user_idx on ai_jobs (user_id, created_at desc);
+
+alter table ai_jobs enable row level security;
+
+drop policy if exists "ai_jobs_select_own" on ai_jobs;
+create policy "ai_jobs_select_own" on ai_jobs
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "ai_jobs_insert_own" on ai_jobs;
+create policy "ai_jobs_insert_own" on ai_jobs
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "ai_jobs_update_own" on ai_jobs;
+create policy "ai_jobs_update_own" on ai_jobs
+  for update using (auth.uid() = user_id);
+
 -- ─────────────────────────────────────────────
 -- 2. RLS – Row Level Security
 -- ─────────────────────────────────────────────
