@@ -182,36 +182,52 @@ function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
 
   return (
     <div style={{
-      background: "linear-gradient(135deg,#fafafa,#f0f4ff)",
-      border: "1px solid #c7d2fe", borderRadius: 14,
-      padding: "16px 18px", width: "100%",
+      background: "rgba(255,255,255,0.75)",
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
+      border: "1px solid rgba(199,210,254,0.6)",
+      borderRadius: 20,
+      padding: "20px 22px",
+      width: "100%",
+      boxShadow: "0 8px 32px rgba(99,102,241,0.08), 0 2px 8px rgba(0,0,0,0.04)",
     }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 15 }}>🤖</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#4338ca" }}>
-            AI Agent Analysis
-          </span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 10,
+            background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(99,102,241,0.35)", fontSize: 16, flexShrink: 0,
+          }}>🤖</div>
+          <div>
+            <span style={{
+              fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px",
+              background: "linear-gradient(135deg, #4338ca, #6366f1)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            }}>
+              AI Agent Analysis
+            </span>
+          </div>
           {job?.doc_count > 0 && (
-            <span style={{ fontSize: 11, background: "#e0e7ff", color: "#4338ca", borderRadius: 20, padding: "2px 9px", fontWeight: 600 }}>
+            <span style={{ fontSize: 11, background: "linear-gradient(135deg,#e0e7ff,#ede9fe)", color: "#4338ca", borderRadius: 20, padding: "3px 10px", fontWeight: 700, border: "1px solid #c4b5fd" }}>
               {job.doc_count} docs
             </span>
           )}
           {job?.status === "running" && (
-            <span style={{ fontSize: 11, background: "#fef9c3", color: "#854d0e", borderRadius: 20, padding: "2px 9px", fontWeight: 600 }}>
+            <span style={{ fontSize: 11, background: "#fef9c3", color: "#854d0e", borderRadius: 20, padding: "3px 10px", fontWeight: 700, border: "1px solid #fde047" }}>
               Processing…
             </span>
           )}
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {job?.status === "done" && onRerun && (
-            <button onClick={onRerun} style={{ background: "none", border: "1px solid #c7d2fe", borderRadius: 6, padding: "2px 9px", fontSize: 11, color: "#6366f1", cursor: "pointer", fontFamily: "inherit" }}>
-              Refresh
+            <button onClick={onRerun} className="agent-refresh-btn">
+              ↻ Refresh
             </button>
           )}
           {!loading && (
-            <button onClick={onDismiss} style={{ background: "none", border: "none", color: "#a5b4fc", cursor: "pointer", fontSize: 16 }}>✕</button>
+            <button onClick={onDismiss} style={{ background: "rgba(165,180,252,0.15)", border: "1px solid rgba(165,180,252,0.3)", color: "#818cf8", cursor: "pointer", fontSize: 14, width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>✕</button>
           )}
         </div>
       </div>
@@ -239,15 +255,9 @@ function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
       {!loading && job?.status === "done" && (
         <>
           {/* Tabs */}
-          <div style={{ display: "flex", gap: 4, marginBottom: 14, borderBottom: "1px solid #e0e7ff", paddingBottom: 8 }}>
+          <div style={{ display: "flex", gap: 4, marginBottom: 16, padding: "4px", background: "rgba(238,242,255,0.7)", borderRadius: 14, width: "fit-content" }}>
             {tabs.map((t) => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                background: tab === t.id ? "#6366f1" : "none",
-                color: tab === t.id ? "#fff" : "#6366f1",
-                border: tab === t.id ? "none" : "1px solid #c7d2fe",
-                borderRadius: 20, padding: "3px 12px",
-                fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              }}>
+              <button key={t.id} onClick={() => setTab(t.id)} className={`agent-tab ${tab === t.id ? "agent-tab-active" : ""}`}>
                 {t.label}
               </button>
             ))}
@@ -262,7 +272,7 @@ function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
                   <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Common Themes</p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {r.themes.map((t, i) => (
-                      <span key={i} style={{ background: "#e0e7ff", color: "#4338ca", borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 500 }}>{t}</span>
+                      <span key={i} className={`theme-chip theme-chip-${i % 4}`}>{t}</span>
                     ))}
                   </div>
                 </div>
@@ -270,11 +280,19 @@ function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
               {r.document_summaries?.length > 0 && (
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Documents</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {r.document_summaries.map((d, i) => (
-                      <div key={i} style={{ fontSize: 12, color: "#374151", display: "flex", gap: 8 }}>
-                        <span style={{ color: "#6366f1", fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
-                        <span><strong>{d.name}</strong> — {d.one_liner}</span>
+                      <div key={i} className="doc-summary-item">
+                        <div style={{
+                          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                          background: "linear-gradient(135deg,#6366f1,#4f46e5)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 11, color: "#fff", fontWeight: 800,
+                        }}>{i + 1}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: "#1e1b4b", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</p>
+                          <p style={{ fontSize: 11, color: "#6b7280", lineHeight: 1.4 }}>{d.one_liner}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -325,11 +343,7 @@ function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
               <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Ask across all documents</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {r.suggested_questions?.map((q, i) => (
-                  <button key={i} onClick={() => onQuestionClick(q)} style={{
-                    background: "#fff", border: "1px solid #c7d2fe",
-                    borderRadius: 20, padding: "5px 13px",
-                    fontSize: 12, color: "#4338ca", cursor: "pointer", fontFamily: "inherit",
-                  }}>{q}</button>
+                  <button key={i} onClick={() => onQuestionClick(q)} className="suggest-q-btn">{q}</button>
                 ))}
               </div>
             </div>
@@ -347,21 +361,31 @@ function InsightsPanel({ insights, loading, onQuestionClick, onDismiss }) {
   if (!loading && !insights) return null;
   return (
     <div style={{
-      background: "linear-gradient(135deg, #eff6ff, #f0fdf4)",
-      border: "1px solid #bfdbfe",
-      borderRadius: 14,
-      padding: "16px 18px",
+      background: "rgba(255,255,255,0.75)",
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
+      border: "1px solid rgba(191,219,254,0.7)",
+      borderRadius: 20,
+      padding: "20px 22px",
       width: "100%",
+      boxShadow: "0 8px 32px rgba(37,99,235,0.07), 0 2px 8px rgba(0,0,0,0.04)",
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8", display: "flex", alignItems: "center", gap: 6 }}>
-          ✨ AI Insights
-        </span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 10,
+            background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(37,99,235,0.3)", fontSize: 16,
+          }}>✨</div>
+          <span style={{
+            fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px",
+            background: "linear-gradient(135deg, #1d4ed8, #2563eb)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          }}>AI Insights</span>
+        </div>
         {!loading && (
-          <button onClick={onDismiss} style={{
-            background: "none", border: "none", color: "#93c5fd",
-            cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 2,
-          }}>✕</button>
+          <button onClick={onDismiss} style={{ background: "rgba(147,197,253,0.15)", border: "1px solid rgba(147,197,253,0.35)", color: "#60a5fa", cursor: "pointer", fontSize: 14, width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         )}
       </div>
 
@@ -402,14 +426,7 @@ function InsightsPanel({ insights, loading, onQuestionClick, onDismiss }) {
               <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Ask about this document</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {insights.suggested_questions.map((q, i) => (
-                  <button key={i} onClick={() => onQuestionClick(q)} style={{
-                    background: "#fff", border: "1px solid #93c5fd",
-                    borderRadius: 20, padding: "5px 12px",
-                    fontSize: 12, color: "#1d4ed8", cursor: "pointer",
-                    transition: "all 0.15s", fontFamily: "inherit",
-                  }}>
-                    {q}
-                  </button>
+                  <button key={i} onClick={() => onQuestionClick(q)} className="suggest-q-btn">{q}</button>
                 ))}
               </div>
             </div>
@@ -1015,7 +1032,7 @@ export default function Dashboard() {
       <aside style={{ ...s.drawer, transform: drawerOpen ? "translateX(0)" : "translateX(-100%)" }}>
         <div style={s.drawerHead}>
           <div style={s.drawerBrand}>
-            <span style={s.brandDot}>⚡</span>
+            <div style={s.brandDot}>⚡</div>
             <span style={s.brandName}>PDF Chat</span>
           </div>
           <button className="icon-btn" onClick={() => setDrawerOpen(false)}>✕</button>
@@ -1457,13 +1474,14 @@ export default function Dashboard() {
               { label: "Explain", prompt: "Explain the main topic of this document in simple terms" },
               { label: "Questions", prompt: "What are 5 important questions I can ask about this document?" },
             ].map(({ label, prompt }) => (
-              <button key={label} style={s.quickBtn} onClick={() => injectPrompt(prompt)}>
+              <button key={label} className="quick-action-btn" onClick={() => injectPrompt(prompt)}>
                 {label}
               </button>
             ))}
             {docs.length > 1 && (
               <button
-                style={{ ...s.quickBtn, borderColor: compareMode ? "#93c5fd" : undefined, background: compareMode ? "#dbeafe" : undefined, color: compareMode ? "#1d4ed8" : undefined }}
+                className="quick-action-btn"
+                style={compareMode ? { borderColor: "#c4b5fd", background: "rgba(238,242,255,0.9)", color: "#4f46e5" } : undefined}
                 onClick={() => { setCompareMode(v => !v); setCompareDoc(null); if (!compareMode) window.scrollTo(0,0); }}
               >
                 ⚖ Compare Docs
@@ -1471,7 +1489,8 @@ export default function Dashboard() {
             )}
             {docs.length >= 2 && (
               <button
-                style={{ ...s.quickBtn, borderColor: "#c7d2fe", background: agentLoading ? "#e0e7ff" : undefined, color: "#4338ca" }}
+                className="quick-action-btn"
+                style={{ borderColor: "#c4b5fd", color: "#4338ca" }}
                 onClick={() => { setAgentDismissed(false); runAgent(); }}
                 disabled={agentLoading}
               >
@@ -1536,64 +1555,67 @@ export default function Dashboard() {
 }
 
 /* ─────────────────────────────────────────────
-   GLOBAL CSS  (light theme)
+   GLOBAL CSS  (premium light theme)
 ───────────────────────────────────────────── */
 const CSS = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #ffffff; }
+  body { background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 50%, #fafafa 100%); }
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #d0d7de; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #b0b8c1; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
   /* Snackbar */
   .snackbar {
     position: fixed; bottom: 90px; left: 50%;
     transform: translateX(-50%);
-    padding: 11px 20px; border-radius: 10px;
-    font-size: 13px; font-weight: 500; color: #fff;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    padding: 12px 22px; border-radius: 12px;
+    font-size: 13px; font-weight: 600; color: #fff;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
     z-index: 9999; white-space: nowrap;
     animation: snackIn 0.25s ease;
+    backdrop-filter: blur(8px);
   }
-  .snackbar-success { background: #16a34a; }
-  .snackbar-error   { background: #dc2626; }
+  .snackbar-success { background: linear-gradient(135deg,#16a34a,#15803d); }
+  .snackbar-error   { background: linear-gradient(135deg,#dc2626,#b91c1c); }
 
   /* Icon buttons */
   .icon-btn {
-    background: #f6f8fa;
-    border: 1px solid #d0d7de;
-    color: #57606a; width: 34px; height: 34px;
-    border-radius: 8px; cursor: pointer;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid #e2e8f0;
+    color: #64748b; width: 34px; height: 34px;
+    border-radius: 9px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s ease; flex-shrink: 0;
+    transition: all 0.18s ease; flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   }
   .icon-btn:hover {
-    background: #eaeef2; color: #24292f;
-    border-color: #b0b8c1; transform: translateY(-1px);
+    background: #fff; color: #1e293b;
+    border-color: #c7d2fe; transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.12);
   }
   .icon-btn-sm {
     background: transparent; border: none;
-    color: #57606a; width: 28px; height: 28px;
+    color: #64748b; width: 28px; height: 28px;
     border-radius: 6px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all 0.15s; flex-shrink: 0;
   }
-  .icon-btn-sm:hover { background: #eaeef2; color: #24292f; }
+  .icon-btn-sm:hover { background: #f1f5f9; color: #1e293b; }
 
   /* Upload button */
   .upload-btn {
     display: flex; align-items: center; gap: 8px;
-    width: 100%; padding: 10px 14px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    border: none; border-radius: 10px; color: #fff;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.3);
-    font-family: inherit;
+    width: 100%; padding: 11px 16px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+    font-family: inherit; letter-spacing: -0.2px;
   }
   .upload-btn:hover {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    box-shadow: 0 4px 20px rgba(37,99,235,0.45);
+    background: linear-gradient(135deg, #818cf8, #6366f1);
+    box-shadow: 0 6px 24px rgba(99,102,241,0.5);
     transform: translateY(-1px);
   }
   .upload-btn:active { transform: translateY(0); }
@@ -1601,37 +1623,42 @@ const CSS = `
   /* Nav items */
   .nav-item {
     display: flex; align-items: center; gap: 9px;
-    padding: 9px 10px; border-radius: 8px; cursor: pointer;
-    transition: all 0.15s; border: 1px solid transparent;
+    padding: 9px 10px; border-radius: 10px; cursor: pointer;
+    transition: all 0.18s; border: 1px solid transparent;
   }
-  .nav-item:hover { background: #f6f8fa; border-color: #d0d7de; }
+  .nav-item:hover { background: rgba(255,255,255,0.8); border-color: #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
   .nav-item:hover .trash-btn { opacity: 1; }
   .nav-item-active {
-    background: #dbeafe !important;
-    border-color: #93c5fd !important;
+    background: linear-gradient(135deg,rgba(238,242,255,0.9),rgba(237,233,254,0.7)) !important;
+    border-color: #c4b5fd !important;
+    box-shadow: 0 2px 12px rgba(99,102,241,0.12) !important;
   }
 
   .trash-btn {
-    background: none; border: none; color: #b0b8c1;
+    background: none; border: none; color: #cbd5e1;
     cursor: pointer; padding: 3px; border-radius: 4px;
     display: flex; opacity: 0;
     transition: opacity 0.15s, color 0.15s; flex-shrink: 0;
   }
-  .trash-btn:hover { color: #dc2626; }
+  .trash-btn:hover { color: #ef4444; }
 
   /* Hint cards */
   .hint-card {
     display: flex; align-items: flex-start; gap: 10px;
-    padding: 15px 14px;
-    background: #f6f8fa; border: 1px solid #d0d7de;
-    border-radius: 12px; color: #24292f;
+    padding: 16px 15px;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(226,232,240,0.8);
+    border-radius: 14px; color: #1e293b;
     font-size: 13px; cursor: pointer; text-align: left;
     transition: all 0.2s; font-family: inherit;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
   .hint-card:hover {
-    background: #eaeef2; border-color: #b0b8c1;
+    background: rgba(255,255,255,0.95);
+    border-color: #c4b5fd;
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.12);
   }
 
   /* Message rows */
@@ -1643,27 +1670,27 @@ const CSS = `
   /* Copy button */
   .copy-btn {
     display: inline-flex; align-items: center; gap: 5px;
-    margin-top: 8px; background: transparent;
-    border: 1px solid #d0d7de; color: #57606a;
-    font-size: 11px; padding: 3px 10px;
-    border-radius: 6px; cursor: pointer;
+    margin-top: 8px; background: rgba(255,255,255,0.8);
+    border: 1px solid #e2e8f0; color: #64748b;
+    font-size: 11px; padding: 4px 11px;
+    border-radius: 8px; cursor: pointer;
     transition: all 0.15s; font-family: inherit;
   }
-  .copy-btn:hover { border-color: #b0b8c1; color: #24292f; background: #f6f8fa; }
+  .copy-btn:hover { border-color: #c4b5fd; color: #4f46e5; background: rgba(238,242,255,0.6); }
 
   /* Open PDF btn */
   .open-pdf-btn {
     display: flex; align-items: center; justify-content: center; gap: 6px;
     width: 100%; padding: 11px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    border: none; border-radius: 10px; color: #fff;
-    font-size: 13px; font-weight: 600; cursor: pointer;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 13px; font-weight: 700; cursor: pointer;
     transition: all 0.2s; font-family: inherit;
-    box-shadow: 0 2px 12px rgba(37,99,235,0.25);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.3);
   }
   .open-pdf-btn:hover {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    box-shadow: 0 4px 20px rgba(37,99,235,0.4);
+    background: linear-gradient(135deg, #818cf8, #6366f1);
+    box-shadow: 0 6px 24px rgba(99,102,241,0.45);
     transform: translateY(-1px);
   }
 
@@ -1675,26 +1702,26 @@ const CSS = `
     padding: 5px 12px; border-radius: 8px;
     cursor: pointer; white-space: nowrap;
     transition: all 0.2s; font-family: inherit; flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(217,119,6,0.35);
+    box-shadow: 0 2px 10px rgba(217,119,6,0.35);
   }
   .upgrade-btn:hover { background: linear-gradient(135deg, #fbbf24, #f59e0b); transform: translateY(-1px); }
   .upgrade-btn:active { transform: translateY(0); }
 
   /* Manage button */
   .manage-btn {
-    background: none; border: 1px solid #d0d7de;
-    color: #57606a; font-size: 11px; font-weight: 500;
-    padding: 4px 10px; border-radius: 6px;
+    background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0;
+    color: #64748b; font-size: 11px; font-weight: 500;
+    padding: 4px 10px; border-radius: 7px;
     cursor: pointer; white-space: nowrap;
     transition: all 0.15s; font-family: inherit; flex-shrink: 0;
   }
-  .manage-btn:hover { background: #f6f8fa; border-color: #b0b8c1; color: #24292f; }
+  .manage-btn:hover { background: #fff; border-color: #c4b5fd; color: #4f46e5; }
 
   /* Sign out button */
   .sign-out-btn {
-    background: none; border: 1px solid #d0d7de;
-    color: #57606a; font-size: 11px; font-weight: 500;
-    padding: 4px 10px; border-radius: 6px;
+    background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0;
+    color: #64748b; font-size: 11px; font-weight: 500;
+    padding: 4px 10px; border-radius: 7px;
     cursor: pointer; white-space: nowrap;
     transition: all 0.15s; font-family: inherit; flex-shrink: 0;
   }
@@ -1702,20 +1729,100 @@ const CSS = `
 
   /* Input focus ring */
   .input-box:focus-within {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15), 0 4px 24px rgba(99,102,241,0.1) !important;
   }
 
   /* Plus button */
   .plus-btn {
     width: 36px; height: 36px; flex-shrink: 0;
-    background: #f6f8fa; border: 1px solid #d0d7de;
-    border-radius: 9px; color: #24292f;
+    background: rgba(248,250,252,0.9); border: 1px solid #e2e8f0;
+    border-radius: 10px; color: #475569;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
+    transition: all 0.18s;
   }
-  .plus-btn:hover { background: #eaeef2; border-color: #b0b8c1; transform: scale(1.05); }
+  .plus-btn:hover { background: #fff; border-color: #c4b5fd; color: #4f46e5; transform: scale(1.05); box-shadow: 0 2px 8px rgba(99,102,241,0.15); }
   .plus-btn:active { transform: scale(0.95); }
+
+  /* Agent panel tabs */
+  .agent-tab {
+    padding: 6px 14px; border-radius: 10px; border: none;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: inherit; color: #64748b; background: transparent;
+    transition: all 0.18s;
+  }
+  .agent-tab:hover { color: #4f46e5; background: rgba(255,255,255,0.6); }
+  .agent-tab-active {
+    background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 12px rgba(99,102,241,0.35);
+  }
+
+  /* Agent refresh button */
+  .agent-refresh-btn {
+    background: rgba(238,242,255,0.8); border: 1px solid #c4b5fd;
+    border-radius: 8px; padding: 5px 12px;
+    font-size: 12px; color: #4f46e5; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.18s;
+  }
+  .agent-refresh-btn:hover { background: #e0e7ff; box-shadow: 0 2px 8px rgba(99,102,241,0.2); transform: translateY(-1px); }
+
+  /* Theme chips */
+  .theme-chip {
+    border-radius: 20px; padding: 4px 13px;
+    font-size: 12px; font-weight: 600; cursor: default;
+    transition: transform 0.15s; display: inline-block;
+    border: 1px solid;
+  }
+  .theme-chip:hover { transform: translateY(-1px); }
+  .theme-chip-0 { background: linear-gradient(135deg,#ede9fe,#ddd6fe); color: #5b21b6; border-color: #c4b5fd; }
+  .theme-chip-1 { background: linear-gradient(135deg,#dbeafe,#bfdbfe); color: #1e40af; border-color: #93c5fd; }
+  .theme-chip-2 { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color: #14532d; border-color: #86efac; }
+  .theme-chip-3 { background: linear-gradient(135deg,#fce7f3,#fbcfe8); color: #831843; border-color: #f9a8d4; }
+
+  /* Doc summary item */
+  .doc-summary-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; border-radius: 12px;
+    background: rgba(248,250,255,0.8);
+    border: 1px solid rgba(226,232,240,0.7);
+    transition: all 0.18s;
+  }
+  .doc-summary-item:hover { background: rgba(238,242,255,0.8); border-color: #c4b5fd; transform: translateX(2px); }
+
+  /* Suggest question buttons */
+  .suggest-q-btn {
+    background: rgba(255,255,255,0.85);
+    border: 1px solid #e2e8f0;
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 12px; color: #4f46e5; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.18s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .suggest-q-btn:hover {
+    background: linear-gradient(135deg,#ede9fe,#e0e7ff);
+    border-color: #c4b5fd; transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.15);
+  }
+
+  /* Quick action buttons */
+  .quick-action-btn {
+    background: rgba(255,255,255,0.85);
+    border: 1px solid #e2e8f0;
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 12px; color: #475569; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.18s; white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .quick-action-btn:hover {
+    background: rgba(238,242,255,0.9);
+    border-color: #c4b5fd; color: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(99,102,241,0.12);
+  }
 
   /* Mic recording state */
   .mic-active {
@@ -1731,18 +1838,23 @@ const CSS = `
 
   /* Send button */
   .send-btn {
-    width: 36px; height: 36px; flex-shrink: 0;
-    background: #f6f8fa; border: 1px solid #d0d7de;
-    border-radius: 9px; color: #b0b8c1;
+    width: 38px; height: 38px; flex-shrink: 0;
+    background: #f1f5f9; border: 1px solid #e2e8f0;
+    border-radius: 12px; color: #cbd5e1;
     cursor: not-allowed; display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
+    transition: all 0.18s;
   }
   .send-btn-active {
-    background: #2563eb; color: #fff;
-    border-color: #2563eb; cursor: pointer;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.35);
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff; border-color: transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.4);
   }
-  .send-btn-active:hover { background: #1d4ed8; transform: scale(1.06); }
+  .send-btn-active:hover {
+    background: linear-gradient(135deg, #818cf8, #6366f1);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.5);
+    transform: scale(1.06);
+  }
   .send-btn-active:active { transform: scale(0.94); }
 
   /* Animations */
@@ -1782,33 +1894,45 @@ const CSS = `
 const s = {
   root: {
     display: "flex", height: "100vh",
-    background: "#ffffff",
-    color: "#24292f",
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    background: "linear-gradient(135deg, #f8faff 0%, #f0f4ff 50%, #fafafa 100%)",
+    color: "#1e293b",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif",
     overflow: "hidden", position: "relative",
   },
 
   /* ── Drawer ── */
-  backdrop: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 40 },
+  backdrop: { position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", backdropFilter: "blur(4px)", zIndex: 40 },
   drawer: {
     position: "fixed", top: 0, left: 0, bottom: 0,
-    width: 272, background: "#f6f8fa",
+    width: 276,
+    background: "rgba(248,250,255,0.92)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
     zIndex: 50, display: "flex", flexDirection: "column",
     transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)",
-    borderRight: "1px solid #d0d7de",
-    boxShadow: "8px 0 32px rgba(0,0,0,0.1)",
+    borderRight: "1px solid rgba(226,232,240,0.8)",
+    boxShadow: "12px 0 40px rgba(99,102,241,0.08), 4px 0 16px rgba(0,0,0,0.06)",
   },
   drawerHead: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "18px 16px 14px", borderBottom: "1px solid #d0d7de",
+    padding: "18px 16px 14px", borderBottom: "1px solid rgba(226,232,240,0.7)",
   },
   drawerBrand: { display: "flex", alignItems: "center", gap: 10 },
-  brandDot: { fontSize: 22 },
-  brandName: { fontSize: 16, fontWeight: 700, color: "#24292f", letterSpacing: "-0.3px" },
+  brandDot: {
+    width: 32, height: 32, borderRadius: 9,
+    background: "linear-gradient(135deg,#6366f1,#4f46e5)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontSize: 16, boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
+  },
+  brandName: {
+    fontSize: 16, fontWeight: 800, letterSpacing: "-0.4px",
+    background: "linear-gradient(135deg,#4338ca,#6366f1)",
+    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+  },
   drawerUpload: { padding: "14px 12px 6px" },
   drawerLabel: {
-    padding: "14px 16px 6px", fontSize: 11, fontWeight: 600,
-    color: "#57606a", textTransform: "uppercase", letterSpacing: "0.08em",
+    padding: "14px 16px 6px", fontSize: 10, fontWeight: 700,
+    color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em",
   },
   drawerNav: {
     flex: 1, overflowY: "auto", padding: "4px 8px 16px",
@@ -1826,22 +1950,22 @@ const s = {
 
   /* ── Drawer footer ── */
   drawerFooter: {
-    borderTop: "1px solid #d0d7de",
+    borderTop: "1px solid rgba(226,232,240,0.7)",
     padding: "12px 12px 14px",
     display: "flex", flexDirection: "column", gap: 10,
   },
   usageBox: {
-    background: "#fff", border: "1px solid #d0d7de",
-    borderRadius: 10, padding: "10px 12px",
+    background: "rgba(255,255,255,0.7)", border: "1px solid #e2e8f0",
+    borderRadius: 12, padding: "10px 12px",
   },
   usageRow: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-  usageLabel: { fontSize: 11, color: "#57606a", fontWeight: 500 },
-  usageVal: { fontSize: 11, fontWeight: 700, color: "#24292f" },
+  usageLabel: { fontSize: 11, color: "#64748b", fontWeight: 500 },
+  usageVal: { fontSize: 11, fontWeight: 700, color: "#1e293b" },
   usageBar: {
-    marginTop: 4, height: 4, background: "#e5e7eb",
-    borderRadius: 4, overflow: "hidden",
+    marginTop: 5, height: 5, background: "#e2e8f0",
+    borderRadius: 6, overflow: "hidden",
   },
-  usageFill: { height: "100%", background: "#2563eb", borderRadius: 4, transition: "width 0.4s ease" },
+  usageFill: { height: "100%", background: "linear-gradient(90deg,#6366f1,#4f46e5)", borderRadius: 6, transition: "width 0.4s ease" },
   upgradeHint: {
     marginTop: 6, fontSize: 11, color: "#dc2626", fontWeight: 500, textAlign: "center",
   },
@@ -1849,42 +1973,48 @@ const s = {
     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
   },
   planBadge: {
-    fontSize: 12, fontWeight: 700, padding: "3px 10px",
+    fontSize: 12, fontWeight: 700, padding: "4px 12px",
     borderRadius: 20, border: "1px solid",
   },
-  planBadgeFree: { background: "#f6f8fa", borderColor: "#d0d7de", color: "#57606a" },
-  planBadgePro: { background: "#fef9c3", borderColor: "#fde047", color: "#713f12" },
+  planBadgeFree: { background: "rgba(248,250,252,0.9)", borderColor: "#e2e8f0", color: "#64748b" },
+  planBadgePro: { background: "linear-gradient(135deg,#fef9c3,#fef08a)", borderColor: "#fde047", color: "#713f12" },
   proUnlimited: {
-    fontSize: 12, color: "#16a34a", fontWeight: 500,
+    fontSize: 12, color: "#16a34a", fontWeight: 600,
     textAlign: "center", padding: "6px 0",
   },
   userRow: {
     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
   },
   userEmail: {
-    fontSize: 11, color: "#57606a",
+    fontSize: 11, color: "#64748b",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
   },
 
   /* ── Main ── */
   main: {
     flex: 1, display: "flex", flexDirection: "column",
-    overflow: "hidden", background: "#ffffff",
+    overflow: "hidden", background: "transparent",
   },
 
   /* ── Top bar ── */
   topBar: {
     display: "flex", alignItems: "center", gap: 8,
     padding: "10px 16px",
-    borderBottom: "1px solid #d0d7de",
-    background: "rgba(255,255,255,0.9)",
-    backdropFilter: "blur(8px)",
+    borderBottom: "1px solid rgba(226,232,240,0.7)",
+    background: "rgba(255,255,255,0.85)",
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
     flexShrink: 0, minHeight: 56,
+    boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
   },
   topCenter: { flex: 1, overflow: "hidden", padding: "0 6px", textAlign: "center" },
-  topTitle: { fontSize: 15, fontWeight: 700, color: "#24292f" },
+  topTitle: {
+    fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px",
+    background: "linear-gradient(135deg,#4338ca,#6366f1)",
+    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+  },
   topDocName: {
-    fontSize: 13, color: "#57606a",
+    fontSize: 13, color: "#64748b",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block",
   },
   topActions: { display: "flex", gap: 6, alignItems: "center" },
@@ -1892,11 +2022,11 @@ const s = {
   /* ── PDF header bar (mobile) ── */
   pdfHeaderBar: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "8px 14px", borderBottom: "1px solid #d0d7de",
-    background: "#f6f8fa", flexShrink: 0,
+    padding: "8px 14px", borderBottom: "1px solid rgba(226,232,240,0.7)",
+    background: "rgba(248,250,255,0.9)", flexShrink: 0,
   },
   pdfHeaderName: {
-    fontSize: 12, color: "#57606a",
+    fontSize: 12, color: "#64748b",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
   },
 
@@ -1919,13 +2049,13 @@ const s = {
   },
   emptyGlow: {
     position: "absolute", top: 60, left: "50%",
-    width: 360, height: 260,
-    background: "radial-gradient(ellipse, rgba(37,99,235,0.08) 0%, transparent 70%)",
+    width: 480, height: 320,
+    background: "radial-gradient(ellipse, rgba(99,102,241,0.1) 0%, transparent 70%)",
     borderRadius: "50%", pointerEvents: "none",
     animation: "glowPulse 5s ease-in-out infinite",
   },
   emptyTitle: {
-    fontSize: 28, fontWeight: 700, color: "#24292f",
+    fontSize: 30, fontWeight: 800, color: "#1e293b", letterSpacing: "-0.5px",
     lineHeight: 1.3, zIndex: 1, letterSpacing: "-0.5px",
   },
   emptySubtitle: {
@@ -1941,57 +2071,59 @@ const s = {
 
   /* ── Messages ── */
   aiAvatar: {
-    width: 32, height: 32, borderRadius: "50%",
-    background: "linear-gradient(135deg, #f6f8fa, #eaeef2)",
-    border: "1px solid #d0d7de",
+    width: 34, height: 34, borderRadius: 10,
+    background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+    border: "none",
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 15, flexShrink: 0, marginTop: 2,
-    boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
+    fontSize: 16, flexShrink: 0, marginTop: 2,
+    boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
   },
   userBubble: {
-    maxWidth: "74%", padding: "12px 17px",
-    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+    maxWidth: "74%", padding: "13px 18px",
+    background: "linear-gradient(135deg, #6366f1, #4f46e5)",
     borderRadius: "18px 18px 4px 18px",
-    boxShadow: "0 2px 12px rgba(37,99,235,0.25)",
+    boxShadow: "0 4px 16px rgba(99,102,241,0.3)",
   },
   aiBubble: { maxWidth: "84%", padding: "2px 0 4px" },
   msgText: {
-    fontSize: 15, lineHeight: 1.75, color: "#24292f",
+    fontSize: 15, lineHeight: 1.8, color: "#1e293b",
     whiteSpace: "pre-wrap", wordBreak: "break-word",
   },
   dots: { display: "flex", gap: 6, padding: "10px 2px", alignItems: "center" },
   dot: {
     width: 7, height: 7, borderRadius: "50%",
-    background: "#b0b8c1", display: "inline-block",
+    background: "#94a3b8", display: "inline-block",
     animation: "blink 1.2s infinite ease-in-out",
   },
   cursor: {
     display: "inline-block", width: 2, height: 16,
-    background: "#2563eb", marginLeft: 2, verticalAlign: "text-bottom",
+    background: "#6366f1", marginLeft: 2, verticalAlign: "text-bottom",
     animation: "cursorBlink 0.7s infinite",
   },
 
   /* ── PDF Panel ── */
   pdfPanel: {
-    width: 300, minWidth: 300,
-    borderLeft: "1px solid #d0d7de",
+    width: 306, minWidth: 306,
+    borderLeft: "1px solid rgba(226,232,240,0.7)",
     display: "flex", flexDirection: "column",
-    background: "#f6f8fa", padding: 12, gap: 10, flexShrink: 0,
+    background: "rgba(248,250,255,0.7)",
+    backdropFilter: "blur(12px)",
+    padding: 12, gap: 10, flexShrink: 0,
   },
   pdfPanelHead: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "4px 2px 8px", borderBottom: "1px solid #d0d7de",
+    padding: "4px 2px 8px", borderBottom: "1px solid rgba(226,232,240,0.7)",
     marginBottom: 2,
   },
   pdfPanelTitle: {
     display: "flex", alignItems: "center", gap: 7,
-    fontSize: 11, fontWeight: 600,
-    color: "#57606a", textTransform: "uppercase", letterSpacing: "0.07em",
+    fontSize: 11, fontWeight: 700,
+    color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em",
   },
   pdfWrap: {
-    flex: 1, minHeight: 0, borderRadius: 10, overflow: "hidden",
-    border: "1px solid #d0d7de", background: "#fff",
-    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+    flex: 1, minHeight: 0, borderRadius: 12, overflow: "hidden",
+    border: "1px solid rgba(226,232,240,0.7)", background: "#fff",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
   },
   pdfIframe: { width: "100%", height: "100%", border: "none" },
 
@@ -1999,34 +2131,40 @@ const s = {
   chipRow: { padding: "0 20px 8px", maxWidth: 740, margin: "0 auto", width: "100%" },
   chip: {
     display: "inline-flex", alignItems: "center", gap: 7,
-    padding: "5px 12px 5px 10px",
-    background: "#dbeafe", border: "1px solid #93c5fd",
-    borderRadius: 20, fontSize: 12, color: "#1d4ed8",
+    padding: "6px 14px 6px 10px",
+    background: "linear-gradient(135deg,rgba(238,242,255,0.9),rgba(237,233,254,0.7))",
+    border: "1px solid #c4b5fd",
+    borderRadius: 20, fontSize: 12, color: "#4f46e5", fontWeight: 600,
+    boxShadow: "0 2px 8px rgba(99,102,241,0.1)",
   },
   chipName: { maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
   chipX: {
-    background: "none", border: "none", color: "#57606a",
+    background: "none", border: "none", color: "#94a3b8",
     cursor: "pointer", fontSize: 13, padding: "0 2px", lineHeight: 1,
   },
 
   /* ── Alerts dropdown ── */
   alertsDropdown: {
     position: "absolute", top: "calc(100% + 8px)", right: 0,
-    width: 320, background: "#fff",
-    border: "1px solid #e5e7eb", borderRadius: 12,
-    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+    width: 328,
+    background: "rgba(255,255,255,0.95)",
+    backdropFilter: "blur(20px)",
+    border: "1px solid rgba(226,232,240,0.8)", borderRadius: 16,
+    boxShadow: "0 16px 48px rgba(0,0,0,0.14), 0 4px 16px rgba(99,102,241,0.08)",
     zIndex: 200, overflow: "hidden",
   },
   alertsHeader: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "12px 14px", borderBottom: "1px solid #f3f4f6",
+    padding: "14px 16px", borderBottom: "1px solid #f1f5f9",
   },
 
   /* ── Compare panel ── */
   comparePanel: {
-    background: "linear-gradient(135deg, #eff6ff, #f0fdf4)",
-    border: "1px solid #bfdbfe",
-    borderRadius: 14, padding: "16px 18px", width: "100%",
+    background: "rgba(255,255,255,0.75)",
+    backdropFilter: "blur(16px)",
+    border: "1px solid rgba(191,219,254,0.7)",
+    borderRadius: 20, padding: "18px 20px", width: "100%",
+    boxShadow: "0 8px 32px rgba(37,99,235,0.06)",
   },
 
   /* ── Suggestions ── */
@@ -2035,50 +2173,52 @@ const s = {
     padding: "4px 0 0",
   },
   suggestionsLabel: {
-    fontSize: 11, fontWeight: 600, color: "#9ca3af",
-    textTransform: "uppercase", letterSpacing: "0.07em",
+    fontSize: 11, fontWeight: 700, color: "#94a3b8",
+    textTransform: "uppercase", letterSpacing: "0.08em",
     flexBasis: "100%", marginBottom: 2,
   },
   suggestionChip: {
-    background: "#f8faff", border: "1px solid #bfdbfe",
+    background: "rgba(255,255,255,0.85)", border: "1px solid #e2e8f0",
     borderRadius: 20, padding: "5px 14px",
-    fontSize: 12, color: "#1d4ed8", cursor: "pointer",
+    fontSize: 12, color: "#4f46e5", cursor: "pointer",
     transition: "all 0.15s", fontFamily: "inherit",
-    whiteSpace: "nowrap",
+    whiteSpace: "nowrap", fontWeight: 500,
   },
 
   /* ── Quick actions ── */
   quickActions: {
-    display: "flex", gap: 6, padding: "0 20px 8px",
+    display: "flex", gap: 6, padding: "0 20px 10px",
     maxWidth: 740, margin: "0 auto", width: "100%",
     flexWrap: "wrap",
   },
   quickBtn: {
-    background: "#f3f4f6", border: "1px solid #e5e7eb",
-    borderRadius: 20, padding: "4px 12px",
-    fontSize: 12, color: "#374151", cursor: "pointer",
-    whiteSpace: "nowrap", transition: "background 0.15s",
+    background: "rgba(255,255,255,0.85)", border: "1px solid #e2e8f0",
+    borderRadius: 20, padding: "5px 14px",
+    fontSize: 12, color: "#475569", cursor: "pointer",
+    whiteSpace: "nowrap", transition: "all 0.18s", fontWeight: 500,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
   },
 
   /* ── Input bar ── */
-  inputBar: { padding: "8px 20px 20px", flexShrink: 0 },
+  inputBar: { padding: "8px 20px 22px", flexShrink: 0 },
   inputBox: {
     display: "flex", alignItems: "flex-end", gap: 8,
-    background: "#ffffff",
-    border: "1.5px solid #d0d7de",
-    borderRadius: 14, padding: "8px 8px 8px 9px",
+    background: "rgba(255,255,255,0.92)",
+    backdropFilter: "blur(12px)",
+    border: "1.5px solid rgba(226,232,240,0.9)",
+    borderRadius: 18, padding: "9px 9px 9px 10px",
     maxWidth: 740, margin: "0 auto",
     transition: "border-color 0.2s, box-shadow 0.2s",
-    boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
   },
   textarea: {
     flex: 1, background: "transparent", border: "none", outline: "none",
-    color: "#24292f", fontSize: 15, lineHeight: 1.55,
+    color: "#1e293b", fontSize: 15, lineHeight: 1.55,
     resize: "none", fontFamily: "inherit",
     maxHeight: 140, overflowY: "auto", padding: "5px 0",
   },
   inputHint: {
-    textAlign: "center", fontSize: 11, color: "#b0b8c1",
+    textAlign: "center", fontSize: 11, color: "#cbd5e1",
     maxWidth: 740, margin: "6px auto 0",
   },
 };
