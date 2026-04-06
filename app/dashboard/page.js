@@ -4,96 +4,29 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase-browser";
 
 /* ─────────────────────────────────────────────
-   ICON COMPONENTS
+   ICONS
 ───────────────────────────────────────────── */
-const Icon = {
-  Menu: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
-  ),
-  Eye: ({ on }) => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={on ? "#fff" : "currentColor"} strokeWidth="2" strokeLinecap="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
-    </svg>
-  ),
-  External: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-      <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-    </svg>
-  ),
-  Download: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  ),
-  Copy: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
-  ),
-  Send: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2L12 22M12 2L4 10M12 2L20 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-    </svg>
-  ),
-  Plus: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  ),
-  Trash: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-      <path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-    </svg>
-  ),
-  PDF: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-    </svg>
-  ),
-  Mic: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <rect x="9" y="2" width="6" height="11" rx="3" />
-      <path d="M19 10a7 7 0 0 1-14 0" /><line x1="12" y1="19" x2="12" y2="22" />
-      <line x1="8" y1="22" x2="16" y2="22" />
-    </svg>
-  ),
-  MicOff: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <line x1="1" y1="1" x2="23" y2="23" />
-      <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
-      <path d="M17 16.95A7 7 0 0 1 5 10v-1m14 0v1a7 7 0 0 1-.11 1.23" />
-      <line x1="12" y1="19" x2="12" y2="22" /><line x1="8" y1="22" x2="16" y2="22" />
-    </svg>
-  ),
-  Compare: () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <rect x="2" y="3" width="8" height="18" rx="1" />
-      <rect x="14" y="3" width="8" height="18" rx="1" />
-      <line x1="10" y1="12" x2="14" y2="12" />
-    </svg>
-  ),
-  Speaker: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-    </svg>
-  ),
-  Bell: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  ),
+const Icons = {
+  PDF:      () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/></svg>,
+  Plus:     () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  Trash:    () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>,
+  Send:     () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  Copy:     () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>,
+  Eye:      ({on}) => <svg className="w-4 h-4" fill="none" stroke={on?"#fff":"currentColor"} viewBox="0 0 24 24" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+  External: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+  Download: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  Mic:      () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10a7 7 0 01-14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>,
+  MicOff:   () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 10v-1m14 0v1a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>,
+  Speaker:  () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>,
+  Compare:  () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
+  Bell:     () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
+  Menu:     () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  Close:    () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  Sparkle:  () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>,
 };
 
 /* ─────────────────────────────────────────────
-   HINT CARDS DATA
+   HINT DATA
 ───────────────────────────────────────────── */
 const HINTS_DEFAULT = [
   { icon: "📎", text: "Upload a PDF to get started" },
@@ -101,7 +34,6 @@ const HINTS_DEFAULT = [
   { icon: "📊", text: "Extract key data & tables" },
   { icon: "✍️", text: "Summarize or rewrite content" },
 ];
-
 const HINTS_PDF = [
   { icon: "📋", text: "Summarize this PDF" },
   { icon: "🔑", text: "What are the key points?" },
@@ -112,23 +44,23 @@ const HINTS_PDF = [
 ];
 
 /* ─────────────────────────────────────────────
-   MAIN COMPONENT
+   EXTRACTION CARD
 ───────────────────────────────────────────── */
 function ExtractionCard({ data, onCopy, copied }) {
   const fields = data?.extracted_fields || data || {};
   const docType = data?.document_type || "document";
 
   function renderValue(val) {
-    if (val === null || val === undefined || val === "") return <span style={{ color: "#9ca3af" }}>—</span>;
+    if (val === null || val === undefined || val === "") return <span className="text-gray-400">—</span>;
     if (Array.isArray(val)) {
-      if (val.length === 0) return <span style={{ color: "#9ca3af" }}>—</span>;
+      if (val.length === 0) return <span className="text-gray-400">—</span>;
       if (typeof val[0] === "object") {
         return (
-          <div style={{ marginTop: 6 }}>
+          <div className="mt-1.5 flex flex-col gap-1">
             {val.map((item, i) => (
-              <div key={i} style={{ background: "#f3f4f6", borderRadius: 6, padding: "6px 10px", marginBottom: 4, fontSize: 12 }}>
+              <div key={i} className="bg-gray-50 rounded-lg px-3 py-2 text-xs">
                 {Object.entries(item).map(([k, v]) => (
-                  <div key={k}><span style={{ color: "#6b7280", fontWeight: 600 }}>{k}:</span> {String(v ?? "—")}</div>
+                  <div key={k}><span className="text-gray-500 font-semibold">{k}:</span> {String(v ?? "—")}</div>
                 ))}
               </div>
             ))}
@@ -141,22 +73,18 @@ function ExtractionCard({ data, onCopy, copied }) {
   }
 
   return (
-    <div style={{ maxWidth: 520, width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#111", textTransform: "capitalize" }}>
-          📊 {docType.replace(/_/g, " ")} extraction
-        </span>
-        <button onClick={onCopy} style={{ fontSize: 12, color: copied ? "#4ade80" : "#6b7280", background: "none", border: "1px solid #e5e7eb", borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>
+    <div className="max-w-lg w-full bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm font-bold text-gray-900 capitalize">📊 {docType.replace(/_/g, " ")} extraction</span>
+        <button onClick={onCopy} className={`text-xs px-3 py-1 rounded-lg border transition-colors ${copied ? "border-emerald-300 text-emerald-600 bg-emerald-50" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
           {copied ? "✓ Copied" : "Copy JSON"}
         </button>
       </div>
-      <div style={{ display: "grid", gap: 8 }}>
+      <div className="flex flex-col gap-2">
         {Object.entries(fields).map(([key, val]) => (
-          <div key={key} style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: 8, alignItems: "start", fontSize: 13 }}>
-            <span style={{ color: "#6b7280", fontWeight: 600, textTransform: "capitalize", wordBreak: "break-word" }}>
-              {key.replace(/_/g, " ")}
-            </span>
-            <span style={{ color: "#111", wordBreak: "break-word" }}>{renderValue(val)}</span>
+          <div key={key} className="grid gap-2 text-sm" style={{ gridTemplateColumns: "140px 1fr" }}>
+            <span className="text-gray-500 font-semibold capitalize truncate">{key.replace(/_/g, " ")}</span>
+            <span className="text-gray-900 break-words">{renderValue(val)}</span>
           </div>
         ))}
       </div>
@@ -165,11 +93,10 @@ function ExtractionCard({ data, onCopy, copied }) {
 }
 
 /* ─────────────────────────────────────────────
-   AGENT PANEL COMPONENT  (cross-document)
+   AGENT PANEL
 ───────────────────────────────────────────── */
 function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
   const [tab, setTab] = React.useState("overview");
-
   if (!loading && !job) return null;
 
   const r = job?.result || {};
@@ -180,118 +107,86 @@ function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
     { id: "questions", label: "Ask" },
   ];
 
+  const themeColors = [
+    "bg-violet-100 text-violet-700 border-violet-200",
+    "bg-blue-100 text-blue-700 border-blue-200",
+    "bg-emerald-100 text-emerald-700 border-emerald-200",
+    "bg-pink-100 text-pink-700 border-pink-200",
+  ];
+
   return (
-    <div style={{
-      background: "rgba(255,255,255,0.75)",
-      backdropFilter: "blur(16px)",
-      WebkitBackdropFilter: "blur(16px)",
-      border: "1px solid rgba(199,210,254,0.6)",
-      borderRadius: 20,
-      padding: "20px 22px",
-      width: "100%",
-      boxShadow: "0 8px 32px rgba(99,102,241,0.08), 0 2px 8px rgba(0,0,0,0.04)",
-    }}>
+    <div className="w-full bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-2xl p-5 shadow-md shadow-indigo-500/5">
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(99,102,241,0.35)", fontSize: 16, flexShrink: 0,
-          }}>🤖</div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-lg shadow-lg shadow-indigo-500/30 shrink-0">🤖</div>
           <div>
-            <span style={{
-              fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px",
-              background: "linear-gradient(135deg, #4338ca, #6366f1)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>
-              AI Agent Analysis
-            </span>
+            <p className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">AI Agent Analysis</p>
+            {job?.doc_count > 0 && <p className="text-xs text-indigo-400">{job.doc_count} documents analyzed</p>}
           </div>
-          {job?.doc_count > 0 && (
-            <span style={{ fontSize: 11, background: "linear-gradient(135deg,#e0e7ff,#ede9fe)", color: "#4338ca", borderRadius: 20, padding: "3px 10px", fontWeight: 700, border: "1px solid #c4b5fd" }}>
-              {job.doc_count} docs
-            </span>
-          )}
           {job?.status === "running" && (
-            <span style={{ fontSize: 11, background: "#fef9c3", color: "#854d0e", borderRadius: 20, padding: "3px 10px", fontWeight: 700, border: "1px solid #fde047" }}>
-              Processing…
-            </span>
+            <span className="text-xs bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full font-semibold">Processing…</span>
           )}
         </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <div className="flex items-center gap-2">
           {job?.status === "done" && onRerun && (
-            <button onClick={onRerun} className="agent-refresh-btn">
-              ↻ Refresh
-            </button>
+            <button onClick={onRerun} className="text-xs text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg font-semibold transition-colors">↻ Refresh</button>
           )}
           {!loading && (
-            <button onClick={onDismiss} style={{ background: "rgba(165,180,252,0.15)", border: "1px solid rgba(165,180,252,0.3)", color: "#818cf8", cursor: "pointer", fontSize: 14, width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>✕</button>
+            <button onClick={onDismiss} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"><Icons.Close /></button>
           )}
         </div>
       </div>
 
       {/* Loading skeleton */}
       {loading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ fontSize: 12, color: "#6366f1", marginBottom: 4 }}>🤖 Analyzing your documents…</div>
+        <div className="flex flex-col gap-2.5">
+          <p className="text-xs text-indigo-500 font-medium mb-1">🤖 Analyzing your documents…</p>
           {[90, 70, 80, 55].map((w, i) => (
-            <div key={i} style={{
-              height: 12, borderRadius: 6, width: `${w}%`,
-              background: "linear-gradient(90deg,#e0e7ff 25%,#c7d2fe 50%,#e0e7ff 75%)",
-              backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite",
-            }} />
+            <div key={i} className="h-3 rounded-full bg-gradient-to-r from-indigo-100 via-indigo-200 to-indigo-100 animate-pulse" style={{ width: `${w}%` }} />
           ))}
         </div>
       )}
 
-      {/* Failed state */}
       {!loading && job?.status === "failed" && (
-        <p style={{ fontSize: 13, color: "#dc2626" }}>⚠ {job.error || "Analysis failed. Try refreshing."}</p>
+        <p className="text-sm text-red-500">⚠ {job.error || "Analysis failed. Try refreshing."}</p>
       )}
 
-      {/* Done: tabbed content */}
       {!loading && job?.status === "done" && (
         <>
           {/* Tabs */}
-          <div style={{ display: "flex", gap: 4, marginBottom: 16, padding: "4px", background: "rgba(238,242,255,0.7)", borderRadius: 14, width: "fit-content" }}>
+          <div className="flex gap-1.5 mb-4 bg-gray-50 p-1 rounded-xl w-fit">
             {tabs.map((t) => (
-              <button key={t.id} onClick={() => setTab(t.id)} className={`agent-tab ${tab === t.id ? "agent-tab-active" : ""}`}>
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${tab === t.id ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/30" : "text-gray-500 hover:text-gray-700 hover:bg-white"}`}>
                 {t.label}
               </button>
             ))}
           </div>
 
-          {/* Overview tab */}
           {tab === "overview" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {r.overview && <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.65 }}>{r.overview}</p>}
+            <div className="flex flex-col gap-4">
+              {r.overview && <p className="text-sm text-gray-700 leading-relaxed">{r.overview}</p>}
               {r.themes?.length > 0 && (
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Common Themes</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Common Themes</p>
+                  <div className="flex flex-wrap gap-2">
                     {r.themes.map((t, i) => (
-                      <span key={i} className={`theme-chip theme-chip-${i % 4}`}>{t}</span>
+                      <span key={i} className={`text-xs font-semibold px-3 py-1 rounded-full border ${themeColors[i % 4]}`}>{t}</span>
                     ))}
                   </div>
                 </div>
               )}
               {r.document_summaries?.length > 0 && (
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Documents</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Documents</p>
+                  <div className="flex flex-col gap-2">
                     {r.document_summaries.map((d, i) => (
-                      <div key={i} className="doc-summary-item">
-                        <div style={{
-                          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                          background: "linear-gradient(135deg,#6366f1,#4f46e5)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 11, color: "#fff", fontWeight: 800,
-                        }}>{i + 1}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 12, fontWeight: 700, color: "#1e1b4b", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</p>
-                          <p style={{ fontSize: 11, color: "#6b7280", lineHeight: 1.4 }}>{d.one_liner}</p>
+                      <div key={i} className="flex gap-3 items-start bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-100 rounded-xl px-3 py-2.5 transition-colors">
+                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-xs font-bold shrink-0">{i + 1}</div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-gray-800 truncate">{d.name}</p>
+                          <p className="text-xs text-gray-500 leading-relaxed">{d.one_liner}</p>
                         </div>
                       </div>
                     ))}
@@ -301,49 +196,45 @@ function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
             </div>
           )}
 
-          {/* Differences tab */}
           {tab === "differences" && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Key Differences</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Key Differences</p>
               {r.key_differences?.length > 0 ? (
-                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+                <ul className="flex flex-col gap-2">
                   {r.key_differences.map((d, i) => (
-                    <li key={i} style={{ fontSize: 13, color: "#374151", display: "flex", gap: 8, alignItems: "flex-start" }}>
-                      <span style={{ color: "#dc2626", fontWeight: 700, flexShrink: 0 }}>≠</span>{d}
+                    <li key={i} className="flex gap-3 items-start text-sm text-gray-700">
+                      <span className="text-red-500 font-bold shrink-0 mt-0.5">≠</span>{d}
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p style={{ fontSize: 13, color: "#9ca3af" }}>No major differences found.</p>
-              )}
+              ) : <p className="text-sm text-gray-400">No major differences found.</p>}
             </div>
           )}
 
-          {/* Actions tab */}
           {tab === "actions" && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Action Items</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Action Items</p>
               {r.action_items?.length > 0 ? (
-                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+                <ul className="flex flex-col gap-2">
                   {r.action_items.map((a, i) => (
-                    <li key={i} style={{ fontSize: 13, color: "#374151", display: "flex", gap: 8, alignItems: "flex-start" }}>
-                      <span style={{ color: "#16a34a", fontWeight: 700, flexShrink: 0 }}>→</span>{a}
+                    <li key={i} className="flex gap-3 items-start text-sm text-gray-700">
+                      <span className="text-emerald-500 font-bold shrink-0 mt-0.5">→</span>{a}
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p style={{ fontSize: 13, color: "#9ca3af" }}>No action items found.</p>
-              )}
+              ) : <p className="text-sm text-gray-400">No action items found.</p>}
             </div>
           )}
 
-          {/* Suggested questions tab */}
           {tab === "questions" && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Ask across all documents</p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Suggested Questions</p>
+              <div className="flex flex-wrap gap-2">
                 {r.suggested_questions?.map((q, i) => (
-                  <button key={i} onClick={() => onQuestionClick(q)} className="suggest-q-btn">{q}</button>
+                  <button key={i} onClick={() => onQuestionClick(q)}
+                    className="text-xs text-indigo-600 font-medium bg-white hover:bg-indigo-50 border border-indigo-200 hover:border-indigo-300 px-3 py-2 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-sm">
+                    {q}
+                  </button>
                 ))}
               </div>
             </div>
@@ -355,67 +246,38 @@ function AgentPanel({ job, loading, onQuestionClick, onDismiss, onRerun }) {
 }
 
 /* ─────────────────────────────────────────────
-   INSIGHTS PANEL COMPONENT
+   INSIGHTS PANEL
 ───────────────────────────────────────────── */
 function InsightsPanel({ insights, loading, onQuestionClick, onDismiss }) {
   if (!loading && !insights) return null;
   return (
-    <div style={{
-      background: "rgba(255,255,255,0.75)",
-      backdropFilter: "blur(16px)",
-      WebkitBackdropFilter: "blur(16px)",
-      border: "1px solid rgba(191,219,254,0.7)",
-      borderRadius: 20,
-      padding: "20px 22px",
-      width: "100%",
-      boxShadow: "0 8px 32px rgba(37,99,235,0.07), 0 2px 8px rgba(0,0,0,0.04)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(37,99,235,0.3)", fontSize: 16,
-          }}>✨</div>
-          <span style={{
-            fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px",
-            background: "linear-gradient(135deg, #1d4ed8, #2563eb)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-          }}>AI Insights</span>
+    <div className="w-full bg-white/80 backdrop-blur-sm border border-blue-100 rounded-2xl p-5 shadow-md shadow-blue-500/5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-lg shadow-lg shadow-blue-500/25 shrink-0">✨</div>
+          <p className="text-sm font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">AI Insights</p>
         </div>
         {!loading && (
-          <button onClick={onDismiss} style={{ background: "rgba(147,197,253,0.15)", border: "1px solid rgba(147,197,253,0.35)", color: "#60a5fa", cursor: "pointer", fontSize: 14, width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <button onClick={onDismiss} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"><Icons.Close /></button>
         )}
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex flex-col gap-2.5">
           {[80, 60, 90, 70].map((w, i) => (
-            <div key={i} style={{
-              height: 12, borderRadius: 6,
-              background: "linear-gradient(90deg, #dbeafe 25%, #bfdbfe 50%, #dbeafe 75%)",
-              backgroundSize: "200% 100%",
-              animation: "shimmer 1.5s infinite",
-              width: `${w}%`,
-            }} />
+            <div key={i} className="h-3 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 animate-pulse" style={{ width: `${w}%` }} />
           ))}
         </div>
       ) : (
         <>
-          {insights.summary && (
-            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.65, marginBottom: 12 }}>
-              {insights.summary}
-            </p>
-          )}
+          {insights.summary && <p className="text-sm text-gray-700 leading-relaxed mb-4">{insights.summary}</p>}
           {insights.key_points?.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Key Points</p>
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+            <div className="mb-4">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Key Points</p>
+              <ul className="flex flex-col gap-2">
                 {insights.key_points.map((pt, i) => (
-                  <li key={i} style={{ fontSize: 13, color: "#374151", display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <span style={{ color: "#2563eb", fontWeight: 700, flexShrink: 0 }}>·</span>
-                    {pt}
+                  <li key={i} className="flex gap-2 items-start text-sm text-gray-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0 mt-2" />{pt}
                   </li>
                 ))}
               </ul>
@@ -423,10 +285,13 @@ function InsightsPanel({ insights, loading, onQuestionClick, onDismiss }) {
           )}
           {insights.suggested_questions?.length > 0 && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Ask about this document</p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Ask about this document</p>
+              <div className="flex flex-wrap gap-2">
                 {insights.suggested_questions.map((q, i) => (
-                  <button key={i} onClick={() => onQuestionClick(q)} className="suggest-q-btn">{q}</button>
+                  <button key={i} onClick={() => onQuestionClick(q)}
+                    className="text-xs text-blue-600 font-medium bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-300 px-3 py-2 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-sm">
+                    {q}
+                  </button>
                 ))}
               </div>
             </div>
@@ -437,6 +302,9 @@ function InsightsPanel({ insights, loading, onQuestionClick, onDismiss }) {
   );
 }
 
+/* ─────────────────────────────────────────────
+   MAIN DASHBOARD
+───────────────────────────────────────────── */
 export default function Dashboard() {
   const [docs, setDocs] = useState([]);
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -446,37 +314,27 @@ export default function Dashboard() {
   const [typingText, setTypingText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [snackbar, setSnackbar] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [usage, setUsage] = useState(null);
-
   const [suggestions, setSuggestions] = useState([]);
   const [insights, setInsights] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
-
-  // Agent (cross-document)
   const [agentJob, setAgentJob] = useState(null);
   const [agentLoading, setAgentLoading] = useState(false);
   const [agentDismissed, setAgentDismissed] = useState(false);
-
-  // Alerts
   const [alerts, setAlerts] = useState([]);
   const [alertsOpen, setAlertsOpen] = useState(false);
-
-  // Voice
   const [isRecording, setIsRecording] = useState(false);
-  const [voiceMode, setVoiceMode] = useState(false); // auto-speak AI responses
+  const [voiceMode, setVoiceMode] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
-
-  // Compare
   const [compareMode, setCompareMode] = useState(false);
   const [compareDoc, setCompareDoc] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
   const [compareQuestion, setCompareQuestion] = useState("");
-
-  const [selectionBubble, setSelectionBubble] = useState(null); // {x, y, text}
+  const [selectionBubble, setSelectionBubble] = useState(null);
 
   const chatEndRef = useRef(null);
   const snackbarTimer = useRef(null);
@@ -496,7 +354,6 @@ export default function Dashboard() {
   /* ── Text selection → Ask AI bubble ── */
   useEffect(() => {
     const handleMouseUp = (e) => {
-      // Don't trigger inside the input area
       if (textareaRef.current?.contains(e.target)) return;
       setTimeout(() => {
         const sel = window.getSelection();
@@ -504,9 +361,7 @@ export default function Dashboard() {
         if (text && text.length > 10 && text.length < 500) {
           const range = sel.getRangeAt(0).getBoundingClientRect();
           setSelectionBubble({ x: range.left + range.width / 2, y: range.top - 12, text });
-        } else {
-          setSelectionBubble(null);
-        }
+        } else setSelectionBubble(null);
       }, 10);
     };
     document.addEventListener("mouseup", handleMouseUp);
@@ -533,29 +388,22 @@ export default function Dashboard() {
     snackbarTimer.current = setTimeout(() => setSnackbar(null), 3000);
   }, []);
 
-  /* ── TTS: speak text ── */
+  /* ── TTS ── */
   const speak = useCallback((text) => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text.slice(0, 800));
     utterance.rate = 1.05;
-    utterance.pitch = 1;
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  /* ── Voice: start/stop recording ── */
+  /* ── Voice recording ── */
   const toggleRecording = useCallback(async () => {
-    if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      return;
-    }
+    if (isRecording) { mediaRecorderRef.current?.stop(); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : MediaRecorder.isTypeSupported("audio/webm")
-        ? "audio/webm"
-        : "audio/mp4";
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
       const recorder = new MediaRecorder(stream, { mimeType });
       audioChunksRef.current = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
@@ -569,58 +417,33 @@ export default function Dashboard() {
           form.append("audio", blob);
           const res = await fetch("/api/transcribe", { method: "POST", body: form });
           const data = await res.json();
-          if (data.text) {
-            setInput(data.text);
-            setTimeout(() => textareaRef.current?.focus(), 50);
-          } else {
-            showSnackbar("Could not transcribe audio", "error");
-          }
-        } catch {
-          showSnackbar("Transcription failed", "error");
-        } finally {
-          setTranscribing(false);
-        }
+          if (data.text) { setInput(data.text); setTimeout(() => textareaRef.current?.focus(), 50); }
+          else showSnackbar("Could not transcribe audio", "error");
+        } catch { showSnackbar("Transcription failed", "error"); }
+        finally { setTranscribing(false); }
       };
       mediaRecorderRef.current = recorder;
       recorder.start();
       setIsRecording(true);
-    } catch {
-      showSnackbar("Microphone access denied", "error");
-    }
+    } catch { showSnackbar("Microphone access denied", "error"); }
   }, [isRecording, showSnackbar]);
 
-  /* ── Compare two documents ── */
+  /* ── Compare ── */
   const handleCompare = useCallback(async (secondDoc) => {
     if (!selectedDoc || !secondDoc) return;
     setCompareLoading(true);
     setCompareMode(false);
-    const q = compareQuestion.trim() || "";
     try {
       const res = await fetch("/api/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ doc1Id: selectedDoc.id, doc2Id: secondDoc.id, question: q }),
+        body: JSON.stringify({ doc1Id: selectedDoc.id, doc2Id: secondDoc.id, question: compareQuestion.trim() }),
       });
       const data = await res.json();
-      if (data.error) {
-        showSnackbar(data.error, "error");
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "ai",
-            text: `📊 **Comparing "${data.doc1.name}" vs "${data.doc2.name}"**\n\n${data.result}`,
-            isCompare: true,
-          },
-        ]);
-      }
-    } catch {
-      showSnackbar("Comparison failed", "error");
-    } finally {
-      setCompareLoading(false);
-      setCompareQuestion("");
-      setCompareDoc(null);
-    }
+      if (data.error) showSnackbar(data.error, "error");
+      else setMessages((prev) => [...prev, { role: "ai", text: `📊 **Comparing "${data.doc1.name}" vs "${data.doc2.name}"**\n\n${data.result}`, isCompare: true }]);
+    } catch { showSnackbar("Comparison failed", "error"); }
+    finally { setCompareLoading(false); setCompareQuestion(""); setCompareDoc(null); }
   }, [selectedDoc, compareQuestion, showSnackbar]);
 
   /* ── Alerts ── */
@@ -640,7 +463,7 @@ export default function Dashboard() {
     } catch {}
   }, []);
 
-  /* ── Agent: fetch latest job ── */
+  /* ── Agent ── */
   const fetchAgentJob = useCallback(async () => {
     try {
       const res = await fetch("/api/agent/status");
@@ -650,7 +473,6 @@ export default function Dashboard() {
     } catch {}
   }, []);
 
-  /* ── Agent: trigger cross-document analysis ── */
   const runAgent = useCallback(async () => {
     setAgentLoading(true);
     setAgentDismissed(false);
@@ -658,37 +480,26 @@ export default function Dashboard() {
       const res = await fetch("/api/agent/run", { method: "POST" });
       const data = await res.json();
       if (data.jobId && !data.skipped) {
-        // Poll until done (max 30s, every 2s)
         let attempts = 0;
         const poll = setInterval(async () => {
           attempts++;
           const s = await fetch("/api/agent/status").then((r) => r.json()).catch(() => null);
           if (s?.status === "done" || s?.status === "failed" || attempts > 15) {
-            clearInterval(poll);
-            setAgentJob(s);
-            setAgentLoading(false);
+            clearInterval(poll); setAgentJob(s); setAgentLoading(false);
           }
         }, 2000);
-      } else {
-        // Skipped (already ran recently) — just fetch existing result
-        await fetchAgentJob();
-        setAgentLoading(false);
-      }
-    } catch {
-      setAgentLoading(false);
-    }
+      } else { await fetchAgentJob(); setAgentLoading(false); }
+    } catch { setAgentLoading(false); }
   }, [fetchAgentJob]);
 
-  /* ── Data ── */
+  /* ── Docs & Usage ── */
   const fetchDocs = useCallback(async () => {
     try {
       const res = await fetch("/api/docs");
       if (res.status === 401) { window.location.href = "/login"; return; }
       const data = await res.json();
       setDocs(Array.isArray(data) ? data : []);
-    } catch {
-      setDocs([]);
-    }
+    } catch { setDocs([]); }
   }, []);
 
   const fetchUsage = useCallback(async () => {
@@ -711,9 +522,7 @@ export default function Dashboard() {
       const data = await res.json().catch(() => ({}));
       if (data.url) window.location.href = data.url;
       else showSnackbar(data.error || "Checkout failed", "error");
-    } catch {
-      showSnackbar("Checkout failed. Please try again.", "error");
-    }
+    } catch { showSnackbar("Checkout failed. Please try again.", "error"); }
   }, [showSnackbar]);
 
   const handlePortal = useCallback(async () => {
@@ -723,16 +532,11 @@ export default function Dashboard() {
       const data = await res.json().catch(() => ({}));
       if (data.url) window.location.href = data.url;
       else showSnackbar(data.error || "Portal failed", "error");
-    } catch {
-      showSnackbar("Portal failed. Please try again.", "error");
-    }
+    } catch { showSnackbar("Portal failed. Please try again.", "error"); }
   }, [showSnackbar]);
 
   useEffect(() => {
-    fetchDocs();
-    fetchUsage();
-    fetchAgentJob();
-    fetchAlerts();
+    fetchDocs(); fetchUsage(); fetchAgentJob(); fetchAlerts();
     const params = new URLSearchParams(window.location.search);
     if (params.get("upgraded") === "1") {
       showSnackbar("Welcome to Pro! Limits removed.");
@@ -740,24 +544,16 @@ export default function Dashboard() {
     }
   }, [fetchDocs, fetchUsage, fetchAgentJob, fetchAlerts, showSnackbar]);
 
-  /* ── Load history + insights when document changes ── */
+  /* ── Load history + insights ── */
   useEffect(() => {
     if (!selectedDoc?.id) return;
-
-    // Load chat history
     fetch(`/api/messages?documentId=${selectedDoc.id}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setMessages(data.map((m) => ({
-            role: m.role === "assistant" ? "ai" : "user",
-            text: m.message,
-          })));
-        }
-      })
-      .catch(() => {});
+        if (Array.isArray(data) && data.length > 0)
+          setMessages(data.map((m) => ({ role: m.role === "assistant" ? "ai" : "user", text: m.message })));
+      }).catch(() => {});
 
-    // Load cached insights (non-blocking)
     setInsightsLoading(true);
     fetch(`/api/insights?documentId=${selectedDoc.id}`)
       .then((r) => (r.ok ? r.json() : null))
@@ -766,12 +562,8 @@ export default function Dashboard() {
       .finally(() => setInsightsLoading(false));
   }, [selectedDoc?.id]);
 
-  /* ── Auto scroll ── */
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading, typingText]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading, typingText]);
 
-  /* ── Auto resize textarea ── */
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -790,38 +582,23 @@ export default function Dashboard() {
     if (res.status === 401) { window.location.href = "/login"; return; }
     const data = await res.json().catch(() => ({}));
     if (data.url) {
-      await fetchDocs();
-      await fetchUsage();
+      await fetchDocs(); await fetchUsage();
       const newDoc = { id: data.id, name: file.name, file_url: data.url };
-      setSelectedDoc(newDoc);
-      setMessages([]);
-      setSuggestions([]);
-      setInsights(null);
+      setSelectedDoc(newDoc); setMessages([]); setSuggestions([]); setInsights(null);
       showSnackbar("PDF uploaded! Generating insights…");
-      // Generate insights in background
       if (data.id) {
         setInsightsLoading(true);
-        fetch("/api/insights", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ documentId: data.id, fileUrl: data.url }),
-        })
-          .then((r) => r.json())
-          .then((d) => { if (d && !d.error) setInsights(d); })
-          .catch(() => {})
-          .finally(() => setInsightsLoading(false));
+        fetch("/api/insights", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: data.id, fileUrl: data.url }) })
+          .then((r) => r.json()).then((d) => { if (d && !d.error) setInsights(d); }).catch(() => {}).finally(() => setInsightsLoading(false));
       }
-      // Trigger cross-document agent if user has multiple docs
       if (docs.length >= 2) runAgent();
     } else if (data.limitExceeded) {
       showSnackbar(`PDF limit reached (${data.error})`, "error");
-    } else {
-      showSnackbar("Upload failed", "error");
-    }
+    } else showSnackbar("Upload failed", "error");
     e.target.value = "";
   };
 
-  /* ── Chat (streaming) ── */
+  /* ── Chat ── */
   const handleAsk = useCallback(async () => {
     if (!selectedDoc) return showSnackbar("Select a PDF first", "error");
     if (!input.trim() || loading || isTyping) return;
@@ -829,8 +606,7 @@ export default function Dashboard() {
     const userText = input.trim();
     setSuggestions([]);
     setMessages((prev) => [...prev, { role: "user", text: userText }]);
-    setInput("");
-    setLoading(true);
+    setInput(""); setLoading(true);
 
     try {
       const res = await fetch("/api/chat", {
@@ -838,7 +614,6 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userText, fileUrl: selectedDoc.file_url }),
       });
-
       if (!res.ok) {
         if (res.status === 401) { window.location.href = "/login"; return; }
         const err = await res.json().catch(() => ({}));
@@ -846,1379 +621,584 @@ export default function Dashboard() {
         if (err.limitExceeded) {
           setMessages((prev) => [...prev, { role: "ai", text: `⚠️ ${err.error}\n\nUpgrade your plan to ask more questions.` }]);
           fetchUsage();
-        } else {
-          setMessages((prev) => [...prev, { role: "ai", text: err.error || "❌ Something went wrong" }]);
-        }
+        } else setMessages((prev) => [...prev, { role: "ai", text: err.error || "❌ Something went wrong" }]);
         return;
       }
-
-      // Detect extraction response (JSON) vs streaming text
       const contentType = res.headers.get("content-type") || "";
       if (contentType.includes("application/json")) {
         const json = await res.json().catch(() => ({}));
         setLoading(false);
-        if (json.type === "extraction") {
-          setMessages((prev) => [...prev, { role: "ai", text: null, extraction: json.data }]);
-        } else {
-          setMessages((prev) => [...prev, { role: "ai", text: JSON.stringify(json, null, 2) }]);
-        }
-        fetchUsage();
-        return;
+        if (json.type === "extraction") setMessages((prev) => [...prev, { role: "ai", text: null, extraction: json.data }]);
+        else setMessages((prev) => [...prev, { role: "ai", text: JSON.stringify(json, null, 2) }]);
+        fetchUsage(); return;
       }
-
-      // Switch from loading dots → streaming bubble
-      setLoading(false);
-      setIsTyping(true);
-      setTypingText("");
-
+      setLoading(false); setIsTyping(true); setTypingText("");
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let fullText = "";
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const token = decoder.decode(value, { stream: true });
-        fullText += token;
+        fullText += decoder.decode(value, { stream: true });
         setTypingText(fullText);
       }
-
-      // Commit completed message
-      setIsTyping(false);
-      setTypingText("");
+      setIsTyping(false); setTypingText("");
       setMessages((prev) => [...prev, { role: "ai", text: fullText }]);
       fetchUsage();
-      // Auto-speak in voice mode
       if (voiceMode) speak(fullText);
 
-      // Fetch follow-up suggestions in background (non-blocking)
       const recentForSuggestions = [
-        ...messages.slice(-3).map((m) => ({
-          role: m.role === "ai" ? "assistant" : "user",
-          content: m.text || "",
-        })),
+        ...messages.slice(-3).map((m) => ({ role: m.role === "ai" ? "assistant" : "user", content: m.text || "" })),
         { role: "user", content: userText },
         { role: "assistant", content: fullText },
       ];
-      fetch("/api/suggestions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recentMessages: recentForSuggestions }),
-      })
-        .then((r) => r.json())
-        .then((d) => { if (d.suggestions?.length > 0) setSuggestions(d.suggestions); })
-        .catch(() => {});
+      fetch("/api/suggestions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recentMessages: recentForSuggestions }) })
+        .then((r) => r.json()).then((d) => { if (d.suggestions?.length > 0) setSuggestions(d.suggestions); }).catch(() => {});
     } catch {
-      setLoading(false);
-      setIsTyping(false);
-      setTypingText("");
+      setLoading(false); setIsTyping(false); setTypingText("");
       setMessages((prev) => [...prev, { role: "ai", text: "❌ Something went wrong" }]);
-    } finally {
-      textareaRef.current?.focus();
-    }
+    } finally { textareaRef.current?.focus(); }
   }, [selectedDoc, input, loading, isTyping, messages, voiceMode, speak, showSnackbar, fetchUsage]);
 
   /* ── Delete ── */
   const handleDelete = async (e, doc) => {
     e.stopPropagation();
-    const res = await fetch("/api/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: doc.id, fileUrl: doc.file_url }),
-    });
+    const res = await fetch("/api/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: doc.id, fileUrl: doc.file_url }) });
     const data = await res.json();
     if (data.success) {
       fetchDocs();
       if (selectedDoc?.id === doc.id) { setSelectedDoc(null); setMessages([]); setPreviewOpen(false); }
       showSnackbar(`"${doc.name}" deleted`);
-    } else {
-      showSnackbar("Delete failed", "error");
-    }
+    } else showSnackbar("Delete failed", "error");
   };
 
-  /* ── Copy message ── */
   const handleCopy = (text, idx) => {
     navigator.clipboard.writeText(text);
     setCopiedIdx(idx);
     setTimeout(() => setCopiedIdx(null), 2000);
   };
 
-  /* ── Copy PDF link ── */
   const handleCopyLink = () => {
     if (!selectedDoc?.file_url) return;
     navigator.clipboard.writeText(selectedDoc.file_url);
     showSnackbar("Link copied!");
   };
 
-  /* ── Download ── */
   const handleDownload = () => {
     if (!selectedDoc?.file_url) return;
     const a = document.createElement("a");
-    a.href = selectedDoc.file_url;
-    a.download = selectedDoc.name;
-    a.click();
+    a.href = selectedDoc.file_url; a.download = selectedDoc.name; a.click();
   };
 
-  /* ── Keyboard ── */
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAsk(); }
   };
 
   const selectDoc = (doc) => {
-    // In compare mode, the second click picks the compare target
-    if (compareMode && selectedDoc && doc.id !== selectedDoc.id) {
-      setCompareDoc(doc);
-      return;
-    }
-    setSelectedDoc(doc);
-    setMessages([]);
-    setSuggestions([]);
-    setInsights(null);
-    setInsightsLoading(false);
-    setCompareMode(false);
-    setCompareDoc(null);
-    setPreviewOpen(false);
-    setDrawerOpen(false);
+    if (compareMode && selectedDoc && doc.id !== selectedDoc.id) { setCompareDoc(doc); return; }
+    setSelectedDoc(doc); setMessages([]); setSuggestions([]); setInsights(null);
+    setInsightsLoading(false); setCompareMode(false); setCompareDoc(null);
+    setPreviewOpen(false); setSidebarOpen(false);
   };
 
   const hints = selectedDoc ? HINTS_PDF : HINTS_DEFAULT;
   const canSend = !!(selectedDoc && !loading && !isTyping && input.trim());
+  const unreadAlerts = alerts.some(a => !a.read);
 
   /* ─────────────────────────────────────────────
      RENDER
   ───────────────────────────────────────────── */
   return (
-    <div style={s.root}>
-      <style>{CSS}</style>
+    <div className="flex h-screen overflow-hidden bg-gray-50 font-sans">
+      <style>{`
+        @keyframes fadeIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes blink   { 0%,80%,100%{opacity:.2;transform:scale(.75)} 40%{opacity:1;transform:scale(1)} }
+        @keyframes cursorB { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        @keyframes micPulse{ 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,0)} }
+        .msg-anim { animation: fadeIn .3s ease both; }
+        .cursor-blink::after { content:''; display:inline-block; width:2px; height:15px; background:#6366f1; margin-left:2px; vertical-align:text-bottom; animation:cursorB .7s infinite; }
+        .dot-1,.dot-2,.dot-3 { width:7px; height:7px; border-radius:50%; background:#94a3b8; display:inline-block; animation:blink 1.2s infinite ease-in-out; }
+        .dot-2{animation-delay:.15s} .dot-3{animation-delay:.3s}
+        .mic-pulse { animation: micPulse 1.2s ease-in-out infinite; }
+        ::-webkit-scrollbar{width:5px;height:5px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:4px} ::-webkit-scrollbar-thumb:hover{background:#cbd5e1}
+      `}</style>
 
-      {/* SNACKBAR */}
+      {/* ── SNACKBAR ── */}
       {snackbar && (
-        <div className={`snackbar ${snackbar.type === "error" ? "snackbar-error" : "snackbar-success"}`}>
+        <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl text-sm font-semibold text-white shadow-xl whitespace-nowrap ${snackbar.type === "error" ? "bg-gradient-to-r from-red-500 to-rose-600" : "bg-gradient-to-r from-emerald-500 to-teal-600"}`}>
           {snackbar.type === "success" ? "✓ " : "✕ "}{snackbar.message}
         </div>
       )}
 
-      {/* TEXT SELECTION BUBBLE */}
+      {/* ── SELECTION BUBBLE ── */}
       {selectionBubble && selectedDoc && (
-        <button
-          onMouseDown={(e) => { e.preventDefault(); handleAskSelection(); }}
-          style={{
-            position: "fixed",
-            left: Math.min(selectionBubble.x, window.innerWidth - 130),
-            top: Math.max(selectionBubble.y - 36, 8),
-            transform: "translateX(-50%)",
-            background: "#1d4ed8",
-            color: "#fff",
-            border: "none",
-            borderRadius: 20,
-            padding: "6px 14px",
-            fontSize: 12,
-            fontWeight: 600,
-            cursor: "pointer",
-            zIndex: 9999,
-            boxShadow: "0 4px 16px rgba(29,78,216,0.4)",
-            whiteSpace: "nowrap",
-            fontFamily: "inherit",
-          }}
-        >
+        <button onMouseDown={(e) => { e.preventDefault(); handleAskSelection(); }}
+          className="fixed z-[9998] bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl whitespace-nowrap hover:bg-indigo-700 transition-colors"
+          style={{ left: Math.min(selectionBubble.x, window.innerWidth - 130), top: Math.max(selectionBubble.y - 40, 8), transform: "translateX(-50%)" }}>
           ⚡ Ask AI
         </button>
       )}
 
-      {/* DRAWER BACKDROP */}
-      {drawerOpen && <div style={s.backdrop} onClick={() => setDrawerOpen(false)} />}
+      {/* ── SIDEBAR OVERLAY (mobile) ── */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* ── DRAWER ── */}
-      <aside style={{ ...s.drawer, transform: drawerOpen ? "translateX(0)" : "translateX(-100%)" }}>
-        <div style={s.drawerHead}>
-          <div style={s.drawerBrand}>
-            <div style={s.brandDot}>⚡</div>
-            <span style={s.brandName}>PDF Chat</span>
+      {/* ════════════════════════════════════════
+          LEFT SIDEBAR
+      ════════════════════════════════════════ */}
+      <aside className={`
+        fixed md:relative top-0 left-0 h-full z-40 md:z-auto
+        w-64 flex flex-col bg-gray-900 border-r border-gray-800
+        transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}>
+        {/* Brand */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <span className="text-white font-bold text-base tracking-tight">PDF Chat</span>
           </div>
-          <button className="icon-btn" onClick={() => setDrawerOpen(false)}>✕</button>
+          <button className="md:hidden text-gray-400 hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}><Icons.Close /></button>
         </div>
 
-        {/* Upload area */}
-        <div style={s.drawerUpload}>
-          <input ref={fileInputRef} type="file" accept="application/pdf"
-            style={{ display: "none" }} suppressHydrationWarning onChange={handleFileChange} />
-          <button className="upload-btn" onClick={() => fileInputRef.current?.click()}>
-            <Icon.Plus /> Upload PDF
+        {/* Upload btn */}
+        <div className="px-3 py-3">
+          <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" suppressHydrationWarning onChange={handleFileChange} />
+          <button onClick={() => fileInputRef.current?.click()}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-sm py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:-translate-y-0.5">
+            <Icons.Plus />
+            Upload PDF
           </button>
         </div>
 
-        <p style={s.drawerLabel}>
-          {compareMode ? "📊 Pick document to compare" : "Your PDFs"}
+        {/* Compare mode hint */}
+        {compareMode && (
+          <div className="mx-3 mb-2 px-3 py-2 bg-blue-900/40 border border-blue-700/50 rounded-xl">
+            <p className="text-xs text-blue-300 font-medium">📊 Pick a document to compare</p>
+          </div>
+        )}
+
+        {/* PDF list label */}
+        <p className="px-4 text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1">
+          {docs.length > 0 ? `Your PDFs (${docs.length})` : "Your PDFs"}
         </p>
 
-        <nav style={s.drawerNav}>
-          {docs.length === 0 && (
-            <div style={s.drawerEmpty}>
-              <span style={{ fontSize: 28 }}>📂</span>
-              <span style={{ fontSize: 13, color: "#57606a", marginTop: 6 }}>No PDFs yet</span>
+        {/* PDF list */}
+        <nav className="flex-1 overflow-y-auto px-2 pb-3">
+          {docs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-2 text-center px-4">
+              <div className="w-12 h-12 rounded-2xl bg-gray-800 flex items-center justify-center text-2xl">📂</div>
+              <p className="text-gray-500 text-xs leading-relaxed">Upload your first PDF to get started</p>
             </div>
+          ) : (
+            docs.map((doc) => {
+              const active = selectedDoc?.id === doc.id;
+              const isCompareTarget = compareDoc?.id === doc.id;
+              return (
+                <div key={doc.id} onClick={() => selectDoc(doc)}
+                  className={`group flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer mb-1 transition-all duration-150 border
+                    ${isCompareTarget ? "bg-emerald-900/30 border-emerald-700/40 text-emerald-300"
+                    : active && !compareMode ? "bg-indigo-600/20 border-indigo-500/30 text-indigo-300"
+                    : "border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-200 hover:border-gray-700/50"}`}>
+                  <div className={`shrink-0 ${active ? "text-indigo-400" : "text-gray-600 group-hover:text-gray-400"}`}><Icons.PDF /></div>
+                  <span className="flex-1 text-sm truncate">{doc.name}</span>
+                  {!compareMode && (
+                    <button className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-500/20 hover:text-red-400 text-gray-600 transition-all" onClick={(e) => handleDelete(e, doc)}>
+                      <Icons.Trash />
+                    </button>
+                  )}
+                </div>
+              );
+            })
           )}
-          {docs.map((doc) => {
-            const active = selectedDoc?.id === doc.id;
-            const isCompareTarget = compareDoc?.id === doc.id;
-            const isCompareSource = compareMode && active;
-            return (
-              <div key={doc.id}
-                className={`nav-item ${active && !compareMode ? "nav-item-active" : ""}`}
-                style={isCompareTarget ? { background: "#dcfce7", borderColor: "#86efac" } : isCompareSource ? { background: "#dbeafe", borderColor: "#93c5fd" } : undefined}
-                onClick={() => selectDoc(doc)}>
-                <span style={s.navIcon}><Icon.PDF /></span>
-                <span style={s.navText} title={doc.name}>{doc.name}</span>
-                {!compareMode && (
-                  <button className="trash-btn" onClick={(e) => handleDelete(e, doc)} title="Delete">
-                    <Icon.Trash />
-                  </button>
-                )}
-              </div>
-            );
-          })}
         </nav>
 
-        {/* Plan + Usage + Sign out */}
-        <div style={s.drawerFooter}>
+        {/* Sidebar footer */}
+        <div className="border-t border-gray-800 px-3 py-3 flex flex-col gap-2">
           {usage && (
             <>
-              {/* Plan badge row */}
-              <div style={s.planRow}>
-                <span style={{ ...s.planBadge, ...(usage.plan === "pro" ? s.planBadgePro : s.planBadgeFree) }}>
+              <div className="flex items-center justify-between">
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${usage.plan === "pro" ? "bg-amber-900/40 border-amber-600/40 text-amber-400" : "bg-gray-800 border-gray-700 text-gray-400"}`}>
                   {usage.plan === "pro" ? "⚡ Pro" : "Free"}
                 </span>
-                {usage.plan === "pro" ? (
-                  <button className="manage-btn" onClick={handlePortal}>Manage</button>
-                ) : (
-                  <button className="upgrade-btn" onClick={handleUpgrade}>Upgrade ↗</button>
-                )}
+                {usage.plan === "pro"
+                  ? <button onClick={handlePortal} className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Manage</button>
+                  : <button onClick={handleUpgrade} className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors">Upgrade ↗</button>}
               </div>
 
-              {/* Usage bars — only for free */}
               {usage.plan !== "pro" && (
-                <div style={s.usageBox}>
-                  <div style={s.usageRow}>
-                    <span style={s.usageLabel}>📄 PDFs</span>
-                    <span style={s.usageVal}>{usage.pdfs.used}/{usage.pdfs.max}</span>
+                <div className="bg-gray-800/60 rounded-xl p-2.5 flex flex-col gap-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">PDFs</span>
+                    <span className="text-gray-300 font-semibold">{usage.pdfs.used}/{usage.pdfs.max}</span>
                   </div>
-                  <div style={s.usageBar}>
-                    <div style={{ ...s.usageFill, width: `${Math.min(100, (usage.pdfs.used / usage.pdfs.max) * 100)}%` }} />
+                  <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all" style={{ width: `${Math.min(100, (usage.pdfs.used / usage.pdfs.max) * 100)}%` }} />
                   </div>
-                  <div style={{ ...s.usageRow, marginTop: 8 }}>
-                    <span style={s.usageLabel}>💬 Questions today</span>
-                    <span style={s.usageVal}>{usage.questions.used}/{usage.questions.max}</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Questions</span>
+                    <span className="text-gray-300 font-semibold">{usage.questions.used}/{usage.questions.max}</span>
                   </div>
-                  <div style={s.usageBar}>
-                    <div style={{ ...s.usageFill, width: `${Math.min(100, (usage.questions.used / usage.questions.max) * 100)}%`, background: usage.questions.remaining === 0 ? "#dc2626" : "#2563eb" }} />
+                  <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, (usage.questions.used / usage.questions.max) * 100)}%`, background: usage.questions.remaining === 0 ? "#ef4444" : "linear-gradient(90deg,#6366f1,#4f46e5)" }} />
                   </div>
-                  {usage.questions.remaining === 0 && (
-                    <p style={s.upgradeHint}>Daily limit reached — upgrade for more</p>
-                  )}
+                  {usage.questions.remaining === 0 && <p className="text-xs text-red-400 text-center">Daily limit reached</p>}
                 </div>
               )}
 
-              {/* Pro unlimited message */}
-              {usage.plan === "pro" && (
-                <div style={s.proUnlimited}>✨ Unlimited PDFs & questions</div>
-              )}
+              {usage.plan === "pro" && <p className="text-xs text-emerald-400 font-medium text-center">✨ Unlimited PDFs & questions</p>}
             </>
           )}
+
           {usage?.email && (
-            <div style={s.userRow}>
-              <span style={s.userEmail} title={usage.email}>{usage.email}</span>
-              <button className="sign-out-btn" onClick={handleSignOut}>Sign out</button>
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <span className="text-xs text-gray-600 truncate flex-1">{usage.email}</span>
+              <button onClick={handleSignOut} className="text-xs text-gray-600 hover:text-red-400 transition-colors shrink-0">Sign out</button>
             </div>
           )}
         </div>
       </aside>
 
-      {/* ── MAIN ── */}
-      <div style={s.main}>
+      {/* ════════════════════════════════════════
+          MAIN AREA
+      ════════════════════════════════════════ */}
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* TOP BAR */}
-        <header style={s.topBar}>
-          <button className="icon-btn" onClick={() => setDrawerOpen(true)} title="Open sidebar">
-            <Icon.Menu />
+        {/* ── TOP BAR ── */}
+        <header className="flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-gray-200 bg-white/90 backdrop-blur-sm shrink-0 min-h-[56px]">
+          {/* Mobile menu toggle */}
+          <button className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors" onClick={() => setSidebarOpen(true)}>
+            <Icons.Menu />
           </button>
-          <div style={s.topCenter}>
+
+          {/* Title */}
+          <div className="flex-1 min-w-0">
             {selectedDoc
-              ? <span style={s.topDocName} title={selectedDoc.name}>📄 {selectedDoc.name}</span>
-              : <span style={s.topTitle}>AI PDF Chat</span>}
+              ? <p className="text-sm text-gray-600 truncate flex items-center gap-1.5"><span className="text-gray-400"><Icons.PDF /></span>{selectedDoc.name}</p>
+              : <p className="text-sm font-bold text-gray-900">AI PDF Chat</p>}
           </div>
-          <div style={s.topActions}>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5">
             {selectedDoc?.file_url && !isMobile && (
               <>
-                <button className="icon-btn" onClick={() => setPreviewOpen(v => !v)}
-                  title={previewOpen ? "Hide preview" : "Show preview"}
-                  style={{ color: previewOpen ? "#fff" : undefined }}>
-                  <Icon.Eye on={previewOpen} />
+                <button onClick={() => setPreviewOpen(v => !v)} title="Toggle PDF preview"
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors ${previewOpen ? "bg-indigo-100 text-indigo-600" : ""}`}>
+                  <Icons.Eye on={previewOpen} />
                 </button>
-                <button className="icon-btn" onClick={handleCopyLink} title="Copy link"><Icon.Copy /></button>
-                <button className="icon-btn" onClick={() => window.open(selectedDoc.file_url, "_blank")} title="Open in new tab"><Icon.External /></button>
-                <button className="icon-btn" onClick={handleDownload} title="Download"><Icon.Download /></button>
+                <button onClick={handleCopyLink} title="Copy link" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"><Icons.Copy /></button>
+                <button onClick={() => window.open(selectedDoc.file_url, "_blank")} title="Open in new tab" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"><Icons.External /></button>
+                <button onClick={handleDownload} title="Download" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"><Icons.Download /></button>
               </>
             )}
             {selectedDoc && docs.length > 1 && !isMobile && (
-              <button
-                className="icon-btn"
-                title={compareMode ? "Exit compare mode" : "Compare with another document"}
-                onClick={() => { setCompareMode(v => !v); setCompareDoc(null); if (!compareMode) setDrawerOpen(true); }}
-                style={{ background: compareMode ? "#dbeafe" : undefined, borderColor: compareMode ? "#93c5fd" : undefined }}
-              >
-                <Icon.Compare />
+              <button onClick={() => { setCompareMode(v => !v); setCompareDoc(null); if (!compareMode) setSidebarOpen(true); }}
+                title={compareMode ? "Exit compare" : "Compare docs"}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${compareMode ? "bg-blue-100 text-blue-600" : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"}`}>
+                <Icons.Compare />
               </button>
             )}
-            <button
-              className="icon-btn"
-              title={voiceMode ? "Voice mode on — click to turn off" : "Enable voice mode (auto-speak)"}
-              onClick={() => { setVoiceMode(v => !v); window.speechSynthesis?.cancel(); }}
-              style={{ background: voiceMode ? "#dcfce7" : undefined, borderColor: voiceMode ? "#86efac" : undefined }}
-            >
-              <Icon.Speaker />
+            <button onClick={() => { setVoiceMode(v => !v); window.speechSynthesis?.cancel(); }}
+              title={voiceMode ? "Voice on" : "Voice off"}
+              className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${voiceMode ? "bg-emerald-100 text-emerald-600" : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"}`}>
+              <Icons.Speaker />
             </button>
 
-            {/* BELL — alerts */}
-            <div style={{ position: "relative" }}>
-              <button
-                className="icon-btn"
-                title="Alerts"
-                onClick={() => {
-                  setAlertsOpen(v => !v);
-                  if (!alertsOpen && alerts.some(a => !a.read)) markAlertsRead();
-                }}
-                style={{ background: alertsOpen ? "#fef9c3" : undefined, borderColor: alertsOpen ? "#fde047" : undefined }}
-              >
-                <Icon.Bell />
-                {alerts.some(a => !a.read) && (
-                  <span style={{
-                    position: "absolute", top: 4, right: 4,
-                    width: 8, height: 8, borderRadius: "50%",
-                    background: "#dc2626", border: "2px solid #fff",
-                  }} />
-                )}
+            {/* Bell */}
+            <div className="relative">
+              <button onClick={() => { setAlertsOpen(v => !v); if (!alertsOpen && unreadAlerts) markAlertsRead(); }}
+                className={`relative w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${alertsOpen ? "bg-amber-100 text-amber-600" : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"}`}>
+                <Icons.Bell />
+                {unreadAlerts && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 border-2 border-white" />}
               </button>
-
-              {/* ALERTS DROPDOWN */}
               {alertsOpen && (
-                <div style={s.alertsDropdown}>
-                  <div style={s.alertsHeader}>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: "#24292f" }}>🔔 Alerts</span>
-                    <button onClick={() => setAlertsOpen(false)}
-                      style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", fontSize: 16 }}>✕</button>
+                <div className="absolute top-[calc(100%+8px)] right-0 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <span className="font-bold text-sm text-gray-900">🔔 Alerts</span>
+                    <button onClick={() => setAlertsOpen(false)} className="text-gray-400 hover:text-gray-600"><Icons.Close /></button>
                   </div>
-                  {alerts.length === 0 ? (
-                    <div style={{ padding: "16px 14px", fontSize: 13, color: "#9ca3af", textAlign: "center" }}>
-                      No alerts yet. AI analysis runs every 6 hours.
-                    </div>
-                  ) : (
-                    <div style={{ overflowY: "auto", maxHeight: 320 }}>
-                      {alerts.map((alert) => (
-                        <div key={alert.id} style={{
-                          padding: "10px 14px",
-                          borderBottom: "1px solid #f3f4f6",
-                          background: alert.read ? "transparent" : "#fffbeb",
-                          display: "flex", gap: 10, alignItems: "flex-start",
-                        }}>
-                          <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>
-                            {alert.type === "warning" ? "⚠️" : alert.type === "success" ? "✅" : "ℹ️"}
-                          </span>
-                          <div>
-                            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5 }}>{alert.message}</p>
-                            <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>
-                              {new Date(alert.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                            </p>
+                  {alerts.length === 0
+                    ? <div className="px-4 py-8 text-center text-sm text-gray-400">No alerts yet.<br /><span className="text-xs">AI analysis runs every 6 hours.</span></div>
+                    : <div className="overflow-y-auto max-h-72">
+                        {alerts.map((alert) => (
+                          <div key={alert.id} className={`flex gap-3 px-4 py-3 border-b border-gray-50 ${alert.read ? "" : "bg-amber-50"}`}>
+                            <span className="text-base shrink-0 mt-0.5">{alert.type === "warning" ? "⚠️" : alert.type === "success" ? "✅" : "ℹ️"}</span>
+                            <div>
+                              <p className="text-sm text-gray-700 leading-relaxed">{alert.message}</p>
+                              <p className="text-xs text-gray-400 mt-1">{new Date(alert.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>}
                 </div>
               )}
             </div>
           </div>
         </header>
 
-        {/* PDF HEADER BAR (mobile actions) */}
-        {selectedDoc && isMobile && (
-          <div style={s.pdfHeaderBar}>
-            <span style={s.pdfHeaderName}>📄 {selectedDoc.name}</span>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="icon-btn-sm" onClick={handleCopyLink} title="Copy link"><Icon.Copy /></button>
-              <button className="icon-btn-sm" onClick={() => window.open(selectedDoc.file_url, "_blank")} title="Open"><Icon.External /></button>
-              <button className="icon-btn-sm" onClick={handleDownload} title="Download"><Icon.Download /></button>
-            </div>
-          </div>
-        )}
+        {/* ── BODY ── */}
+        <div className="flex-1 flex overflow-hidden">
 
-        {/* BODY */}
-        <div style={s.body}>
+          {/* Chat area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
 
-          {/* CHAT AREA */}
-          <div style={s.chatScroll}>
-            <div style={s.chatInner}>
+            {/* Scrollable chat */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-4 flex flex-col gap-5">
 
-              {/* AGENT PANEL — cross-document analysis */}
-              {!agentDismissed && docs.length >= 2 && (agentJob || agentLoading) && (
-                <AgentPanel
-                  job={agentJob}
-                  loading={agentLoading}
-                  onQuestionClick={(q) => injectPrompt(q)}
-                  onDismiss={() => setAgentDismissed(true)}
-                  onRerun={runAgent}
-                />
-              )}
+                {/* Agent panel */}
+                {!agentDismissed && docs.length >= 2 && (agentJob || agentLoading) && (
+                  <AgentPanel job={agentJob} loading={agentLoading}
+                    onQuestionClick={(q) => injectPrompt(q)}
+                    onDismiss={() => setAgentDismissed(true)}
+                    onRerun={runAgent} />
+                )}
 
-              {/* COMPARE MODE PANEL */}
-              {compareMode && selectedDoc && (
-                <div style={s.comparePanel}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8" }}>
-                      <Icon.Compare /> &nbsp;Compare with another document
-                    </span>
-                    <button onClick={() => { setCompareMode(false); setCompareDoc(null); }}
-                      style={{ background: "none", border: "none", color: "#93c5fd", cursor: "pointer", fontSize: 16 }}>✕</button>
-                  </div>
-                  <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 10 }}>
-                    Click a document in the sidebar, or pick one below:
-                  </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-                    {docs.filter(d => d.id !== selectedDoc.id).map((d) => (
-                      <button key={d.id} onClick={() => setCompareDoc(d)}
-                        style={{
-                          background: compareDoc?.id === d.id ? "#dbeafe" : "#f8faff",
-                          border: `1px solid ${compareDoc?.id === d.id ? "#93c5fd" : "#e5e7eb"}`,
-                          borderRadius: 20, padding: "5px 12px",
-                          fontSize: 12, color: compareDoc?.id === d.id ? "#1d4ed8" : "#374151",
-                          cursor: "pointer", fontFamily: "inherit",
-                          maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}>
-                        {d.name}
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    value={compareQuestion}
-                    onChange={(e) => setCompareQuestion(e.target.value)}
-                    placeholder="Custom question (optional) — e.g. 'which has better pricing?'"
-                    style={{
-                      width: "100%", padding: "8px 12px",
-                      border: "1px solid #d0d7de", borderRadius: 8,
-                      fontSize: 13, color: "#24292f", outline: "none",
-                      marginBottom: 10, fontFamily: "inherit", background: "#fff",
-                    }}
-                  />
-                  <button
-                    onClick={() => handleCompare(compareDoc)}
-                    disabled={!compareDoc || compareLoading}
-                    style={{
-                      background: compareDoc ? "linear-gradient(135deg,#2563eb,#1d4ed8)" : "#e5e7eb",
-                      color: compareDoc ? "#fff" : "#9ca3af",
-                      border: "none", borderRadius: 8, padding: "9px 20px",
-                      fontSize: 13, fontWeight: 600, cursor: compareDoc ? "pointer" : "not-allowed",
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    {compareLoading ? "Comparing…" : compareDoc ? `Compare with "${compareDoc.name}"` : "Select a document above"}
-                  </button>
-                </div>
-              )}
-
-              {/* AI INSIGHTS PANEL */}
-              {selectedDoc && (insights || insightsLoading) && (
-                <InsightsPanel
-                  insights={insights}
-                  loading={insightsLoading}
-                  onQuestionClick={(q) => { injectPrompt(q); }}
-                  onDismiss={() => setInsights(null)}
-                />
-              )}
-
-              {/* Empty state */}
-              {messages.length === 0 && !loading && !isTyping && !(insights || insightsLoading) && (
-                <div style={s.emptyState}>
-                  <div style={s.emptyGlow} />
-                  <h2 style={s.emptyTitle}>
-                    {selectedDoc ? "Ask anything about this PDF" : "What can I help with?"}
-                  </h2>
-                  {selectedDoc && (
-                    <p style={s.emptySubtitle}>{selectedDoc.name}</p>
-                  )}
-                  <div style={s.hintGrid}>
-                    {hints.map((h, i) => (
-                      <button key={i} className="hint-card"
-                        onClick={() => selectedDoc ? setInput(h.text) : fileInputRef.current?.click()}>
-                        <span style={s.hintIcon}>{h.icon}</span>
-                        <span style={s.hintText}>{h.text}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Messages */}
-              {messages.map((msg, i) => (
-                <div key={i} className="msg-row"
-                  style={{ justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                  {msg.role === "ai" && <div style={s.aiAvatar}>⚡</div>}
-                  {msg.extraction ? (
-                    <ExtractionCard data={msg.extraction} onCopy={() => {
-                      navigator.clipboard.writeText(JSON.stringify(msg.extraction, null, 2));
-                      setCopiedIdx(i);
-                      setTimeout(() => setCopiedIdx(null), 2000);
-                    }} copied={copiedIdx === i} />
-                  ) : (
-                    <div style={msg.role === "user" ? s.userBubble : s.aiBubble}>
-                      <p style={{ ...s.msgText, color: msg.role === "user" ? "#fff" : "#24292f" }}>{msg.text}</p>
-                      {msg.role === "ai" && (
-                        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                          <button className="copy-btn" onClick={() => handleCopy(msg.text, i)}>
-                            {copiedIdx === i ? (
-                              <span style={{ color: "#4ade80" }}>✓ Copied</span>
-                            ) : (
-                              <><Icon.Copy /> Copy</>
-                            )}
-                          </button>
-                          <button className="copy-btn" onClick={() => speak(msg.text)} title="Read aloud">
-                            <Icon.Speaker /> Listen
-                          </button>
-                        </div>
-                      )}
+                {/* Compare panel */}
+                {compareMode && selectedDoc && (
+                  <div className="w-full bg-white/80 backdrop-blur-sm border border-blue-100 rounded-2xl p-5 shadow-md">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold text-blue-700 flex items-center gap-2"><Icons.Compare /> Compare with another document</span>
+                      <button onClick={() => { setCompareMode(false); setCompareDoc(null); }} className="text-gray-400 hover:text-gray-600"><Icons.Close /></button>
                     </div>
-                  )}
-                </div>
-              ))}
-
-              {/* Follow-up suggestions */}
-              {suggestions.length > 0 && !loading && !isTyping && (
-                <div style={s.suggestionsRow}>
-                  <span style={s.suggestionsLabel}>Follow-up</span>
-                  {suggestions.map((s_item, i) => (
-                    <button key={i} style={s.suggestionChip}
-                      onClick={() => { injectPrompt(s_item); setSuggestions([]); }}>
-                      {s_item}
+                    <p className="text-xs text-gray-500 mb-3">Click a document in the sidebar, or pick one below:</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {docs.filter(d => d.id !== selectedDoc.id).map((d) => (
+                        <button key={d.id} onClick={() => setCompareDoc(d)}
+                          className={`text-xs px-3 py-2 rounded-xl border font-medium transition-all ${compareDoc?.id === d.id ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200"}`}>
+                          {d.name}
+                        </button>
+                      ))}
+                    </div>
+                    <input type="text" value={compareQuestion} onChange={(e) => setCompareQuestion(e.target.value)}
+                      placeholder="Optional question — e.g. 'Which has better pricing?'"
+                      className="w-full text-sm px-4 py-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 mb-3 bg-white" />
+                    <button onClick={() => handleCompare(compareDoc)} disabled={!compareDoc || compareLoading}
+                      className={`text-sm font-semibold px-5 py-2.5 rounded-xl transition-all ${compareDoc ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}>
+                      {compareLoading ? "Comparing…" : compareDoc ? `Compare with "${compareDoc.name}"` : "Select a document above"}
                     </button>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )}
 
-              {/* Thinking dots */}
-              {loading && (
-                <div className="msg-row" style={{ justifyContent: "flex-start" }}>
-                  <div style={s.aiAvatar}>⚡</div>
-                  <div style={s.aiBubble}>
-                    <div style={s.dots}>
-                      {[0, 150, 300].map((d) => (
-                        <span key={d} style={{ ...s.dot, animationDelay: `${d}ms` }} />
+                {/* Insights panel */}
+                {selectedDoc && (insights || insightsLoading) && (
+                  <InsightsPanel insights={insights} loading={insightsLoading}
+                    onQuestionClick={(q) => injectPrompt(q)}
+                    onDismiss={() => setInsights(null)} />
+                )}
+
+                {/* Empty state */}
+                {messages.length === 0 && !loading && !isTyping && !(insights || insightsLoading) && (
+                  <div className="flex flex-col items-center text-center pt-16 gap-6">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-indigo-400/15 rounded-full blur-2xl scale-150" />
+                      <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-3xl shadow-xl shadow-indigo-500/25">
+                        {selectedDoc ? "💬" : "📄"}
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                        {selectedDoc ? "Ask anything about this PDF" : "What can I help with?"}
+                      </h2>
+                      {selectedDoc && <p className="text-sm text-gray-500">{selectedDoc.name}</p>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 w-full max-w-md">
+                      {hints.map((h, i) => (
+                        <button key={i} onClick={() => selectedDoc ? setInput(h.text) : fileInputRef.current?.click()}
+                          className="flex items-start gap-3 p-4 bg-white hover:bg-indigo-50/60 border border-gray-200 hover:border-indigo-200 rounded-2xl text-left text-sm text-gray-700 transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:shadow-indigo-500/10">
+                          <span className="text-lg shrink-0">{h.icon}</span>
+                          <span className="leading-snug">{h.text}</span>
+                        </button>
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Typing animation */}
-              {isTyping && (
-                <div className="msg-row" style={{ justifyContent: "flex-start" }}>
-                  <div style={s.aiAvatar}>⚡</div>
-                  <div style={s.aiBubble}>
-                    <p style={s.msgText}>{typingText}<span style={s.cursor} /></p>
+                {/* Messages */}
+                {messages.map((msg, i) => (
+                  <div key={i} className={`msg-anim flex items-end gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    {msg.role === "ai" && (
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shadow-indigo-500/25 shrink-0 mb-1">⚡</div>
+                    )}
+                    {msg.extraction ? (
+                      <ExtractionCard data={msg.extraction}
+                        onCopy={() => { navigator.clipboard.writeText(JSON.stringify(msg.extraction, null, 2)); setCopiedIdx(i); setTimeout(() => setCopiedIdx(null), 2000); }}
+                        copied={copiedIdx === i} />
+                    ) : (
+                      <div className={`max-w-[78%] ${msg.role === "user"
+                        ? "bg-gradient-to-br from-indigo-600 to-violet-600 text-white rounded-2xl rounded-br-sm px-4 py-3 shadow-lg shadow-indigo-500/20"
+                        : "bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm"}`}>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
+                        {msg.role === "ai" && (
+                          <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-gray-100">
+                            <button onClick={() => handleCopy(msg.text, i)}
+                              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-600 transition-colors">
+                              <Icons.Copy />{copiedIdx === i ? <span className="text-emerald-500">Copied!</span> : "Copy"}
+                            </button>
+                            <button onClick={() => speak(msg.text)} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-600 transition-colors">
+                              <Icons.Speaker />Listen
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {msg.role === "user" && (
+                      <div className="w-8 h-8 rounded-xl bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 shrink-0 mb-1">U</div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Follow-up suggestions */}
+                {suggestions.length > 0 && !loading && !isTyping && (
+                  <div className="flex flex-wrap gap-2">
+                    <span className="w-full text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Follow-up</span>
+                    {suggestions.map((s, i) => (
+                      <button key={i} onClick={() => { injectPrompt(s); setSuggestions([]); }}
+                        className="text-xs text-indigo-600 font-medium bg-white hover:bg-indigo-50 border border-indigo-200 hover:border-indigo-300 px-3 py-2 rounded-xl transition-all hover:-translate-y-0.5">
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Loading dots */}
+                {loading && (
+                  <div className="msg-anim flex items-end gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shrink-0 mb-1">⚡</div>
+                    <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-4 shadow-sm">
+                      <div className="flex gap-1.5"><span className="dot-1"/><span className="dot-2"/><span className="dot-3"/></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Typing stream */}
+                {isTyping && (
+                  <div className="msg-anim flex items-end gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shrink-0 mb-1">⚡</div>
+                    <div className="max-w-[78%] bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words cursor-blink">{typingText}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={chatEndRef} />
+              </div>
+            </div>
+
+            {/* ── BOTTOM AREA ── */}
+            <div className="border-t border-gray-200 bg-white/90 backdrop-blur-sm px-4 sm:px-6 pt-3 pb-5 shrink-0">
+
+              {/* Doc chip */}
+              {selectedDoc && (
+                <div className="max-w-3xl mx-auto mb-2.5 flex items-center gap-2">
+                  <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                    <Icons.PDF />
+                    <span className="max-w-[180px] truncate">{selectedDoc.name}</span>
+                    <button className="text-indigo-400 hover:text-indigo-700 transition-colors ml-0.5"
+                      onClick={() => { setSelectedDoc(null); setMessages([]); setPreviewOpen(false); }}>✕</button>
                   </div>
                 </div>
               )}
 
-              <div ref={chatEndRef} />
+              {/* Quick actions */}
+              {selectedDoc && (
+                <div className="max-w-3xl mx-auto mb-2.5 flex flex-wrap gap-1.5">
+                  {[
+                    { label: "Summarize", prompt: "Summarize this document" },
+                    { label: "Key Points", prompt: "What are the key points?" },
+                    { label: "Extract Data", prompt: "Extract all important data" },
+                    { label: "Explain", prompt: "Explain this in simple terms" },
+                  ].map(({ label, prompt }) => (
+                    <button key={label} onClick={() => injectPrompt(prompt)}
+                      className="text-xs text-gray-600 font-medium bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-200 hover:text-indigo-600 px-3 py-1.5 rounded-full transition-all">
+                      {label}
+                    </button>
+                  ))}
+                  {docs.length > 1 && (
+                    <button onClick={() => { setCompareMode(v => !v); setCompareDoc(null); }}
+                      className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${compareMode ? "bg-blue-100 border-blue-300 text-blue-700" : "text-gray-600 bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"}`}>
+                      ⚖ Compare
+                    </button>
+                  )}
+                  {docs.length >= 2 && (
+                    <button onClick={() => { setAgentDismissed(false); runAgent(); }} disabled={agentLoading}
+                      className="text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-full transition-all disabled:opacity-60">
+                      {agentLoading ? "🤖 Analyzing…" : "🤖 AI Analysis"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Input box */}
+              <div className="max-w-3xl mx-auto">
+                <div className="flex items-end gap-2.5 bg-white border-2 border-gray-200 focus-within:border-indigo-400 focus-within:shadow-lg focus-within:shadow-indigo-500/10 rounded-2xl px-3 py-2.5 transition-all duration-200">
+                  {/* Upload */}
+                  <button onClick={() => fileInputRef.current?.click()} title="Upload PDF"
+                    className="w-8 h-8 shrink-0 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors mb-0.5">
+                    <Icons.Plus />
+                  </button>
+
+                  {/* Mic */}
+                  <button onClick={toggleRecording} disabled={!selectedDoc || transcribing} title={isRecording ? "Stop" : "Voice"}
+                    className={`w-8 h-8 shrink-0 flex items-center justify-center rounded-xl transition-all mb-0.5 ${
+                      isRecording ? "bg-red-100 text-red-500 mic-pulse" : "text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                    } disabled:opacity-40`}>
+                    {transcribing ? <span className="text-[10px] font-bold text-gray-400">…</span> : isRecording ? <Icons.MicOff /> : <Icons.Mic />}
+                  </button>
+
+                  {/* Textarea */}
+                  <textarea ref={textareaRef} suppressHydrationWarning
+                    value={input} rows={1}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={!selectedDoc || loading || isTyping || isRecording}
+                    placeholder={
+                      isRecording ? "🔴 Listening… click mic to stop"
+                      : transcribing ? "Transcribing…"
+                      : selectedDoc ? "Ask anything about this PDF…"
+                      : "Upload a PDF to start chatting…"
+                    }
+                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 placeholder-gray-400 resize-none leading-relaxed py-1 max-h-36 overflow-y-auto disabled:opacity-50"
+                    style={{ minHeight: 28 }}
+                  />
+
+                  {/* Send */}
+                  <button onClick={handleAsk} disabled={!canSend} title="Send (Enter)"
+                    className={`w-9 h-9 shrink-0 flex items-center justify-center rounded-xl transition-all mb-0.5 ${
+                      canSend
+                        ? "bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 active:scale-95 cursor-pointer"
+                        : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                    }`}>
+                    <Icons.Send />
+                  </button>
+                </div>
+                <p className="text-center text-xs text-gray-300 mt-2">Enter to send · Shift+Enter for new line</p>
+              </div>
             </div>
           </div>
 
-          {/* PDF PREVIEW PANEL */}
+          {/* ── PDF PREVIEW PANEL ── */}
           {previewOpen && selectedDoc?.file_url && !isMobile && (
-            <div style={s.pdfPanel}>
-              <div style={s.pdfPanelHead}>
-                <span style={s.pdfPanelTitle}><Icon.PDF /> Preview</span>
-                <button className="icon-btn-sm" onClick={() => setPreviewOpen(false)}>✕</button>
+            <div className="w-72 shrink-0 border-l border-gray-200 flex flex-col bg-gray-50">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><Icons.PDF /> Preview</span>
+                <button className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition-colors" onClick={() => setPreviewOpen(false)}><Icons.Close /></button>
               </div>
-              <div style={s.pdfWrap}>
-                <iframe
-                  src={selectedDoc.file_url + "#toolbar=0&navpanes=0&page=1&zoom=page-width"}
-                  style={s.pdfIframe}
-                  title="PDF Preview"
-                />
+              <div className="flex-1 min-h-0 m-3 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+                <iframe src={selectedDoc.file_url + "#toolbar=0&navpanes=0&zoom=page-width"} className="w-full h-full border-none" title="PDF Preview" />
               </div>
-              <button className="open-pdf-btn" onClick={() => window.open(selectedDoc.file_url, "_blank")}>
-                <Icon.External /> Open Full PDF
-              </button>
+              <div className="p-3">
+                <button onClick={() => window.open(selectedDoc.file_url, "_blank")}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-semibold py-2.5 rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5 transition-all">
+                  <Icons.External /> Open Full PDF
+                </button>
+              </div>
             </div>
           )}
         </div>
-
-        {/* SELECTED DOC CHIP */}
-        {selectedDoc && (
-          <div style={s.chipRow}>
-            <div style={s.chip}>
-              <Icon.PDF />
-              <span style={s.chipName}>{selectedDoc.name}</span>
-              <button style={s.chipX}
-                onClick={() => { setSelectedDoc(null); setMessages([]); setPreviewOpen(false); }}>✕</button>
-            </div>
-          </div>
-        )}
-
-        {/* QUICK ACTIONS */}
-        {selectedDoc && (
-          <div style={s.quickActions}>
-            {[
-              { label: "Summarize", prompt: "Summarize this document" },
-              { label: "Key Points", prompt: "What are the key points of this document?" },
-              { label: "Extract Data", prompt: "Extract all important data and details from this document" },
-              { label: "Explain", prompt: "Explain the main topic of this document in simple terms" },
-              { label: "Questions", prompt: "What are 5 important questions I can ask about this document?" },
-            ].map(({ label, prompt }) => (
-              <button key={label} className="quick-action-btn" onClick={() => injectPrompt(prompt)}>
-                {label}
-              </button>
-            ))}
-            {docs.length > 1 && (
-              <button
-                className="quick-action-btn"
-                style={compareMode ? { borderColor: "#c4b5fd", background: "rgba(238,242,255,0.9)", color: "#4f46e5" } : undefined}
-                onClick={() => { setCompareMode(v => !v); setCompareDoc(null); if (!compareMode) window.scrollTo(0,0); }}
-              >
-                ⚖ Compare Docs
-              </button>
-            )}
-            {docs.length >= 2 && (
-              <button
-                className="quick-action-btn"
-                style={{ borderColor: "#c4b5fd", color: "#4338ca" }}
-                onClick={() => { setAgentDismissed(false); runAgent(); }}
-                disabled={agentLoading}
-              >
-                {agentLoading ? "🤖 Analyzing…" : "🤖 AI Analysis"}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* INPUT BAR */}
-        <div style={s.inputBar}>
-          <input ref={fileInputRef} type="file" accept="application/pdf"
-            style={{ display: "none" }} suppressHydrationWarning onChange={handleFileChange} />
-
-          <div style={s.inputBox} className="input-box">
-            <button className="plus-btn" onClick={() => fileInputRef.current?.click()} title="Upload PDF">
-              <Icon.Plus />
-            </button>
-
-            <button
-              className={`plus-btn ${isRecording ? "mic-active" : ""}`}
-              onClick={toggleRecording}
-              disabled={!selectedDoc || transcribing}
-              title={isRecording ? "Stop recording" : "Record voice question"}
-              style={{ flexShrink: 0, color: isRecording ? "#dc2626" : undefined }}
-            >
-              {transcribing ? (
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#6b7280" }}>…</span>
-              ) : isRecording ? (
-                <Icon.MicOff />
-              ) : (
-                <Icon.Mic />
-              )}
-            </button>
-
-            <textarea
-              ref={textareaRef}
-              suppressHydrationWarning autoComplete="off"
-              value={input} rows={1}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                isRecording ? "🔴 Listening… click mic to stop" :
-                transcribing ? "Transcribing…" :
-                selectedDoc ? "Ask anything about this PDF…" : "Upload a PDF to start chatting…"
-              }
-              disabled={!selectedDoc || loading || isTyping || isRecording}
-              style={{ ...s.textarea, opacity: !selectedDoc ? 0.45 : 1 }}
-            />
-
-            <button className={`send-btn ${canSend ? "send-btn-active" : ""}`}
-              onClick={handleAsk} disabled={!canSend} title="Send">
-              <Icon.Send />
-            </button>
-          </div>
-
-          <p style={s.inputHint}>Enter to send · Shift+Enter for new line</p>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
-
-/* ─────────────────────────────────────────────
-   GLOBAL CSS  (premium light theme)
-───────────────────────────────────────────── */
-const CSS = `
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 50%, #fafafa 100%); }
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-  /* Snackbar */
-  .snackbar {
-    position: fixed; bottom: 90px; left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 22px; border-radius: 12px;
-    font-size: 13px; font-weight: 600; color: #fff;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    z-index: 9999; white-space: nowrap;
-    animation: snackIn 0.25s ease;
-    backdrop-filter: blur(8px);
-  }
-  .snackbar-success { background: linear-gradient(135deg,#16a34a,#15803d); }
-  .snackbar-error   { background: linear-gradient(135deg,#dc2626,#b91c1c); }
-
-  /* Icon buttons */
-  .icon-btn {
-    background: rgba(255,255,255,0.8);
-    border: 1px solid #e2e8f0;
-    color: #64748b; width: 34px; height: 34px;
-    border-radius: 9px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.18s ease; flex-shrink: 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .icon-btn:hover {
-    background: #fff; color: #1e293b;
-    border-color: #c7d2fe; transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99,102,241,0.12);
-  }
-  .icon-btn-sm {
-    background: transparent; border: none;
-    color: #64748b; width: 28px; height: 28px;
-    border-radius: 6px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; flex-shrink: 0;
-  }
-  .icon-btn-sm:hover { background: #f1f5f9; color: #1e293b; }
-
-  /* Upload button */
-  .upload-btn {
-    display: flex; align-items: center; gap: 8px;
-    width: 100%; padding: 11px 16px;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    border: none; border-radius: 12px; color: #fff;
-    font-size: 14px; font-weight: 700; cursor: pointer;
-    transition: all 0.2s; box-shadow: 0 4px 16px rgba(99,102,241,0.35);
-    font-family: inherit; letter-spacing: -0.2px;
-  }
-  .upload-btn:hover {
-    background: linear-gradient(135deg, #818cf8, #6366f1);
-    box-shadow: 0 6px 24px rgba(99,102,241,0.5);
-    transform: translateY(-1px);
-  }
-  .upload-btn:active { transform: translateY(0); }
-
-  /* Nav items */
-  .nav-item {
-    display: flex; align-items: center; gap: 9px;
-    padding: 9px 10px; border-radius: 10px; cursor: pointer;
-    transition: all 0.18s; border: 1px solid transparent;
-  }
-  .nav-item:hover { background: rgba(255,255,255,0.8); border-color: #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-  .nav-item:hover .trash-btn { opacity: 1; }
-  .nav-item-active {
-    background: linear-gradient(135deg,rgba(238,242,255,0.9),rgba(237,233,254,0.7)) !important;
-    border-color: #c4b5fd !important;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.12) !important;
-  }
-
-  .trash-btn {
-    background: none; border: none; color: #cbd5e1;
-    cursor: pointer; padding: 3px; border-radius: 4px;
-    display: flex; opacity: 0;
-    transition: opacity 0.15s, color 0.15s; flex-shrink: 0;
-  }
-  .trash-btn:hover { color: #ef4444; }
-
-  /* Hint cards */
-  .hint-card {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 16px 15px;
-    background: rgba(255,255,255,0.8);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(226,232,240,0.8);
-    border-radius: 14px; color: #1e293b;
-    font-size: 13px; cursor: pointer; text-align: left;
-    transition: all 0.2s; font-family: inherit;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  }
-  .hint-card:hover {
-    background: rgba(255,255,255,0.95);
-    border-color: #c4b5fd;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(99,102,241,0.12);
-  }
-
-  /* Message rows */
-  .msg-row {
-    display: flex; align-items: flex-start; gap: 12px;
-    animation: msgIn 0.3s cubic-bezier(0.4,0,0.2,1) both;
-  }
-
-  /* Copy button */
-  .copy-btn {
-    display: inline-flex; align-items: center; gap: 5px;
-    margin-top: 8px; background: rgba(255,255,255,0.8);
-    border: 1px solid #e2e8f0; color: #64748b;
-    font-size: 11px; padding: 4px 11px;
-    border-radius: 8px; cursor: pointer;
-    transition: all 0.15s; font-family: inherit;
-  }
-  .copy-btn:hover { border-color: #c4b5fd; color: #4f46e5; background: rgba(238,242,255,0.6); }
-
-  /* Open PDF btn */
-  .open-pdf-btn {
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    width: 100%; padding: 11px;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    border: none; border-radius: 12px; color: #fff;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    transition: all 0.2s; font-family: inherit;
-    box-shadow: 0 4px 16px rgba(99,102,241,0.3);
-  }
-  .open-pdf-btn:hover {
-    background: linear-gradient(135deg, #818cf8, #6366f1);
-    box-shadow: 0 6px 24px rgba(99,102,241,0.45);
-    transform: translateY(-1px);
-  }
-
-  /* Upgrade button */
-  .upgrade-btn {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    border: none; color: #fff;
-    font-size: 11px; font-weight: 700;
-    padding: 5px 12px; border-radius: 8px;
-    cursor: pointer; white-space: nowrap;
-    transition: all 0.2s; font-family: inherit; flex-shrink: 0;
-    box-shadow: 0 2px 10px rgba(217,119,6,0.35);
-  }
-  .upgrade-btn:hover { background: linear-gradient(135deg, #fbbf24, #f59e0b); transform: translateY(-1px); }
-  .upgrade-btn:active { transform: translateY(0); }
-
-  /* Manage button */
-  .manage-btn {
-    background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0;
-    color: #64748b; font-size: 11px; font-weight: 500;
-    padding: 4px 10px; border-radius: 7px;
-    cursor: pointer; white-space: nowrap;
-    transition: all 0.15s; font-family: inherit; flex-shrink: 0;
-  }
-  .manage-btn:hover { background: #fff; border-color: #c4b5fd; color: #4f46e5; }
-
-  /* Sign out button */
-  .sign-out-btn {
-    background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0;
-    color: #64748b; font-size: 11px; font-weight: 500;
-    padding: 4px 10px; border-radius: 7px;
-    cursor: pointer; white-space: nowrap;
-    transition: all 0.15s; font-family: inherit; flex-shrink: 0;
-  }
-  .sign-out-btn:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
-
-  /* Input focus ring */
-  .input-box:focus-within {
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.15), 0 4px 24px rgba(99,102,241,0.1) !important;
-  }
-
-  /* Plus button */
-  .plus-btn {
-    width: 36px; height: 36px; flex-shrink: 0;
-    background: rgba(248,250,252,0.9); border: 1px solid #e2e8f0;
-    border-radius: 10px; color: #475569;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all 0.18s;
-  }
-  .plus-btn:hover { background: #fff; border-color: #c4b5fd; color: #4f46e5; transform: scale(1.05); box-shadow: 0 2px 8px rgba(99,102,241,0.15); }
-  .plus-btn:active { transform: scale(0.95); }
-
-  /* Agent panel tabs */
-  .agent-tab {
-    padding: 6px 14px; border-radius: 10px; border: none;
-    font-size: 12px; font-weight: 600; cursor: pointer;
-    font-family: inherit; color: #64748b; background: transparent;
-    transition: all 0.18s;
-  }
-  .agent-tab:hover { color: #4f46e5; background: rgba(255,255,255,0.6); }
-  .agent-tab-active {
-    background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
-    color: #fff !important;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.35);
-  }
-
-  /* Agent refresh button */
-  .agent-refresh-btn {
-    background: rgba(238,242,255,0.8); border: 1px solid #c4b5fd;
-    border-radius: 8px; padding: 5px 12px;
-    font-size: 12px; color: #4f46e5; font-weight: 600;
-    cursor: pointer; font-family: inherit;
-    transition: all 0.18s;
-  }
-  .agent-refresh-btn:hover { background: #e0e7ff; box-shadow: 0 2px 8px rgba(99,102,241,0.2); transform: translateY(-1px); }
-
-  /* Theme chips */
-  .theme-chip {
-    border-radius: 20px; padding: 4px 13px;
-    font-size: 12px; font-weight: 600; cursor: default;
-    transition: transform 0.15s; display: inline-block;
-    border: 1px solid;
-  }
-  .theme-chip:hover { transform: translateY(-1px); }
-  .theme-chip-0 { background: linear-gradient(135deg,#ede9fe,#ddd6fe); color: #5b21b6; border-color: #c4b5fd; }
-  .theme-chip-1 { background: linear-gradient(135deg,#dbeafe,#bfdbfe); color: #1e40af; border-color: #93c5fd; }
-  .theme-chip-2 { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color: #14532d; border-color: #86efac; }
-  .theme-chip-3 { background: linear-gradient(135deg,#fce7f3,#fbcfe8); color: #831843; border-color: #f9a8d4; }
-
-  /* Doc summary item */
-  .doc-summary-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 10px 12px; border-radius: 12px;
-    background: rgba(248,250,255,0.8);
-    border: 1px solid rgba(226,232,240,0.7);
-    transition: all 0.18s;
-  }
-  .doc-summary-item:hover { background: rgba(238,242,255,0.8); border-color: #c4b5fd; transform: translateX(2px); }
-
-  /* Suggest question buttons */
-  .suggest-q-btn {
-    background: rgba(255,255,255,0.85);
-    border: 1px solid #e2e8f0;
-    border-radius: 20px; padding: 6px 14px;
-    font-size: 12px; color: #4f46e5; font-weight: 500;
-    cursor: pointer; font-family: inherit;
-    transition: all 0.18s;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  }
-  .suggest-q-btn:hover {
-    background: linear-gradient(135deg,#ede9fe,#e0e7ff);
-    border-color: #c4b5fd; transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99,102,241,0.15);
-  }
-
-  /* Quick action buttons */
-  .quick-action-btn {
-    background: rgba(255,255,255,0.85);
-    border: 1px solid #e2e8f0;
-    border-radius: 20px; padding: 5px 14px;
-    font-size: 12px; color: #475569; font-weight: 500;
-    cursor: pointer; font-family: inherit;
-    transition: all 0.18s; white-space: nowrap;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  }
-  .quick-action-btn:hover {
-    background: rgba(238,242,255,0.9);
-    border-color: #c4b5fd; color: #4f46e5;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 10px rgba(99,102,241,0.12);
-  }
-
-  /* Mic recording state */
-  .mic-active {
-    background: #fef2f2 !important;
-    border-color: #fca5a5 !important;
-    color: #dc2626 !important;
-    animation: micPulse 1.2s ease-in-out infinite;
-  }
-  @keyframes micPulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.3); }
-    50%      { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
-  }
-
-  /* Send button */
-  .send-btn {
-    width: 38px; height: 38px; flex-shrink: 0;
-    background: #f1f5f9; border: 1px solid #e2e8f0;
-    border-radius: 12px; color: #cbd5e1;
-    cursor: not-allowed; display: flex; align-items: center; justify-content: center;
-    transition: all 0.18s;
-  }
-  .send-btn-active {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    color: #fff; border-color: transparent;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(99,102,241,0.4);
-  }
-  .send-btn-active:hover {
-    background: linear-gradient(135deg, #818cf8, #6366f1);
-    box-shadow: 0 6px 20px rgba(99,102,241,0.5);
-    transform: scale(1.06);
-  }
-  .send-btn-active:active { transform: scale(0.94); }
-
-  /* Animations */
-  @keyframes snackIn {
-    from { opacity:0; transform: translateX(-50%) translateY(12px); }
-    to   { opacity:1; transform: translateX(-50%) translateY(0); }
-  }
-  @keyframes msgIn {
-    from { opacity:0; transform: translateY(10px); }
-    to   { opacity:1; transform: translateY(0); }
-  }
-  @keyframes blink {
-    0%,80%,100% { opacity:0.2; transform: scale(0.75); }
-    40%         { opacity:1;   transform: scale(1); }
-  }
-  @keyframes cursorBlink {
-    0%,100% { opacity:1; }
-    50%     { opacity:0; }
-  }
-  @keyframes glowPulse {
-    0%,100% { opacity:0.3; transform: translateX(-50%) scale(1); }
-    50%     { opacity:0.6; transform: translateX(-50%) scale(1.08); }
-  }
-  @keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  @media (max-width: 768px) {
-    .hint-card { padding: 12px; font-size: 12px; }
-  }
-`;
-
-/* ─────────────────────────────────────────────
-   STYLES OBJECT  (light / white theme)
-───────────────────────────────────────────── */
-const s = {
-  root: {
-    display: "flex", height: "100vh",
-    background: "linear-gradient(135deg, #f8faff 0%, #f0f4ff 50%, #fafafa 100%)",
-    color: "#1e293b",
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif",
-    overflow: "hidden", position: "relative",
-  },
-
-  /* ── Drawer ── */
-  backdrop: { position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", backdropFilter: "blur(4px)", zIndex: 40 },
-  drawer: {
-    position: "fixed", top: 0, left: 0, bottom: 0,
-    width: 276,
-    background: "rgba(248,250,255,0.92)",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    zIndex: 50, display: "flex", flexDirection: "column",
-    transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)",
-    borderRight: "1px solid rgba(226,232,240,0.8)",
-    boxShadow: "12px 0 40px rgba(99,102,241,0.08), 4px 0 16px rgba(0,0,0,0.06)",
-  },
-  drawerHead: {
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "18px 16px 14px", borderBottom: "1px solid rgba(226,232,240,0.7)",
-  },
-  drawerBrand: { display: "flex", alignItems: "center", gap: 10 },
-  brandDot: {
-    width: 32, height: 32, borderRadius: 9,
-    background: "linear-gradient(135deg,#6366f1,#4f46e5)",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 16, boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
-  },
-  brandName: {
-    fontSize: 16, fontWeight: 800, letterSpacing: "-0.4px",
-    background: "linear-gradient(135deg,#4338ca,#6366f1)",
-    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-  },
-  drawerUpload: { padding: "14px 12px 6px" },
-  drawerLabel: {
-    padding: "14px 16px 6px", fontSize: 10, fontWeight: 700,
-    color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em",
-  },
-  drawerNav: {
-    flex: 1, overflowY: "auto", padding: "4px 8px 16px",
-    display: "flex", flexDirection: "column", gap: 2,
-  },
-  drawerEmpty: {
-    display: "flex", flexDirection: "column", alignItems: "center",
-    padding: "32px 0", gap: 8,
-  },
-  navIcon: { color: "#57606a", display: "flex", flexShrink: 0 },
-  navText: {
-    flex: 1, fontSize: 13, color: "#24292f",
-    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-  },
-
-  /* ── Drawer footer ── */
-  drawerFooter: {
-    borderTop: "1px solid rgba(226,232,240,0.7)",
-    padding: "12px 12px 14px",
-    display: "flex", flexDirection: "column", gap: 10,
-  },
-  usageBox: {
-    background: "rgba(255,255,255,0.7)", border: "1px solid #e2e8f0",
-    borderRadius: 12, padding: "10px 12px",
-  },
-  usageRow: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-  usageLabel: { fontSize: 11, color: "#64748b", fontWeight: 500 },
-  usageVal: { fontSize: 11, fontWeight: 700, color: "#1e293b" },
-  usageBar: {
-    marginTop: 5, height: 5, background: "#e2e8f0",
-    borderRadius: 6, overflow: "hidden",
-  },
-  usageFill: { height: "100%", background: "linear-gradient(90deg,#6366f1,#4f46e5)", borderRadius: 6, transition: "width 0.4s ease" },
-  upgradeHint: {
-    marginTop: 6, fontSize: 11, color: "#dc2626", fontWeight: 500, textAlign: "center",
-  },
-  planRow: {
-    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
-  },
-  planBadge: {
-    fontSize: 12, fontWeight: 700, padding: "4px 12px",
-    borderRadius: 20, border: "1px solid",
-  },
-  planBadgeFree: { background: "rgba(248,250,252,0.9)", borderColor: "#e2e8f0", color: "#64748b" },
-  planBadgePro: { background: "linear-gradient(135deg,#fef9c3,#fef08a)", borderColor: "#fde047", color: "#713f12" },
-  proUnlimited: {
-    fontSize: 12, color: "#16a34a", fontWeight: 600,
-    textAlign: "center", padding: "6px 0",
-  },
-  userRow: {
-    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
-  },
-  userEmail: {
-    fontSize: 11, color: "#64748b",
-    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
-  },
-
-  /* ── Main ── */
-  main: {
-    flex: 1, display: "flex", flexDirection: "column",
-    overflow: "hidden", background: "transparent",
-  },
-
-  /* ── Top bar ── */
-  topBar: {
-    display: "flex", alignItems: "center", gap: 8,
-    padding: "10px 16px",
-    borderBottom: "1px solid rgba(226,232,240,0.7)",
-    background: "rgba(255,255,255,0.85)",
-    backdropFilter: "blur(16px)",
-    WebkitBackdropFilter: "blur(16px)",
-    flexShrink: 0, minHeight: 56,
-    boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
-  },
-  topCenter: { flex: 1, overflow: "hidden", padding: "0 6px", textAlign: "center" },
-  topTitle: {
-    fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px",
-    background: "linear-gradient(135deg,#4338ca,#6366f1)",
-    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-  },
-  topDocName: {
-    fontSize: 13, color: "#64748b",
-    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block",
-  },
-  topActions: { display: "flex", gap: 6, alignItems: "center" },
-
-  /* ── PDF header bar (mobile) ── */
-  pdfHeaderBar: {
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "8px 14px", borderBottom: "1px solid rgba(226,232,240,0.7)",
-    background: "rgba(248,250,255,0.9)", flexShrink: 0,
-  },
-  pdfHeaderName: {
-    fontSize: 12, color: "#64748b",
-    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
-  },
-
-  /* ── Body ── */
-  body: { flex: 1, display: "flex", overflow: "hidden" },
-
-  /* ── Chat ── */
-  chatScroll: { flex: 1, overflowY: "auto", padding: "0 20px" },
-  chatInner: {
-    maxWidth: 740, margin: "0 auto",
-    display: "flex", flexDirection: "column", gap: 24,
-    paddingTop: 40, paddingBottom: 20,
-  },
-
-  /* ── Empty state ── */
-  emptyState: {
-    display: "flex", flexDirection: "column", alignItems: "center",
-    justifyContent: "center", paddingTop: 80, gap: 28,
-    textAlign: "center", position: "relative",
-  },
-  emptyGlow: {
-    position: "absolute", top: 60, left: "50%",
-    width: 480, height: 320,
-    background: "radial-gradient(ellipse, rgba(99,102,241,0.1) 0%, transparent 70%)",
-    borderRadius: "50%", pointerEvents: "none",
-    animation: "glowPulse 5s ease-in-out infinite",
-  },
-  emptyTitle: {
-    fontSize: 30, fontWeight: 800, color: "#1e293b", letterSpacing: "-0.5px",
-    lineHeight: 1.3, zIndex: 1, letterSpacing: "-0.5px",
-  },
-  emptySubtitle: {
-    fontSize: 14, color: "#57606a", maxWidth: 320,
-    lineHeight: 1.6, zIndex: 1,
-  },
-  hintGrid: {
-    display: "grid", gridTemplateColumns: "1fr 1fr",
-    gap: 10, width: "100%", maxWidth: 460, zIndex: 1,
-  },
-  hintIcon: { fontSize: 18, flexShrink: 0, lineHeight: 1 },
-  hintText: { lineHeight: 1.35, color: "#24292f" },
-
-  /* ── Messages ── */
-  aiAvatar: {
-    width: 34, height: 34, borderRadius: 10,
-    background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-    border: "none",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 16, flexShrink: 0, marginTop: 2,
-    boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
-  },
-  userBubble: {
-    maxWidth: "74%", padding: "13px 18px",
-    background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-    borderRadius: "18px 18px 4px 18px",
-    boxShadow: "0 4px 16px rgba(99,102,241,0.3)",
-  },
-  aiBubble: { maxWidth: "84%", padding: "2px 0 4px" },
-  msgText: {
-    fontSize: 15, lineHeight: 1.8, color: "#1e293b",
-    whiteSpace: "pre-wrap", wordBreak: "break-word",
-  },
-  dots: { display: "flex", gap: 6, padding: "10px 2px", alignItems: "center" },
-  dot: {
-    width: 7, height: 7, borderRadius: "50%",
-    background: "#94a3b8", display: "inline-block",
-    animation: "blink 1.2s infinite ease-in-out",
-  },
-  cursor: {
-    display: "inline-block", width: 2, height: 16,
-    background: "#6366f1", marginLeft: 2, verticalAlign: "text-bottom",
-    animation: "cursorBlink 0.7s infinite",
-  },
-
-  /* ── PDF Panel ── */
-  pdfPanel: {
-    width: 306, minWidth: 306,
-    borderLeft: "1px solid rgba(226,232,240,0.7)",
-    display: "flex", flexDirection: "column",
-    background: "rgba(248,250,255,0.7)",
-    backdropFilter: "blur(12px)",
-    padding: 12, gap: 10, flexShrink: 0,
-  },
-  pdfPanelHead: {
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "4px 2px 8px", borderBottom: "1px solid rgba(226,232,240,0.7)",
-    marginBottom: 2,
-  },
-  pdfPanelTitle: {
-    display: "flex", alignItems: "center", gap: 7,
-    fontSize: 11, fontWeight: 700,
-    color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em",
-  },
-  pdfWrap: {
-    flex: 1, minHeight: 0, borderRadius: 12, overflow: "hidden",
-    border: "1px solid rgba(226,232,240,0.7)", background: "#fff",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-  },
-  pdfIframe: { width: "100%", height: "100%", border: "none" },
-
-  /* ── Chip ── */
-  chipRow: { padding: "0 20px 8px", maxWidth: 740, margin: "0 auto", width: "100%" },
-  chip: {
-    display: "inline-flex", alignItems: "center", gap: 7,
-    padding: "6px 14px 6px 10px",
-    background: "linear-gradient(135deg,rgba(238,242,255,0.9),rgba(237,233,254,0.7))",
-    border: "1px solid #c4b5fd",
-    borderRadius: 20, fontSize: 12, color: "#4f46e5", fontWeight: 600,
-    boxShadow: "0 2px 8px rgba(99,102,241,0.1)",
-  },
-  chipName: { maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-  chipX: {
-    background: "none", border: "none", color: "#94a3b8",
-    cursor: "pointer", fontSize: 13, padding: "0 2px", lineHeight: 1,
-  },
-
-  /* ── Alerts dropdown ── */
-  alertsDropdown: {
-    position: "absolute", top: "calc(100% + 8px)", right: 0,
-    width: 328,
-    background: "rgba(255,255,255,0.95)",
-    backdropFilter: "blur(20px)",
-    border: "1px solid rgba(226,232,240,0.8)", borderRadius: 16,
-    boxShadow: "0 16px 48px rgba(0,0,0,0.14), 0 4px 16px rgba(99,102,241,0.08)",
-    zIndex: 200, overflow: "hidden",
-  },
-  alertsHeader: {
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "14px 16px", borderBottom: "1px solid #f1f5f9",
-  },
-
-  /* ── Compare panel ── */
-  comparePanel: {
-    background: "rgba(255,255,255,0.75)",
-    backdropFilter: "blur(16px)",
-    border: "1px solid rgba(191,219,254,0.7)",
-    borderRadius: 20, padding: "18px 20px", width: "100%",
-    boxShadow: "0 8px 32px rgba(37,99,235,0.06)",
-  },
-
-  /* ── Suggestions ── */
-  suggestionsRow: {
-    display: "flex", flexWrap: "wrap", gap: 7, alignItems: "center",
-    padding: "4px 0 0",
-  },
-  suggestionsLabel: {
-    fontSize: 11, fontWeight: 700, color: "#94a3b8",
-    textTransform: "uppercase", letterSpacing: "0.08em",
-    flexBasis: "100%", marginBottom: 2,
-  },
-  suggestionChip: {
-    background: "rgba(255,255,255,0.85)", border: "1px solid #e2e8f0",
-    borderRadius: 20, padding: "5px 14px",
-    fontSize: 12, color: "#4f46e5", cursor: "pointer",
-    transition: "all 0.15s", fontFamily: "inherit",
-    whiteSpace: "nowrap", fontWeight: 500,
-  },
-
-  /* ── Quick actions ── */
-  quickActions: {
-    display: "flex", gap: 6, padding: "0 20px 10px",
-    maxWidth: 740, margin: "0 auto", width: "100%",
-    flexWrap: "wrap",
-  },
-  quickBtn: {
-    background: "rgba(255,255,255,0.85)", border: "1px solid #e2e8f0",
-    borderRadius: 20, padding: "5px 14px",
-    fontSize: 12, color: "#475569", cursor: "pointer",
-    whiteSpace: "nowrap", transition: "all 0.18s", fontWeight: 500,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-  },
-
-  /* ── Input bar ── */
-  inputBar: { padding: "8px 20px 22px", flexShrink: 0 },
-  inputBox: {
-    display: "flex", alignItems: "flex-end", gap: 8,
-    background: "rgba(255,255,255,0.92)",
-    backdropFilter: "blur(12px)",
-    border: "1.5px solid rgba(226,232,240,0.9)",
-    borderRadius: 18, padding: "9px 9px 9px 10px",
-    maxWidth: 740, margin: "0 auto",
-    transition: "border-color 0.2s, box-shadow 0.2s",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
-  },
-  textarea: {
-    flex: 1, background: "transparent", border: "none", outline: "none",
-    color: "#1e293b", fontSize: 15, lineHeight: 1.55,
-    resize: "none", fontFamily: "inherit",
-    maxHeight: 140, overflowY: "auto", padding: "5px 0",
-  },
-  inputHint: {
-    textAlign: "center", fontSize: 11, color: "#cbd5e1",
-    maxWidth: 740, margin: "6px auto 0",
-  },
-};
