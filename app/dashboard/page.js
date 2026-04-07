@@ -324,16 +324,22 @@ function InsightsPanel({ doc, onClose, onAskQuestion }) {
 }
 
 /* ─── COMPARE PANEL ──────────────────────────────────────────────────────── */
-function ComparePanel({ docs, currentDoc, onClose }) {
-  const [doc2Id, setDoc2Id] = useState("");
+function ComparePanel({ docs, onClose }) {
+  const [doc1Id, setDoc1Id] = useState(docs[0]?.id || "");
+  const [doc2Id, setDoc2Id] = useState(docs[1]?.id || "");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const otherDocs = docs.filter((d) => d.id !== currentDoc?.id);
-
   async function handleCompare() {
-    if (!doc2Id || !currentDoc) return;
+    if (!doc1Id || !doc2Id) {
+      setError("Please select two PDFs to compare.");
+      return;
+    }
+    if (doc1Id === doc2Id) {
+      setError("Please select two different PDFs.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
@@ -341,7 +347,7 @@ function ComparePanel({ docs, currentDoc, onClose }) {
       const res = await fetch("/api/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ doc1Id: currentDoc.id, doc2Id }),
+        body: JSON.stringify({ doc1Id, doc2Id }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Comparison failed");
@@ -352,6 +358,8 @@ function ComparePanel({ docs, currentDoc, onClose }) {
       setLoading(false);
     }
   }
+
+  const selectStyle = { width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 13, color: "white", outline: "none", cursor: "pointer" };
 
   return (
     <div style={{ width: 340, borderLeft: "1px solid rgba(255,255,255,0.07)", background: "#0a0a1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
@@ -366,63 +374,71 @@ function ComparePanel({ docs, currentDoc, onClose }) {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-        <div style={{ marginBottom: 16 }}>
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>Document 1</p>
-          <div style={{ padding: "10px 12px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 8, fontSize: 13, color: "#c4b5fd", fontWeight: 500 }}>
-            {currentDoc?.file_name}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>Document 2</p>
-          {otherDocs.length === 0 ? (
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.07)" }}>
-              Upload another PDF to compare
+        {docs.length < 2 ? (
+          <div style={{ textAlign: "center", paddingTop: 32 }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+              Upload at least <strong style={{ color: "white" }}>2 PDFs</strong> to compare them.
             </p>
-          ) : (
-            <select
-              value={doc2Id}
-              onChange={(e) => setDoc2Id(e.target.value)}
-              style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 13, color: "white", outline: "none", cursor: "pointer" }}
-            >
-              <option value="" style={{ background: "#0d0d1a" }}>Select a PDF…</option>
-              {otherDocs.map((d) => (
-                <option key={d.id} value={d.id} style={{ background: "#0d0d1a" }}>{d.file_name}</option>
-              ))}
-            </select>
-          )}
-        </div>
-
-        {doc2Id && (
-          <button
-            onClick={handleCompare}
-            disabled={loading}
-            style={{ width: "100%", padding: "11px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, marginBottom: 16 }}
-          >
-            {loading ? "Comparing…" : "Compare Documents"}
-          </button>
-        )}
-
-        {loading && (
-          <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <div style={{ width: 32, height: 32, border: "3px solid rgba(124,58,237,0.3)", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Analyzing both documents…</p>
           </div>
-        )}
-
-        {error && <p style={{ fontSize: 12, color: "#f87171", padding: "10px 12px", background: "rgba(239,68,68,0.08)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)" }}>{error}</p>}
-
-        {result && (
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Comparison Result</p>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
-              {result.split("**").map((part, i) =>
-                i % 2 === 1
-                  ? <strong key={i} style={{ color: "white" }}>{part}</strong>
-                  : part
-              )}
+        ) : (
+          <>
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>Document 1</p>
+              <select value={doc1Id} onChange={(e) => { setDoc1Id(e.target.value); setResult(null); setError(null); }} style={selectStyle}>
+                <option value="" style={{ background: "#0d0d1a" }}>Select PDF…</option>
+                {docs.map((d) => (
+                  <option key={d.id} value={d.id} style={{ background: "#0d0d1a" }}>{d.file_name}</option>
+                ))}
+              </select>
             </div>
-          </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", margin: "8px 0", color: "rgba(255,255,255,0.2)", fontSize: 13 }}>vs</div>
+
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>Document 2</p>
+              <select value={doc2Id} onChange={(e) => { setDoc2Id(e.target.value); setResult(null); setError(null); }} style={selectStyle}>
+                <option value="" style={{ background: "#0d0d1a" }}>Select PDF…</option>
+                {docs.map((d) => (
+                  <option key={d.id} value={d.id} style={{ background: "#0d0d1a" }}>{d.file_name}</option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={handleCompare}
+              disabled={loading || !doc1Id || !doc2Id}
+              style={{ width: "100%", padding: "11px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, cursor: loading || !doc1Id || !doc2Id ? "not-allowed" : "pointer", opacity: loading || !doc1Id || !doc2Id ? 0.6 : 1, marginBottom: 16, transition: "opacity 0.2s" }}
+            >
+              {loading ? "Comparing…" : "Compare Documents"}
+            </button>
+
+            {loading && (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <div style={{ width: 32, height: 32, border: "3px solid rgba(124,58,237,0.3)", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 10px" }} />
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Analyzing both documents…</p>
+              </div>
+            )}
+
+            {error && (
+              <div style={{ padding: "10px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, marginBottom: 12 }}>
+                <p style={{ fontSize: 12, color: "#f87171", margin: 0 }}>{error}</p>
+              </div>
+            )}
+
+            {result && (
+              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Comparison Result</p>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                  {result.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
+                    part.startsWith("**") && part.endsWith("**")
+                      ? <strong key={i} style={{ color: "white", display: "block", marginTop: i > 0 ? 12 : 0 }}>{part.slice(2, -2)}</strong>
+                      : <span key={i}>{part}</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -668,7 +684,7 @@ export default function DashboardPage() {
 
   const userEmail = user?.email || "";
   const userInitial = userEmail.charAt(0).toUpperCase();
-  const rightPanelOpen = showInsights || showCompare;
+  const rightPanelOpen = (showInsights && !!selectedDoc) || showCompare;
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#0d0d1a", overflow: "hidden", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
@@ -847,36 +863,34 @@ export default function DashboardPage() {
               </span>
             )}
             {selectedDoc && (
-              <>
-                <button
-                  onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
-                    background: showInsights ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)",
-                    border: showInsights ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: 8, fontSize: 12, fontWeight: 600,
-                    color: showInsights ? "#c4b5fd" : "rgba(255,255,255,0.6)",
-                    cursor: "pointer", transition: "all 0.15s",
-                  }}
-                >
-                  <InsightIcon /> Insights
-                </button>
-                {docs.length >= 2 && (
-                  <button
-                    onClick={() => { setShowCompare(!showCompare); setShowInsights(false); }}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
-                      background: showCompare ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)",
-                      border: showCompare ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 8, fontSize: 12, fontWeight: 600,
-                      color: showCompare ? "#c4b5fd" : "rgba(255,255,255,0.6)",
-                      cursor: "pointer", transition: "all 0.15s",
-                    }}
-                  >
-                    <CompareIcon /> Compare
-                  </button>
-                )}
-              </>
+              <button
+                onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
+                  background: showInsights ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)",
+                  border: showInsights ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  color: showInsights ? "#c4b5fd" : "rgba(255,255,255,0.6)",
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                <InsightIcon /> Insights
+              </button>
+            )}
+            {docs.length >= 2 && (
+              <button
+                onClick={() => { setShowCompare(!showCompare); setShowInsights(false); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
+                  background: showCompare ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)",
+                  border: showCompare ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  color: showCompare ? "#c4b5fd" : "rgba(255,255,255,0.6)",
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                <CompareIcon /> Compare
+              </button>
             )}
           </div>
         </header>
@@ -1021,10 +1035,9 @@ export default function DashboardPage() {
               }}
             />
           )}
-          {rightPanelOpen && showCompare && selectedDoc && (
+          {rightPanelOpen && showCompare && (
             <ComparePanel
               docs={docs}
-              currentDoc={selectedDoc}
               onClose={() => setShowCompare(false)}
             />
           )}
