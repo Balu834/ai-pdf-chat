@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-/* ── NAVBAR ─────────────────────────────────────────────────────────────── */
+/* ─── NAVBAR ─────────────────────────────────────────────────────────────── */
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -21,28 +21,40 @@ function Navbar() {
 
   return (
     <nav
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[#07071a]/95 backdrop-blur-xl border-b border-white/8 shadow-lg shadow-black/20"
-          : "bg-transparent"
-      }`}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        transition: "all 0.3s",
+        background: scrolled ? "rgba(7,7,26,0.95)" : "transparent",
+        backdropFilter: scrolled ? "blur(20px)" : "none",
+        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.08)" : "none",
+      }}
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/40">
+        <a href="/" className="flex items-center gap-2 shrink-0 no-underline">
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 4px 16px rgba(124,58,237,0.4)" }}
+          >
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <span className="font-bold text-lg tracking-tight text-white">AI PDF Chat</span>
+          <span className="font-bold text-lg text-white tracking-tight">AI PDF Chat</span>
         </a>
 
         {/* Desktop links */}
-        <ul className="hidden md:flex items-center gap-8 text-sm font-medium text-white/65">
+        <ul className="hidden md:flex items-center gap-8 list-none m-0 p-0">
           {links.map((l) => (
             <li key={l.label}>
-              <a href={l.href} className="hover:text-white transition-colors duration-200">
+              <a href={l.href} className="text-sm font-medium no-underline" style={{ color: "rgba(255,255,255,0.6)", transition: "color 0.2s" }}
+                onMouseEnter={e => (e.target.style.color = "white")}
+                onMouseLeave={e => (e.target.style.color = "rgba(255,255,255,0.6)")}
+              >
                 {l.label}
               </a>
             </li>
@@ -51,15 +63,19 @@ function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href="/login"
-            className="text-sm font-medium text-white/70 hover:text-white px-4 py-2 rounded-xl hover:bg-white/8 transition-all duration-200"
+          <a href="/login" className="text-sm font-medium no-underline px-4 py-2 rounded-xl transition-all"
+            style={{ color: "rgba(255,255,255,0.7)" }}
+            onMouseEnter={e => { e.currentTarget.style.color = "white"; e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; e.currentTarget.style.background = "transparent"; }}
           >
             Log in
           </a>
           <a
             href="/login"
-            className="text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-5 py-2.5 rounded-full shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:-translate-y-0.5 transition-all duration-200"
+            className="text-sm font-bold no-underline px-5 py-2 rounded-full text-white"
+            style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(124,58,237,0.55)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(124,58,237,0.35)"; }}
           >
             Get Started Free
           </a>
@@ -67,38 +83,31 @@ function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden p-2 text-white/80 hover:text-white"
+          className="md:hidden p-2 bg-transparent border-none cursor-pointer"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-            {open ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            )}
+          <svg className="w-5 h-5 text-white" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="2">
+            {open
+              ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
           </svg>
         </button>
       </div>
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-[#0d0d24] border-t border-white/8 px-5 py-5 flex flex-col gap-4">
+        <div style={{ background: "#0d0d24", borderTop: "1px solid rgba(255,255,255,0.08)" }} className="md:hidden px-5 py-5 flex flex-col gap-4">
           {links.map((l) => (
-            <a
-              key={l.label}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="text-sm font-medium text-white/70 hover:text-white py-1 transition-colors"
-            >
+            <a key={l.label} href={l.href} onClick={() => setOpen(false)} className="text-sm font-medium no-underline py-1" style={{ color: "rgba(255,255,255,0.7)" }}>
               {l.label}
             </a>
           ))}
-          <div className="flex gap-3 pt-3 border-t border-white/8">
-            <a href="/login" className="flex-1 text-center text-sm font-semibold py-2.5 rounded-xl border border-white/15 text-white/70 hover:text-white hover:bg-white/5 transition-all">
+          <div className="flex gap-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            <a href="/login" className="flex-1 text-center text-sm font-semibold no-underline py-2 rounded-xl text-white" style={{ border: "1px solid rgba(255,255,255,0.15)" }}>
               Log in
             </a>
-            <a href="/login" className="flex-1 text-center text-sm font-semibold py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
+            <a href="/login" className="flex-1 text-center text-sm font-semibold no-underline py-2 rounded-xl text-white" style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)" }}>
               Get Started
             </a>
           </div>
@@ -108,41 +117,35 @@ function Navbar() {
   );
 }
 
-/* ── HERO ────────────────────────────────────────────────────────────────── */
+/* ─── HERO ───────────────────────────────────────────────────────────────── */
 function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-      {/* Background blobs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[700px] h-[700px] rounded-full bg-violet-600/18 blur-[140px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-600/15 blur-[120px]" />
-        <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/10 blur-[100px]" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ paddingTop: "64px" }}>
+      {/* Blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div style={{ position: "absolute", top: "-20%", left: "-10%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.22),transparent 70%)", filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", bottom: "-20%", right: "-10%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle,rgba(79,70,229,0.18),transparent 70%)", filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", top: "40%", left: "35%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(192,38,211,0.12),transparent 70%)", filter: "blur(50px)" }} />
         {/* Dot grid */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: "radial-gradient(circle, #a78bfa 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
+        <div style={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "radial-gradient(circle, #a78bfa 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
       </div>
 
-      <div className="relative max-w-5xl mx-auto px-5 sm:px-8 text-center">
+      <div className="relative w-full max-w-5xl mx-auto px-5 sm:px-8 text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/25 rounded-full px-4 py-1.5 mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-          <span className="text-xs font-semibold text-violet-300 tracking-wide uppercase">Powered by GPT-4o</span>
+        <div className="inline-flex items-center gap-2 mb-8 px-4 py-1.5 rounded-full" style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-400" style={{ animation: "pulse 2s infinite" }} />
+          <span className="text-xs font-bold tracking-widest uppercase" style={{ color: "#c4b5fd" }}>Powered by GPT-4o</span>
         </div>
 
         {/* Headline */}
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-[1.08] mb-6">
+        <h1 className="font-extrabold tracking-tight text-white mb-6" style={{ fontSize: "clamp(2.5rem,6vw,4.5rem)", lineHeight: 1.08 }}>
           Chat with any{" "}
-          <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">
+          <span style={{ background: "linear-gradient(135deg,#c084fc,#e879f9,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
             PDF instantly
           </span>
         </h1>
 
-        <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-lg sm:text-xl mb-10 mx-auto max-w-2xl" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
           Upload invoices, contracts, and reports. Ask questions in plain English.
           Get precise answers in seconds — no more manual searching.
         </p>
@@ -151,54 +154,68 @@ function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
           <a
             href="/login"
-            className="w-full sm:w-auto text-center px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-full shadow-xl shadow-violet-500/35 hover:shadow-violet-500/55 hover:-translate-y-1 transition-all duration-200"
+            className="w-full sm:w-auto text-center no-underline px-8 py-4 text-base font-bold text-white rounded-full"
+            style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 8px 32px rgba(124,58,237,0.4)", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(124,58,237,0.6)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(124,58,237,0.4)"; }}
           >
             Start for free — no card needed
           </a>
           <a
             href="#how-it-works"
-            className="w-full sm:w-auto text-center px-8 py-4 text-base font-semibold text-white/80 hover:text-white border border-white/15 hover:border-white/30 rounded-full hover:bg-white/5 transition-all duration-200"
+            className="w-full sm:w-auto text-center no-underline px-8 py-4 text-base font-semibold rounded-full"
+            style={{ color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.15)", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.color = "white"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}
           >
             See how it works →
           </a>
         </div>
 
-        {/* Mock UI preview */}
-        <div className="relative mx-auto max-w-3xl bg-white/4 border border-white/10 rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
-          {/* Window bar */}
-          <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/8 bg-white/3">
-            <div className="w-3 h-3 rounded-full bg-red-500/60" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-            <div className="w-3 h-3 rounded-full bg-green-500/60" />
-            <span className="ml-3 text-[11px] text-gray-500">AI PDF Chat — dashboard</span>
+        {/* Mock UI */}
+        <div className="mx-auto max-w-3xl rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 40px 80px rgba(0,0,0,0.5)" }}>
+          {/* Title bar */}
+          <div className="flex items-center gap-1.5 px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="w-3 h-3 rounded-full" style={{ background: "rgba(239,68,68,0.6)" }} />
+            <div className="w-3 h-3 rounded-full" style={{ background: "rgba(234,179,8,0.6)" }} />
+            <div className="w-3 h-3 rounded-full" style={{ background: "rgba(34,197,94,0.6)" }} />
+            <span className="ml-3 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>AI PDF Chat — dashboard</span>
           </div>
-          <div className="flex h-52 sm:h-64">
+          <div className="flex" style={{ height: 220 }}>
             {/* Sidebar */}
-            <div className="w-44 bg-white/3 border-r border-white/8 p-3 flex flex-col gap-2">
-              <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Your PDFs</p>
-              {["Q4 Report.pdf", "Contract.pdf", "Invoice.pdf"].map((f, i) => (
-                <div key={f} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] font-medium ${i === 0 ? "bg-violet-600/20 text-violet-300 border border-violet-500/25" : "text-gray-500 hover:bg-white/4"}`}>
+            <div className="flex flex-col gap-2 p-3 w-44" style={{ background: "rgba(255,255,255,0.02)", borderRight: "1px solid rgba(255,255,255,0.07)" }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Your PDFs</p>
+              {[
+                { name: "Q4 Report.pdf", active: true },
+                { name: "Contract.pdf", active: false },
+                { name: "Invoice.pdf", active: false },
+              ].map((f) => (
+                <div key={f.name} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium"
+                  style={f.active
+                    ? { background: "rgba(124,58,237,0.2)", color: "#c4b5fd", border: "1px solid rgba(124,58,237,0.3)" }
+                    : { color: "rgba(255,255,255,0.35)" }
+                  }>
                   <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                     <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
                   </svg>
-                  {f}
+                  {f.name}
                 </div>
               ))}
             </div>
             {/* Chat */}
-            <div className="flex-1 flex flex-col p-4 gap-3 justify-end">
-              <div className="flex gap-2 justify-end">
-                <div className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs px-3 py-2 rounded-2xl rounded-br-md max-w-[70%]">
+            <div className="flex-1 flex flex-col justify-end gap-3 p-4">
+              <div className="flex justify-end">
+                <div className="text-xs text-white px-3 py-2 rounded-2xl" style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", maxWidth: "70%" }}>
                   What is the total revenue in Q4?
                 </div>
               </div>
-              <div className="flex gap-2">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shrink-0">
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)" }}>
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
                 </div>
-                <div className="bg-white/8 border border-white/10 text-gray-200 text-xs px-3 py-2 rounded-2xl rounded-bl-md max-w-[75%]">
-                  Total Q4 revenue was <strong className="text-violet-300">$4.2M</strong>, up 18% from Q3, driven by enterprise contracts in APAC.
+                <div className="text-xs px-3 py-2 rounded-2xl" style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.85)", maxWidth: "75%" }}>
+                  Total Q4 revenue was <strong style={{ color: "#c4b5fd" }}>$4.2M</strong>, up 18% from Q3, driven by enterprise contracts in APAC.
                 </div>
               </div>
             </div>
@@ -209,8 +226,8 @@ function Hero() {
   );
 }
 
-/* ── SOCIAL PROOF ────────────────────────────────────────────────────────── */
-function SocialProof() {
+/* ─── STATS ──────────────────────────────────────────────────────────────── */
+function Stats() {
   const stats = [
     { value: "50K+", label: "PDFs analyzed" },
     { value: "200K+", label: "Questions answered" },
@@ -218,115 +235,82 @@ function SocialProof() {
     { value: "< 2s", label: "Response time" },
   ];
   return (
-    <section className="py-16 border-y border-white/6">
-      <div className="max-w-5xl mx-auto px-5 sm:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {stats.map((s) => (
-            <div key={s.label}>
-              <p className="text-3xl font-extrabold text-white bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">{s.value}</p>
-              <p className="text-sm text-gray-500 mt-1">{s.label}</p>
-            </div>
-          ))}
-        </div>
+    <section style={{ borderTop: "1px solid rgba(255,255,255,0.07)", borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "64px 0" }}>
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        {stats.map((s) => (
+          <div key={s.label}>
+            <p className="text-3xl font-extrabold mb-1" style={{ background: "linear-gradient(135deg,#c084fc,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              {s.value}
+            </p>
+            <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>{s.label}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
-/* ── FEATURES ────────────────────────────────────────────────────────────── */
+/* ─── FEATURES ───────────────────────────────────────────────────────────── */
 function Features() {
   const features = [
     {
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-      ),
-      title: "Instant Q&A",
+      icon: "💬", title: "Instant Q&A",
       desc: "Ask any question in plain English and get precise answers extracted directly from your PDF content.",
-      color: "from-violet-500 to-purple-600",
-      glow: "shadow-violet-500/20",
+      color: "#7c3aed",
     },
     {
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-      ),
-      title: "Smart Extraction",
-      desc: "Automatically extract invoices, resumes, contracts, and reports into clean structured JSON data.",
-      color: "from-indigo-500 to-blue-600",
-      glow: "shadow-indigo-500/20",
+      icon: "📋", title: "Smart Extraction",
+      desc: "Automatically extract invoices, resumes, contracts into clean structured JSON data.",
+      color: "#4f46e5",
     },
     {
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ),
-      title: "Lightning Fast",
-      desc: "Vector search over your documents with semantic understanding. Get answers in under 2 seconds.",
-      color: "from-fuchsia-500 to-pink-600",
-      glow: "shadow-fuchsia-500/20",
+      icon: "⚡", title: "Lightning Fast",
+      desc: "Vector search with semantic understanding. Get answers in under 2 seconds.",
+      color: "#c026d3",
     },
     {
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-      ),
-      title: "Secure & Private",
+      icon: "🔒", title: "Secure & Private",
       desc: "Your documents are encrypted in transit and at rest. Only you can access your files.",
-      color: "from-emerald-500 to-teal-600",
-      glow: "shadow-emerald-500/20",
+      color: "#059669",
     },
     {
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-      ),
-      title: "Multi-Document",
+      icon: "📁", title: "Multi-Document",
       desc: "Upload and organize multiple PDFs. Switch between documents instantly in the sidebar.",
-      color: "from-amber-500 to-orange-600",
-      glow: "shadow-amber-500/20",
+      color: "#d97706",
     },
     {
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      ),
-      title: "Chat History",
+      icon: "🕘", title: "Chat History",
       desc: "Every conversation is saved. Pick up where you left off with full multi-turn context.",
-      color: "from-sky-500 to-cyan-600",
-      glow: "shadow-sky-500/20",
+      color: "#0284c7",
     },
   ];
 
   return (
-    <section id="features" className="py-24">
+    <section id="features" style={{ padding: "96px 0" }}>
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
         <div className="text-center mb-16">
-          <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Features</p>
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#a78bfa" }}>Features</p>
+          <h2 className="font-extrabold tracking-tight text-white mb-4" style={{ fontSize: "clamp(2rem,5vw,3rem)" }}>
             Everything you need
           </h2>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto">
-            A complete AI toolkit for working with PDF documents — built for speed, accuracy, and ease of use.
+          <p className="text-lg mx-auto max-w-xl" style={{ color: "rgba(255,255,255,0.45)" }}>
+            A complete AI toolkit for working with PDF documents.
           </p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map((f) => (
             <div
               key={f.title}
-              className="group bg-white/4 hover:bg-white/6 border border-white/8 hover:border-white/14 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
+              className="rounded-2xl p-6 transition-all duration-300 cursor-default"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.055)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center text-white mb-4 shadow-lg ${f.glow} group-hover:scale-105 transition-transform duration-300`}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4" style={{ background: `${f.color}22`, border: `1px solid ${f.color}44` }}>
                 {f.icon}
               </div>
               <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
-              <p className="text-sm text-gray-400 leading-relaxed">{f.desc}</p>
+              <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{f.desc}</p>
             </div>
           ))}
         </div>
@@ -335,55 +319,37 @@ function Features() {
   );
 }
 
-/* ── HOW IT WORKS ────────────────────────────────────────────────────────── */
+/* ─── HOW IT WORKS ───────────────────────────────────────────────────────── */
 function HowItWorks() {
   const steps = [
-    {
-      n: "01",
-      title: "Upload your PDF",
-      desc: "Drag and drop any PDF — invoices, contracts, reports, research papers. Up to 100MB supported.",
-      icon: "📄",
-    },
-    {
-      n: "02",
-      title: "Ask a question",
-      desc: "Type any question in plain English. Our AI understands context and finds the exact information you need.",
-      icon: "💬",
-    },
-    {
-      n: "03",
-      title: "Get precise answers",
-      desc: "Receive accurate, sourced answers in seconds. Extract structured data, summaries, or specific details.",
-      icon: "⚡",
-    },
+    { n: 1, icon: "📄", title: "Upload your PDF", desc: "Drag and drop any PDF — invoices, contracts, research papers. Up to 100MB supported." },
+    { n: 2, icon: "💬", title: "Ask a question", desc: "Type any question in plain English. AI understands context and finds exact information." },
+    { n: 3, icon: "⚡", title: "Get precise answers", desc: "Receive accurate answers in seconds. Extract structured data, summaries, or specific details." },
   ];
 
   return (
-    <section id="how-it-works" className="py-24">
+    <section id="how-it-works" style={{ padding: "96px 0" }}>
       <div className="max-w-5xl mx-auto px-5 sm:px-8">
         <div className="text-center mb-16">
-          <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">How it works</p>
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#a78bfa" }}>How it works</p>
+          <h2 className="font-extrabold tracking-tight text-white mb-4" style={{ fontSize: "clamp(2rem,5vw,3rem)" }}>
             Three simple steps
           </h2>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto">
-            From PDF to answers in under 30 seconds.
-          </p>
+          <p className="text-lg" style={{ color: "rgba(255,255,255,0.45)" }}>From PDF to answers in under 30 seconds.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((step, i) => (
-            <div key={step.n} className="relative text-center">
-              {i < steps.length - 1 && (
-                <div className="hidden md:block absolute top-10 left-[calc(50%+40px)] right-0 h-px bg-gradient-to-r from-violet-500/40 to-transparent" />
-              )}
-              <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-500/20 text-3xl mb-5 shadow-lg">
-                {step.icon}
-                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md">
-                  {i + 1}
+        <div className="grid md:grid-cols-3 gap-10">
+          {steps.map((s) => (
+            <div key={s.n} className="text-center">
+              <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl text-3xl mb-5"
+                style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.25)" }}>
+                {s.icon}
+                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs font-bold text-white flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 2px 8px rgba(124,58,237,0.5)" }}>
+                  {s.n}
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
-              <p className="text-sm text-gray-400 leading-relaxed">{step.desc}</p>
+              <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{s.desc}</p>
             </div>
           ))}
         </div>
@@ -392,57 +358,42 @@ function HowItWorks() {
   );
 }
 
-/* ── TESTIMONIALS ────────────────────────────────────────────────────────── */
+/* ─── TESTIMONIALS ───────────────────────────────────────────────────────── */
 function Testimonials() {
   const reviews = [
-    {
-      quote: "I process 50+ invoices a week. AI PDF Chat cuts that down to 10 minutes. Absolute game changer.",
-      name: "Sarah K.",
-      role: "Finance Manager",
-      avatar: "SK",
-    },
-    {
-      quote: "Our legal team uses it to review contracts in seconds. The accuracy is remarkable — saves us hours.",
-      name: "James L.",
-      role: "Legal Counsel",
-      avatar: "JL",
-    },
-    {
-      quote: "I upload research papers and just ask questions. It's like having a research assistant that never sleeps.",
-      name: "Priya M.",
-      role: "PhD Researcher",
-      avatar: "PM",
-    },
+    { quote: "I process 50+ invoices a week. AI PDF Chat cuts that to 10 minutes. Absolute game changer.", name: "Sarah K.", role: "Finance Manager", avatar: "SK" },
+    { quote: "Our legal team uses it to review contracts in seconds. The accuracy is remarkable.", name: "James L.", role: "Legal Counsel", avatar: "JL" },
+    { quote: "I upload research papers and just ask questions. Like a research assistant that never sleeps.", name: "Priya M.", role: "PhD Researcher", avatar: "PM" },
   ];
 
   return (
-    <section className="py-24">
+    <section style={{ padding: "96px 0" }}>
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
         <div className="text-center mb-16">
-          <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Testimonials</p>
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#a78bfa" }}>Testimonials</p>
+          <h2 className="font-extrabold tracking-tight text-white" style={{ fontSize: "clamp(2rem,5vw,3rem)" }}>
             Loved by thousands
           </h2>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {reviews.map((r) => (
-            <div key={r.name} className="bg-white/4 border border-white/8 rounded-2xl p-6 flex flex-col gap-4 hover:bg-white/6 hover:border-white/12 transition-all duration-300">
-              {/* Stars */}
+            <div key={r.name} className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex gap-0.5">
                 {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  <svg key={i} className="w-4 h-4" fill="#fbbf24" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                   </svg>
                 ))}
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed flex-1">"{r.quote}"</p>
+              <p className="text-sm leading-relaxed flex-1" style={{ color: "rgba(255,255,255,0.6)" }}>"{r.quote}"</p>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                  style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)" }}>
                   {r.avatar}
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{r.name}</p>
-                  <p className="text-xs text-gray-500">{r.role}</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{r.role}</p>
                 </div>
               </div>
             </div>
@@ -453,7 +404,7 @@ function Testimonials() {
   );
 }
 
-/* ── PRICING ─────────────────────────────────────────────────────────────── */
+/* ─── PRICING ────────────────────────────────────────────────────────────── */
 function Pricing() {
   const plans = [
     {
@@ -463,7 +414,6 @@ function Pricing() {
       desc: "Perfect to get started.",
       features: ["5 PDF uploads", "20 questions / day", "Basic Q&A", "Chat history (7 days)", "Email support"],
       cta: "Get started free",
-      href: "/login",
       highlight: false,
     },
     {
@@ -473,49 +423,47 @@ function Pricing() {
       desc: "For power users and teams.",
       features: ["Unlimited PDFs", "Unlimited questions", "Smart extraction (JSON)", "Full chat history", "Priority support", "Early access to new features"],
       cta: "Start Pro",
-      href: "/login",
-      highlight: true,
       badge: "Most Popular",
+      highlight: true,
     },
   ];
 
   return (
-    <section id="pricing" className="py-24">
+    <section id="pricing" style={{ padding: "96px 0" }}>
       <div className="max-w-4xl mx-auto px-5 sm:px-8">
         <div className="text-center mb-16">
-          <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Pricing</p>
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#a78bfa" }}>Pricing</p>
+          <h2 className="font-extrabold tracking-tight text-white mb-4" style={{ fontSize: "clamp(2rem,5vw,3rem)" }}>
             Simple, honest pricing
           </h2>
-          <p className="text-gray-400 text-lg">No hidden fees. No surprise charges. Cancel anytime.</p>
+          <p className="text-lg" style={{ color: "rgba(255,255,255,0.45)" }}>No hidden fees. Cancel anytime.</p>
         </div>
         <div className="grid sm:grid-cols-2 gap-6">
           {plans.map((p) => (
-            <div
-              key={p.name}
-              className={`relative rounded-2xl p-8 border flex flex-col ${
-                p.highlight
-                  ? "bg-gradient-to-b from-violet-600/15 to-indigo-600/10 border-violet-500/40 shadow-xl shadow-violet-500/10"
-                  : "bg-white/4 border-white/8"
-              }`}
+            <div key={p.name} className="relative rounded-2xl p-8 flex flex-col"
+              style={p.highlight
+                ? { background: "linear-gradient(135deg,rgba(124,58,237,0.15),rgba(79,70,229,0.1))", border: "1px solid rgba(124,58,237,0.4)", boxShadow: "0 20px 60px rgba(124,58,237,0.15)" }
+                : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }
+              }
             >
               {p.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg shadow-violet-500/30">
+                <div className="absolute text-xs font-bold text-white px-4 py-1 rounded-full"
+                  style={{ top: -14, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 4px 16px rgba(124,58,237,0.4)", whiteSpace: "nowrap" }}>
                   {p.badge}
                 </div>
               )}
               <div className="mb-6">
-                <p className="text-sm font-semibold text-gray-400 mb-1">{p.name}</p>
+                <p className="text-sm font-semibold mb-1" style={{ color: "rgba(255,255,255,0.45)" }}>{p.name}</p>
                 <div className="flex items-end gap-1.5 mb-1">
                   <span className="text-4xl font-extrabold text-white">{p.price}</span>
-                  <span className="text-gray-400 text-sm pb-1">{p.period}</span>
+                  <span className="text-sm pb-1" style={{ color: "rgba(255,255,255,0.4)" }}>{p.period}</span>
                 </div>
-                <p className="text-sm text-gray-500">{p.desc}</p>
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>{p.desc}</p>
               </div>
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="flex flex-col gap-3 mb-8 flex-1" style={{ listStyle: "none", margin: 0, padding: 0 }}>
                 {p.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm text-gray-300">
-                    <svg className="w-4 h-4 text-violet-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="#a78bfa" viewBox="0 0 24 24" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     {f}
@@ -523,12 +471,14 @@ function Pricing() {
                 ))}
               </ul>
               <a
-                href={p.href}
-                className={`block text-center py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  p.highlight
-                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:-translate-y-0.5"
-                    : "bg-white/8 hover:bg-white/14 text-white border border-white/10"
-                }`}
+                href="/login"
+                className="block text-center no-underline py-3 rounded-xl text-sm font-bold text-white"
+                style={p.highlight
+                  ? { background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)", transition: "all 0.2s" }
+                  : { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", transition: "all 0.2s" }
+                }
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
               >
                 {p.cta}
               </a>
@@ -540,26 +490,30 @@ function Pricing() {
   );
 }
 
-/* ── FINAL CTA ───────────────────────────────────────────────────────────── */
+/* ─── FINAL CTA ──────────────────────────────────────────────────────────── */
 function FinalCTA() {
   return (
-    <section className="py-24">
+    <section style={{ padding: "96px 0" }}>
       <div className="max-w-3xl mx-auto px-5 sm:px-8 text-center">
-        <div className="relative bg-gradient-to-br from-violet-600/20 to-indigo-600/15 border border-violet-500/25 rounded-3xl px-8 py-16 overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-[-30%] left-[-10%] w-[400px] h-[400px] rounded-full bg-violet-600/15 blur-[80px]" />
-            <div className="absolute bottom-[-30%] right-[-10%] w-[300px] h-[300px] rounded-full bg-indigo-600/15 blur-[80px]" />
+        <div className="relative rounded-3xl px-8 py-16 overflow-hidden"
+          style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(79,70,229,0.12))", border: "1px solid rgba(124,58,237,0.25)" }}>
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div style={{ position: "absolute", top: "-40%", left: "-10%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.18),transparent 70%)", filter: "blur(50px)" }} />
+            <div style={{ position: "absolute", bottom: "-40%", right: "-10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle,rgba(79,70,229,0.18),transparent 70%)", filter: "blur(50px)" }} />
           </div>
           <div className="relative">
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+            <h2 className="font-extrabold tracking-tight text-white mb-4" style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)" }}>
               Start chatting with your PDFs today
             </h2>
-            <p className="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
+            <p className="text-lg mb-8 mx-auto max-w-xl" style={{ color: "rgba(255,255,255,0.5)" }}>
               Join thousands of users who save hours every week. Free forever — no credit card needed.
             </p>
             <a
               href="/login"
-              className="inline-block px-10 py-4 text-base font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-full shadow-xl shadow-violet-500/35 hover:shadow-violet-500/55 hover:-translate-y-1 transition-all duration-200"
+              className="inline-block no-underline px-10 py-4 text-base font-bold text-white rounded-full"
+              style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 8px 32px rgba(124,58,237,0.4)", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(124,58,237,0.6)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(124,58,237,0.4)"; }}
             >
               Get started for free →
             </a>
@@ -570,43 +524,50 @@ function FinalCTA() {
   );
 }
 
-/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+/* ─── FOOTER ─────────────────────────────────────────────────────────────── */
 function Footer() {
   return (
-    <footer className="border-t border-white/6 py-10">
+    <footer style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "40px 0" }}>
       <div className="max-w-6xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)" }}>
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
           <span className="text-sm font-bold text-white">AI PDF Chat</span>
         </div>
-        <p className="text-xs text-gray-600">© {new Date().getFullYear()} AI PDF Chat. All rights reserved.</p>
-        <div className="flex items-center gap-5 text-xs text-gray-600">
-          <a href="#" className="hover:text-gray-400 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-gray-400 transition-colors">Terms</a>
-          <a href="#" className="hover:text-gray-400 transition-colors">Contact</a>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+          © {new Date().getFullYear()} AI PDF Chat. All rights reserved.
+        </p>
+        <div className="flex items-center gap-5">
+          {["Privacy", "Terms", "Contact"].map((l) => (
+            <a key={l} href="#" className="text-xs no-underline" style={{ color: "rgba(255,255,255,0.3)", transition: "color 0.2s" }}
+              onMouseEnter={e => (e.target.style.color = "rgba(255,255,255,0.7)")}
+              onMouseLeave={e => (e.target.style.color = "rgba(255,255,255,0.3)")}
+            >
+              {l}
+            </a>
+          ))}
         </div>
       </div>
     </footer>
   );
 }
 
-/* ── PAGE ────────────────────────────────────────────────────────────────── */
+/* ─── PAGE ───────────────────────────────────────────────────────────────── */
 export default function HomePage() {
   return (
-    <main className="bg-[#07071a] min-h-screen">
+    <div style={{ background: "#07071a", minHeight: "100vh", color: "white" }}>
       <Navbar />
       <Hero />
-      <SocialProof />
+      <Stats />
       <Features />
       <HowItWorks />
       <Testimonials />
       <Pricing />
       <FinalCTA />
       <Footer />
-    </main>
+    </div>
   );
 }
