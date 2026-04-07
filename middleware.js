@@ -2,8 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
 export async function middleware(request) {
-  const { pathname } = request.nextUrl;
-
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -31,7 +29,6 @@ export async function middleware(request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /dashboard — redirect unauthenticated users to /login
   if (!user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -39,7 +36,7 @@ export async function middleware(request) {
   return supabaseResponse;
 }
 
-// Only run middleware on /dashboard routes — never on / or /login
+// ONLY protect /dashboard — never runs on "/" or "/login"
 export const config = {
   matcher: ["/dashboard/:path*"],
 };
