@@ -176,6 +176,7 @@ export default function DashboardPage() {
   const [limitError, setLimitError] = useState(null);
   const [plan, setPlan] = useState("free");
   const [upgradingStripe, setUpgradingStripe] = useState(false);
+  const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 20 });
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -191,6 +192,7 @@ export default function DashboardPage() {
         setLoading(false);
         fetchDocs(user.id);
         fetchPlan(user.id);
+        fetchUsage(user.id);
       }
     });
   }, []);
@@ -203,8 +205,39 @@ export default function DashboardPage() {
         .select("plan")
         .eq("user_id", userId)
         .single();
-      if (data?.plan) setPlan(data.plan);
+      if (data?.plan) {
+        setPlan(data.plan);
+        if (data.plan === "pro") {
+          setUsage((prev) => ({ ...prev, maxPdfs: Infinity, maxQuestions: Infinity }));
+        }
+      }
     } catch { /* free by default */ }
+  }
+
+  /* ── Fetch usage ────────────────────────────────────────────────────── */
+  async function fetchUsage(userId) {
+    try {
+      // PDF count
+      const { count: pdfCount } = await supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+
+      // Questions used today
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const { count: qCount } = await supabase
+        .from("question_usage")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", startOfDay.toISOString());
+
+      setUsage((prev) => ({
+        ...prev,
+        pdfs: pdfCount ?? 0,
+        questions: qCount ?? 0,
+      }));
+    } catch { /* non-fatal */ }
   }
 
   /* ── Fetch documents ────────────────────────────────────────────────── */
@@ -239,6 +272,7 @@ export default function DashboardPage() {
       if (dbErr) throw dbErr;
 
       await fetchDocs(user.id);
+      await fetchUsage(user.id);
       // Trigger background embedding (best-effort, non-blocking)
       fetch("/api/embed", {
         method: "POST",
@@ -344,6 +378,7 @@ export default function DashboardPage() {
       );
     } finally {
       setAiStreaming(false);
+      if (user) fetchUsage(user.id);
     }
   }
 
@@ -480,6 +515,61 @@ export default function DashboardPage() {
             ))
           )}
         </div>
+
+        {/* Usage stats */}
+        {plan !== "pro" && (
+          <div className="mx-3 mb-2 rounded-xl p-3 space-y-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Usage today</p>
+
+            {/* PDFs */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>PDFs</span>
+                <span className="text-xs font-semibold" style={{ color: usage.pdfs >= usage.maxPdfs ? "#f87171" : "rgba(255,255,255,0.6)" }}>
+                  {usage.pdfs} / {usage.maxPdfs}
+                </span>
+              </div>
+              <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.08)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min((usage.pdfs / usage.maxPdfs) * 100, 100)}%`,
+                    background: usage.pdfs >= usage.maxPdfs
+                      ? "linear-gradient(90deg,#ef4444,#dc2626)"
+                      : "linear-gradient(90deg,#7c3aed,#4f46e5)",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Questions */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Questions</span>
+                <span className="text-xs font-semibold" style={{ color: usage.questions >= usage.maxQuestions ? "#f87171" : "rgba(255,255,255,0.6)" }}>
+                  {usage.questions} / {usage.maxQuestions}
+                </span>
+              </div>
+              <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.08)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min((usage.questions / usage.maxQuestions) * 100, 100)}%`,
+                    background: usage.questions >= usage.maxQuestions
+                      ? "linear-gradient(90deg,#ef4444,#dc2626)"
+                      : usage.questions / usage.maxQuestions > 0.7
+                      ? "linear-gradient(90deg,#f59e0b,#d97706)"
+                      : "linear-gradient(90deg,#7c3aed,#4f46e5)",
+                  }}
+                />
+              </div>
+            </div>
+
+            {usage.questions >= usage.maxQuestions && (
+              <p className="text-[10px]" style={{ color: "#f87171" }}>Daily limit reached. Upgrade for unlimited.</p>
+            )}
+          </div>
+        )}
 
         {/* Bottom: plan + user */}
         <div className="border-t border-white/6 p-3 space-y-2 shrink-0">
