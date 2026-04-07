@@ -466,6 +466,7 @@ export default function DashboardPage() {
 
   const [showInsights, setShowInsights] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [showUpgradedToast, setShowUpgradedToast] = useState(false);
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -484,6 +485,18 @@ export default function DashboardPage() {
         fetchUsage(user.id);
       }
     });
+  }, []);
+
+  /* ── Show upgrade success toast if redirected from Stripe ───────────── */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("upgraded") === "1") {
+      setShowUpgradedToast(true);
+      // Clean URL without reload
+      window.history.replaceState({}, "", "/dashboard");
+      setTimeout(() => setShowUpgradedToast(false), 6000);
+    }
   }, []);
 
   async function fetchPlan(userId) {
@@ -645,6 +658,17 @@ export default function DashboardPage() {
       if (data.url) window.location.href = data.url;
       else alert(data.error || "Checkout failed");
     } catch { alert("Checkout failed"); }
+    finally { setUpgradingStripe(false); }
+  }
+
+  async function handleManageSubscription() {
+    setUpgradingStripe(true);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert(data.error || "Could not open billing portal");
+    } catch { alert("Could not open billing portal"); }
     finally { setUpgradingStripe(false); }
   }
 
@@ -813,14 +837,28 @@ export default function DashboardPage() {
 
         {/* Bottom */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "10px", flexShrink: 0 }}>
-          {plan !== "pro" && (
+          {plan !== "pro" ? (
             <button
               onClick={handleUpgrade}
               disabled={upgradingStripe}
-              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", fontSize: 12, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: "pointer", marginBottom: 8 }}
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", fontSize: 12, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1, marginBottom: 8 }}
             >
               <CrownIcon /> {upgradingStripe ? "Loading…" : "Upgrade to Pro · $9/mo"}
             </button>
+          ) : (
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "5px", marginBottom: 6 }}>
+                <svg width="12" height="12" fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/></svg>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#fbbf24" }}>Pro Plan Active</span>
+              </div>
+              <button
+                onClick={handleManageSubscription}
+                disabled={upgradingStripe}
+                style={{ width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1 }}
+              >
+                {upgradingStripe ? "Loading…" : "Manage Subscription"}
+              </button>
+            </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 4px" }}>
             <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white", flexShrink: 0 }}>
@@ -1048,6 +1086,22 @@ export default function DashboardPage() {
       {copied && (
         <div style={{ position: "fixed", bottom: 24, right: 24, padding: "10px 18px", background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", zIndex: 100 }}>
           Copied to clipboard
+        </div>
+      )}
+
+      {/* Upgraded toast */}
+      {showUpgradedToast && (
+        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", padding: "14px 24px", background: "linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.1))", border: "1px solid rgba(34,197,94,0.35)", borderRadius: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", gap: 12, whiteSpace: "nowrap" }}>
+          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(34,197,94,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="14" height="14" fill="none" stroke="#4ade80" viewBox="0 0 24 24" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "white", margin: 0 }}>Welcome to Pro! 🎉</p>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", margin: "2px 0 0" }}>You now have unlimited PDFs and questions.</p>
+          </div>
+          <button onClick={() => setShowUpgradedToast(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 4, marginLeft: 4, flexShrink: 0 }}>
+            <CloseIcon />
+          </button>
         </div>
       )}
 
