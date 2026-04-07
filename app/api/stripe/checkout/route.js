@@ -64,7 +64,7 @@ export async function POST() {
     // ── Create checkout session ───────────────────────────────
     const appUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
-      "https://intellixy.org";
+      "https://intellixy.vercel.app";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

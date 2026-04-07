@@ -23,7 +23,7 @@ export async function POST(req) {
       (() => {
         const host = req.headers.get("host") || "";
         const proto = host.startsWith("localhost") ? "http" : "https";
-        return host ? `${proto}://${host}` : "https://intellixy.org";
+        return host ? `${proto}://${host}` : "https://intellixy.vercel.app";
       })();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
