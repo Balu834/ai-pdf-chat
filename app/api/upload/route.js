@@ -98,7 +98,7 @@ export async function POST(req) {
     // ── DB record ─────────────────────────────────────────────
     const { data: docRecord, error: dbError } = await supabase
       .from("documents")
-      .insert([{ name: file.name, file_url: fileUrl, user_id: user.id }])
+      .insert([{ file_name: file.name, file_url: fileUrl, file_size: file.size, user_id: user.id }])
       .select("id")
       .single();
 
