@@ -2,6 +2,22 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
 export async function middleware(request) {
+  const { pathname } = request.nextUrl;
+
+  // Absolute safety — never touch public routes
+  if (
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  // Only reach here for /dashboard routes
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -36,7 +52,7 @@ export async function middleware(request) {
   return supabaseResponse;
 }
 
-// ONLY protect /dashboard — never runs on "/" or "/login"
 export const config = {
+  // Only run on /dashboard and sub-paths — "/" and "/login" are NEVER matched
   matcher: ["/dashboard/:path*"],
 };
