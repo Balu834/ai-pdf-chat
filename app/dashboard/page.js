@@ -244,7 +244,7 @@ export default function DashboardPage() {
   const fetchDocs = useCallback(async (userId) => {
     const { data, error } = await supabase
       .from("documents")
-      .select("id, file_name, file_url, file_size, created_at")
+      .select("id, file_name, file_url, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
     if (!error && data) setDocs(data);
@@ -267,7 +267,6 @@ export default function DashboardPage() {
         user_id: user.id,
         file_name: file.name,
         file_url: fileUrl,
-        file_size: file.size,
       }]);
       if (dbErr) throw dbErr;
 
