@@ -12,15 +12,17 @@ create extension if not exists "uuid-ossp";
 create table if not exists documents (
   id         uuid primary key default uuid_generate_v4(),
   user_id    uuid references auth.users(id) on delete cascade not null,
-  name       text not null,
+  file_name  text not null,
   file_url   text not null,
+  file_size  bigint,
   created_at timestamptz default now() not null
 );
 
 -- Ensure columns exist even if table was created without them
-alter table documents add column if not exists user_id  uuid references auth.users(id) on delete cascade;
-alter table documents add column if not exists file_url text;
-alter table documents add column if not exists name     text;
+alter table documents add column if not exists user_id    uuid references auth.users(id) on delete cascade;
+alter table documents add column if not exists file_url   text;
+alter table documents add column if not exists file_name  text;
+alter table documents add column if not exists file_size  bigint;
 
 -- document_chunks: chunked text + embeddings for RAG
 create table if not exists document_chunks (

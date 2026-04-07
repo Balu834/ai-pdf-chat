@@ -256,28 +256,13 @@ export default function DashboardPage() {
     if (!file || !file.name.endsWith(".pdf")) return;
     setUploading(true);
     try {
-      const path = `${user.id}/${Date.now()}_${file.name}`;
-      const { error: upErr } = await supabase.storage.from("pdfs").upload(path, file, { upsert: false });
-      if (upErr) throw upErr;
-
-      const { data: urlData } = supabase.storage.from("pdfs").getPublicUrl(path);
-      const fileUrl = urlData.publicUrl;
-
-      const { error: dbErr } = await supabase.from("documents").insert([{
-        user_id: user.id,
-        file_name: file.name,
-        file_url: fileUrl,
-      }]);
-      if (dbErr) throw dbErr;
-
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
       await fetchDocs(user.id);
       await fetchUsage(user.id);
-      // Trigger background embedding (best-effort, non-blocking)
-      fetch("/api/embed", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileUrl }),
-      }).catch(() => {});
     } catch (err) {
       alert("Upload failed: " + err.message);
     } finally {
