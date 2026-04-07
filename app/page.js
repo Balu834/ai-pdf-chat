@@ -58,14 +58,18 @@ export default function HomePage() {
             No more manual searching — just answers.
           </p>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 72 }}>
-            <a href="/login" style={{ fontSize: 15, fontWeight: 700, color: "white", textDecoration: "none", padding: "14px 32px", borderRadius: 50, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", boxShadow: "0 8px 32px rgba(124,58,237,0.4)" }}>
-              Get Started Free →
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 16 }}>
+            <a href="/login" style={{ fontSize: 16, fontWeight: 800, color: "white", textDecoration: "none", padding: "16px 36px", borderRadius: 50, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", boxShadow: "0 10px 40px rgba(124,58,237,0.45)", letterSpacing: "-0.2px" }}>
+              Try Intellixy Free →
             </a>
-            <a href="#features" style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.65)", textDecoration: "none", padding: "14px 32px", borderRadius: 50, border: "1px solid rgba(255,255,255,0.14)" }}>
+            <a href="#how-it-works" style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.65)", textDecoration: "none", padding: "16px 32px", borderRadius: 50, border: "1px solid rgba(255,255,255,0.14)" }}>
               See how it works
             </a>
           </div>
+          {/* Trust text */}
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 56 }}>
+            No signup required &nbsp;•&nbsp; Free to try &nbsp;•&nbsp; No credit card needed
+          </p>
 
           {/* Mock dashboard preview */}
           <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 18, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.5)", maxWidth: 680, margin: "0 auto" }}>
@@ -105,6 +109,44 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────── */}
+      <section id="how-it-works" style={{ padding: "96px 24px", background: "rgba(255,255,255,0.015)" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>How it works</p>
+            <h2 style={{ fontSize: "clamp(1.8rem,4vw,2.6rem)", fontWeight: 900, color: "white", margin: "0 0 14px" }}>Up and running in seconds</h2>
+            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", margin: 0 }}>No setup. No learning curve. Just results.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 0, position: "relative" }}>
+            {[
+              { step: "01", icon: "📄", title: "Upload your PDF", desc: "Drop any PDF — invoices, contracts, reports, research papers. Up to any size." },
+              { step: "02", icon: "💬", title: "Ask a question", desc: "Type your question in plain English. No special commands or syntax needed." },
+              { step: "03", icon: "✨", title: "Get instant answers", desc: "AI reads your document and replies with precise, cited answers in seconds." },
+            ].map((s, i) => (
+              <div key={s.step} style={{ position: "relative", padding: "32px 28px", textAlign: "center" }}>
+                {/* Connector line */}
+                {i < 2 && (
+                  <div style={{ position: "absolute", top: 44, right: 0, width: "50%", height: 1, background: "linear-gradient(90deg,rgba(124,58,237,0.4),transparent)", display: "none" }} />
+                )}
+                {/* Step circle */}
+                <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg,rgba(124,58,237,0.25),rgba(6,182,212,0.15))", border: "1px solid rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", position: "relative" }}>
+                  <span style={{ fontSize: 22 }}>{s.icon}</span>
+                  <div style={{ position: "absolute", top: -8, right: -8, width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "white" }}>{s.step}</div>
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "white", margin: "0 0 10px" }}>{s.title}</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.65, margin: 0 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+          {/* Arrow connectors for desktop */}
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
+            <a href="/login" style={{ fontSize: 14, fontWeight: 700, color: "white", textDecoration: "none", padding: "12px 28px", borderRadius: 50, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", boxShadow: "0 6px 24px rgba(124,58,237,0.35)" }}>
+              Try it now — it&apos;s free
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ── FEATURES ──────────────────────────────────────────────────── */}
       <section id="features" style={{ padding: "96px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -113,19 +155,48 @@ export default function HomePage() {
             <h2 style={{ fontSize: "clamp(2rem,4vw,2.8rem)", fontWeight: 900, color: "white", margin: "0 0 16px" }}>Understand your documents like never before</h2>
             <p style={{ fontSize: 17, color: "rgba(255,255,255,0.42)", maxWidth: 500, margin: "0 auto" }}>Everything you need to work smarter with any document.</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 24 }}>
             {[
-              { icon: "💬", title: "Instant Q&A", desc: "Ask anything in plain English and get precise answers directly from your document." },
-              { icon: "✨", title: "AI Insights", desc: "Auto-generate summaries, key points, and suggested questions for any PDF." },
-              { icon: "⚡", title: "Lightning Fast", desc: "Semantic search delivers accurate answers in under 2 seconds." },
-              { icon: "🔒", title: "Secure & Private", desc: "Your files are encrypted in transit and at rest. Only you have access." },
-              { icon: "📊", title: "Compare Documents", desc: "Select two PDFs and let AI highlight similarities and differences instantly." },
-              { icon: "🕘", title: "Chat History", desc: "Every conversation is saved with full multi-turn context." },
+              {
+                icon: "💬",
+                gradient: "rgba(124,58,237,0.18)",
+                border: "rgba(124,58,237,0.3)",
+                iconBg: "rgba(124,58,237,0.2)",
+                title: "Chat with PDF",
+                desc: "Ask any question in plain English and get precise, cited answers directly from your document — no manual searching required.",
+                bullets: ["Multi-turn conversation", "Instant semantic search", "Cited from source"],
+              },
+              {
+                icon: "✨",
+                gradient: "rgba(6,182,212,0.12)",
+                border: "rgba(6,182,212,0.25)",
+                iconBg: "rgba(6,182,212,0.15)",
+                title: "Instant Insights",
+                desc: "One click generates a full summary, key takeaways, and suggested follow-up questions — without reading a single page yourself.",
+                bullets: ["Auto-generated summary", "Key points extraction", "Smart question suggestions"],
+              },
+              {
+                icon: "📊",
+                gradient: "rgba(167,139,250,0.12)",
+                border: "rgba(167,139,250,0.25)",
+                iconBg: "rgba(167,139,250,0.15)",
+                title: "Compare Documents",
+                desc: "Select any two PDFs and let AI identify similarities, differences, and conflicting information across both documents instantly.",
+                bullets: ["Side-by-side analysis", "Conflict detection", "Works on any two PDFs"],
+              },
             ].map(f => (
-              <div key={f.title} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: 24, transition: "border-color 0.2s" }}>
-                <div style={{ fontSize: 28, marginBottom: 14 }}>{f.icon}</div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: "white", margin: "0 0 8px" }}>{f.title}</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.65, margin: 0 }}>{f.desc}</p>
+              <div key={f.title} style={{ background: `linear-gradient(135deg,${f.gradient},transparent)`, border: `1px solid ${f.border}`, borderRadius: 20, padding: 32 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: f.iconBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, marginBottom: 20 }}>{f.icon}</div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: "white", margin: "0 0 10px", letterSpacing: "-0.3px" }}>{f.title}</h3>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, margin: "0 0 20px" }}>{f.desc}</p>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {f.bullets.map(b => (
+                    <li key={b} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+                      <svg width="14" height="14" fill="none" stroke="#a78bfa" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
