@@ -67,14 +67,28 @@ const CrownIcon = () => (
     <path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/>
   </svg>
 );
+const InsightIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+  </svg>
+);
+const CompareIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/>
+  </svg>
+);
+const CloseIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+const CheckIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
 
 /* ─── HELPERS ────────────────────────────────────────────────────────────── */
-function formatBytes(bytes) {
-  if (!bytes) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 function timeAgo(ts) {
   if (!ts) return "";
   const diff = (Date.now() - new Date(ts)) / 1000;
@@ -85,34 +99,45 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+/* ─── SMART ACTIONS ─────────────────────────────────────────────────────── */
+const SMART_ACTIONS = [
+  { label: "Summarize", prompt: "Summarize this document in 3-4 sentences covering the main points." },
+  { label: "ELI5", prompt: "Explain this document like I'm 5 years old, in simple plain language." },
+  { label: "Key Points", prompt: "List the most important key points from this document as bullet points." },
+  { label: "Find Risks", prompt: "Identify any risks, warnings, issues or concerns mentioned in this document." },
+  { label: "Questions", prompt: "Generate 5 insightful questions someone might ask about this document." },
+];
+
 /* ─── WELCOME SCREEN ────────────────────────────────────────────────────── */
 function WelcomeScreen({ onUpload }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-xl shadow-violet-500/30 mb-6">
-        <PdfIcon />
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", textAlign: "center" }}>
+      <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 16px 40px rgba(124,58,237,0.35)", marginBottom: 24 }}>
+        <svg width="28" height="28" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
+        </svg>
       </div>
-      <h2 className="text-2xl font-bold text-white mb-2">Chat with your PDFs</h2>
-      <p className="text-gray-400 text-sm max-w-xs mb-8">
-        Upload a PDF and start asking questions. Get instant AI-powered answers from your documents.
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: "white", margin: "0 0 8px" }}>Chat with your PDFs</h2>
+      <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", maxWidth: 300, margin: "0 0 28px", lineHeight: 1.6 }}>
+        Upload a PDF and get instant AI-powered answers, insights, and summaries.
       </p>
       <button
         onClick={onUpload}
-        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-violet-500/30 transition-all duration-200 hover:-translate-y-0.5"
+        style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 24px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontWeight: 700, fontSize: 14, border: "none", borderRadius: 12, cursor: "pointer", boxShadow: "0 8px 24px rgba(124,58,237,0.4)" }}
       >
-        <UploadIcon />
-        Upload your first PDF
+        <UploadIcon /> Upload your first PDF
       </button>
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-lg">
+      <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, maxWidth: 480 }}>
         {[
-          { icon: "📄", title: "Smart Q&A", desc: "Ask anything about your document" },
+          { icon: "💬", title: "Smart Q&A", desc: "Ask anything about your document" },
           { icon: "⚡", title: "Instant answers", desc: "Powered by GPT-4o-mini" },
           { icon: "🔒", title: "Secure", desc: "Your files are private" },
         ].map((f) => (
-          <div key={f.title} className="bg-white/4 border border-white/8 rounded-xl p-4 text-left">
-            <div className="text-xl mb-2">{f.icon}</div>
-            <p className="text-sm font-semibold text-white">{f.title}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
+          <div key={f.title} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 16, textAlign: "left" }}>
+            <div style={{ fontSize: 20, marginBottom: 8 }}>{f.icon}</div>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "white", margin: "0 0 4px" }}>{f.title}</p>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", margin: 0 }}>{f.desc}</p>
           </div>
         ))}
       </div>
@@ -120,41 +145,286 @@ function WelcomeScreen({ onUpload }) {
   );
 }
 
-/* ─── CHAT MESSAGES ─────────────────────────────────────────────────────── */
+/* ─── CHAT MESSAGE ───────────────────────────────────────────────────────── */
 function ChatMessage({ msg, onCopy }) {
   const isUser = msg.role === "user";
   return (
-    <div className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
+    <div style={{ display: "flex", gap: 12, justifyContent: isUser ? "flex-end" : "flex-start" }}>
       {!isUser && (
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-md shadow-violet-500/30 shrink-0 mt-0.5">
+        <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}>
           <SparkleIcon />
         </div>
       )}
-      <div className={`group relative max-w-[75%] ${isUser ? "order-first" : ""}`}>
-        <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-          isUser
-            ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-br-md shadow-lg shadow-violet-500/20"
-            : "bg-white/6 border border-white/10 text-gray-100 rounded-bl-md"
-        }`}>
+      <div style={{ maxWidth: "75%", position: "relative" }}>
+        <div style={{
+          padding: "10px 16px",
+          borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+          fontSize: 14,
+          lineHeight: 1.65,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+          background: isUser
+            ? "linear-gradient(135deg,#7c3aed,#4f46e5)"
+            : "rgba(255,255,255,0.06)",
+          border: isUser ? "none" : "1px solid rgba(255,255,255,0.09)",
+          color: isUser ? "white" : "rgba(255,255,255,0.88)",
+          boxShadow: isUser ? "0 4px 16px rgba(124,58,237,0.25)" : "none",
+        }}>
           {msg.content}
           {msg.streaming && (
-            <span className="inline-block w-1.5 h-4 ml-1 bg-violet-400 rounded-sm animate-pulse align-middle" />
+            <span style={{ display: "inline-block", width: 6, height: 14, marginLeft: 4, background: "#a78bfa", borderRadius: 2, verticalAlign: "middle", animation: "blink 0.8s step-end infinite" }} />
           )}
         </div>
-        {!isUser && !msg.streaming && (
+        {!isUser && !msg.streaming && msg.content && (
           <button
             onClick={() => onCopy(msg.content)}
-            className="absolute -bottom-5 left-0 opacity-0 group-hover:opacity-100 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-all duration-150 bg-transparent border-none cursor-pointer p-0"
+            style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}
           >
             <CopyIcon /> Copy
           </button>
         )}
       </div>
       {isUser && (
-        <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold text-gray-300">
+        <div style={{ width: 32, height: 32, borderRadius: 9, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>
           U
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── INSIGHTS PANEL ─────────────────────────────────────────────────────── */
+function InsightsPanel({ doc, onClose, onAskQuestion }) {
+  const [insights, setInsights] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!doc) return;
+    setInsights(null);
+    setError(null);
+    // Try to load cached insights first
+    fetch(`/api/insights?documentId=${doc.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.summary) setInsights(data);
+      })
+      .catch(() => {});
+  }, [doc?.id]);
+
+  async function generateInsights() {
+    if (!doc) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/insights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: doc.id, fileUrl: doc.file_url }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate insights");
+      setInsights(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ width: 300, borderLeft: "1px solid rgba(255,255,255,0.07)", background: "#0a0a1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ color: "#a78bfa" }}><InsightIcon /></div>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "white" }}>AI Insights</span>
+        </div>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", padding: 4 }}>
+          <CloseIcon />
+        </button>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+        {!insights && !loading && (
+          <div style={{ textAlign: "center", paddingTop: 24 }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>✨</div>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 16, lineHeight: 1.5 }}>
+              Generate AI insights for <strong style={{ color: "rgba(255,255,255,0.8)" }}>{doc?.file_name}</strong>
+            </p>
+            <button
+              onClick={generateInsights}
+              style={{ padding: "10px 20px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, cursor: "pointer", width: "100%" }}
+            >
+              Generate Insights
+            </button>
+            {error && <p style={{ fontSize: 12, color: "#f87171", marginTop: 12 }}>{error}</p>}
+          </div>
+        )}
+
+        {loading && (
+          <div style={{ textAlign: "center", paddingTop: 40 }}>
+            <div style={{ width: 36, height: 36, border: "3px solid rgba(124,58,237,0.3)", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Analyzing document…</p>
+          </div>
+        )}
+
+        {insights && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Summary */}
+            <div style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 12, padding: 14 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 8px" }}>Summary</p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, margin: 0 }}>{insights.summary}</p>
+            </div>
+
+            {/* Key Points */}
+            {insights.key_points?.length > 0 && (
+              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 14 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px" }}>Key Points</p>
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {insights.key_points.map((point, i) => (
+                    <li key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <span style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }}><CheckIcon /></span>
+                      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Suggested Questions */}
+            {insights.suggested_questions?.length > 0 && (
+              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 14 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px" }}>Try asking</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {insights.suggested_questions.map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => onAskQuestion(q)}
+                      style={{ padding: "8px 12px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 8, fontSize: 12, color: "#c4b5fd", cursor: "pointer", textAlign: "left", lineHeight: 1.4, transition: "all 0.15s" }}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={generateInsights}
+              style={{ padding: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
+            >
+              Regenerate
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── COMPARE PANEL ──────────────────────────────────────────────────────── */
+function ComparePanel({ docs, currentDoc, onClose }) {
+  const [doc2Id, setDoc2Id] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const otherDocs = docs.filter((d) => d.id !== currentDoc?.id);
+
+  async function handleCompare() {
+    if (!doc2Id || !currentDoc) return;
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch("/api/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doc1Id: currentDoc.id, doc2Id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Comparison failed");
+      setResult(data.result);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ width: 340, borderLeft: "1px solid rgba(255,255,255,0.07)", background: "#0a0a1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
+      <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ color: "#a78bfa" }}><CompareIcon /></div>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "white" }}>Compare PDFs</span>
+        </div>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", padding: 4 }}>
+          <CloseIcon />
+        </button>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>Document 1</p>
+          <div style={{ padding: "10px 12px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 8, fontSize: 13, color: "#c4b5fd", fontWeight: 500 }}>
+            {currentDoc?.file_name}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>Document 2</p>
+          {otherDocs.length === 0 ? (
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.07)" }}>
+              Upload another PDF to compare
+            </p>
+          ) : (
+            <select
+              value={doc2Id}
+              onChange={(e) => setDoc2Id(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 13, color: "white", outline: "none", cursor: "pointer" }}
+            >
+              <option value="" style={{ background: "#0d0d1a" }}>Select a PDF…</option>
+              {otherDocs.map((d) => (
+                <option key={d.id} value={d.id} style={{ background: "#0d0d1a" }}>{d.file_name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {doc2Id && (
+          <button
+            onClick={handleCompare}
+            disabled={loading}
+            style={{ width: "100%", padding: "11px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, marginBottom: 16 }}
+          >
+            {loading ? "Comparing…" : "Compare Documents"}
+          </button>
+        )}
+
+        {loading && (
+          <div style={{ textAlign: "center", padding: "24px 0" }}>
+            <div style={{ width: 32, height: 32, border: "3px solid rgba(124,58,237,0.3)", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Analyzing both documents…</p>
+          </div>
+        )}
+
+        {error && <p style={{ fontSize: 12, color: "#f87171", padding: "10px 12px", background: "rgba(239,68,68,0.08)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)" }}>{error}</p>}
+
+        {result && (
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Comparison Result</p>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+              {result.split("**").map((part, i) =>
+                i % 2 === 1
+                  ? <strong key={i} style={{ color: "white" }}>{part}</strong>
+                  : part
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -178,6 +448,9 @@ export default function DashboardPage() {
   const [upgradingStripe, setUpgradingStripe] = useState(false);
   const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 20 });
 
+  const [showInsights, setShowInsights] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
+
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -197,50 +470,25 @@ export default function DashboardPage() {
     });
   }, []);
 
-  /* ── Fetch user plan ────────────────────────────────────────────────── */
   async function fetchPlan(userId) {
     try {
-      const { data } = await supabase
-        .from("user_plans")
-        .select("plan")
-        .eq("user_id", userId)
-        .single();
+      const { data } = await supabase.from("user_plans").select("plan").eq("user_id", userId).single();
       if (data?.plan) {
         setPlan(data.plan);
-        if (data.plan === "pro") {
-          setUsage((prev) => ({ ...prev, maxPdfs: Infinity, maxQuestions: Infinity }));
-        }
+        if (data.plan === "pro") setUsage((prev) => ({ ...prev, maxPdfs: Infinity, maxQuestions: Infinity }));
       }
-    } catch { /* free by default */ }
+    } catch {}
   }
 
-  /* ── Fetch usage ────────────────────────────────────────────────────── */
   async function fetchUsage(userId) {
     try {
-      // PDF count
-      const { count: pdfCount } = await supabase
-        .from("documents")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId);
-
-      // Questions used today
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-      const { count: qCount } = await supabase
-        .from("question_usage")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("created_at", startOfDay.toISOString());
-
-      setUsage((prev) => ({
-        ...prev,
-        pdfs: pdfCount ?? 0,
-        questions: qCount ?? 0,
-      }));
-    } catch { /* non-fatal */ }
+      const { count: pdfCount } = await supabase.from("documents").select("id", { count: "exact", head: true }).eq("user_id", userId);
+      const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+      const { count: qCount } = await supabase.from("question_usage").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", startOfDay.toISOString());
+      setUsage((prev) => ({ ...prev, pdfs: pdfCount ?? 0, questions: qCount ?? 0 }));
+    } catch {}
   }
 
-  /* ── Fetch documents ────────────────────────────────────────────────── */
   const fetchDocs = useCallback(async (userId) => {
     const { data, error } = await supabase
       .from("documents")
@@ -279,7 +527,7 @@ export default function DashboardPage() {
       const pathMatch = urlObj.pathname.match(/\/object\/public\/pdfs\/(.+)$/);
       if (pathMatch) await supabase.storage.from("pdfs").remove([pathMatch[1]]);
       await supabase.from("documents").delete().eq("id", doc.id);
-      if (selectedDoc?.id === doc.id) { setSelectedDoc(null); setMessages([]); }
+      if (selectedDoc?.id === doc.id) { setSelectedDoc(null); setMessages([]); setShowInsights(false); setShowCompare(false); }
       await fetchDocs(user.id);
     } catch (err) {
       alert("Delete failed: " + err.message);
@@ -292,13 +540,15 @@ export default function DashboardPage() {
     setMessages([]);
     setLimitError(null);
     setSidebarOpen(false);
-    inputRef.current?.focus();
+    setShowInsights(false);
+    setShowCompare(false);
+    setTimeout(() => inputRef.current?.focus(), 100);
   }
 
   /* ── Send message ───────────────────────────────────────────────────── */
-  async function handleSend(e) {
+  async function handleSend(e, overrideText) {
     e?.preventDefault();
-    const text = input.trim();
+    const text = (overrideText ?? input).trim();
     if (!text || !selectedDoc || aiStreaming) return;
 
     setInput("");
@@ -330,7 +580,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // Structured extraction returns JSON
       const contentType = res.headers.get("content-type") || "";
       if (contentType.includes("application/json")) {
         const data = await res.json();
@@ -341,7 +590,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // Streaming text
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let full = "";
@@ -356,7 +604,7 @@ export default function DashboardPage() {
       setMessages((prev) =>
         prev.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m)
       );
-    } catch (err) {
+    } catch {
       setMessages((prev) =>
         prev.map((m) => m.id === aiMsgId ? { ...m, content: "Something went wrong. Please try again.", streaming: false } : m)
       );
@@ -364,6 +612,12 @@ export default function DashboardPage() {
       setAiStreaming(false);
       if (user) fetchUsage(user.id);
     }
+  }
+
+  /* ── Smart action ───────────────────────────────────────────────────── */
+  function handleSmartAction(prompt) {
+    if (!selectedDoc || aiStreaming) return;
+    handleSend(null, prompt);
   }
 
   /* ── Stripe upgrade ─────────────────────────────────────────────────── */
@@ -378,6 +632,12 @@ export default function DashboardPage() {
     finally { setUpgradingStripe(false); }
   }
 
+  /* ── Sign out ───────────────────────────────────────────────────────── */
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  }
+
   /* ── Copy ────────────────────────────────────────────────────────────── */
   function copyText(text) {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -385,18 +645,11 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  /* ── Sign out ────────────────────────────────────────────────────────── */
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
-  }
-
-  /* ── Auto-scroll ─────────────────────────────────────────────────────── */
+  /* ── Scroll to bottom ───────────────────────────────────────────────── */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  /* ── Key handler ─────────────────────────────────────────────────────── */
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -407,309 +660,392 @@ export default function DashboardPage() {
   /* ── Loading ─────────────────────────────────────────────────────────── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0d0d1a] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ minHeight: "100vh", background: "#0d0d1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 36, height: 36, border: "3px solid rgba(124,58,237,0.3)", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       </div>
     );
   }
 
   const userEmail = user?.email || "";
   const userInitial = userEmail.charAt(0).toUpperCase();
+  const rightPanelOpen = showInsights || showCompare;
 
   return (
-    <div className="flex h-screen bg-[#0d0d1a] overflow-hidden">
+    <div style={{ display: "flex", height: "100vh", background: "#0d0d1a", overflow: "hidden", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
-      {/* ── Sidebar overlay (mobile) ──────────────────────────────────── */}
+      {/* ── Mobile sidebar overlay ─────────────────────────────────────── */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/60 md:hidden"
           onClick={() => setSidebarOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 20, background: "rgba(0,0,0,0.6)" }}
         />
       )}
 
       {/* ── SIDEBAR ───────────────────────────────────────────────────── */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-30 w-64 bg-gray-950 border-r border-white/6 flex flex-col
-        transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        md:relative md:translate-x-0 md:z-auto
-      `}>
+      <aside style={{
+        position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 30,
+        width: 240,
+        background: "#080814",
+        borderRight: "1px solid rgba(255,255,255,0.06)",
+        display: "flex", flexDirection: "column",
+        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.3s ease",
+      }}
+        className="md-sidebar"
+      >
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 h-14 border-b border-white/6 shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-md shadow-violet-500/30">
-            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+        <div style={{ height: 56, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="14" height="14" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <span className="text-sm font-bold text-white tracking-tight">AI PDF Chat</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "white" }}>AI PDF Chat</span>
         </div>
 
         {/* Upload button */}
-        <div className="px-3 pt-3 pb-2 shrink-0">
+        <div style={{ padding: "12px 12px 8px", flexShrink: 0 }}>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-violet-600/80 to-indigo-600/80 hover:from-violet-600 hover:to-indigo-600 border border-violet-500/30 rounded-xl transition-all duration-200 disabled:opacity-50"
+            style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              padding: "10px", fontSize: 13, fontWeight: 600, color: "white",
+              background: "linear-gradient(135deg,rgba(124,58,237,0.7),rgba(79,70,229,0.7))",
+              border: "1px solid rgba(124,58,237,0.35)", borderRadius: 10, cursor: uploading ? "not-allowed" : "pointer",
+              opacity: uploading ? 0.7 : 1, transition: "all 0.2s",
+            }}
           >
             {uploading ? (
-              <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Uploading…</>
+              <><div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Uploading…</>
             ) : (
               <><PlusIcon /> New PDF</>
             )}
           </button>
-          <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} className="hidden" />
+          <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} style={{ display: "none" }} />
         </div>
 
         {/* PDF list */}
-        <div className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5">
+        <div style={{ flex: 1, overflowY: "auto", padding: "4px 8px" }}>
           {docs.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-xs text-gray-600">No PDFs yet</p>
-              <p className="text-xs text-gray-700 mt-1">Upload one to get started</p>
+            <div style={{ textAlign: "center", padding: "32px 0" }}>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>No PDFs yet</p>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.12)", marginTop: 4 }}>Upload one to get started</p>
             </div>
           ) : (
-            docs.map((doc) => (
-              <div
-                key={doc.id}
-                onClick={() => selectDoc(doc)}
-                className={`group flex items-start gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
-                  selectedDoc?.id === doc.id
-                    ? "bg-violet-600/20 border border-violet-500/30"
-                    : "hover:bg-white/4 border border-transparent"
-                }`}
-              >
-                <span className={`mt-0.5 ${selectedDoc?.id === doc.id ? "text-violet-400" : "text-gray-500"}`}>
-                  <PdfIcon />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-medium truncate ${selectedDoc?.id === doc.id ? "text-violet-200" : "text-gray-300"}`}>
-                    {doc.file_name}
-                  </p>
-                  <p className="text-[10px] text-gray-600 mt-0.5">
-                    {formatBytes(doc.file_size)} · {timeAgo(doc.created_at)}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-600 hover:text-red-400 transition-all bg-transparent border-none cursor-pointer rounded"
+            docs.map((doc) => {
+              const isSelected = selectedDoc?.id === doc.id;
+              return (
+                <div
+                  key={doc.id}
+                  onClick={() => selectDoc(doc)}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 8, padding: "9px 10px",
+                    borderRadius: 8, cursor: "pointer", marginBottom: 2,
+                    background: isSelected ? "rgba(124,58,237,0.18)" : "transparent",
+                    border: isSelected ? "1px solid rgba(124,58,237,0.28)" : "1px solid transparent",
+                    transition: "all 0.15s",
+                  }}
                 >
-                  <TrashIcon />
-                </button>
-              </div>
-            ))
+                  <span style={{ color: isSelected ? "#a78bfa" : "rgba(255,255,255,0.3)", marginTop: 1, flexShrink: 0 }}><PdfIcon /></span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: isSelected ? "#e2d9f7" : "rgba(255,255,255,0.65)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {doc.file_name}
+                    </p>
+                    <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", margin: "2px 0 0" }}>{timeAgo(doc.created_at)}</p>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
+                    style={{ opacity: 0, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 2, borderRadius: 4, flexShrink: 0, transition: "opacity 0.15s" }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = "0"}
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+              );
+            })
           )}
         </div>
 
-        {/* Usage stats */}
+        {/* Usage */}
         {plan !== "pro" && (
-          <div className="mx-3 mb-2 rounded-xl p-3 space-y-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Usage today</p>
-
-            {/* PDFs */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>PDFs</span>
-                <span className="text-xs font-semibold" style={{ color: usage.pdfs >= usage.maxPdfs ? "#f87171" : "rgba(255,255,255,0.6)" }}>
-                  {usage.pdfs} / {usage.maxPdfs}
-                </span>
-              </div>
-              <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.08)" }}>
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.min((usage.pdfs / usage.maxPdfs) * 100, 100)}%`,
-                    background: usage.pdfs >= usage.maxPdfs
-                      ? "linear-gradient(90deg,#ef4444,#dc2626)"
+          <div style={{ margin: "0 10px 8px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "12px" }}>
+            <p style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Usage Today</p>
+            {[
+              { label: "PDFs", used: usage.pdfs, max: usage.maxPdfs },
+              { label: "Questions", used: usage.questions, max: usage.maxQuestions },
+            ].map(({ label, used, max }) => (
+              <div key={label} style={{ marginBottom: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: used >= max ? "#f87171" : "rgba(255,255,255,0.5)" }}>{used} / {max}</span>
+                </div>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.07)", borderRadius: 99, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%", borderRadius: 99, transition: "width 0.5s",
+                    width: `${Math.min((used / max) * 100, 100)}%`,
+                    background: used >= max ? "linear-gradient(90deg,#ef4444,#dc2626)"
+                      : used / max > 0.7 ? "linear-gradient(90deg,#f59e0b,#d97706)"
                       : "linear-gradient(90deg,#7c3aed,#4f46e5)",
-                  }}
-                />
+                  }} />
+                </div>
               </div>
-            </div>
-
-            {/* Questions */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Questions</span>
-                <span className="text-xs font-semibold" style={{ color: usage.questions >= usage.maxQuestions ? "#f87171" : "rgba(255,255,255,0.6)" }}>
-                  {usage.questions} / {usage.maxQuestions}
-                </span>
-              </div>
-              <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.08)" }}>
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.min((usage.questions / usage.maxQuestions) * 100, 100)}%`,
-                    background: usage.questions >= usage.maxQuestions
-                      ? "linear-gradient(90deg,#ef4444,#dc2626)"
-                      : usage.questions / usage.maxQuestions > 0.7
-                      ? "linear-gradient(90deg,#f59e0b,#d97706)"
-                      : "linear-gradient(90deg,#7c3aed,#4f46e5)",
-                  }}
-                />
-              </div>
-            </div>
-
-            {usage.questions >= usage.maxQuestions && (
-              <p className="text-[10px]" style={{ color: "#f87171" }}>Daily limit reached. Upgrade for unlimited.</p>
-            )}
+            ))}
           </div>
         )}
 
-        {/* Bottom: plan + user */}
-        <div className="border-t border-white/6 p-3 space-y-2 shrink-0">
+        {/* Bottom */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "10px", flexShrink: 0 }}>
           {plan !== "pro" && (
             <button
               onClick={handleUpgrade}
               disabled={upgradingStripe}
-              className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 rounded-xl transition-all duration-200 disabled:opacity-60"
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", fontSize: 12, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: "pointer", marginBottom: 8 }}
             >
-              <CrownIcon />
-              {upgradingStripe ? "Loading…" : "Upgrade to Pro · $9/mo"}
+              <CrownIcon /> {upgradingStripe ? "Loading…" : "Upgrade to Pro · $9/mo"}
             </button>
           )}
-          {plan === "pro" && (
-            <div className="flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-amber-300">
-              <CrownIcon /> Pro Plan
-            </div>
-          )}
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 4px" }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white", flexShrink: 0 }}>
               {userInitial}
             </div>
-            <p className="text-xs text-gray-400 truncate flex-1">{userEmail}</p>
-            <button onClick={handleSignOut} className="p-1.5 text-gray-600 hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer rounded">
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{userEmail}</p>
+            <button onClick={handleSignOut} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 4 }}>
               <LogoutIcon />
             </button>
           </div>
         </div>
       </aside>
 
-      {/* ── MAIN AREA ─────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* ── MAIN + RIGHT PANEL wrapper ────────────────────────────────────── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", marginLeft: 240, overflow: "hidden" }}>
 
-        {/* Header */}
-        <header className="h-14 flex items-center gap-3 px-4 border-b border-white/6 shrink-0 bg-[#0d0d1a]/95 backdrop-blur-sm">
+        {/* ── HEADER ────────────────────────────────────────────────────── */}
+        <header style={{ height: 56, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, background: "rgba(13,13,26,0.95)" }}>
           <button
-            className="md:hidden p-1.5 text-gray-400 hover:text-white transition-colors bg-transparent border-none cursor-pointer rounded-lg hover:bg-white/5"
             onClick={() => setSidebarOpen(true)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", padding: 6, borderRadius: 6, display: "none" }}
           >
             <MenuIcon />
           </button>
+
           {selectedDoc ? (
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-violet-400 shrink-0"><PdfIcon /></span>
-              <span className="text-sm font-semibold text-white truncate">{selectedDoc.file_name}</span>
-              {formatBytes(selectedDoc.file_size) && (
-                <span className="text-xs text-gray-500 shrink-0 hidden sm:inline">{formatBytes(selectedDoc.file_size)}</span>
-              )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+              <span style={{ color: "#a78bfa", flexShrink: 0 }}><PdfIcon /></span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedDoc.file_name}</span>
             </div>
           ) : (
-            <h1 className="text-sm font-semibold text-gray-300">Select a PDF to start chatting</h1>
+            <h1 style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.4)", flex: 1, margin: 0 }}>Select a PDF to start chatting</h1>
           )}
-          <div className="ml-auto flex items-center gap-2">
+
+          {/* Header action buttons */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
             {plan === "pro" && (
-              <span className="flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-full">
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "3px 10px", borderRadius: 99 }}>
                 <CrownIcon /> PRO
               </span>
+            )}
+            {selectedDoc && (
+              <>
+                <button
+                  onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
+                    background: showInsights ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)",
+                    border: showInsights ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    color: showInsights ? "#c4b5fd" : "rgba(255,255,255,0.6)",
+                    cursor: "pointer", transition: "all 0.15s",
+                  }}
+                >
+                  <InsightIcon /> Insights
+                </button>
+                {docs.length >= 2 && (
+                  <button
+                    onClick={() => { setShowCompare(!showCompare); setShowInsights(false); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
+                      background: showCompare ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)",
+                      border: showCompare ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 8, fontSize: 12, fontWeight: 600,
+                      color: showCompare ? "#c4b5fd" : "rgba(255,255,255,0.6)",
+                      cursor: "pointer", transition: "all 0.15s",
+                    }}
+                  >
+                    <CompareIcon /> Compare
+                  </button>
+                )}
+              </>
             )}
           </div>
         </header>
 
-        {/* Chat body */}
-        <div className="flex-1 overflow-y-auto">
-          {!selectedDoc ? (
-            <WelcomeScreen onUpload={() => fileInputRef.current?.click()} />
-          ) : messages.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-full px-6 text-center py-12">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30 mb-4">
-                <SparkleIcon />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-1">{selectedDoc.file_name}</h3>
-              <p className="text-gray-400 text-sm mb-6">Ask anything about this document</p>
-              <div className="flex flex-wrap justify-center gap-2 max-w-md">
-                {["Summarize this document", "What are the key points?", "List any important dates", "Extract contact information"].map((q) => (
+        {/* ── CONTENT ROW ────────────────────────────────────────────────── */}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+
+          {/* ── CHAT AREA ─────────────────────────────────────────────────── */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+            {/* Smart action bar */}
+            {selectedDoc && (
+              <div style={{ padding: "10px 16px 0", display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0 }}>
+                {SMART_ACTIONS.map((action) => (
                   <button
-                    key={q}
-                    onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                    className="text-xs px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-violet-500/40 text-gray-300 hover:text-white rounded-lg transition-all duration-150 cursor-pointer"
+                    key={action.label}
+                    onClick={() => handleSmartAction(action.prompt)}
+                    disabled={aiStreaming}
+                    style={{
+                      padding: "5px 12px",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.09)",
+                      borderRadius: 99,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: "rgba(255,255,255,0.55)",
+                      cursor: aiStreaming ? "not-allowed" : "pointer",
+                      opacity: aiStreaming ? 0.5 : 1,
+                      transition: "all 0.15s",
+                      whiteSpace: "nowrap",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!aiStreaming) {
+                        e.currentTarget.style.background = "rgba(124,58,237,0.15)";
+                        e.currentTarget.style.borderColor = "rgba(124,58,237,0.35)";
+                        e.currentTarget.style.color = "#c4b5fd";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+                    }}
                   >
-                    {q}
+                    {action.label}
                   </button>
                 ))}
               </div>
+            )}
+
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+              {!selectedDoc ? (
+                <WelcomeScreen onUpload={() => fileInputRef.current?.click()} />
+              ) : messages.length === 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "calc(100% - 32px)", textAlign: "center", padding: "24px" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, boxShadow: "0 8px 24px rgba(124,58,237,0.35)" }}>
+                    <SparkleIcon />
+                  </div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "white", margin: "0 0 8px" }}>{selectedDoc.file_name}</h3>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: "0 0 20px" }}>Ask anything about this document, or use a smart action above</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 480 }}>
+                    {["What is this document about?", "List the main topics", "Any important dates or numbers?", "Summarize in 3 sentences"].map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => { setInput(q); inputRef.current?.focus(); }}
+                        style={{ padding: "7px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8, fontSize: 12, color: "rgba(255,255,255,0.5)", cursor: "pointer", transition: "all 0.15s" }}
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20, paddingBottom: 8 }}>
+                  {messages.map((msg) => (
+                    <ChatMessage key={msg.id} msg={msg} onCopy={copyText} />
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="max-w-3xl mx-auto px-4 py-6 space-y-8 pb-4">
-              {messages.map((msg) => (
-                <ChatMessage key={msg.id} msg={msg} onCopy={copyText} />
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
+
+            {/* Limit error */}
+            {limitError && (
+              <div style={{ margin: "0 16px 8px", padding: "10px 14px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <p style={{ fontSize: 12, color: "#fbbf24", margin: 0 }}>{limitError}</p>
+                <button onClick={handleUpgrade} disabled={upgradingStripe} style={{ padding: "5px 12px", background: "#f59e0b", color: "black", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>
+                  {upgradingStripe ? "…" : "Upgrade"}
+                </button>
+              </div>
+            )}
+
+            {/* Input bar */}
+            {selectedDoc && (
+              <div style={{ padding: "8px 16px 16px", flexShrink: 0 }}>
+                <form
+                  onSubmit={handleSend}
+                  style={{ display: "flex", alignItems: "flex-end", gap: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "12px 14px", maxWidth: 720, margin: "0 auto", transition: "border-color 0.2s" }}
+                >
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Ask about ${selectedDoc.file_name}…`}
+                    disabled={aiStreaming}
+                    rows={1}
+                    suppressHydrationWarning
+                    style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: "white", resize: "none", lineHeight: 1.5, maxHeight: 120, minHeight: 22 }}
+                    onInput={(e) => {
+                      e.target.style.height = "auto";
+                      e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!input.trim() || aiStreaming}
+                    style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", cursor: !input.trim() || aiStreaming ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: !input.trim() || aiStreaming ? 0.4 : 1, transition: "all 0.2s", color: "white" }}
+                  >
+                    {aiStreaming
+                      ? <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                      : <SendIcon />
+                    }
+                  </button>
+                </form>
+                <p style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.15)", marginTop: 6 }}>
+                  AI answers are based on your PDF content only
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* ── RIGHT PANEL (Insights or Compare) ─────────────────────── */}
+          {rightPanelOpen && showInsights && selectedDoc && (
+            <InsightsPanel
+              doc={selectedDoc}
+              onClose={() => setShowInsights(false)}
+              onAskQuestion={(q) => {
+                setShowInsights(false);
+                setTimeout(() => handleSend(null, q), 100);
+              }}
+            />
+          )}
+          {rightPanelOpen && showCompare && selectedDoc && (
+            <ComparePanel
+              docs={docs}
+              currentDoc={selectedDoc}
+              onClose={() => setShowCompare(false)}
+            />
           )}
         </div>
-
-        {/* Limit error banner */}
-        {limitError && (
-          <div className="mx-4 mb-2 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3">
-            <p className="text-xs text-amber-300">{limitError}</p>
-            <button
-              onClick={handleUpgrade}
-              disabled={upgradingStripe}
-              className="shrink-0 text-xs font-bold px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black rounded-lg transition-colors disabled:opacity-60 border-none cursor-pointer"
-            >
-              {upgradingStripe ? "…" : "Upgrade"}
-            </button>
-          </div>
-        )}
-
-        {/* Input bar */}
-        {selectedDoc && (
-          <div className="px-4 pb-4 pt-2 shrink-0">
-            <form
-              onSubmit={handleSend}
-              className="flex items-end gap-2 bg-white/5 border border-white/10 hover:border-violet-500/30 focus-within:border-violet-500/50 rounded-2xl px-4 py-3 transition-all duration-200 max-w-3xl mx-auto"
-            >
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`Ask about ${selectedDoc.file_name}…`}
-                disabled={aiStreaming}
-                rows={1}
-                suppressHydrationWarning
-                className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 outline-none resize-none leading-relaxed max-h-32 disabled:opacity-60"
-                style={{ minHeight: "24px" }}
-                onInput={(e) => {
-                  e.target.style.height = "auto";
-                  e.target.style.height = Math.min(e.target.scrollHeight, 128) + "px";
-                }}
-              />
-              <button
-                type="submit"
-                disabled={!input.trim() || aiStreaming}
-                className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 shadow-md shadow-violet-500/25 border-none cursor-pointer"
-              >
-                {aiStreaming ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <SendIcon />
-                )}
-              </button>
-            </form>
-            <p className="text-center text-[10px] text-gray-700 mt-2">
-              AI can make mistakes. Verify important information.
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Copy toast */}
       {copied && (
-        <div className="fixed bottom-6 right-6 px-4 py-2.5 bg-gray-800 border border-white/10 text-white text-sm rounded-xl shadow-xl animate-fade-in z-50">
+        <div style={{ position: "fixed", bottom: 24, right: 24, padding: "10px 18px", background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", zIndex: 100 }}>
           Copied to clipboard
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 768px) {
+          .md-sidebar { transform: ${sidebarOpen ? "translateX(0)" : "translateX(-100%)"}; }
+        }
+        @media (min-width: 769px) {
+          .md-sidebar { transform: translateX(0) !important; position: relative !important; z-index: auto !important; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -23,7 +23,7 @@ export async function POST(req) {
     // Verify ownership of both docs in one query
     const { data: docs } = await supabase
       .from("documents")
-      .select("id, name")
+      .select("id, file_name")
       .in("id", [doc1Id, doc2Id])
       .eq("user_id", user.id);
 
@@ -67,9 +67,9 @@ export async function POST(req) {
     }
 
     const userPrompt =
-      `DOCUMENT 1 — "${doc1.name}":\n${ctx1 || "(no content extracted)"}\n\n` +
+      `DOCUMENT 1 — "${doc1.file_name}":\n${ctx1 || "(no content extracted)"}\n\n` +
       `---\n\n` +
-      `DOCUMENT 2 — "${doc2.name}":\n${ctx2 || "(no content extracted)"}\n\n` +
+      `DOCUMENT 2 — "${doc2.file_name}":\n${ctx2 || "(no content extracted)"}\n\n` +
       `---\n\n` +
       `TASK: ${question?.trim() || "Compare these documents. Highlight key similarities and differences."}`;
 
@@ -95,8 +95,8 @@ export async function POST(req) {
 
     return NextResponse.json({
       result: completion.choices[0].message.content,
-      doc1: { id: doc1Id, name: doc1.name },
-      doc2: { id: doc2Id, name: doc2.name },
+      doc1: { id: doc1Id, name: doc1.file_name },
+      doc2: { id: doc2Id, name: doc2.file_name },
     });
   } catch (err) {
     console.error("[compare]", err.message);
