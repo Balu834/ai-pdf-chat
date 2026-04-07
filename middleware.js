@@ -1,22 +1,27 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
-const CANONICAL = "ai-pdf-chat-steel-kappa.vercel.app";
+const PUBLIC_PATHS = ["/", "/login", "/signup"];
 
 export async function middleware(request) {
-  // Redirect any old/preview deployment URL to the canonical production domain
-  const host = request.headers.get("host") || "";
-  if (
-    host.endsWith(".vercel.app") &&
-    host !== CANONICAL &&
-    !host.startsWith("localhost")
-  ) {
-    const url = request.nextUrl.clone();
-    url.host = CANONICAL;
-    url.port = "";
-    return NextResponse.redirect(url, { status: 308 });
+  const { pathname } = request.nextUrl;
+
+  // Always allow public paths — never redirect them
+  if (PUBLIC_PATHS.some((p) => pathname === p)) {
+    return NextResponse.next();
   }
 
+  // Allow all static / API paths
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/auth/") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  // For protected paths (/dashboard, etc.) check auth
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -40,23 +45,18 @@ export async function middleware(request) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-
-  // Protect /dashboard — redirect to /login if not authenticated
+  // Protect /dashboard — send unauthenticated users to /login
   if (pathname.startsWith("/dashboard") && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  // Redirect logged-in users away from /login
-  if (pathname === "/login" && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/dashboard/:path*"],
 };
