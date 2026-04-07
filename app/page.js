@@ -39,7 +39,7 @@ export default function HomePage() {
           {/* Badge */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 50, padding: "6px 16px", marginBottom: 32 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", display: "inline-block" }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.1em" }}>Powered by GPT-4o</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#c4b5fd", textTransform: "uppercase", letterSpacing: "0.1em" }}>AI-Powered Document Assistant</span>
           </div>
 
           {/* Headline */}
@@ -199,7 +199,7 @@ export default function HomePage() {
             </div>
             <span style={{ fontSize: 14, fontWeight: 700, color: "white" }}>AI PDF Chat</span>
           </div>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", margin: 0 }}>© 2025 AI PDF Chat. All rights reserved.</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", margin: 0 }}>© 2026 AI PDF Chat. All rights reserved.</p>
           <div style={{ display: "flex", gap: 20 }}>
             {["Privacy", "Terms", "Contact"].map(l => (
               <a key={l} href="#" style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>{l}</a>

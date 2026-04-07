@@ -131,7 +131,7 @@ function WelcomeScreen({ onUpload }) {
       <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, maxWidth: 480 }}>
         {[
           { icon: "💬", title: "Smart Q&A", desc: "Ask anything about your document" },
-          { icon: "⚡", title: "Instant answers", desc: "Powered by GPT-4o-mini" },
+          { icon: "⚡", title: "Instant answers", desc: "Smart AI document analysis" },
           { icon: "🔒", title: "Secure", desc: "Your files are private" },
         ].map((f) => (
           <div key={f.title} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 16, textAlign: "left" }}>
