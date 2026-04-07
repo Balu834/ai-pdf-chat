@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI PDF Chat — Chat with any PDF instantly",
-  description:
-    "Upload invoices, contracts, and reports. Ask questions in plain English. Get precise answers in seconds — powered by AI.",
+  title: "Intellixy - AI Document Assistant",
+  description: "Chat with PDFs, extract insights, and compare documents using AI.",
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({

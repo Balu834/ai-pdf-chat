@@ -45,7 +45,7 @@ export default function SuccessPage() {
           <svg width="13" height="13" fill="#fbbf24" viewBox="0 0 24 24">
             <path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/>
           </svg>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24" }}>Pro Plan Activated</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24" }}>Intellixy Pro Activated</span>
         </div>
 
         <h1 style={{ fontSize: 28, fontWeight: 900, color: "white", margin: "0 0 12px" }}>

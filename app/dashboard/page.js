@@ -735,12 +735,10 @@ export default function DashboardPage() {
       >
         {/* Logo */}
         <div style={{ height: 56, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="14" height="14" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(124,58,237,0.35)" }}>
+            <span style={{ fontSize: 14, fontWeight: 900, color: "white" }}>I</span>
           </div>
-          <span style={{ fontSize: 14, fontWeight: 800, color: "white" }}>AI PDF Chat</span>
+          <span style={{ fontSize: 15, fontWeight: 800, color: "white", letterSpacing: "-0.2px" }}>Intellixy</span>
         </div>
 
         {/* Upload button */}

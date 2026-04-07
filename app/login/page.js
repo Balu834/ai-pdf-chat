@@ -77,12 +77,10 @@ export default function LoginPage() {
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-            <div style={{ width: 40, height: 40, borderRadius: 14, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(124,58,237,0.4)" }}>
-              <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+            <div style={{ width: 40, height: 40, borderRadius: 14, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(124,58,237,0.4)" }}>
+              <span style={{ fontSize: 20, fontWeight: 900, color: "white" }}>I</span>
             </div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: "white", letterSpacing: "-0.3px" }}>AI PDF Chat</span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: "white", letterSpacing: "-0.3px" }}>Intellixy</span>
           </a>
         </div>
 
@@ -94,7 +92,7 @@ export default function LoginPage() {
             {mode === "forgot" && "Reset password"}
           </h1>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", textAlign: "center", margin: "0 0 24px" }}>
-            {mode === "login" && "Sign in to continue to AI PDF Chat"}
+            {mode === "login" && "Sign in to continue to Intellixy"}
             {mode === "signup" && "Start for free — no credit card required"}
             {mode === "forgot" && "Enter your email and we'll send a reset link"}
           </p>
