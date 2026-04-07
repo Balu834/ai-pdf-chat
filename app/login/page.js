@@ -58,32 +58,42 @@ export default function LoginPage() {
   const isForgot = mode === "forgot";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#07071a] px-4 py-12 relative overflow-hidden">
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "#07071a",
+      padding: "48px 16px",
+      position: "relative",
+      overflow: "hidden",
+      fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+    }}>
       {/* Background blobs */}
-      <div className="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] rounded-full bg-violet-600/20 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-200px] right-[-200px] w-[600px] h-[600px] rounded-full bg-indigo-600/15 blur-[120px] pointer-events-none" />
+      <div style={{ position: "absolute", top: -200, left: -200, width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.2),transparent 70%)", filter: "blur(80px)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: -200, right: -200, width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle,rgba(79,70,229,0.15),transparent 70%)", filter: "blur(80px)", pointerEvents: "none" }} />
 
-      <div className="relative w-full max-w-md">
+      <div style={{ position: "relative", width: "100%", maxWidth: 440 }}>
         {/* Logo */}
-        <div className="text-center mb-8">
-          <a href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/40">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 14, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(124,58,237,0.4)" }}>
+              <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-white tracking-tight">AI PDF Chat</span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: "white", letterSpacing: "-0.3px" }}>AI PDF Chat</span>
           </a>
         </div>
 
         {/* Card */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
-          <h1 className="text-2xl font-bold text-white text-center mb-1">
+        <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 32, boxShadow: "0 32px 80px rgba(0,0,0,0.4)" }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: "white", textAlign: "center", margin: "0 0 6px" }}>
             {mode === "login" && "Welcome back"}
             {mode === "signup" && "Create your account"}
             {mode === "forgot" && "Reset password"}
           </h1>
-          <p className="text-gray-400 text-sm text-center mb-6">
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", textAlign: "center", margin: "0 0 24px" }}>
             {mode === "login" && "Sign in to continue to AI PDF Chat"}
             {mode === "signup" && "Start for free — no credit card required"}
             {mode === "forgot" && "Enter your email and we'll send a reset link"}
@@ -91,16 +101,24 @@ export default function LoginPage() {
 
           {/* Tabs */}
           {!isForgot && (
-            <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 mb-6">
+            <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 4, marginBottom: 24 }}>
               {["login", "signup"].map((m) => (
                 <button
                   key={m}
                   onClick={() => switchMode(m)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                    mode === m
-                      ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md"
-                      : "text-gray-400 hover:text-white"
-                  }`}
+                  style={{
+                    flex: 1,
+                    padding: "9px 0",
+                    borderRadius: 9,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    background: mode === m ? "linear-gradient(135deg,#7c3aed,#4f46e5)" : "transparent",
+                    color: mode === m ? "white" : "rgba(255,255,255,0.45)",
+                    boxShadow: mode === m ? "0 2px 12px rgba(124,58,237,0.4)" : "none",
+                  }}
                 >
                   {m === "login" ? "Sign In" : "Sign Up"}
                 </button>
@@ -115,7 +133,24 @@ export default function LoginPage() {
                 type="button"
                 onClick={handleGoogle}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/8 hover:bg-white/12 border border-white/15 rounded-xl text-sm font-semibold text-white transition-all duration-200 mb-4 disabled:opacity-60"
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                  padding: "12px 16px",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 12,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "white",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.6 : 1,
+                  marginBottom: 16,
+                  transition: "all 0.2s",
+                }}
               >
                 <svg width="18" height="18" viewBox="0 0 48 48">
                   <path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.86l6.08-6.08C34.46 3.05 29.48 1 24 1 14.82 1 7.07 6.48 3.64 14.28l7.06 5.49C12.4 13.72 17.73 9.5 24 9.5z"/>
@@ -126,21 +161,21 @@ export default function LoginPage() {
                 Continue with Google
               </button>
 
-              <div className="relative my-5">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10" />
+              <div style={{ position: "relative", margin: "20px 0" }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center" }}>
+                  <div style={{ width: "100%", borderTop: "1px solid rgba(255,255,255,0.1)" }} />
                 </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-[#0d0d24] px-3 text-xs text-gray-500">or continue with email</span>
+                <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+                  <span style={{ background: "#0d0d24", padding: "0 12px", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>or continue with email</span>
                 </div>
               </div>
             </>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>Email</label>
               <input
                 type="email"
                 value={email}
@@ -149,19 +184,29 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 suppressHydrationWarning
-                className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-sm text-white placeholder-gray-500 outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
+                style={{
+                  width: "100%",
+                  padding: "11px 14px",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 10,
+                  fontSize: 14,
+                  color: "white",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
               />
             </div>
 
             {!isForgot && (
               <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-sm font-medium text-gray-300">Password</label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>Password</label>
                   {mode === "login" && (
                     <button
                       type="button"
                       onClick={() => switchMode("forgot")}
-                      className="text-xs text-violet-400 hover:text-violet-300 transition-colors bg-transparent border-none cursor-pointer p-0 font-medium"
+                      style={{ fontSize: 12, color: "#a78bfa", background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 500 }}
                     >
                       Forgot password?
                     </button>
@@ -176,17 +221,30 @@ export default function LoginPage() {
                   minLength={6}
                   suppressHydrationWarning
                   autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-sm text-white placeholder-gray-500 outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
+                  style={{
+                    width: "100%",
+                    padding: "11px 14px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 10,
+                    fontSize: 14,
+                    color: "white",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
                 />
               </div>
             )}
 
             {status && (
-              <div className={`px-4 py-3 rounded-xl text-sm border ${
-                status.type === "error"
-                  ? "bg-red-500/10 border-red-500/30 text-red-400"
-                  : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-              }`}>
+              <div style={{
+                padding: "12px 16px",
+                borderRadius: 10,
+                fontSize: 13,
+                border: `1px solid ${status.type === "error" ? "rgba(239,68,68,0.3)" : "rgba(34,197,94,0.3)"}`,
+                background: status.type === "error" ? "rgba(239,68,68,0.1)" : "rgba(34,197,94,0.1)",
+                color: status.type === "error" ? "#f87171" : "#4ade80",
+              }}>
                 {status.msg}
               </div>
             )}
@@ -194,7 +252,20 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 700,
+                color: "white",
+                background: loading ? "rgba(124,58,237,0.5)" : "linear-gradient(135deg,#7c3aed,#4f46e5)",
+                border: "none",
+                cursor: loading ? "not-allowed" : "pointer",
+                boxShadow: loading ? "none" : "0 4px 20px rgba(124,58,237,0.4)",
+                marginTop: 4,
+                transition: "all 0.2s",
+              }}
             >
               {loading
                 ? "Please wait…"
@@ -207,7 +278,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => switchMode("login")}
-                className="text-sm text-gray-400 hover:text-white transition-colors text-center bg-transparent border-none cursor-pointer p-0 font-medium"
+                style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 500, textAlign: "center" }}
               >
                 ← Back to Sign In
               </button>
@@ -216,21 +287,15 @@ export default function LoginPage() {
 
           {/* Free plan info */}
           {!isForgot && (
-            <div className="mt-6 pt-5 border-t border-white/8">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center mb-3">Free plan includes</p>
-              <div className="flex justify-center gap-6">
-                <div className="flex items-center gap-1.5 text-sm text-gray-400">
-                  <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  5 PDFs
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-400">
-                  <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  20 questions/day
-                </div>
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "center", margin: "0 0 12px" }}>Free plan includes</p>
+              <div style={{ display: "flex", justifyContent: "center", gap: 24 }}>
+                {["5 PDFs", "20 questions / day"].map(item => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
+                    <svg width="14" height="14" fill="none" stroke="#a78bfa" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    {item}
+                  </div>
+                ))}
               </div>
             </div>
           )}
