@@ -1,48 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase-browser";
 
-/* ─── MOCK DATA ──────────────────────────────────────────────────────────── */
-const MOCK_PDFS = [
-  { id: 1, name: "Research Paper Q4.pdf",   pages: 24, size: "2.1 MB", date: "Today" },
-  { id: 2, name: "Contract 2024.pdf",        pages: 8,  size: "0.8 MB", date: "Yesterday" },
-  { id: 3, name: "Annual Report.pdf",        pages: 52, size: "4.6 MB", date: "2 days ago" },
-  { id: 4, name: "Meeting Notes April.pdf",  pages: 5,  size: "0.3 MB", date: "Apr 3" },
-  { id: 5, name: "Technical Manual v3.pdf",  pages: 116,size: "8.2 MB", date: "Mar 28" },
-];
-
-const MOCK_ANALYSIS = {
-  overview: "These documents collectively cover Q4 financial performance, contractual obligations, and technical specifications. The research paper provides supporting data for strategic decisions outlined in the annual report.",
-  themes: ["Financial Performance", "AI & Automation", "Risk Assessment", "Product Roadmap", "Compliance"],
-  differences: [
-    "Research paper focuses on long-term projections while the contract specifies short-term deliverables.",
-    "Annual report uses conservative estimates whereas the technical manual assumes optimistic adoption rates.",
-    "Compliance requirements differ between the contract (GDPR) and the annual report (SOX).",
-  ],
-  actions: [
-    "Schedule legal review of Contract 2024 clauses 7–12 before May 15.",
-    "Cross-reference Q4 research findings with annual report projections.",
-    "Update technical manual to reflect new compliance requirements.",
-    "Prepare executive summary combining key insights from all documents.",
-  ],
-  questions: [
-    "What are the key financial projections for Q4?",
-    "What compliance requirements apply across all documents?",
-    "Which action items are highest priority?",
-    "How do the technical specs align with business goals?",
-  ],
-};
-
-const MOCK_AI_RESPONSES = [
-  "Based on the document, the main conclusion is that transformer-based models outperform traditional NLP methods by approximately **34% accuracy** on long-document tasks. This was validated across 5 benchmark datasets.",
-  "The key financial projections show a **12% revenue growth** target for Q4, driven primarily by enterprise contracts and new product launches in the APAC region.",
-  "Section 3 covers the **fine-tuning methodology** — the model was trained on 50,000 domain-specific documents using a custom pipeline with reinforcement learning from human feedback (RLHF).",
-  "The compliance requirements include GDPR Article 17 (right to erasure), SOX Section 404 (internal controls), and CCPA data processing standards. All three apply to your current document set.",
-];
+const supabase = createClient();
 
 /* ─── ICONS ──────────────────────────────────────────────────────────────── */
 const PdfIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
     <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
     <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
     <line strokeLinecap="round" x1="16" y1="13" x2="8" y2="13"/>
@@ -60,20 +25,23 @@ const MenuIcon = () => (
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
 );
-const CloseIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-);
 const PlusIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
   </svg>
 );
-const RefreshIcon = () => (
+const UploadIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+    <polyline strokeLinecap="round" strokeLinejoin="round" points="17 8 12 3 7 8"/>
+    <line strokeLinecap="round" x1="12" y1="3" x2="12" y2="15"/>
+  </svg>
+);
+const LogoutIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-    <polyline points="23 4 23 10 17 10"/>
-    <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+    <polyline strokeLinecap="round" strokeLinejoin="round" points="16 17 21 12 16 7"/>
+    <line strokeLinecap="round" x1="21" y1="12" x2="9" y2="12"/>
   </svg>
 );
 const SparkleIcon = () => (
@@ -87,593 +55,587 @@ const CopyIcon = () => (
     <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
   </svg>
 );
+const TrashIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <polyline strokeLinecap="round" strokeLinejoin="round" points="3 6 5 6 21 6"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10 11v6M14 11v6"/>
+  </svg>
+);
+const CrownIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/>
+  </svg>
+);
 
-/* ─── AI ANALYSIS CARD ───────────────────────────────────────────────────── */
-function AnalysisCard({ onAsk }) {
-  const [tab, setTab] = useState("overview");
-  const [refreshing, setRefreshing] = useState(false);
-  const tabs = ["overview", "differences", "actions", "ask"];
+/* ─── HELPERS ────────────────────────────────────────────────────────────── */
+function formatBytes(bytes) {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+function timeAgo(ts) {
+  if (!ts) return "";
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60) return "Just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 172800) return "Yesterday";
+  return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
-  const themeColors = [
-    "bg-violet-100 text-violet-700 border-violet-200 hover:bg-violet-200",
-    "bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-200",
-    "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200",
-    "bg-cyan-100 text-cyan-700 border-cyan-200 hover:bg-cyan-200",
-    "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200",
-  ];
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1200);
-  };
-
+/* ─── WELCOME SCREEN ────────────────────────────────────────────────────── */
+function WelcomeScreen({ onUpload }) {
   return (
-    <div className="w-full bg-white/70 backdrop-blur-md border border-indigo-100/80 rounded-2xl shadow-xl shadow-indigo-500/5 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100/80">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0">
-            <SparkleIcon />
-            <span className="sr-only">AI</span>
-          </div>
-          <div>
-            <p className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent leading-tight">
-              AI Agent Analysis
-            </p>
-            <p className="text-[11px] text-gray-400">{MOCK_PDFS.length} documents analyzed</p>
-          </div>
-        </div>
-        <button
-          onClick={handleRefresh}
-          className={`flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg transition-all ${refreshing ? "opacity-60" : ""}`}
-        >
-          <span className={refreshing ? "animate-spin" : ""}><RefreshIcon /></span>
-          {refreshing ? "Refreshing…" : "Refresh"}
-        </button>
+    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-xl shadow-violet-500/30 mb-6">
+        <PdfIcon />
       </div>
-
-      {/* Tabs */}
-      <div className="px-5 pt-4">
-        <div className="flex gap-1 bg-gray-50 p-1 rounded-xl w-fit">
-          {tabs.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all duration-200 ${
-                tab === t
-                  ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/30"
-                  : "text-gray-500 hover:text-gray-800 hover:bg-white"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tab content */}
-      <div className="px-5 py-4">
-        {/* Overview */}
-        {tab === "overview" && (
-          <div className="flex flex-col gap-5">
-            <p className="text-sm text-gray-700 leading-relaxed">{MOCK_ANALYSIS.overview}</p>
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Common Themes</p>
-              <div className="flex flex-wrap gap-2">
-                {MOCK_ANALYSIS.themes.map((t, i) => (
-                  <span key={i} className={`text-xs font-semibold px-3 py-1.5 rounded-full border cursor-default transition-colors ${themeColors[i % themeColors.length]}`}>
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Documents</p>
-              <div className="flex flex-col gap-2">
-                {MOCK_PDFS.slice(0, 3).map((doc, i) => (
-                  <div key={doc.id} className="flex items-center gap-3 bg-gray-50 hover:bg-indigo-50/60 border border-gray-100 hover:border-indigo-200 rounded-xl px-3 py-2.5 transition-all duration-150 group cursor-default">
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">{i + 1}</div>
-                    <span className="text-xs font-medium text-gray-700 truncate flex-1">{doc.name}</span>
-                    <span className="text-[10px] text-gray-400 shrink-0">{doc.pages}p</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <h2 className="text-2xl font-bold text-white mb-2">Chat with your PDFs</h2>
+      <p className="text-gray-400 text-sm max-w-xs mb-8">
+        Upload a PDF and start asking questions. Get instant AI-powered answers from your documents.
+      </p>
+      <button
+        onClick={onUpload}
+        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-violet-500/30 transition-all duration-200 hover:-translate-y-0.5"
+      >
+        <UploadIcon />
+        Upload your first PDF
+      </button>
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-lg">
+        {[
+          { icon: "📄", title: "Smart Q&A", desc: "Ask anything about your document" },
+          { icon: "⚡", title: "Instant answers", desc: "Powered by GPT-4o-mini" },
+          { icon: "🔒", title: "Secure", desc: "Your files are private" },
+        ].map((f) => (
+          <div key={f.title} className="bg-white/4 border border-white/8 rounded-xl p-4 text-left">
+            <div className="text-xl mb-2">{f.icon}</div>
+            <p className="text-sm font-semibold text-white">{f.title}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
           </div>
-        )}
-
-        {/* Differences */}
-        {tab === "differences" && (
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Key Differences</p>
-            <ul className="flex flex-col gap-3">
-              {MOCK_ANALYSIS.differences.map((d, i) => (
-                <li key={i} className="flex gap-3 items-start text-sm text-gray-700">
-                  <span className="w-5 h-5 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">≠</span>
-                  <span className="leading-relaxed">{d}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Actions */}
-        {tab === "actions" && (
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Action Items</p>
-            <ul className="flex flex-col gap-3">
-              {MOCK_ANALYSIS.actions.map((a, i) => (
-                <li key={i} className="flex gap-3 items-start text-sm text-gray-700">
-                  <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">→</span>
-                  <span className="leading-relaxed">{a}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Ask */}
-        {tab === "ask" && (
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Suggested Questions</p>
-            <div className="flex flex-wrap gap-2">
-              {MOCK_ANALYSIS.questions.map((q, i) => (
-                <button
-                  key={i}
-                  onClick={() => onAsk(q)}
-                  className="text-xs text-indigo-600 font-medium bg-white hover:bg-indigo-50 border border-indigo-200 hover:border-indigo-300 px-3 py-2 rounded-xl transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
 }
 
-/* ─── DASHBOARD ──────────────────────────────────────────────────────────── */
-export default function Dashboard() {
-  const [selectedPdf, setSelectedPdf] = useState(MOCK_PDFS[0]);
+/* ─── CHAT MESSAGES ─────────────────────────────────────────────────────── */
+function ChatMessage({ msg, onCopy }) {
+  const isUser = msg.role === "user";
+  return (
+    <div className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
+      {!isUser && (
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-md shadow-violet-500/30 shrink-0 mt-0.5">
+          <SparkleIcon />
+        </div>
+      )}
+      <div className={`group relative max-w-[75%] ${isUser ? "order-first" : ""}`}>
+        <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+          isUser
+            ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-br-md shadow-lg shadow-violet-500/20"
+            : "bg-white/6 border border-white/10 text-gray-100 rounded-bl-md"
+        }`}>
+          {msg.content}
+          {msg.streaming && (
+            <span className="inline-block w-1.5 h-4 ml-1 bg-violet-400 rounded-sm animate-pulse align-middle" />
+          )}
+        </div>
+        {!isUser && !msg.streaming && (
+          <button
+            onClick={() => onCopy(msg.content)}
+            className="absolute -bottom-5 left-0 opacity-0 group-hover:opacity-100 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-all duration-150 bg-transparent border-none cursor-pointer p-0"
+          >
+            <CopyIcon /> Copy
+          </button>
+        )}
+      </div>
+      {isUser && (
+        <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold text-gray-300">
+          U
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── MAIN DASHBOARD ─────────────────────────────────────────────────────── */
+export default function DashboardPage() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const [docs, setDocs] = useState([]);
+  const [selectedDoc, setSelectedDoc] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [typingText, setTypingText] = useState("");
+  const [aiStreaming, setAiStreaming] = useState(false);
+
+  const [uploading, setUploading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [copiedIdx, setCopiedIdx] = useState(null);
-  const [showAnalysis, setShowAnalysis] = useState(true);
-  const [activeView, setActiveView] = useState("chat"); // "chat" | "analysis"
+  const [copied, setCopied] = useState(false);
+  const [limitError, setLimitError] = useState(null);
+  const [plan, setPlan] = useState("free");
+  const [upgradingStripe, setUpgradingStripe] = useState(false);
 
-  const chatEndRef = useRef(null);
-  const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
-  const responseIdx = useRef(0);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
+  /* ── Auth guard ─────────────────────────────────────────────────────── */
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, typingText]);
-
-  useEffect(() => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 140) + "px";
-  }, [input]);
-
-  const sendMessage = useCallback(async () => {
-    if (!input.trim() || isTyping) return;
-    const text = input.trim();
-    setInput("");
-    setMessages((prev) => [...prev, { role: "user", text }]);
-    setIsTyping(true);
-    setTypingText("");
-
-    // Simulate streaming AI response
-    const response = MOCK_AI_RESPONSES[responseIdx.current % MOCK_AI_RESPONSES.length];
-    responseIdx.current++;
-    let i = 0;
-    const interval = setInterval(() => {
-      i += 3;
-      setTypingText(response.slice(0, i));
-      if (i >= response.length) {
-        clearInterval(interval);
-        setIsTyping(false);
-        setTypingText("");
-        setMessages((prev) => [...prev, { role: "ai", text: response }]);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        window.location.href = "/login";
+      } else {
+        setUser(user);
+        setLoading(false);
+        fetchDocs(user.id);
+        fetchPlan(user.id);
       }
-    }, 18);
-  }, [input, isTyping]);
+    });
+  }, []);
 
-  const handleKey = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  };
+  /* ── Fetch user plan ────────────────────────────────────────────────── */
+  async function fetchPlan(userId) {
+    try {
+      const { data } = await supabase
+        .from("user_plans")
+        .select("plan")
+        .eq("user_id", userId)
+        .single();
+      if (data?.plan) setPlan(data.plan);
+    } catch { /* free by default */ }
+  }
 
-  const handleAskFromPanel = (q) => {
-    setInput(q);
-    setActiveView("chat");
-    setTimeout(() => textareaRef.current?.focus(), 100);
-  };
+  /* ── Fetch documents ────────────────────────────────────────────────── */
+  const fetchDocs = useCallback(async (userId) => {
+    const { data, error } = await supabase
+      .from("documents")
+      .select("id, file_name, file_url, file_size, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (!error && data) setDocs(data);
+  }, []);
 
-  const handleCopy = (text, idx) => {
-    navigator.clipboard.writeText(text).catch(() => {});
-    setCopiedIdx(idx);
-    setTimeout(() => setCopiedIdx(null), 2000);
-  };
+  /* ── Upload PDF ─────────────────────────────────────────────────────── */
+  async function handleUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file || !file.name.endsWith(".pdf")) return;
+    setUploading(true);
+    try {
+      const path = `${user.id}/${Date.now()}_${file.name}`;
+      const { error: upErr } = await supabase.storage.from("pdfs").upload(path, file, { upsert: false });
+      if (upErr) throw upErr;
 
-  const selectPdf = (pdf) => {
-    setSelectedPdf(pdf);
+      const { data: urlData } = supabase.storage.from("pdfs").getPublicUrl(path);
+      const fileUrl = urlData.publicUrl;
+
+      const { error: dbErr } = await supabase.from("documents").insert([{
+        user_id: user.id,
+        file_name: file.name,
+        file_url: fileUrl,
+        file_size: file.size,
+      }]);
+      if (dbErr) throw dbErr;
+
+      await fetchDocs(user.id);
+      // Trigger background embedding (best-effort, non-blocking)
+      fetch("/api/embed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileUrl }),
+      }).catch(() => {});
+    } catch (err) {
+      alert("Upload failed: " + err.message);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  /* ── Delete document ────────────────────────────────────────────────── */
+  async function handleDelete(doc) {
+    if (!confirm(`Delete "${doc.file_name}"?`)) return;
+    try {
+      const urlObj = new URL(doc.file_url);
+      const pathMatch = urlObj.pathname.match(/\/object\/public\/pdfs\/(.+)$/);
+      if (pathMatch) await supabase.storage.from("pdfs").remove([pathMatch[1]]);
+      await supabase.from("documents").delete().eq("id", doc.id);
+      if (selectedDoc?.id === doc.id) { setSelectedDoc(null); setMessages([]); }
+      await fetchDocs(user.id);
+    } catch (err) {
+      alert("Delete failed: " + err.message);
+    }
+  }
+
+  /* ── Select document ────────────────────────────────────────────────── */
+  function selectDoc(doc) {
+    setSelectedDoc(doc);
     setMessages([]);
+    setLimitError(null);
     setSidebarOpen(false);
-  };
+    inputRef.current?.focus();
+  }
 
-  const quickPrompts = ["Summarize this document", "What are the key points?", "Extract important data", "Explain the main topic"];
+  /* ── Send message ───────────────────────────────────────────────────── */
+  async function handleSend(e) {
+    e?.preventDefault();
+    const text = input.trim();
+    if (!text || !selectedDoc || aiStreaming) return;
+
+    setInput("");
+    setLimitError(null);
+    const userMsg = { role: "user", content: text, id: Date.now() };
+    setMessages((prev) => [...prev, userMsg]);
+    setAiStreaming(true);
+
+    const aiMsgId = Date.now() + 1;
+    setMessages((prev) => [...prev, { role: "assistant", content: "", id: aiMsgId, streaming: true }]);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, fileUrl: selectedDoc.file_url }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        if (data.limitExceeded) {
+          setLimitError(data.error);
+          setMessages((prev) => prev.filter((m) => m.id !== aiMsgId));
+        } else {
+          setMessages((prev) =>
+            prev.map((m) => m.id === aiMsgId ? { ...m, content: data.error || "Request failed.", streaming: false } : m)
+          );
+        }
+        return;
+      }
+
+      // Structured extraction returns JSON
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        const pretty = JSON.stringify(data.data, null, 2);
+        setMessages((prev) =>
+          prev.map((m) => m.id === aiMsgId ? { ...m, content: "```json\n" + pretty + "\n```", streaming: false } : m)
+        );
+        return;
+      }
+
+      // Streaming text
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let full = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        full += decoder.decode(value, { stream: true });
+        setMessages((prev) =>
+          prev.map((m) => m.id === aiMsgId ? { ...m, content: full } : m)
+        );
+      }
+      setMessages((prev) =>
+        prev.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m)
+      );
+    } catch (err) {
+      setMessages((prev) =>
+        prev.map((m) => m.id === aiMsgId ? { ...m, content: "Something went wrong. Please try again.", streaming: false } : m)
+      );
+    } finally {
+      setAiStreaming(false);
+    }
+  }
+
+  /* ── Stripe upgrade ─────────────────────────────────────────────────── */
+  async function handleUpgrade() {
+    setUpgradingStripe(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert(data.error || "Checkout failed");
+    } catch { alert("Checkout failed"); }
+    finally { setUpgradingStripe(false); }
+  }
+
+  /* ── Copy ────────────────────────────────────────────────────────────── */
+  function copyText(text) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  /* ── Sign out ────────────────────────────────────────────────────────── */
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  }
+
+  /* ── Auto-scroll ─────────────────────────────────────────────────────── */
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  /* ── Key handler ─────────────────────────────────────────────────────── */
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  /* ── Loading ─────────────────────────────────────────────────────────── */
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0d0d1a] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const userEmail = user?.email || "";
+  const userInitial = userEmail.charAt(0).toUpperCase();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      <style>{`
-        @keyframes fadeSlideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes blink { 0%,80%,100%{opacity:.25;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
-        @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-        .msg-in { animation: fadeSlideUp .28s ease both; }
-        .dot { width:7px;height:7px;border-radius:50%;background:#94a3b8;display:inline-block;animation:blink 1.2s infinite ease-in-out; }
-        .dot:nth-child(2){animation-delay:.15s} .dot:nth-child(3){animation-delay:.3s}
-        .cursor-type::after { content:''; display:inline-block;width:2px;height:15px;background:#6366f1;margin-left:2px;vertical-align:text-bottom;animation:cursorBlink .7s infinite; }
-        ::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:4px} ::-webkit-scrollbar-thumb:hover{background:#cbd5e1}
-      `}</style>
+    <div className="flex h-screen bg-[#0d0d1a] overflow-hidden">
 
-      {/* Sidebar overlay (mobile) */}
+      {/* ── Sidebar overlay (mobile) ──────────────────────────────────── */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-20 bg-black/60 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
-      {/* ══════════════════════════════════════════
-          LEFT SIDEBAR
-      ══════════════════════════════════════════ */}
+      {/* ── SIDEBAR ───────────────────────────────────────────────────── */}
       <aside className={`
-        fixed md:relative inset-y-0 left-0 z-40 w-64 flex flex-col
-        bg-gray-900 border-r border-gray-800
-        transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        fixed inset-y-0 left-0 z-30 w-64 bg-gray-950 border-r border-white/6 flex flex-col
+        transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        md:relative md:translate-x-0 md:z-auto
       `}>
-        {/* Brand */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-800 shrink-0">
-          <a href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <span className="text-white font-bold text-base tracking-tight">PDF Chat</span>
-          </a>
-          <button className="md:hidden text-gray-400 hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}>
-            <CloseIcon />
-          </button>
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 px-4 h-14 border-b border-white/6 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-md shadow-violet-500/30">
+            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <span className="text-sm font-bold text-white tracking-tight">AI PDF Chat</span>
         </div>
 
         {/* Upload button */}
-        <div className="px-3 py-3 shrink-0">
-          <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" />
+        <div className="px-3 pt-3 pb-2 shrink-0">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-sm py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:-translate-y-0.5"
+            disabled={uploading}
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-violet-600/80 to-indigo-600/80 hover:from-violet-600 hover:to-indigo-600 border border-violet-500/30 rounded-xl transition-all duration-200 disabled:opacity-50"
           >
-            <PlusIcon />
-            Upload PDF
+            {uploading ? (
+              <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Uploading…</>
+            ) : (
+              <><PlusIcon /> New PDF</>
+            )}
           </button>
+          <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} className="hidden" />
         </div>
 
         {/* PDF list */}
-        <div className="px-3 mb-2 shrink-0">
-          <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.12em] px-1">Recent PDFs</p>
-        </div>
-
-        <nav className="flex-1 overflow-y-auto px-2 pb-4">
-          {MOCK_PDFS.map((pdf) => {
-            const active = selectedPdf?.id === pdf.id;
-            return (
-              <button
-                key={pdf.id}
-                onClick={() => selectPdf(pdf)}
-                className={`group w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl mb-1 text-left transition-all duration-150 border ${
-                  active
-                    ? "bg-indigo-600/20 border-indigo-500/30 text-indigo-300"
-                    : "border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-200 hover:border-gray-700/50"
+        <div className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5">
+          {docs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-xs text-gray-600">No PDFs yet</p>
+              <p className="text-xs text-gray-700 mt-1">Upload one to get started</p>
+            </div>
+          ) : (
+            docs.map((doc) => (
+              <div
+                key={doc.id}
+                onClick={() => selectDoc(doc)}
+                className={`group flex items-start gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
+                  selectedDoc?.id === doc.id
+                    ? "bg-violet-600/20 border border-violet-500/30"
+                    : "hover:bg-white/4 border border-transparent"
                 }`}
               >
-                <div className={`shrink-0 mt-0.5 ${active ? "text-indigo-400" : "text-gray-600 group-hover:text-gray-400"}`}>
+                <span className={`mt-0.5 ${selectedDoc?.id === doc.id ? "text-violet-400" : "text-gray-500"}`}>
                   <PdfIcon />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-xs font-medium truncate ${selectedDoc?.id === doc.id ? "text-violet-200" : "text-gray-300"}`}>
+                    {doc.file_name}
+                  </p>
+                  <p className="text-[10px] text-gray-600 mt-0.5">
+                    {formatBytes(doc.file_size)} · {timeAgo(doc.created_at)}
+                  </p>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm truncate leading-tight">{pdf.name}</p>
-                  <p className="text-[10px] text-gray-600 mt-0.5">{pdf.pages}p · {pdf.size} · {pdf.date}</p>
-                </div>
-              </button>
-            );
-          })}
-        </nav>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-600 hover:text-red-400 transition-all bg-transparent border-none cursor-pointer rounded"
+                >
+                  <TrashIcon />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
 
-        {/* Sidebar footer */}
-        <div className="border-t border-gray-800 px-4 py-4 shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-gray-500 bg-gray-800 border border-gray-700 px-2.5 py-1 rounded-full">Free Plan</span>
-            <a href="/dashboard" className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors">Upgrade ↗</a>
-          </div>
-          <div className="bg-gray-800/60 rounded-xl p-2.5 mb-3">
-            <div className="flex justify-between text-[10px] mb-1.5">
-              <span className="text-gray-500">PDFs used</span>
-              <span className="text-gray-300 font-semibold">3 / 5</span>
+        {/* Bottom: plan + user */}
+        <div className="border-t border-white/6 p-3 space-y-2 shrink-0">
+          {plan !== "pro" && (
+            <button
+              onClick={handleUpgrade}
+              disabled={upgradingStripe}
+              className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 rounded-xl transition-all duration-200 disabled:opacity-60"
+            >
+              <CrownIcon />
+              {upgradingStripe ? "Loading…" : "Upgrade to Pro · $9/mo"}
+            </button>
+          )}
+          {plan === "pro" && (
+            <div className="flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-amber-300">
+              <CrownIcon /> Pro Plan
             </div>
-            <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full w-[60%] bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full" />
+          )}
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+              {userInitial}
             </div>
+            <p className="text-xs text-gray-400 truncate flex-1">{userEmail}</p>
+            <button onClick={handleSignOut} className="p-1.5 text-gray-600 hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer rounded">
+              <LogoutIcon />
+            </button>
           </div>
-          <a href="/login" className="flex items-center gap-2 text-xs text-gray-600 hover:text-gray-300 transition-colors">
-            <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-300">U</div>
-            user@example.com
-          </a>
         </div>
       </aside>
 
-      {/* ══════════════════════════════════════════
-          MAIN CONTENT
-      ══════════════════════════════════════════ */}
-      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+      {/* ── MAIN AREA ─────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* ── TOP BAR ── */}
-        <header className="flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-gray-200 bg-white/90 backdrop-blur-sm shrink-0 min-h-[56px]">
+        {/* Header */}
+        <header className="h-14 flex items-center gap-3 px-4 border-b border-white/6 shrink-0 bg-[#0d0d1a]/95 backdrop-blur-sm">
           <button
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            className="md:hidden p-1.5 text-gray-400 hover:text-white transition-colors bg-transparent border-none cursor-pointer rounded-lg hover:bg-white/5"
             onClick={() => setSidebarOpen(true)}
           >
             <MenuIcon />
           </button>
-
-          {/* PDF name */}
-          <div className="flex-1 min-w-0 flex items-center gap-2">
-            {selectedPdf ? (
-              <>
-                <div className="text-gray-400 shrink-0"><PdfIcon /></div>
-                <p className="text-sm font-semibold text-gray-800 truncate">{selectedPdf.name}</p>
-                <span className="hidden sm:block text-xs text-gray-400 shrink-0">{selectedPdf.pages} pages</span>
-              </>
-            ) : (
-              <p className="text-sm font-bold text-gray-900">AI PDF Chat</p>
+          {selectedDoc ? (
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-violet-400 shrink-0"><PdfIcon /></span>
+              <span className="text-sm font-semibold text-white truncate">{selectedDoc.file_name}</span>
+              {formatBytes(selectedDoc.file_size) && (
+                <span className="text-xs text-gray-500 shrink-0 hidden sm:inline">{formatBytes(selectedDoc.file_size)}</span>
+              )}
+            </div>
+          ) : (
+            <h1 className="text-sm font-semibold text-gray-300">Select a PDF to start chatting</h1>
+          )}
+          <div className="ml-auto flex items-center gap-2">
+            {plan === "pro" && (
+              <span className="flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-full">
+                <CrownIcon /> PRO
+              </span>
             )}
-          </div>
-
-          {/* View toggle */}
-          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-            <button
-              onClick={() => setActiveView("chat")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeView === "chat" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              Chat
-            </button>
-            <button
-              onClick={() => setActiveView("analysis")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeView === "analysis" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              Analysis
-            </button>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => { setMessages([]); }}
-              title="New chat"
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-            >
-              <PlusIcon />
-            </button>
           </div>
         </header>
 
-        {/* ── BODY ── */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-
-          {/* ANALYSIS VIEW */}
-          {activeView === "analysis" && (
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-              <div className="max-w-3xl mx-auto">
-                <AnalysisCard onAsk={handleAskFromPanel} />
-
-                {/* Full PDF list */}
-                <div className="mt-6 bg-white/70 backdrop-blur-sm border border-gray-100 rounded-2xl p-5 shadow-sm">
-                  <p className="text-sm font-bold text-gray-800 mb-4">All Documents</p>
-                  <div className="flex flex-col gap-2">
-                    {MOCK_PDFS.map((pdf) => (
-                      <div
-                        key={pdf.id}
-                        onClick={() => { setSelectedPdf(pdf); setActiveView("chat"); }}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm ${selectedPdf?.id === pdf.id ? "bg-indigo-50 border-indigo-200" : "bg-gray-50 border-gray-100 hover:bg-indigo-50/60 hover:border-indigo-100"}`}
-                      >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${selectedPdf?.id === pdf.id ? "bg-gradient-to-br from-indigo-500 to-violet-500 text-white" : "bg-gray-200 text-gray-500"}`}>
-                          <PdfIcon />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{pdf.name}</p>
-                          <p className="text-xs text-gray-400">{pdf.pages} pages · {pdf.size}</p>
-                        </div>
-                        <span className="text-xs text-gray-400 shrink-0">{pdf.date}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        {/* Chat body */}
+        <div className="flex-1 overflow-y-auto">
+          {!selectedDoc ? (
+            <WelcomeScreen onUpload={() => fileInputRef.current?.click()} />
+          ) : messages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-full px-6 text-center py-12">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30 mb-4">
+                <SparkleIcon />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-1">{selectedDoc.file_name}</h3>
+              <p className="text-gray-400 text-sm mb-6">Ask anything about this document</p>
+              <div className="flex flex-wrap justify-center gap-2 max-w-md">
+                {["Summarize this document", "What are the key points?", "List any important dates", "Extract contact information"].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => { setInput(q); inputRef.current?.focus(); }}
+                    className="text-xs px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-violet-500/40 text-gray-300 hover:text-white rounded-lg transition-all duration-150 cursor-pointer"
+                  >
+                    {q}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-
-          {/* CHAT VIEW */}
-          {activeView === "chat" && (
-            <>
-              {/* Scrollable chat */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-4 flex flex-col gap-5">
-
-                  {/* Inline analysis card (collapsed) */}
-                  {showAnalysis && (
-                    <div className="w-full bg-gradient-to-r from-indigo-50/80 to-violet-50/80 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-sm shrink-0 shadow-md shadow-indigo-500/25">🤖</div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800">AI Analysis ready</p>
-                          <p className="text-xs text-gray-500">{MOCK_PDFS.length} documents · {MOCK_ANALYSIS.themes.length} themes identified</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => setActiveView("analysis")} className="text-xs font-semibold text-indigo-600 bg-white border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
-                          View
-                        </button>
-                        <button onClick={() => setShowAnalysis(false)} className="text-gray-400 hover:text-gray-600 transition-colors"><CloseIcon /></button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Empty state */}
-                  {messages.length === 0 && !isTyping && (
-                    <div className="flex flex-col items-center text-center pt-10 gap-6">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-indigo-400/15 rounded-full blur-2xl scale-150" />
-                        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-3xl shadow-xl shadow-indigo-500/25">💬</div>
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Ask anything about this PDF</h2>
-                        <p className="text-sm text-gray-500 max-w-sm">{selectedPdf ? `Currently reading: ${selectedPdf.name}` : "Select a PDF from the sidebar to start"}</p>
-                      </div>
-                      {/* Quick prompt cards */}
-                      <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-                        {quickPrompts.map((p, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setInput(p)}
-                            className="p-4 bg-white hover:bg-indigo-50/70 border border-gray-200 hover:border-indigo-200 rounded-2xl text-sm text-gray-700 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:shadow-indigo-500/8"
-                          >
-                            <span className="text-base mr-2">{["📋","🔑","📊","🧠"][i]}</span>
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Messages */}
-                  {messages.map((msg, i) => (
-                    <div key={i} className={`msg-in flex items-end gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                      {msg.role === "ai" && (
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shadow-indigo-500/25 shrink-0 mb-0.5">⚡</div>
-                      )}
-
-                      <div className={`max-w-[78%] ${
-                        msg.role === "user"
-                          ? "bg-gradient-to-br from-indigo-600 to-violet-600 text-white rounded-2xl rounded-br-sm px-4 py-3 shadow-lg shadow-indigo-500/20"
-                          : "bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm"
-                      }`}>
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
-                        {msg.role === "ai" && (
-                          <div className="flex gap-2 mt-2.5 pt-2 border-t border-gray-100">
-                            <button
-                              onClick={() => handleCopy(msg.text, i)}
-                              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-600 transition-colors"
-                            >
-                              <CopyIcon />
-                              {copiedIdx === i ? <span className="text-emerald-500">Copied!</span> : "Copy"}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {msg.role === "user" && (
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0 mb-0.5">U</div>
-                      )}
-                    </div>
-                  ))}
-
-                  {/* Loading dots */}
-                  {isTyping && !typingText && (
-                    <div className="msg-in flex items-end gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shrink-0">⚡</div>
-                      <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-4 shadow-sm">
-                        <div className="flex gap-1.5"><span className="dot"/><span className="dot"/><span className="dot"/></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Typing stream */}
-                  {isTyping && typingText && (
-                    <div className="msg-in flex items-end gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shrink-0">⚡</div>
-                      <div className="max-w-[78%] bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words cursor-type">{typingText}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div ref={chatEndRef} />
-                </div>
-              </div>
-
-              {/* ── INPUT BAR ── */}
-              <div className="border-t border-gray-200 bg-white/95 backdrop-blur-sm px-4 sm:px-6 pt-3 pb-5 shrink-0">
-                {/* Quick action chips */}
-                <div className="max-w-3xl mx-auto mb-2.5 flex flex-wrap gap-1.5">
-                  {quickPrompts.map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setInput(p)}
-                      className="text-xs text-gray-500 font-medium bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-200 hover:text-indigo-600 px-3 py-1.5 rounded-full transition-all duration-150"
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-
-                {/* PDF chip */}
-                {selectedPdf && (
-                  <div className="max-w-3xl mx-auto mb-2 flex items-center">
-                    <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-                      <PdfIcon />
-                      <span className="max-w-[180px] sm:max-w-none truncate">{selectedPdf.name}</span>
-                      <button onClick={() => setSelectedPdf(null)} className="text-indigo-400 hover:text-indigo-700 ml-0.5 transition-colors">✕</button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Input box */}
-                <div className="max-w-3xl mx-auto">
-                  <div className="flex items-end gap-2.5 bg-white border-2 border-gray-200 focus-within:border-indigo-400 focus-within:shadow-lg focus-within:shadow-indigo-500/10 rounded-2xl px-4 py-3 transition-all duration-200">
-                    <textarea
-                      ref={textareaRef}
-                      value={input}
-                      rows={1}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKey}
-                      placeholder={selectedPdf ? `Ask anything about "${selectedPdf.name}"…` : "Upload a PDF to start chatting…"}
-                      disabled={isTyping}
-                      className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 placeholder-gray-400 resize-none leading-relaxed py-0.5 max-h-36 overflow-y-auto disabled:opacity-50"
-                      style={{ minHeight: 24 }}
-                    />
-                    <button
-                      onClick={sendMessage}
-                      disabled={!input.trim() || isTyping}
-                      className={`w-9 h-9 shrink-0 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                        input.trim() && !isTyping
-                          ? "bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:scale-105 hover:shadow-indigo-500/50 active:scale-95 cursor-pointer"
-                          : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                      }`}
-                    >
-                      <SendIcon />
-                    </button>
-                  </div>
-                  <p className="text-center text-[11px] text-gray-300 mt-2">
-                    Enter to send · Shift+Enter for new line · Responses are simulated for demo
-                  </p>
-                </div>
-              </div>
-            </>
+          ) : (
+            <div className="max-w-3xl mx-auto px-4 py-6 space-y-8 pb-4">
+              {messages.map((msg) => (
+                <ChatMessage key={msg.id} msg={msg} onCopy={copyText} />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
           )}
         </div>
-      </main>
+
+        {/* Limit error banner */}
+        {limitError && (
+          <div className="mx-4 mb-2 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3">
+            <p className="text-xs text-amber-300">{limitError}</p>
+            <button
+              onClick={handleUpgrade}
+              disabled={upgradingStripe}
+              className="shrink-0 text-xs font-bold px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black rounded-lg transition-colors disabled:opacity-60 border-none cursor-pointer"
+            >
+              {upgradingStripe ? "…" : "Upgrade"}
+            </button>
+          </div>
+        )}
+
+        {/* Input bar */}
+        {selectedDoc && (
+          <div className="px-4 pb-4 pt-2 shrink-0">
+            <form
+              onSubmit={handleSend}
+              className="flex items-end gap-2 bg-white/5 border border-white/10 hover:border-violet-500/30 focus-within:border-violet-500/50 rounded-2xl px-4 py-3 transition-all duration-200 max-w-3xl mx-auto"
+            >
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={`Ask about ${selectedDoc.file_name}…`}
+                disabled={aiStreaming}
+                rows={1}
+                suppressHydrationWarning
+                className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 outline-none resize-none leading-relaxed max-h-32 disabled:opacity-60"
+                style={{ minHeight: "24px" }}
+                onInput={(e) => {
+                  e.target.style.height = "auto";
+                  e.target.style.height = Math.min(e.target.scrollHeight, 128) + "px";
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || aiStreaming}
+                className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 shadow-md shadow-violet-500/25 border-none cursor-pointer"
+              >
+                {aiStreaming ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <SendIcon />
+                )}
+              </button>
+            </form>
+            <p className="text-center text-[10px] text-gray-700 mt-2">
+              AI can make mistakes. Verify important information.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Copy toast */}
+      {copied && (
+        <div className="fixed bottom-6 right-6 px-4 py-2.5 bg-gray-800 border border-white/10 text-white text-sm rounded-xl shadow-xl animate-fade-in z-50">
+          Copied to clipboard
+        </div>
+      )}
     </div>
   );
 }
