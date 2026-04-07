@@ -108,6 +108,74 @@ const SMART_ACTIONS = [
   { label: "Questions", prompt: "Generate 5 insightful questions someone might ask about this document." },
 ];
 
+/* ─── UPGRADE POPUP ─────────────────────────────────────────────────────── */
+function UpgradePopup({ reason, onUpgrade, onClose, loading }) {
+  const isPdf = reason === "pdf";
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(6px)" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: 420, background: "#0f0f23", border: "1px solid rgba(124,58,237,0.35)", borderRadius: 24, padding: 36, textAlign: "center", boxShadow: "0 32px 80px rgba(0,0,0,0.7)", position: "relative" }}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "4px 8px", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 12, lineHeight: 1 }}
+        >
+          ✕
+        </button>
+
+        {/* Icon */}
+        <div style={{ width: 64, height: 64, borderRadius: 20, background: "linear-gradient(135deg,rgba(124,58,237,0.25),rgba(6,182,212,0.15))", border: "1px solid rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 28 }}>
+          {isPdf ? "📄" : "💬"}
+        </div>
+
+        {/* Heading */}
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Free limit reached</p>
+        <h2 style={{ fontSize: 22, fontWeight: 900, color: "white", margin: "0 0 10px", letterSpacing: "-0.4px" }}>
+          {isPdf ? "You've used all 5 PDFs" : "You've used all 20 questions"}
+        </h2>
+        <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", margin: "0 0 28px", lineHeight: 1.65 }}>
+          Upgrade to Pro for <strong style={{ color: "white" }}>unlimited access</strong> — no restrictions on PDFs or questions.
+        </p>
+
+        {/* Price */}
+        <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.12),rgba(6,182,212,0.07))", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 14, padding: "16px 20px", marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+            <svg width="14" height="14" fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/></svg>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>Intellixy Pro</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginBottom: 14 }}>
+            <span style={{ fontSize: 38, fontWeight: 900, color: "white", lineHeight: 1 }}>₹199</span>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", paddingBottom: 4 }}>/month</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {["Unlimited PDF uploads", "Unlimited questions per day", "PDF Compare feature", "Priority AI responses"].map((f) => (
+              <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+                <svg width="14" height="14" fill="none" stroke="#4ade80" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                {f}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={onUpgrade}
+          disabled={loading}
+          style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, boxShadow: "0 8px 32px rgba(124,58,237,0.4)", letterSpacing: "-0.2px", marginBottom: 12 }}
+        >
+          {loading ? "Redirecting to checkout…" : "Upgrade Now →"}
+        </button>
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0 }}>Cancel anytime &nbsp;·&nbsp; Secure checkout via Stripe</p>
+      </div>
+    </div>
+  );
+}
+
 /* ─── WELCOME SCREEN ────────────────────────────────────────────────────── */
 function WelcomeScreen({ onUpload }) {
   return (
@@ -467,6 +535,7 @@ export default function DashboardPage() {
   const [showInsights, setShowInsights] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [showUpgradedToast, setShowUpgradedToast] = useState(false);
+  const [upgradePopup, setUpgradePopup] = useState(null); // null | "pdf" | "question"
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -537,7 +606,10 @@ export default function DashboardPage() {
       form.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: form });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (!res.ok) {
+        if (data.limitExceeded) { setUpgradePopup("pdf"); return; }
+        throw new Error(data.error || "Upload failed");
+      }
       await fetchDocs(user.id);
       await fetchUsage(user.id);
     } catch (err) {
@@ -601,6 +673,7 @@ export default function DashboardPage() {
         if (data.limitExceeded) {
           setLimitError(data.error);
           setMessages((prev) => prev.filter((m) => m.id !== aiMsgId));
+          setUpgradePopup("question");
         } else {
           setMessages((prev) =>
             prev.map((m) => m.id === aiMsgId ? { ...m, content: data.error || "Request failed.", streaming: false } : m)
@@ -1079,6 +1152,16 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Upgrade popup */}
+      {upgradePopup && (
+        <UpgradePopup
+          reason={upgradePopup}
+          onClose={() => setUpgradePopup(null)}
+          onUpgrade={() => { setUpgradePopup(null); handleUpgrade(); }}
+          loading={upgradingStripe}
+        />
+      )}
 
       {/* Copy toast */}
       {copied && (
