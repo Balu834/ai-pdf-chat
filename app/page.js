@@ -307,9 +307,14 @@ export default function HomePage() {
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.28)", margin: 0 }}>Understand your documents like never before.</p>
             </div>
             {/* Links */}
-            <div style={{ display: "flex", gap: 20 }}>
-              {["Privacy", "Terms", "Contact"].map(l => (
-                <a key={l} href="#" style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>{l}</a>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
+              {[
+                { label: "Privacy Policy", href: "/privacy-policy" },
+                { label: "Terms of Service", href: "/terms" },
+                { label: "Refund Policy", href: "/refund-policy" },
+                { label: "Contact", href: "mailto:support@intellixy.app" },
+              ].map(l => (
+                <a key={l.label} href={l.href} style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>{l.label}</a>
               ))}
             </div>
           </div>
