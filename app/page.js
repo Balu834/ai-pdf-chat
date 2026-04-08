@@ -238,9 +238,9 @@ export default function HomePage() {
                 cta: "Get started free",
               },
               {
-                name: "Pro", price: "$9", period: "/ month", badge: "Most Popular", highlight: true,
+                name: "Pro", price: "$3.99", period: "/ month", badge: "🔥 Limited early pricing", highlight: true,
                 features: ["Unlimited PDFs", "Unlimited questions", "Smart extraction", "PDF Compare", "Priority support"],
-                cta: "Start Pro",
+                cta: "Upgrade to Pro — $3.99/month",
               },
             ].map(p => (
               <div key={p.name} style={{ position: "relative", background: p.highlight ? "linear-gradient(135deg,rgba(124,58,237,0.14),rgba(6,182,212,0.07))" : "rgba(255,255,255,0.03)", border: p.highlight ? "1px solid rgba(124,58,237,0.38)" : "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 32, display: "flex", flexDirection: "column" }}>

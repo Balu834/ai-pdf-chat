@@ -139,7 +139,7 @@ function UpgradePopup({ reason, onUpgrade, onClose, loading }) {
           You&apos;ve reached your free limit 😄
         </h2>
         <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", margin: "0 0 6px", fontWeight: 600 }}>
-          Upgrade to continue using Intellixy
+          Upgrade to continue using Intellixy — $3.99/month
         </p>
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: "0 0 24px", lineHeight: 1.65 }}>
           {isPdf ? "You've used all 5 free PDF uploads." : "You've used all 20 free questions today."}{" "}
@@ -153,7 +153,7 @@ function UpgradePopup({ reason, onUpgrade, onClose, loading }) {
             <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>Intellixy Pro</span>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginBottom: 14 }}>
-            <span style={{ fontSize: 42, fontWeight: 900, color: "white", lineHeight: 1 }}>₹299</span>
+            <span style={{ fontSize: 42, fontWeight: 900, color: "white", lineHeight: 1 }}>$3.99</span>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", paddingBottom: 6 }}>/month</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -948,7 +948,7 @@ export default function DashboardPage() {
               disabled={upgradingStripe}
               style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", fontSize: 12, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1, marginBottom: 8 }}
             >
-              <CrownIcon /> {upgradingStripe ? "Loading…" : "Upgrade to Pro · ₹299/mo"}
+              <CrownIcon /> {upgradingStripe ? "Loading…" : "Upgrade to Pro · $3.99/mo"}
             </button>
           ) : (
             <div style={{ marginBottom: 8 }}>
