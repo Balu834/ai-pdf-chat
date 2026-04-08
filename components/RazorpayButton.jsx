@@ -87,7 +87,7 @@ export default function RazorpayButton({ user, style, children }) {
       disabled={loading}
       style={style}
     >
-      {loading ? "Opening payment…" : (children || "Upgrade to Pro — ₹299/month")}
+      {loading ? "Opening payment…" : (children || "Upgrade to Pro ₹299/month")}
     </button>
   );
 }

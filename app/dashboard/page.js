@@ -140,7 +140,7 @@ function UpgradePopup({ reason, onClose, user }) {
           You&apos;ve reached your free limit 😄
         </h2>
         <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", margin: "0 0 6px", fontWeight: 600 }}>
-          Upgrade to continue using Intellixy — $3.99/month
+          Upgrade to continue using Intellixy — ₹299/month
         </p>
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: "0 0 24px", lineHeight: 1.65 }}>
           {isPdf ? "You've used all 5 free PDF uploads." : "You've used all 20 free questions today."}{" "}
@@ -154,7 +154,7 @@ function UpgradePopup({ reason, onClose, user }) {
             <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>Intellixy Pro</span>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginBottom: 14 }}>
-            <span style={{ fontSize: 42, fontWeight: 900, color: "white", lineHeight: 1 }}>$3.99</span>
+            <span style={{ fontSize: 42, fontWeight: 900, color: "white", lineHeight: 1 }}>₹299</span>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", paddingBottom: 6 }}>/month</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

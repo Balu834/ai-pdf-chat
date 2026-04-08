@@ -23,7 +23,7 @@ const CTA_STYLE = {
 export default function ProPlanCTA() {
   return (
     <RazorpayButton style={CTA_STYLE}>
-      Upgrade to Pro — ₹299/month
+      Upgrade to Pro ₹299/month
     </RazorpayButton>
   );
 }

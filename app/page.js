@@ -235,14 +235,14 @@ export default function HomePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 20 }}>
             {[
               {
-                name: "Free", price: "$0", period: "forever", highlight: false,
+                name: "Free", price: "₹0", period: "forever", highlight: false,
                 features: ["5 PDF uploads", "20 questions / day", "AI Q&A", "AI Insights panel"],
                 cta: "Get started free",
               },
               {
-                name: "Pro", price: "$3.99", period: "/ month", badge: "🔥 Limited early pricing", highlight: true,
+                name: "Pro", price: "₹299", period: "/ month", badge: "🔥 Limited early pricing", highlight: true,
                 features: ["Unlimited PDFs", "Unlimited questions", "Smart extraction", "PDF Compare", "Priority support"],
-                cta: "Upgrade to Pro — $3.99/month",
+                cta: "Upgrade to Pro ₹299/month",
               },
             ].map(p => (
               <div key={p.name} style={{ position: "relative", background: p.highlight ? "linear-gradient(135deg,rgba(124,58,237,0.14),rgba(6,182,212,0.07))" : "rgba(255,255,255,0.03)", border: p.highlight ? "1px solid rgba(124,58,237,0.38)" : "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 32, display: "flex", flexDirection: "column" }}>
