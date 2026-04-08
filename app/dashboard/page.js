@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase-browser";
+import RazorpayButton from "@/components/RazorpayButton";
 
 const supabase = createClient();
 
@@ -109,7 +110,7 @@ const SMART_ACTIONS = [
 ];
 
 /* ─── UPGRADE POPUP ─────────────────────────────────────────────────────── */
-function UpgradePopup({ reason, onUpgrade, onClose, loading }) {
+function UpgradePopup({ reason, onClose, user }) {
   const isPdf = reason === "pdf";
   return (
     <div
@@ -167,14 +168,13 @@ function UpgradePopup({ reason, onUpgrade, onClose, loading }) {
         </div>
 
         {/* CTA */}
-        <button
-          onClick={onUpgrade}
-          disabled={loading}
-          style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, boxShadow: "0 8px 32px rgba(124,58,237,0.45)", letterSpacing: "-0.2px", marginBottom: 12, transition: "opacity 0.2s" }}
+        <RazorpayButton
+          user={user}
+          style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.45)", letterSpacing: "-0.2px", marginBottom: 12, transition: "opacity 0.2s" }}
         >
-          {loading ? "Redirecting to checkout…" : "Upgrade Now →"}
-        </button>
-        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0 }}>Cancel anytime &nbsp;·&nbsp; Secure checkout via Stripe</p>
+          Upgrade Now →
+        </RazorpayButton>
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0 }}>Secure payment via Razorpay &nbsp;·&nbsp; Cancel anytime</p>
       </div>
     </div>
   );
@@ -943,13 +943,12 @@ export default function DashboardPage() {
         {/* Bottom */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "10px", flexShrink: 0 }}>
           {plan !== "pro" ? (
-            <button
-              onClick={handleUpgrade}
-              disabled={upgradingStripe}
-              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", fontSize: 12, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1, marginBottom: 8 }}
+            <RazorpayButton
+              user={user}
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", fontSize: 12, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: "pointer", marginBottom: 8 }}
             >
-              <CrownIcon /> {upgradingStripe ? "Loading…" : "Upgrade to Pro · $3.99/mo"}
-            </button>
+              <CrownIcon /> Upgrade to Pro · ₹299/mo
+            </RazorpayButton>
           ) : (
             <div style={{ marginBottom: 8 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "5px", marginBottom: 6 }}>
@@ -1213,8 +1212,7 @@ export default function DashboardPage() {
         <UpgradePopup
           reason={upgradePopup}
           onClose={() => setUpgradePopup(null)}
-          onUpgrade={() => { setUpgradePopup(null); handleUpgrade(); }}
-          loading={upgradingStripe}
+          user={user}
         />
       )}
 

@@ -1,4 +1,6 @@
 // SERVER COMPONENT — no "use client", no redirects
+import ProPlanCTA from "@/components/ProPlanCTA";
+
 export const metadata = {
   title: "Intellixy - AI Document Assistant",
   description: "Chat with PDFs, extract insights, and compare documents using AI.",
@@ -262,9 +264,13 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <a href="/login" style={{ display: "block", textAlign: "center", textDecoration: "none", fontSize: 14, fontWeight: 700, color: "white", padding: "12px", borderRadius: 12, background: p.highlight ? "linear-gradient(135deg,#7c3aed,#06b6d4)" : "rgba(255,255,255,0.07)", border: p.highlight ? "none" : "1px solid rgba(255,255,255,0.1)" }}>
-                  {p.cta}
-                </a>
+                {p.highlight ? (
+                  <ProPlanCTA />
+                ) : (
+                  <a href="/login" style={{ display: "block", textAlign: "center", textDecoration: "none", fontSize: 14, fontWeight: 700, color: "white", padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                    {p.cta}
+                  </a>
+                )}
               </div>
             ))}
           </div>
