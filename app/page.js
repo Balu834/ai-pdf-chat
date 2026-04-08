@@ -53,12 +53,17 @@ export default function HomePage() {
             </span>
           </h1>
 
-          <p style={{ fontSize: "clamp(1rem,2.5vw,1.18rem)", color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 540, margin: "0 auto 40px" }}>
+          <p style={{ fontSize: "clamp(1rem,2.5vw,1.18rem)", color: "rgba(255,255,255,0.5)", lineHeight: 1.75, maxWidth: 540, margin: "0 auto 12px" }}>
             Upload PDFs, ask questions, get instant insights with AI.
             No more manual searching — just answers.
           </p>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 16 }}>
+          {/* Use-case line */}
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.28)", margin: "0 auto 32px", letterSpacing: "0.01em" }}>
+            Used for invoices, reports, study PDFs
+          </p>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 12 }}>
             <a href="/login" style={{ fontSize: 16, fontWeight: 800, color: "white", textDecoration: "none", padding: "16px 36px", borderRadius: 50, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", boxShadow: "0 10px 40px rgba(124,58,237,0.45)", letterSpacing: "-0.2px" }}>
               Try Intellixy Free →
             </a>
@@ -67,9 +72,23 @@ export default function HomePage() {
             </a>
           </div>
           {/* Trust text */}
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 56 }}>
-            No signup required &nbsp;•&nbsp; Free to try &nbsp;•&nbsp; No credit card needed
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 40 }}>
+            No signup required &nbsp;•&nbsp; Try instantly
           </p>
+
+          {/* Social proof */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 50, padding: "8px 18px", marginBottom: 48 }}>
+            <span style={{ fontSize: 15 }}>🔥</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)" }}>Trusted by early users</span>
+            <div style={{ display: "flex", marginLeft: 4 }}>
+              {["#a78bfa","#06b6d4","#f472b6","#34d399","#fbbf24"].map((c, i) => (
+                <div key={c} style={{ width: 22, height: 22, borderRadius: "50%", background: `${c}33`, border: `2px solid ${c}`, marginLeft: i === 0 ? 0 : -6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>
+                  {["A","B","C","D","E"][i]}
+                </div>
+              ))}
+            </div>
+            <span style={{ fontSize: 12, color: "#a78bfa", fontWeight: 700 }}>★ 5.0</span>
+          </div>
 
           {/* Mock dashboard preview */}
           <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 18, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.5)", maxWidth: 680, margin: "0 auto" }}>

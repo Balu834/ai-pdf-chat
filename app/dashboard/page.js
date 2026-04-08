@@ -114,11 +114,11 @@ function UpgradePopup({ reason, onUpgrade, onClose, loading }) {
   return (
     <div
       onClick={onClose}
-      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(6px)" }}
+      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(8px)", animation: "fadeIn 0.18s ease" }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: "100%", maxWidth: 420, background: "#0f0f23", border: "1px solid rgba(124,58,237,0.35)", borderRadius: 24, padding: 36, textAlign: "center", boxShadow: "0 32px 80px rgba(0,0,0,0.7)", position: "relative" }}
+        style={{ width: "100%", maxWidth: 420, background: "#0f0f23", border: "1px solid rgba(124,58,237,0.4)", borderRadius: 24, padding: 36, textAlign: "center", boxShadow: "0 40px 100px rgba(0,0,0,0.8)", position: "relative", animation: "popIn 0.22s cubic-bezier(0.34,1.56,0.64,1)" }}
       >
         {/* Close */}
         <button
@@ -135,26 +135,30 @@ function UpgradePopup({ reason, onUpgrade, onClose, loading }) {
 
         {/* Heading */}
         <p style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Free limit reached</p>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: "white", margin: "0 0 10px", letterSpacing: "-0.4px" }}>
-          {isPdf ? "You've used all 5 PDFs" : "You've used all 20 questions"}
+        <h2 style={{ fontSize: 22, fontWeight: 900, color: "white", margin: "0 0 6px", letterSpacing: "-0.4px" }}>
+          You&apos;ve reached your free limit 😄
         </h2>
-        <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", margin: "0 0 28px", lineHeight: 1.65 }}>
-          Upgrade to Pro for <strong style={{ color: "white" }}>unlimited access</strong> — no restrictions on PDFs or questions.
+        <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", margin: "0 0 6px", fontWeight: 600 }}>
+          Upgrade to continue using Intellixy
+        </p>
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: "0 0 24px", lineHeight: 1.65 }}>
+          {isPdf ? "You've used all 5 free PDF uploads." : "You've used all 20 free questions today."}{" "}
+          Pro gives you unlimited access.
         </p>
 
         {/* Price */}
-        <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.12),rgba(6,182,212,0.07))", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 14, padding: "16px 20px", marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+        <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.14),rgba(6,182,212,0.07))", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 14, padding: "18px 20px", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 10 }}>
             <svg width="14" height="14" fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/></svg>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>Intellixy Pro</span>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginBottom: 14 }}>
-            <span style={{ fontSize: 38, fontWeight: 900, color: "white", lineHeight: 1 }}>₹199</span>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", paddingBottom: 4 }}>/month</span>
+            <span style={{ fontSize: 42, fontWeight: 900, color: "white", lineHeight: 1 }}>₹299</span>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", paddingBottom: 6 }}>/month</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {["Unlimited PDF uploads", "Unlimited questions per day", "PDF Compare feature", "Priority AI responses"].map((f) => (
-              <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+              <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.65)" }}>
                 <svg width="14" height="14" fill="none" stroke="#4ade80" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                 {f}
               </div>
@@ -166,7 +170,7 @@ function UpgradePopup({ reason, onUpgrade, onClose, loading }) {
         <button
           onClick={onUpgrade}
           disabled={loading}
-          style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, boxShadow: "0 8px 32px rgba(124,58,237,0.4)", letterSpacing: "-0.2px", marginBottom: 12 }}
+          style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, boxShadow: "0 8px 32px rgba(124,58,237,0.45)", letterSpacing: "-0.2px", marginBottom: 12, transition: "opacity 0.2s" }}
         >
           {loading ? "Redirecting to checkout…" : "Upgrade Now →"}
         </button>
@@ -214,7 +218,7 @@ function WelcomeScreen({ onUpload }) {
 }
 
 /* ─── CHAT MESSAGE ───────────────────────────────────────────────────────── */
-function ChatMessage({ msg, onCopy }) {
+function ChatMessage({ msg, onCopy, onShare }) {
   const isUser = msg.role === "user";
   return (
     <div style={{ display: "flex", gap: 12, justifyContent: isUser ? "flex-end" : "flex-start" }}>
@@ -244,12 +248,20 @@ function ChatMessage({ msg, onCopy }) {
           )}
         </div>
         {!isUser && !msg.streaming && msg.content && (
-          <button
-            onClick={() => onCopy(msg.content)}
-            style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}
-          >
-            <CopyIcon /> Copy
-          </button>
+          <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={() => onCopy(msg.content)}
+              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}
+            >
+              <CopyIcon /> Copy
+            </button>
+            <button
+              onClick={() => onShare(msg.content)}
+              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(167,139,250,0.55)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}
+            >
+              🔗 Share
+            </button>
+          </div>
         )}
       </div>
       {isUser && (
@@ -758,6 +770,18 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  /* ── Share ───────────────────────────────────────────────────────────── */
+  function shareAnswer(text) {
+    const shareText = `${text.slice(0, 280)}${text.length > 280 ? "…" : ""}\n\n— via Intellixy`;
+    if (navigator.share) {
+      navigator.share({ text: shareText, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText).catch(() => {});
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
   /* ── Scroll to bottom ───────────────────────────────────────────────── */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -816,23 +840,33 @@ export default function DashboardPage() {
 
         {/* Upload button */}
         <div style={{ padding: "12px 12px 8px", flexShrink: 0 }}>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              padding: "10px", fontSize: 13, fontWeight: 600, color: "white",
-              background: "linear-gradient(135deg,rgba(124,58,237,0.7),rgba(79,70,229,0.7))",
-              border: "1px solid rgba(124,58,237,0.35)", borderRadius: 10, cursor: uploading ? "not-allowed" : "pointer",
-              opacity: uploading ? 0.7 : 1, transition: "all 0.2s",
-            }}
-          >
-            {uploading ? (
-              <><div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Uploading…</>
-            ) : (
-              <><PlusIcon /> New PDF</>
-            )}
-          </button>
+          {(() => {
+            const pdfLimitHit = plan !== "pro" && usage.pdfs >= usage.maxPdfs;
+            const disabled = uploading || pdfLimitHit;
+            return (
+              <button
+                onClick={() => pdfLimitHit ? setUpgradePopup("pdf") : fileInputRef.current?.click()}
+                disabled={uploading}
+                title={pdfLimitHit ? "PDF limit reached — upgrade to add more" : undefined}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  padding: "10px", fontSize: 13, fontWeight: 600, color: "white",
+                  background: pdfLimitHit ? "rgba(239,68,68,0.15)" : "linear-gradient(135deg,rgba(124,58,237,0.7),rgba(79,70,229,0.7))",
+                  border: pdfLimitHit ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(124,58,237,0.35)",
+                  borderRadius: 10, cursor: disabled ? "not-allowed" : "pointer",
+                  opacity: uploading ? 0.7 : 1, transition: "all 0.2s",
+                }}
+              >
+                {uploading ? (
+                  <><div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Uploading…</>
+                ) : pdfLimitHit ? (
+                  <><span style={{ fontSize: 13 }}>🔒</span> PDF limit reached</>
+                ) : (
+                  <><PlusIcon /> New PDF</>
+                )}
+              </button>
+            );
+          })()}
           <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} style={{ display: "none" }} />
         </div>
 
@@ -884,8 +918,8 @@ export default function DashboardPage() {
           <div style={{ margin: "0 10px 8px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "12px" }}>
             <p style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Usage Today</p>
             {[
-              { label: "PDFs", used: usage.pdfs, max: usage.maxPdfs },
-              { label: "Questions", used: usage.questions, max: usage.maxQuestions },
+              { label: "PDFs used today", used: usage.pdfs, max: usage.maxPdfs },
+              { label: "Questions today", used: usage.questions, max: usage.maxQuestions },
             ].map(({ label, used, max }) => (
               <div key={label} style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
@@ -914,7 +948,7 @@ export default function DashboardPage() {
               disabled={upgradingStripe}
               style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", fontSize: 12, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1, marginBottom: 8 }}
             >
-              <CrownIcon /> {upgradingStripe ? "Loading…" : "Upgrade to Pro · $9/mo"}
+              <CrownIcon /> {upgradingStripe ? "Loading…" : "Upgrade to Pro · ₹299/mo"}
             </button>
           ) : (
             <div style={{ marginBottom: 8 }}>
@@ -1076,7 +1110,7 @@ export default function DashboardPage() {
               ) : (
                 <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20, paddingBottom: 8 }}>
                   {messages.map((msg) => (
-                    <ChatMessage key={msg.id} msg={msg} onCopy={copyText} />
+                    <ChatMessage key={msg.id} msg={msg} onCopy={copyText} onShare={shareAnswer} />
                   ))}
                   <div ref={messagesEndRef} />
                 </div>
@@ -1096,6 +1130,25 @@ export default function DashboardPage() {
             {/* Input bar */}
             {selectedDoc && (
               <div style={{ padding: "8px 16px 16px", flexShrink: 0 }}>
+                {(() => {
+                  const qLimitHit = plan !== "pro" && usage.questions >= usage.maxQuestions;
+                  if (qLimitHit) {
+                    return (
+                      <div style={{ maxWidth: 720, margin: "0 auto", padding: "14px 18px", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                        <div>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: "#f87171", margin: "0 0 2px" }}>🔒 Daily question limit reached</p>
+                          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", margin: 0 }}>Upgrade to Pro for unlimited questions</p>
+                        </div>
+                        <button
+                          onClick={() => setUpgradePopup("question")}
+                          style={{ padding: "8px 16px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 10, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}
+                        >
+                          Upgrade Now
+                        </button>
+                      </div>
+                    );
+                  }
+                  return (
                 <form
                   onSubmit={handleSend}
                   style={{ display: "flex", alignItems: "flex-end", gap: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "12px 14px", maxWidth: 720, margin: "0 auto", transition: "border-color 0.2s" }}
@@ -1126,6 +1179,8 @@ export default function DashboardPage() {
                     }
                   </button>
                 </form>
+                  );
+                })()}
                 <p style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.15)", marginTop: 6 }}>
                   AI answers are based on your PDF content only
                 </p>
@@ -1193,6 +1248,10 @@ export default function DashboardPage() {
         @media (min-width: 769px) {
           .md-sidebar { transform: translateX(0) !important; position: relative !important; z-index: auto !important; }
         }
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.88) translateY(16px) } to { opacity: 1; transform: scale(1) translateY(0) } }
+        @keyframes blink { 0%,100% { opacity: 1 } 50% { opacity: 0 } }
+        @keyframes spin { to { transform: rotate(360deg) } }
       `}</style>
     </div>
   );
