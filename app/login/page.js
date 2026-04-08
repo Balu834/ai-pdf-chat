@@ -9,16 +9,25 @@ export default function LoginPage() {
   const [mode, setMode] = useState("login"); // "login" | "signup" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Show error from OAuth callback redirect (e.g. ?error=...)
+  const [status, setStatus] = useState(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    return err ? { type: "error", msg: decodeURIComponent(err) } : null;
+  });
 
   const switchMode = (m) => { setMode(m); setStatus(null); };
 
   const handleGoogle = async () => {
     setLoading(true);
+    // Always redirect back to the production domain, never localhost
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${siteUrl}/auth/callback` },
     });
     if (error) { setStatus({ type: "error", msg: error.message }); setLoading(false); }
   };
