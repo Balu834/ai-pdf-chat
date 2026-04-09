@@ -32,8 +32,8 @@ export async function POST() {
         item: {
           name: "Intellixy Pro",
           amount: 29900, // ₹299 in paise
-          unit_amount: 29900,
           currency: "INR",
+          description: "Unlimited PDFs + questions",
         },
       });
       planId = plan.id;
