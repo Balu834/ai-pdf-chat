@@ -31,46 +31,51 @@ export default function RazorpayButton({ user, style, children }) {
         return;
       }
 
-      // 2. Create subscription on backend
-      const res = await fetch("/api/create-subscription", { method: "POST" });
+      // 2. Create order on backend (never call Razorpay directly from frontend)
+      const res = await fetch("/api/razorpay/create-order", { method: "POST" });
       if (!res.ok) {
         const data = await res.json();
-        console.error("[RazorpayButton] Subscription creation failed:", data.error);
-        alert(data.error || "Could not initiate subscription. Please try again.");
+        console.error("[RazorpayButton] Order creation failed:", data.error);
+        alert(data.error || "Could not initiate payment. Please try again.");
         setLoading(false);
         return;
       }
-      const { subscription_id } = await res.json();
+      const order = await res.json();
 
-      // 3. Open Razorpay checkout with subscription_id (NOT order_id)
+      // 3. Open Razorpay checkout with order_id
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        subscription_id,
+        amount: order.amount,
+        currency: order.currency,
         name: "Intellixy",
         description: "Pro Plan — ₹299/month",
+        order_id: order.id,
         prefill: {
           name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "",
           email: user?.email || "",
         },
         theme: { color: "#7c3aed" },
 
-        // 4. On successful payment — verify server-side then redirect
+        // 4. On success — verify server-side then redirect
         async handler(response) {
           try {
-            const verify = await fetch("/api/razorpay/verify-subscription", {
+            const verify = await fetch("/api/razorpay/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
+                razorpay_order_id:   response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_subscription_id: response.razorpay_subscription_id,
-                razorpay_signature: response.razorpay_signature,
+                razorpay_signature:  response.razorpay_signature,
               }),
             });
 
             if (!verify.ok) {
               const err = await verify.json();
               console.error("[RazorpayButton] Verification failed:", err.error);
-              alert("Payment verification failed. Contact support with your payment ID: " + response.razorpay_payment_id);
+              alert(
+                "Payment received but verification failed. Contact support with Payment ID: " +
+                response.razorpay_payment_id
+              );
               setLoading(false);
               return;
             }
@@ -79,7 +84,7 @@ export default function RazorpayButton({ user, style, children }) {
             window.location.href = "/success";
           } catch (err) {
             console.error("[RazorpayButton] Verify error:", err);
-            alert("Payment verification error. Contact support.");
+            alert("Verification error. Contact support.");
             setLoading(false);
           }
         },
