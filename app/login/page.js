@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-browser";
 
 const supabase = createClient();
@@ -11,13 +11,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Show error from OAuth callback redirect (e.g. ?error=...)
-  const [status, setStatus] = useState(() => {
-    if (typeof window === "undefined") return null;
+  // Read ?error= param after mount only — avoids React hydration mismatch (#418)
+  const [status, setStatus] = useState(null);
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const err = params.get("error");
-    return err ? { type: "error", msg: decodeURIComponent(err) } : null;
-  });
+    if (err) setStatus({ type: "error", msg: decodeURIComponent(err) });
+  }, []);
 
   const switchMode = (m) => { setMode(m); setStatus(null); };
 
