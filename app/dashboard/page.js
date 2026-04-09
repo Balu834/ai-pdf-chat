@@ -587,7 +587,7 @@ export default function DashboardPage() {
         .from("user_plans")
         .select("plan, stripe_subscription_id, razorpay_subscription_id")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
       if (data?.plan) {
         setPlan(data.plan);
         if (data.plan === "pro") {
