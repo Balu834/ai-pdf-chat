@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@/lib/supabase-server-client";
-import { upsertUserPlan } from "@/lib/user-plan";
 
 export async function POST(request) {
   try {
+    // Use the user's authenticated client (session cookies) — not the broken admin client
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -19,8 +19,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Missing payment details" }, { status: 400 });
     }
 
-    // Razorpay signature for orders:
-    // HMAC-SHA256(order_id + "|" + payment_id, key_secret)
+    // Verify Razorpay HMAC signature
     const generated = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -31,10 +30,24 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
     }
 
-    // Mark user as Pro
-    await upsertUserPlan(user.id, { plan: "pro" });
+    // Upsert using the user's own authenticated client — works with RLS
+    const { error: upsertError } = await supabase
+      .from("user_plans")
+      .upsert(
+        {
+          user_id: user.id,
+          plan: "pro",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
 
-    console.log(`[verify-payment] User ${user.id} upgraded to Pro`);
+    if (upsertError) {
+      console.error("[verify-payment] DB upsert failed:", upsertError.message);
+      return NextResponse.json({ error: "Failed to save plan: " + upsertError.message }, { status: 500 });
+    }
+
+    console.log(`[verify-payment] User ${user.id} (${user.email}) upgraded to Pro`);
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[verify-payment]", err);

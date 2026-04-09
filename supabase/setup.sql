@@ -253,10 +253,18 @@ create policy "insights_update_own" on insights
     exists (select 1 from documents d where d.id = document_id and d.user_id = auth.uid())
   );
 
--- user_plans: own row only
+-- user_plans: full CRUD for own row
 drop policy if exists "plans_select_own" on user_plans;
 create policy "plans_select_own" on user_plans
   for select using (auth.uid() = user_id);
+
+drop policy if exists "plans_insert_own" on user_plans;
+create policy "plans_insert_own" on user_plans
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "plans_update_own" on user_plans;
+create policy "plans_update_own" on user_plans
+  for update using (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────
 -- 3. Storage bucket + policies
