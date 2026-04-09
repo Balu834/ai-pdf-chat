@@ -23,41 +23,67 @@ export default function RazorpayButton({ user, style, children }) {
   async function handlePayment() {
     setLoading(true);
     try {
-      // Load Razorpay script dynamically
+      // 1. Load Razorpay checkout script
       const loaded = await loadRazorpayScript();
       if (!loaded) {
         alert("Failed to load payment gateway. Check your internet connection.");
+        setLoading(false);
         return;
       }
 
-      // Create order on backend
-      const res = await fetch("/api/razorpay/create-order", { method: "POST" });
+      // 2. Create subscription on backend
+      const res = await fetch("/api/create-subscription", { method: "POST" });
       if (!res.ok) {
         const data = await res.json();
-        console.error("[RazorpayButton] Order creation failed:", data.error);
-        alert("Could not initiate payment. Please try again.");
+        console.error("[RazorpayButton] Subscription creation failed:", data.error);
+        alert(data.error || "Could not initiate subscription. Please try again.");
+        setLoading(false);
         return;
       }
-      const order = await res.json();
+      const { subscription_id } = await res.json();
 
+      // 3. Open Razorpay checkout with subscription_id (NOT order_id)
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
+        subscription_id,
         name: "Intellixy",
-        description: "Pro Plan ₹299",
-        order_id: order.id,
+        description: "Pro Plan — ₹299/month",
         prefill: {
-          name: user?.name || user?.email?.split("@")[0] || "",
+          name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "",
           email: user?.email || "",
         },
         theme: { color: "#7c3aed" },
-        handler(response) {
-          console.log("[RazorpayButton] Payment success:", response);
-          // TODO: save user as PRO in database
-          // Call your API here: POST /api/razorpay/verify with response data
-          window.location.href = "/dashboard?upgraded=1";
+
+        // 4. On successful payment — verify server-side then redirect
+        async handler(response) {
+          try {
+            const verify = await fetch("/api/razorpay/verify-subscription", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            if (!verify.ok) {
+              const err = await verify.json();
+              console.error("[RazorpayButton] Verification failed:", err.error);
+              alert("Payment verification failed. Contact support with your payment ID: " + response.razorpay_payment_id);
+              setLoading(false);
+              return;
+            }
+
+            // Success — go to success page
+            window.location.href = "/success";
+          } catch (err) {
+            console.error("[RazorpayButton] Verify error:", err);
+            alert("Payment verification error. Contact support.");
+            setLoading(false);
+          }
         },
+
         modal: {
           ondismiss() {
             setLoading(false);
@@ -75,18 +101,12 @@ export default function RazorpayButton({ user, style, children }) {
     } catch (err) {
       console.error("[RazorpayButton] Error:", err);
       alert("Payment error. Please try again.");
-    } finally {
-      // Don't set loading false here — Razorpay modal is still open
-      // setLoading(false) is called in ondismiss / handler
+      setLoading(false);
     }
   }
 
   return (
-    <button
-      onClick={handlePayment}
-      disabled={loading}
-      style={style}
-    >
+    <button onClick={handlePayment} disabled={loading} style={style}>
       {loading ? "Opening payment…" : (children || "Upgrade to Pro ₹299/month")}
     </button>
   );

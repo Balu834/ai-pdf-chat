@@ -541,6 +541,7 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [limitError, setLimitError] = useState(null);
   const [plan, setPlan] = useState("free");
+  const [subscriptionSource, setSubscriptionSource] = useState(null); // "razorpay" | "stripe" | null
   const [upgradingStripe, setUpgradingStripe] = useState(false);
   const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 20 });
 
@@ -582,10 +583,18 @@ export default function DashboardPage() {
 
   async function fetchPlan(userId) {
     try {
-      const { data } = await supabase.from("user_plans").select("plan").eq("user_id", userId).single();
+      const { data } = await supabase
+        .from("user_plans")
+        .select("plan, stripe_subscription_id, razorpay_subscription_id")
+        .eq("user_id", userId)
+        .single();
       if (data?.plan) {
         setPlan(data.plan);
-        if (data.plan === "pro") setUsage((prev) => ({ ...prev, maxPdfs: Infinity, maxQuestions: Infinity }));
+        if (data.plan === "pro") {
+          setUsage((prev) => ({ ...prev, maxPdfs: Infinity, maxQuestions: Infinity }));
+          if (data.razorpay_subscription_id) setSubscriptionSource("razorpay");
+          else if (data.stripe_subscription_id) setSubscriptionSource("stripe");
+        }
       }
     } catch {}
   }
@@ -955,13 +964,24 @@ export default function DashboardPage() {
                 <svg width="12" height="12" fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/></svg>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#fbbf24" }}>Pro Plan Active</span>
               </div>
-              <button
-                onClick={handleManageSubscription}
-                disabled={upgradingStripe}
-                style={{ width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1 }}
-              >
-                {upgradingStripe ? "Loading…" : "Manage Subscription"}
-              </button>
+              {subscriptionSource === "razorpay" ? (
+                <a
+                  href="https://dashboard.razorpay.com/subscriptions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: "block", width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, cursor: "pointer", textAlign: "center", textDecoration: "none", boxSizing: "border-box" }}
+                >
+                  Manage Subscription ↗
+                </a>
+              ) : (
+                <button
+                  onClick={handleManageSubscription}
+                  disabled={upgradingStripe}
+                  style={{ width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1 }}
+                >
+                  {upgradingStripe ? "Loading…" : "Manage Subscription"}
+                </button>
+              )}
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 4px" }}>
