@@ -167,7 +167,7 @@ export async function POST(req) {
         .select("id")
         .eq("file_url", fileUrl)
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       console.log("[CHAT] Document lookup:", doc?.id ?? "NOT FOUND", docError?.message ?? "");
 
@@ -227,13 +227,16 @@ export async function POST(req) {
       });
     }
 
-    // ── Fallback: download PDF via authenticated storage client ──────
+    // ── Fallback: download PDF ─────────────────────────────────────
     let pdfBuffer = null;
+
+    // Try 1: Supabase storage client (handles private buckets)
     try {
       const urlObj = new URL(fileUrl);
-      const pathMatch = urlObj.pathname.match(/\/object\/public\/pdfs\/(.+)$/);
+      // Match both /object/public/pdfs/ and /object/sign/pdfs/ patterns
+      const pathMatch = urlObj.pathname.match(/\/object\/(?:public|sign)\/pdfs\/(.+)$/);
       if (pathMatch) {
-        const storagePath = pathMatch[1];
+        const storagePath = decodeURIComponent(pathMatch[1]).split("?")[0];
         const { data: blob, error: dlError } = await supabase.storage
           .from("pdfs")
           .download(storagePath);
@@ -248,24 +251,24 @@ export async function POST(req) {
       console.warn("[CHAT] Storage download threw:", dlErr.message);
     }
 
+    // Try 2: Direct public URL fetch
     if (!pdfBuffer) {
-      const fileRes = await fetch(fileUrl);
-      if (fileRes.ok) {
-        const contentType = fileRes.headers.get("content-type") || "";
-        if (contentType.includes("pdf") || contentType.includes("octet-stream")) {
+      try {
+        const fileRes = await fetch(fileUrl);
+        if (fileRes.ok) {
           pdfBuffer = Buffer.from(await fileRes.arrayBuffer());
           console.log("[CHAT] Downloaded via public URL, bytes:", pdfBuffer.length);
         } else {
-          console.error("[CHAT] Public URL returned non-PDF content-type:", contentType);
+          console.error("[CHAT] Public URL fetch failed:", fileRes.status);
         }
-      } else {
-        console.error("[CHAT] Public URL fetch failed:", fileRes.status);
+      } catch (fetchErr) {
+        console.warn("[CHAT] Public URL fetch threw:", fetchErr.message);
       }
     }
 
     if (!pdfBuffer) {
       return NextResponse.json(
-        { error: "Could not download the PDF. Make sure the 'pdfs' storage bucket exists and has been created in Supabase." },
+        { error: "Could not download the PDF. Please re-upload the file and try again." },
         { status: 400 }
       );
     }
