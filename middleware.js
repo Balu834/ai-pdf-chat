@@ -2,11 +2,19 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
 
-  console.log("[middleware] pathname:", pathname);
+  // ── Server-side PKCE fix ─────────────────────────────────────────────────
+  // Supabase sometimes redirects ?code= to / instead of /auth/callback
+  // (when Site URL is misconfigured). Catch it here at the edge — before
+  // any client code runs — so the PKCE verifier cookie is always present.
+  if (pathname === "/" && searchParams.has("code")) {
+    const callbackUrl = new URL("/auth/callback", request.url);
+    callbackUrl.search = request.nextUrl.search; // forward code + all params
+    return NextResponse.redirect(callbackUrl);
+  }
 
-  // Hard-coded public routes — return immediately, no Supabase call
+  // ── Public routes — skip auth check ─────────────────────────────────────
   if (
     pathname === "/" ||
     pathname === "/login" ||
@@ -17,11 +25,10 @@ export async function middleware(request) {
     pathname.startsWith("/favicon") ||
     pathname.includes(".")
   ) {
-    console.log("[middleware] public route — skipping auth check");
     return NextResponse.next();
   }
 
-  // Everything below only runs for /dashboard (enforced by matcher too)
+  // ── Protected routes (e.g. /dashboard) ──────────────────────────────────
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -29,7 +36,9 @@ export async function middleware(request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        getAll() { return request.cookies.getAll(); },
+        getAll() {
+          return request.cookies.getAll();
+        },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
@@ -44,17 +53,14 @@ export async function middleware(request) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  console.log("[middleware] /dashboard — user:", user?.email ?? "NOT LOGGED IN");
 
   if (!user) {
-    console.log("[middleware] redirecting to /login");
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return supabaseResponse;
 }
 
-// matcher = ONLY /dashboard routes. "/" is NEVER matched.
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/"],
 };

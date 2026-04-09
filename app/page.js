@@ -1,6 +1,5 @@
 // SERVER COMPONENT — no "use client", no redirects
 import ProPlanCTA from "@/components/ProPlanCTA";
-import AuthCodeHandler from "@/components/AuthCodeHandler";
 
 export const metadata = {
   title: "Intellixy - AI Document Assistant",
@@ -10,8 +9,6 @@ export const metadata = {
 export default function HomePage() {
   return (
     <div style={{ background: "#07071a", minHeight: "100vh", color: "white", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-      {/* Detects ?code= on homepage and forwards to /auth/callback */}
-      <AuthCodeHandler />
 
       {/* ── NAVBAR ────────────────────────────────────────────────────── */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(7,7,26,0.92)", backdropFilter: "blur(20px)" }}>
