@@ -23,11 +23,11 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     setLoading(true);
-    // Always redirect back to the production domain, never localhost
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${siteUrl}/auth/callback` },
+      options: {
+        redirectTo: "https://ai-pdf-chat-steel-kappa.vercel.app/auth/callback",
+      },
     });
     if (error) { setStatus({ type: "error", msg: error.message }); setLoading(false); }
   };
