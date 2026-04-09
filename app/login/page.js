@@ -27,6 +27,7 @@ export default function LoginPage() {
       provider: "google",
       options: {
         redirectTo: "https://ai-pdf-chat-steel-kappa.vercel.app/auth/callback",
+        queryParams: { prompt: "select_account" },
       },
     });
     if (error) { setStatus({ type: "error", msg: error.message }); setLoading(false); }
