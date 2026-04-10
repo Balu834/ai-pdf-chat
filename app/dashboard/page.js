@@ -398,7 +398,7 @@ function ChatMessage({ msg, onCopy, onShare }) {
         <div style={{
           padding: isUser ? "11px 16px" : "13px 17px",
           borderRadius: isUser ? "20px 20px 5px 20px" : "5px 20px 20px 20px",
-          fontSize: 14, lineHeight: 1.72, whiteSpace: "pre-wrap", wordBreak: "break-word",
+          fontSize: 14, lineHeight: 1.72, whiteSpace: "pre-wrap", wordBreak: "break-word", overflowWrap: "break-word",
           background: isUser
             ? "linear-gradient(135deg,#7c3aed,#6d28d9)"
             : "rgba(255,255,255,0.05)",
@@ -881,9 +881,10 @@ export default function DashboardPage() {
         const lines = buffer.split("\n"); buffer = lines.pop();
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
-          const payload = line.slice(6).trim();
-          if (payload === "[DONE]" || payload === "[ERROR]") break;
-          full += payload.replace(/\\n/g, "\n");
+          const raw = line.slice(6);              // keep leading spaces — OpenAI tokens often start with " "
+          const sentinel = raw.trim();
+          if (sentinel === "[DONE]" || sentinel === "[ERROR]") break;
+          full += raw.replace(/\\n/g, "\n");     // preserve spaces between words
           setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: full } : m));
         }
       }
