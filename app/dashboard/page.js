@@ -277,7 +277,11 @@ function ChatMessage({ msg, onCopy, onShare }) {
         }}>
           {msg.content}
           {msg.streaming && (
-            <span style={{ display: "inline-block", width: 6, height: 15, marginLeft: 3, background: C.accentLight, borderRadius: 2, verticalAlign: "middle", animation: "blink 0.8s step-end infinite" }} />
+            <motion.span
+              animate={{ opacity: [1, 0, 1] }}
+              transition={{ duration: 0.85, repeat: Infinity, ease: "steps(1)" }}
+              style={{ display: "inline-block", width: 2.5, height: "1em", marginLeft: 2, background: C.accentLight, borderRadius: 2, verticalAlign: "text-bottom" }}
+            />
           )}
         </div>
         {!isUser && !msg.streaming && msg.content && (
@@ -657,13 +661,36 @@ export default function DashboardPage() {
         setMessages((prev) => prev.map((m) => m.id === aiMsgId ? { ...m, content: "```json\n" + JSON.stringify(data.data, null, 2) + "\n```", streaming: false } : m));
         return;
       }
-      const reader = res.body.getReader(); const decoder = new TextDecoder(); let full = "";
+
+      // ── SSE stream reader ───────────────────────────────────────────
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let full = "";
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        full += decoder.decode(value, { stream: true });
-        setMessages((prev) => prev.map((m) => m.id === aiMsgId ? { ...m, content: full } : m));
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE lines
+        const lines = buffer.split("\n");
+        buffer = lines.pop(); // keep incomplete last line
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]" || payload === "[ERROR]") break;
+          // Unescape newlines encoded by server
+          const token = payload.replace(/\\n/g, "\n");
+          full += token;
+          setMessages((prev) =>
+            prev.map((m) => m.id === aiMsgId ? { ...m, content: full } : m)
+          );
+        }
       }
+
       setMessages((prev) => prev.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
     } catch {
       setMessages((prev) => prev.map((m) => m.id === aiMsgId ? { ...m, content: "Something went wrong. Please try again.", streaming: false } : m));
@@ -715,7 +742,18 @@ export default function DashboardPage() {
     setShareCopied(true); setTimeout(() => setShareCopied(false), 2500);
   }
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  // Auto-scroll: always scroll on new message; during streaming only scroll if near bottom
+  const chatScrollRef = useRef(null);
+  useEffect(() => {
+    const container = chatScrollRef.current;
+    if (!container) return;
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+    const lastMsg = messages[messages.length - 1];
+    const isNewMessage = lastMsg && !lastMsg.streaming && messages.length > 0;
+    if (isNearBottom || isNewMessage) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   function handleKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }
 
@@ -1024,7 +1062,7 @@ export default function DashboardPage() {
             </AnimatePresence>
 
             {/* Messages area */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
+            <div ref={chatScrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
               {!selectedDoc ? (
                 <WelcomeScreen onUpload={() => fileInputRef.current?.click()} />
               ) : historyLoading ? (

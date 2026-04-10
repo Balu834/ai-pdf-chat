@@ -52,16 +52,30 @@ async function extractStructured(context, message) {
   return NextResponse.json({ type: "extraction", data: parsed }, { status: 200 });
 }
 
+const SSE_HEADERS = {
+  "Content-Type": "text/event-stream; charset=utf-8",
+  "Cache-Control": "no-cache, no-transform",
+  "X-Accel-Buffering": "no",   // prevents Nginx/Vercel buffering
+  "X-Content-Type-Options": "nosniff",
+};
+
+function sseChunk(text) {
+  // SSE format: "data: <payload>\n\n"
+  // Escape newlines inside the payload so each event is on one logical line
+  return `data: ${text.replace(/\n/g, "\\n")}\n\n`;
+}
+
 function streamText(text) {
   const encoder = new TextEncoder();
   return new Response(
     new ReadableStream({
       start(controller) {
-        controller.enqueue(encoder.encode(text));
+        controller.enqueue(encoder.encode(sseChunk(text)));
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       },
     }),
-    { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" } }
+    { headers: SSE_HEADERS }
   );
 }
 
@@ -100,11 +114,15 @@ async function streamOpenAI(context, message, { supabase, userId, documentId, pr
           const token = chunk.choices[0]?.delta?.content;
           if (token) {
             fullResponse += token;
-            controller.enqueue(encoder.encode(token));
+            // Send each token as an SSE event for reliable, unbuffered delivery
+            controller.enqueue(encoder.encode(sseChunk(token)));
           }
         }
+        // Signal end of stream
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (err) {
         console.error("[CHAT] Stream error:", err);
+        controller.enqueue(encoder.encode("data: [ERROR]\n\n"));
       } finally {
         controller.close();
         // Persist messages after stream completes (best-effort)
@@ -122,9 +140,7 @@ async function streamOpenAI(context, message, { supabase, userId, documentId, pr
     },
   });
 
-  return new Response(readable, {
-    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" },
-  });
+  return new Response(readable, { headers: SSE_HEADERS });
 }
 
 export async function POST(req) {
