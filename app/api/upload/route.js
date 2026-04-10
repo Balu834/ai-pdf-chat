@@ -49,7 +49,7 @@ export async function POST(req) {
     const { exceeded } = await checkPdfLimit(supabase, user.id);
     if (exceeded) {
       return NextResponse.json(
-        { error: `PDF limit reached (${FREE_PLAN.maxPdfs} max). Upgrade to Pro.`, limitExceeded: true },
+        { error: `Daily PDF limit reached (${FREE_PLAN.maxPdfsPerDay}/day). Upgrade to Pro.`, limitExceeded: true },
         { status: 403 }
       );
     }

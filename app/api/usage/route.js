@@ -25,8 +25,8 @@ export async function GET() {
       plan: planData.plan,
       pdfs: {
         used: isPro ? 0 : (pdfs.count ?? 0),
-        max: isPro ? null : FREE_PLAN.maxPdfs,
-        remaining: isPro ? null : (pdfs.remaining ?? FREE_PLAN.maxPdfs),
+        max: isPro ? null : FREE_PLAN.maxPdfsPerDay,
+        remaining: isPro ? null : (pdfs.remaining ?? FREE_PLAN.maxPdfsPerDay),
       },
       questions: {
         used: isPro ? 0 : (questions.count ?? 0),

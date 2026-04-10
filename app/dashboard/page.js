@@ -223,7 +223,7 @@ function UpgradePopup({ reason, onClose, user }) {
           {isPdf ? "PDF limit reached" : "Daily limit reached"}
         </h2>
         <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 24px", lineHeight: 1.65 }}>
-          {isPdf ? "You've used all 5 free PDF uploads." : "You've used all 20 free questions today."}
+          {isPdf ? "You've used all 5 free PDF uploads today." : "You've used all 10 free questions today."}
           {" "}Upgrade to Pro for unlimited access.
         </p>
 
@@ -237,7 +237,7 @@ function UpgradePopup({ reason, onClose, user }) {
             <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 7 }}>/mo</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            {["Unlimited PDF uploads", "Unlimited questions/day", "PDF Compare & Insights", "Priority AI responses", "Share chat links"].map((f) => (
+            {["Unlimited PDF uploads/day", "Unlimited questions/day", "Delete PDFs anytime", "PDF Compare & Insights", "Share chat links"].map((f) => (
               <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.textSecondary }}>
                 <span style={{ color: C.green, flexShrink: 0 }}><CheckIcon /></span>{f}
               </div>
@@ -686,7 +686,7 @@ export default function DashboardPage() {
   const [plan, setPlan] = useState("free");
   const [subscriptionSource, setSubscriptionSource] = useState(null);
   const [upgradingStripe, setUpgradingStripe] = useState(false);
-  const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 20 });
+  const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 10 });
 
   const [showInsights, setShowInsights] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
@@ -743,9 +743,11 @@ export default function DashboardPage() {
 
   async function fetchUsage(userId) {
     try {
-      const { count: pdfCount } = await supabase.from("documents").select("id", { count: "exact", head: true }).eq("user_id", userId);
       const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
-      const { count: qCount } = await supabase.from("question_usage").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", startOfDay.toISOString());
+      const [{ count: pdfCount }, { count: qCount }] = await Promise.all([
+        supabase.from("documents").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", startOfDay.toISOString()),
+        supabase.from("question_usage").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", startOfDay.toISOString()),
+      ]);
       setUsage((p) => ({ ...p, pdfs: pdfCount ?? 0, questions: qCount ?? 0 }));
     } catch {}
   }
@@ -772,12 +774,19 @@ export default function DashboardPage() {
   }
 
   async function handleDelete(doc) {
+    if (plan !== "pro") { setUpgradePopup("pdf"); return; }
     if (!confirm(`Delete "${doc.file_name}"?`)) return;
     try {
-      const urlObj = new URL(doc.file_url);
-      const pathMatch = urlObj.pathname.match(/\/object\/public\/pdfs\/(.+)$/);
-      if (pathMatch) await supabase.storage.from("pdfs").remove([pathMatch[1]]);
-      await supabase.from("documents").delete().eq("id", doc.id);
+      const res = await fetch("/api/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: doc.id, fileUrl: doc.file_url }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.proRequired) { setUpgradePopup("pdf"); return; }
+        throw new Error(data.error || "Delete failed");
+      }
       if (selectedDoc?.id === doc.id) { setSelectedDoc(null); setMessages([]); setShowInsights(false); setShowCompare(false); }
       await fetchDocs(user.id);
     } catch (err) { alert("Delete failed: " + err.message); }
@@ -1027,10 +1036,13 @@ export default function DashboardPage() {
                     <p style={{ fontSize: 12, fontWeight: 500, color: isSel ? "#e2d9f7" : C.textSecondary, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.file_name}</p>
                     <p style={{ fontSize: 10, color: C.textMuted, margin: "2px 0 0" }}>{timeAgo(doc.created_at)}</p>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); handleDelete(doc); }} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 2, borderRadius: 5, opacity: 0, transition: "opacity 0.15s" }}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
+                    title={plan !== "pro" ? "Pro feature — upgrade to delete" : `Delete ${doc.file_name}`}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: plan !== "pro" ? C.textMuted : C.danger, padding: 2, borderRadius: 5, opacity: 0, transition: "opacity 0.15s", fontSize: plan !== "pro" ? 11 : undefined }}
                     onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
                     onMouseLeave={(e) => e.currentTarget.style.opacity = "0"}>
-                    <TrashIcon />
+                    {plan !== "pro" ? "🔒" : <TrashIcon />}
                   </button>
                 </motion.div>
               );
@@ -1041,8 +1053,8 @@ export default function DashboardPage() {
         {/* Usage bars */}
         {plan !== "pro" && (
           <div style={{ margin: "0 10px 8px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 12, backdropFilter: "blur(8px)" }}>
-            <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Usage Today</p>
-            {[{ label: "PDFs", used: usage.pdfs, max: usage.maxPdfs }, { label: "Questions", used: usage.questions, max: usage.maxQuestions }].map(({ label, used, max }) => (
+            <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Daily Usage · Resets at midnight</p>
+            {[{ label: "PDFs today", used: usage.pdfs, max: usage.maxPdfs }, { label: "Questions today", used: usage.questions, max: usage.maxQuestions }].map(({ label, used, max }) => (
               <div key={label} style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontSize: 11, color: C.textMuted }}>{label}</span>
