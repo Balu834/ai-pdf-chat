@@ -237,10 +237,15 @@ function UpgradePopup({ reason, onClose, user }) {
             <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)", padding: "3px 8px", borderRadius: 99 }}>Save 60%</span>
           </div>
           {/* Anchored price */}
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 6 }}>
             <span style={{ fontSize: 15, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 6 }}>₹499</span>
-            <span style={{ fontSize: 38, fontWeight: 900, color: C.textPrimary, lineHeight: 1 }}>₹199</span>
+            <span style={{ fontSize: 38, fontWeight: 900, color: C.textPrimary, lineHeight: 1 }}>₹299</span>
             <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 5 }}>/mo</span>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.22)", padding: "3px 9px", borderRadius: 99 }}>
+              🔥 Early user discount — Save 40%
+            </span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {["Unlimited PDF uploads","Unlimited questions","Delete PDFs anytime","PDF Compare & Insights","Share chat links"].map((f) => (
@@ -252,7 +257,7 @@ function UpgradePopup({ reason, onClose, user }) {
         </div>
 
         <RazorpayButton user={user} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 14, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.5)", marginBottom: 10, transition: "opacity 0.2s" }}>
-          Upgrade Now — ₹199/mo →
+          Upgrade Now — ₹299/mo →
         </RazorpayButton>
         <p style={{ fontSize: 11, color: C.textMuted, margin: "0 0 4px", textAlign: "center" }}>
           Most users upgrade in under 2 minutes.
@@ -1127,7 +1132,7 @@ export default function DashboardPage() {
               onClick={() => setUpgradePopup("pdf")}
               style={{ width: "100%", padding: "8px", marginTop: 2, fontSize: 11, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: "pointer" }}
             >
-              ✦ Get unlimited access — ₹199/mo
+              ✦ Get unlimited access — ₹299/mo
             </motion.button>
           </div>
         )}
@@ -1136,7 +1141,7 @@ export default function DashboardPage() {
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: 10, flexShrink: 0 }}>
           {plan !== "pro" ? (
             <RazorpayButton user={user} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", fontSize: 12, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 9, cursor: "pointer", marginBottom: 8, backdropFilter: "blur(8px)" }}>
-              <CrownIcon /> Upgrade to Pro · ₹199/mo
+              <CrownIcon /> Upgrade to Pro · ₹299/mo
             </RazorpayButton>
           ) : (
             <div style={{ marginBottom: 8 }}>

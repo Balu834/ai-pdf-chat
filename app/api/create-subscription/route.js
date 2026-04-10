@@ -44,6 +44,9 @@ export async function POST() {
       );
     }
 
+    // Debug: confirm which plan is being used before charging
+    console.log("[create-subscription] Plan ID:", planId, "| Amount: ₹299 (29900 paise)");
+
     // Create a new subscription for this user
     const subscription = await razorpay.subscriptions.create({
       plan_id: planId,

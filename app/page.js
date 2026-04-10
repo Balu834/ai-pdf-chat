@@ -421,14 +421,14 @@ export default function HomePage() {
               {/* Price anchor */}
               <div className="flex items-end gap-2 mb-1">
                 <span className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.28)", paddingBottom: 10 }}>₹499</span>
-                <span className="text-4xl sm:text-5xl font-black text-white" style={{ letterSpacing: "-1px" }}>₹199</span>
+                <span className="text-4xl sm:text-5xl font-black text-white" style={{ letterSpacing: "-1px" }}>₹299</span>
                 <span className="text-sm pb-2" style={{ color: "rgba(255,255,255,0.4)" }}>/ month</span>
               </div>
 
               {/* Savings pill */}
               <div className="inline-flex items-center gap-1.5 mb-5" style={{ width: "fit-content" }}>
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "rgba(74,222,128,0.14)", border: "1px solid rgba(74,222,128,0.28)", color: "#4ade80" }}>
-                  Save 60% — Launch price
+                  🔥 Early user discount — Save 40%
                 </span>
               </div>
 
