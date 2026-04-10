@@ -158,9 +158,9 @@ export async function POST(req) {
     if (exceeded) {
       return NextResponse.json(
         {
-          error: `Daily question limit reached (${FREE_PLAN.maxQuestionsPerDay}/day). Upgrade your plan.`,
+          error: `Question limit reached (${FREE_PLAN.maxQuestions} lifetime). Upgrade to Pro for unlimited access.`,
           limitExceeded: true,
-          usage: { questions: count, maxQuestions: FREE_PLAN.maxQuestionsPerDay },
+          usage: { questions: count, maxQuestions: FREE_PLAN.maxQuestions },
         },
         { status: 403 }
       );

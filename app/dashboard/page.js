@@ -223,7 +223,7 @@ function UpgradePopup({ reason, onClose, user }) {
           {isPdf ? "PDF limit reached" : "Daily limit reached"}
         </h2>
         <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 24px", lineHeight: 1.65 }}>
-          {isPdf ? "You've used all 5 free PDF uploads today." : "You've used all 10 free questions today."}
+          {isPdf ? "You've reached the 5 PDF lifetime limit on the free plan." : "You've reached the 10 question lifetime limit on the free plan."}
           {" "}Upgrade to Pro for unlimited access.
         </p>
 
@@ -269,7 +269,7 @@ function UpgradeBanner({ type, onUpgrade }) {
           {type === "question" ? "🔒 Daily limit reached" : "📄 PDF limit reached"}
         </p>
         <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>
-          {type === "question" ? "Upgrade for unlimited questions" : "Upgrade to add more PDFs"}
+          {type === "question" ? "Upgrade for unlimited questions (lifetime)" : "Upgrade for unlimited PDF uploads"}
         </p>
       </div>
       <motion.button
@@ -686,7 +686,7 @@ export default function DashboardPage() {
   const [plan, setPlan] = useState("free");
   const [subscriptionSource, setSubscriptionSource] = useState(null);
   const [upgradingStripe, setUpgradingStripe] = useState(false);
-  const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 10 });
+  const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 10, loading: true });
 
   const [showInsights, setShowInsights] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
@@ -712,7 +712,7 @@ export default function DashboardPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { window.location.href = "/login"; }
-      else { setUser(user); setLoading(false); fetchDocs(user.id); fetchPlan(user.id); fetchUsage(user.id); }
+      else { setUser(user); setLoading(false); fetchDocs(user.id); fetchPlan(user.id); fetchUsage(); }
     });
   }, []);
 
@@ -741,15 +741,21 @@ export default function DashboardPage() {
     } catch {}
   }
 
-  async function fetchUsage(userId) {
+  async function fetchUsage() {
     try {
-      const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
-      const [{ count: pdfCount }, { count: qCount }] = await Promise.all([
-        supabase.from("documents").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", startOfDay.toISOString()),
-        supabase.from("question_usage").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", startOfDay.toISOString()),
-      ]);
-      setUsage((p) => ({ ...p, pdfs: pdfCount ?? 0, questions: qCount ?? 0 }));
-    } catch {}
+      const res = await fetch("/api/usage");
+      if (!res.ok) return;
+      const data = await res.json();
+      setUsage({
+        pdfs:       data.pdfs?.used      ?? 0,
+        questions:  data.questions?.used ?? 0,
+        maxPdfs:    data.pdfs?.max       ?? 5,
+        maxQuestions: data.questions?.max ?? 10,
+        loading: false,
+      });
+    } catch {
+      setUsage((p) => ({ ...p, loading: false }));
+    }
   }
 
   const fetchDocs = useCallback(async (userId) => {
@@ -768,7 +774,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/upload", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) { if (data.limitExceeded) { setUpgradePopup("pdf"); return; } throw new Error(data.error || "Upload failed"); }
-      await fetchDocs(user.id); await fetchUsage(user.id);
+      await fetchDocs(user.id); await fetchUsage();
     } catch (err) { alert("Upload failed: " + err.message); }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
   }
@@ -858,7 +864,7 @@ export default function DashboardPage() {
       setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "Something went wrong. Please try again.", streaming: false } : m));
     } finally {
       setAiStreaming(false);
-      if (user) fetchUsage(user.id);
+      if (user) fetchUsage();
     }
   }
 
@@ -1053,8 +1059,8 @@ export default function DashboardPage() {
         {/* Usage bars */}
         {plan !== "pro" && (
           <div style={{ margin: "0 10px 8px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 12, backdropFilter: "blur(8px)" }}>
-            <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Daily Usage · Resets at midnight</p>
-            {[{ label: "PDFs today", used: usage.pdfs, max: usage.maxPdfs }, { label: "Questions today", used: usage.questions, max: usage.maxQuestions }].map(({ label, used, max }) => (
+            <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Lifetime Usage</p>
+            {[{ label: "PDFs uploaded", used: usage.pdfs, max: usage.maxPdfs }, { label: "Questions asked", used: usage.questions, max: usage.maxQuestions }].map(({ label, used, max }) => (
               <div key={label} style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontSize: 11, color: C.textMuted }}>{label}</span>

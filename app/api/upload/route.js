@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
-import { checkPdfLimit, FREE_PLAN } from "@/lib/limits";
+import { checkPdfLimit, recordPdfUpload, FREE_PLAN } from "@/lib/limits";
 
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
@@ -49,7 +49,7 @@ export async function POST(req) {
     const { exceeded } = await checkPdfLimit(supabase, user.id);
     if (exceeded) {
       return NextResponse.json(
-        { error: `Daily PDF limit reached (${FREE_PLAN.maxPdfsPerDay}/day). Upgrade to Pro.`, limitExceeded: true },
+        { error: `PDF limit reached (${FREE_PLAN.maxPdfs} lifetime). Upgrade to Pro for unlimited uploads.`, limitExceeded: true },
         { status: 403 }
       );
     }
@@ -106,6 +106,9 @@ export async function POST(req) {
       console.error("[UPLOAD] DB error:", dbError.message);
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
+
+    // ── Increment lifetime PDF counter ────────────────────────
+    await recordPdfUpload(user.id);
 
     // ── Embeddings (blocking — Vercel kills background tasks after response) ──
     if (process.env.OPENAI_API_KEY) {

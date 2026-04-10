@@ -24,14 +24,14 @@ export async function GET() {
       email: user.email,
       plan: planData.plan,
       pdfs: {
-        used: isPro ? 0 : (pdfs.count ?? 0),
-        max: isPro ? null : FREE_PLAN.maxPdfsPerDay,
-        remaining: isPro ? null : (pdfs.remaining ?? FREE_PLAN.maxPdfsPerDay),
+        used: isPro ? 0 : pdfs.count,
+        max: isPro ? null : FREE_PLAN.maxPdfs,
+        remaining: isPro ? null : pdfs.remaining,
       },
       questions: {
-        used: isPro ? 0 : (questions.count ?? 0),
-        max: isPro ? null : FREE_PLAN.maxQuestionsPerDay,
-        remaining: isPro ? null : (questions.remaining ?? FREE_PLAN.maxQuestionsPerDay),
+        used: isPro ? 0 : questions.count,
+        max: isPro ? null : FREE_PLAN.maxQuestions,
+        remaining: isPro ? null : questions.remaining,
       },
     });
   } catch (err) {

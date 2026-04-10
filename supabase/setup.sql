@@ -351,6 +351,55 @@ create policy "storage_delete_own" on storage.objects
 -- ─────────────────────────────────────────────
 -- 4. RPC: similarity search for RAG
 -- ─────────────────────────────────────────────
+-- ─────────────────────────────────────────────
+-- 5. user_stats: lifetime usage counters
+-- ─────────────────────────────────────────────
+
+create table if not exists user_stats (
+  user_id          uuid primary key references auth.users(id) on delete cascade,
+  total_pdfs       int not null default 0,
+  total_questions  int not null default 0,
+  updated_at       timestamptz default now()
+);
+
+alter table user_stats enable row level security;
+
+drop policy if exists "stats_select_own" on user_stats;
+create policy "stats_select_own" on user_stats
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "stats_insert_own" on user_stats;
+create policy "stats_insert_own" on user_stats
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "stats_update_own" on user_stats;
+create policy "stats_update_own" on user_stats
+  for update using (auth.uid() = user_id);
+
+-- Atomic increment for total_questions (called server-side via service role)
+create or replace function increment_total_questions(p_user_id uuid)
+returns void language sql security definer as $$
+  insert into user_stats (user_id, total_pdfs, total_questions, updated_at)
+  values (p_user_id, 0, 1, now())
+  on conflict (user_id) do update
+    set total_questions = user_stats.total_questions + 1,
+        updated_at      = now();
+$$;
+
+-- Atomic increment for total_pdfs (called server-side via service role)
+create or replace function increment_total_pdfs(p_user_id uuid)
+returns void language sql security definer as $$
+  insert into user_stats (user_id, total_pdfs, total_questions, updated_at)
+  values (p_user_id, 1, 0, now())
+  on conflict (user_id) do update
+    set total_pdfs  = user_stats.total_pdfs + 1,
+        updated_at  = now();
+$$;
+
+-- ─────────────────────────────────────────────
+-- 6. RPC: similarity search for RAG
+-- ─────────────────────────────────────────────
+
 create or replace function match_document_chunks(
   query_embedding    vector(1536),
   match_document_id  uuid,
