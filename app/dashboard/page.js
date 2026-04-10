@@ -93,6 +93,14 @@ const CheckIcon = () => (
     <polyline points="20 6 9 17 4 12"/>
   </svg>
 );
+const MicIcon = ({ active }) => (
+  <svg width="16" height="16" fill="none" stroke={active ? "#a78bfa" : "currentColor"} viewBox="0 0 24 24" strokeWidth="2">
+    <rect x="9" y="2" width="6" height="11" rx="3"/>
+    <path strokeLinecap="round" d="M5 10a7 7 0 0014 0"/>
+    <line strokeLinecap="round" x1="12" y1="21" x2="12" y2="17"/>
+    <line strokeLinecap="round" x1="9" y1="21" x2="15" y2="21"/>
+  </svg>
+);
 
 /* ─── HELPERS ────────────────────────────────────────────────────────────── */
 function timeAgo(ts) {
@@ -293,13 +301,17 @@ function ChatMessage({ msg, onCopy, onShare }) {
 }
 
 /* ─── INSIGHTS PANEL ─────────────────────────────────────────────────────── */
-function InsightsPanel({ doc, onClose, onAskQuestion }) {
-  const [insights, setInsights] = useState(null);
+function InsightsPanel({ doc, onClose, onAskQuestion, preloaded, preloading }) {
+  const [insights, setInsights] = useState(preloaded || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Use preloaded insights when they arrive
+  useEffect(() => { if (preloaded) setInsights(preloaded); }, [preloaded]);
+
   useEffect(() => {
     if (!doc) return;
+    if (preloaded) { setInsights(preloaded); return; }
     setInsights(null); setError(null);
     fetch(`/api/insights?documentId=${doc.id}`)
       .then((r) => r.json())
@@ -338,7 +350,7 @@ function InsightsPanel({ doc, onClose, onAskQuestion }) {
         </button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-        {!insights && !loading && (
+        {!insights && !loading && !preloading && (
           <div style={{ textAlign: "center", paddingTop: 28 }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>✨</div>
             <p style={{ fontSize: 13, color: C.textSecondary, marginBottom: 18, lineHeight: 1.55 }}>
@@ -350,7 +362,7 @@ function InsightsPanel({ doc, onClose, onAskQuestion }) {
             {error && <p style={{ fontSize: 12, color: "#f87171", marginTop: 10 }}>{error}</p>}
           </div>
         )}
-        {loading && (
+        {(loading || preloading) && (
           <div style={{ textAlign: "center", paddingTop: 40 }}>
             <div style={{ width: 34, height: 34, border: "3px solid rgba(124,58,237,0.25)", borderTopColor: C.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 14px" }} />
             <p style={{ fontSize: 13, color: C.textMuted }}>Analyzing document…</p>
@@ -513,6 +525,12 @@ export default function DashboardPage() {
   const [shareUrl, setShareUrl] = useState(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [voiceError, setVoiceError] = useState(null);
+  const recognitionRef = useRef(null);
+
+  const [autoInsights, setAutoInsights] = useState(null);       // auto-loaded insights
+  const [autoInsightsLoading, setAutoInsightsLoading] = useState(false);
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -593,7 +611,8 @@ export default function DashboardPage() {
 
   async function selectDoc(doc) {
     setSelectedDoc(doc); setMessages([]); setLimitError(null);
-    setSidebarOpen(false); setShowInsights(false); setShowCompare(false); setShareUrl(null);
+    setSidebarOpen(false); setShowCompare(false); setShareUrl(null);
+    setShowInsights(true); // auto-open insights panel
     setHistoryLoading(true);
     try {
       const res = await fetch(`/api/messages?documentId=${doc.id}`);
@@ -699,6 +718,43 @@ export default function DashboardPage() {
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   function handleKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }
+
+  /* ── Voice input ── */
+  function toggleVoice() {
+    setVoiceError(null);
+    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!SR) { setVoiceError("Voice input not supported in this browser."); return; }
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    const rec = new SR();
+    rec.lang = "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    recognitionRef.current = rec;
+    rec.onstart = () => setListening(true);
+    rec.onresult = (e) => {
+      const transcript = Array.from(e.results).map((r) => r[0].transcript).join("");
+      setInput(transcript);
+    };
+    rec.onerror = (e) => { setVoiceError("Mic error: " + e.error); setListening(false); };
+    rec.onend = () => setListening(false);
+    rec.start();
+  }
+
+  /* ── Auto-fetch insights when a doc is selected ── */
+  useEffect(() => {
+    if (!selectedDoc) { setAutoInsights(null); return; }
+    setAutoInsights(null);
+    setAutoInsightsLoading(true);
+    fetch(`/api/insights?documentId=${selectedDoc.id}`)
+      .then((r) => r.json())
+      .then((data) => { if (data?.summary) setAutoInsights(data); })
+      .catch(() => {})
+      .finally(() => setAutoInsightsLoading(false));
+  }, [selectedDoc?.id]);
 
   /* ── Loading spinner ── */
   if (loading) {
@@ -1059,6 +1115,19 @@ export default function DashboardPage() {
                       style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit" }}
                       onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
                     />
+                    {/* Mic button */}
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+                      onClick={toggleVoice}
+                      title={listening ? "Stop recording" : "Voice input"}
+                      style={{ width: 38, height: 38, borderRadius: 12, background: listening ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)", border: listening ? "1px solid rgba(124,58,237,0.45)" : `1px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: listening ? C.accentLight : C.textMuted, transition: "all 0.2s", position: "relative" }}
+                    >
+                      <MicIcon active={listening} />
+                      {listening && <span style={{ position: "absolute", top: 6, right: 6, width: 7, height: 7, borderRadius: "50%", background: "#ef4444", animation: "pulse-dot 1.2s ease-in-out infinite" }} />}
+                    </motion.button>
+
+                    {/* Send button */}
                     <motion.button
                       whileHover={input.trim() && !aiStreaming ? { scale: 1.08 } : {}}
                       whileTap={input.trim() && !aiStreaming ? { scale: 0.92 } : {}}
@@ -1073,7 +1142,9 @@ export default function DashboardPage() {
                     </motion.button>
                   </form>
                 )}
-                <p style={{ textAlign: "center", fontSize: 10, color: "rgba(240,240,248,0.15)", marginTop: 7 }}>
+                {voiceError && <p style={{ textAlign: "center", fontSize: 11, color: "#f87171", marginTop: 5 }}>{voiceError}</p>}
+                {listening && <p style={{ textAlign: "center", fontSize: 11, color: C.accentLight, marginTop: 5, animation: "pulse-dot 1.5s ease-in-out infinite" }}>🎙 Listening… speak now</p>}
+                <p style={{ textAlign: "center", fontSize: 10, color: "rgba(240,240,248,0.15)", marginTop: 5 }}>
                   Answers are grounded in your PDF content only
                 </p>
               </div>
@@ -1088,6 +1159,8 @@ export default function DashboardPage() {
                 doc={selectedDoc}
                 onClose={() => setShowInsights(false)}
                 onAskQuestion={(q) => { setShowInsights(false); setTimeout(() => handleSend(null, q), 100); }}
+                preloaded={autoInsights}
+                preloading={autoInsightsLoading}
               />
             )}
             {rightPanelOpen && showCompare && (
@@ -1191,8 +1264,9 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       <style>{`
-        @keyframes spin  { to { transform: rotate(360deg); } }
-        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes spin      { to { transform: rotate(360deg); } }
+        @keyframes blink     { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
         /* ── Desktop: sidebar is a flex child ── */
         @media (min-width: 769px) {
