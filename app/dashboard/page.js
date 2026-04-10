@@ -220,24 +220,30 @@ function UpgradePopup({ reason, onClose, user }) {
         </div>
 
         <h2 style={{ fontSize: 22, fontWeight: 900, color: C.textPrimary, margin: "0 0 8px", letterSpacing: "-0.4px" }}>
-          {isPdf ? "PDF limit reached" : "Daily limit reached"}
+          {isPdf ? "You've used all 5 free PDFs" : "You've used all 10 free questions"}
         </h2>
-        <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 24px", lineHeight: 1.65 }}>
-          {isPdf ? "You've reached the 5 PDF lifetime limit on the free plan." : "You've reached the 10 question lifetime limit on the free plan."}
-          {" "}Upgrade to Pro for unlimited access.
+        <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 20px", lineHeight: 1.65 }}>
+          {isPdf
+            ? "Upgrade to Pro and never worry about limits again."
+            : "You're clearly getting value — upgrade to keep going."}
         </p>
 
         {/* Pro card */}
-        <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.05))", border: "1px solid rgba(124,58,237,0.22)", borderRadius: 18, padding: "20px 18px", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12 }}>
-            <CrownIcon /><span style={{ fontSize: 12, fontWeight: 800, color: C.gold, letterSpacing: "0.04em" }}>INTELLIXY PRO</span>
+        <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.05))", border: "1px solid rgba(124,58,237,0.22)", borderRadius: 18, padding: "18px 16px", marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <CrownIcon /><span style={{ fontSize: 12, fontWeight: 800, color: C.gold, letterSpacing: "0.04em" }}>INTELLIXY PRO</span>
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)", padding: "3px 8px", borderRadius: 99 }}>Save 60%</span>
           </div>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 3, marginBottom: 16 }}>
-            <span style={{ fontSize: 42, fontWeight: 900, color: C.textPrimary, lineHeight: 1 }}>₹299</span>
-            <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 7 }}>/mo</span>
+          {/* Anchored price */}
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 14 }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 6 }}>₹499</span>
+            <span style={{ fontSize: 38, fontWeight: 900, color: C.textPrimary, lineHeight: 1 }}>₹199</span>
+            <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 5 }}>/mo</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            {["Unlimited PDF uploads/day", "Unlimited questions/day", "Delete PDFs anytime", "PDF Compare & Insights", "Share chat links"].map((f) => (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {["Unlimited PDF uploads","Unlimited questions","Delete PDFs anytime","PDF Compare & Insights","Share chat links"].map((f) => (
               <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.textSecondary }}>
                 <span style={{ color: C.green, flexShrink: 0 }}><CheckIcon /></span>{f}
               </div>
@@ -245,11 +251,14 @@ function UpgradePopup({ reason, onClose, user }) {
           </div>
         </div>
 
-        <RazorpayButton user={user} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 14, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.5)", marginBottom: 12, transition: "opacity 0.2s" }}>
-          Upgrade Now — ₹299/mo →
+        <RazorpayButton user={user} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 14, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.5)", marginBottom: 10, transition: "opacity 0.2s" }}>
+          Upgrade Now — ₹199/mo →
         </RazorpayButton>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, color: C.textMuted }}>
-          <ShieldIcon /> Secure payment · Razorpay · Cancel anytime
+        <p style={{ fontSize: 11, color: C.textMuted, margin: "0 0 4px", textAlign: "center" }}>
+          Most users upgrade in under 2 minutes.
+        </p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, color: "rgba(240,240,248,0.22)" }}>
+          <ShieldIcon /> Secure · Razorpay · Cancel anytime
         </div>
       </motion.div>
     </motion.div>
@@ -284,7 +293,10 @@ function UpgradeBanner({ type, onUpgrade }) {
 }
 
 /* ─── WELCOME SCREEN ────────────────────────────────────────────────────── */
-function WelcomeScreen({ onUpload }) {
+function WelcomeScreen({ onUpload, usage, plan }) {
+  const questionsLeft = Math.max(0, (usage?.maxQuestions ?? 10) - (usage?.questions ?? 0));
+  const pdfsLeft      = Math.max(0, (usage?.maxPdfs ?? 5)       - (usage?.pdfs ?? 0));
+  const isPro = plan === "pro";
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", textAlign: "center", minHeight: 0 }}>
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.4,0,0.2,1] }}>
@@ -302,9 +314,25 @@ function WelcomeScreen({ onUpload }) {
         <h2 style={{ fontSize: 26, fontWeight: 900, color: C.textPrimary, margin: "0 0 10px", letterSpacing: "-0.5px" }}>
           Chat with your PDFs
         </h2>
-        <p style={{ fontSize: 14, color: C.textSecondary, maxWidth: 340, margin: "0 auto 32px", lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, color: C.textSecondary, maxWidth: 340, margin: "0 auto 24px", lineHeight: 1.7 }}>
           Upload any PDF and get instant AI answers, summaries, and key insights — in seconds.
         </p>
+
+        {/* Free plan remaining — shown before first upload to set expectations */}
+        {!isPro && (
+          <div style={{ display: "inline-flex", gap: 10, marginBottom: 24, flexWrap: "wrap", justifyContent: "center" }}>
+            {[
+              { icon: "📄", count: pdfsLeft,      label: "PDFs remaining", color: pdfsLeft === 0 ? "#f87171" : pdfsLeft <= 1 ? "#f59e0b" : "#4ade80" },
+              { icon: "💬", count: questionsLeft, label: "Questions remaining", color: questionsLeft === 0 ? "#f87171" : questionsLeft <= 3 ? "#f59e0b" : "#4ade80" },
+            ].map(({ icon, count, label, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 99, fontSize: 12 }}>
+                <span>{icon}</span>
+                <span style={{ fontWeight: 800, color }}>{count === 0 ? "None" : count}</span>
+                <span style={{ color: C.textMuted }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <motion.button
           whileHover={{ scale: 1.04, boxShadow: "0 20px 60px rgba(124,58,237,0.6)" }}
@@ -1059,27 +1087,55 @@ export default function DashboardPage() {
         {/* Usage bars */}
         {plan !== "pro" && (
           <div style={{ margin: "0 10px 8px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 12, backdropFilter: "blur(8px)" }}>
-            <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Lifetime Usage</p>
-            {[{ label: "PDFs uploaded", used: usage.pdfs, max: usage.maxPdfs }, { label: "Questions asked", used: usage.questions, max: usage.maxQuestions }].map(({ label, used, max }) => (
-              <div key={label} style={{ marginBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, color: C.textMuted }}>{label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: used >= max ? "#f87171" : C.textMuted }}>{used} / {max}</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>Free Plan Usage</p>
+              <span style={{ fontSize: 9, color: C.textMuted }}>lifetime</span>
+            </div>
+            {[{ label: "PDFs", used: usage.pdfs, max: usage.maxPdfs }, { label: "Questions", used: usage.questions, max: usage.maxQuestions }].map(({ label, used, max }) => {
+              const remaining = Math.max(0, max - used);
+              const pct = Math.min((used / max) * 100, 100);
+              const isOut = used >= max;
+              const isLow = !isOut && pct >= 70;
+              return (
+                <div key={label} style={{ marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: C.textMuted }}>{label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: isOut ? "#f87171" : isLow ? "#f59e0b" : C.green }}>
+                      {isOut ? "Limit reached" : `${remaining} left`}
+                    </span>
+                  </div>
+                  <div style={{ height: 4, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.7, ease: "easeOut" }}
+                      style={{ height: "100%", borderRadius: 99, background: isOut ? "linear-gradient(90deg,#ef4444,#dc2626)" : isLow ? "linear-gradient(90deg,#f59e0b,#d97706)" : "linear-gradient(90deg,#7c3aed,#4f46e5)" }} />
+                  </div>
+                  {isOut && (
+                    <p style={{ fontSize: 10, color: "#f87171", margin: "4px 0 0", lineHeight: 1.4 }}>
+                      Upgrade to Pro for unlimited {label.toLowerCase()}
+                    </p>
+                  )}
+                  {isLow && !isOut && (
+                    <p style={{ fontSize: 10, color: "#f59e0b", margin: "4px 0 0", lineHeight: 1.4 }}>
+                      Almost used up — upgrade before you run out
+                    </p>
+                  )}
                 </div>
-                <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((used / max) * 100, 100)}%` }} transition={{ duration: 0.7, ease: "easeOut" }}
-                    style={{ height: "100%", borderRadius: 99, background: used >= max ? "linear-gradient(90deg,#ef4444,#dc2626)" : used / max > 0.7 ? "linear-gradient(90deg,#f59e0b,#d97706)" : "linear-gradient(90deg,#7c3aed,#4f46e5)" }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => setUpgradePopup("pdf")}
+              style={{ width: "100%", padding: "8px", marginTop: 2, fontSize: 11, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: "pointer" }}
+            >
+              ✦ Get unlimited access — ₹199/mo
+            </motion.button>
           </div>
         )}
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: 10, flexShrink: 0 }}>
           {plan !== "pro" ? (
-            <RazorpayButton user={user} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", fontSize: 12, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.16)", borderRadius: 9, cursor: "pointer", marginBottom: 8, backdropFilter: "blur(8px)" }}>
-              <CrownIcon /> Upgrade to Pro · ₹299/mo
+            <RazorpayButton user={user} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", fontSize: 12, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 9, cursor: "pointer", marginBottom: 8, backdropFilter: "blur(8px)" }}>
+              <CrownIcon /> Upgrade to Pro · ₹199/mo
             </RazorpayButton>
           ) : (
             <div style={{ marginBottom: 8 }}>
@@ -1182,7 +1238,7 @@ export default function DashboardPage() {
             {/* Messages */}
             <div ref={chatScrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px 8px" }}>
               {!selectedDoc ? (
-                <WelcomeScreen onUpload={() => fileInputRef.current?.click()} />
+                <WelcomeScreen onUpload={() => fileInputRef.current?.click()} usage={usage} plan={plan} />
               ) : historyLoading ? (
                 <div style={{ maxWidth: 740, margin: "0 auto", paddingTop: 16 }}><MessageSkeleton /></div>
               ) : messages.length === 0 ? (
