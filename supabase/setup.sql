@@ -150,6 +150,19 @@ create table if not exists alerts (
 
 create index if not exists alerts_user_unread_idx on alerts (user_id, read, created_at desc);
 
+-- shared_chats: viral share links (anyone can view, read-only)
+create table if not exists shared_chats (
+  id          uuid primary key default gen_random_uuid(),
+  document_id uuid references documents(id) on delete cascade not null,
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  title       text,                          -- optional display title
+  is_public   boolean not null default true,
+  created_at  timestamptz default now()
+);
+
+create index if not exists shared_chats_doc_idx on shared_chats (document_id);
+create index if not exists shared_chats_user_idx on shared_chats (user_id);
+
 alter table ai_insights enable row level security;
 alter table alerts       enable row level security;
 
@@ -183,6 +196,17 @@ alter table messages        enable row level security;
 drop policy if exists "messages_select_own" on messages;
 create policy "messages_select_own" on messages
   for select using (auth.uid() = user_id);
+
+-- Allow anonymous read of messages that belong to a publicly shared document
+drop policy if exists "messages_select_public_share" on messages;
+create policy "messages_select_public_share" on messages
+  for select using (
+    exists (
+      select 1 from shared_chats sc
+      where sc.document_id = document_id
+        and sc.is_public = true
+    )
+  );
 
 drop policy if exists "messages_insert_own" on messages;
 create policy "messages_insert_own" on messages
@@ -265,6 +289,21 @@ create policy "plans_insert_own" on user_plans
 drop policy if exists "plans_update_own" on user_plans;
 create policy "plans_update_own" on user_plans
   for update using (auth.uid() = user_id);
+
+-- shared_chats: owner can manage, anyone can read public chats
+alter table shared_chats enable row level security;
+
+drop policy if exists "shared_chats_select_public" on shared_chats;
+create policy "shared_chats_select_public" on shared_chats
+  for select using (is_public = true or auth.uid() = user_id);
+
+drop policy if exists "shared_chats_insert_own" on shared_chats;
+create policy "shared_chats_insert_own" on shared_chats
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "shared_chats_delete_own" on shared_chats;
+create policy "shared_chats_delete_own" on shared_chats
+  for delete using (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────
 -- 3. Storage bucket + policies

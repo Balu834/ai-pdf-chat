@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase-browser";
+import { supabase } from "@/lib/supabaseClient";
 import RazorpayButton from "@/components/RazorpayButton";
-
-const supabase = createClient();
 
 /* ─── ICONS ──────────────────────────────────────────────────────────────── */
 const PdfIcon = () => (
@@ -66,6 +64,12 @@ const TrashIcon = () => (
 const CrownIcon = () => (
   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
     <path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/>
+  </svg>
+);
+const ShareIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
   </svg>
 );
 const InsightIcon = () => (
@@ -536,6 +540,7 @@ export default function DashboardPage() {
   const [input, setInput] = useState("");
   const [aiStreaming, setAiStreaming] = useState(false);
 
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -549,6 +554,9 @@ export default function DashboardPage() {
   const [showCompare, setShowCompare] = useState(false);
   const [showUpgradedToast, setShowUpgradedToast] = useState(false);
   const [upgradePopup, setUpgradePopup] = useState(null); // null | "pdf" | "question"
+  const [shareUrl, setShareUrl] = useState(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -656,15 +664,42 @@ export default function DashboardPage() {
     }
   }
 
-  /* ── Select document ────────────────────────────────────────────────── */
-  function selectDoc(doc) {
+  /* ── Select document + load its history ───────────────────────────── */
+  async function selectDoc(doc) {
     setSelectedDoc(doc);
     setMessages([]);
     setLimitError(null);
     setSidebarOpen(false);
     setShowInsights(false);
     setShowCompare(false);
-    setTimeout(() => inputRef.current?.focus(), 100);
+    setShareUrl(null);
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/messages?documentId=${doc.id}`);
+      if (res.ok) {
+        const history = await res.json();
+        setMessages(
+          history.map((m) => ({ id: m.id, role: m.role, content: m.message }))
+        );
+      }
+    } catch {
+      // non-fatal — user can still chat
+    } finally {
+      setHistoryLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }
+
+  /* ── Clear chat ─────────────────────────────────────────────────────── */
+  async function handleClearChat() {
+    if (!selectedDoc) return;
+    if (!confirm(`Clear all chat history for "${selectedDoc.file_name}"?`)) return;
+    try {
+      await fetch(`/api/messages?documentId=${selectedDoc.id}`, { method: "DELETE" });
+      setMessages([]);
+    } catch (err) {
+      alert("Could not clear chat: " + err.message);
+    }
   }
 
   /* ── Send message ───────────────────────────────────────────────────── */
@@ -789,6 +824,32 @@ export default function DashboardPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  }
+
+  async function handleShareChat() {
+    if (!selectedDoc || shareLoading) return;
+    setShareLoading(true);
+    try {
+      const res = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: selectedDoc.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create share link");
+      setShareUrl(data.url);
+    } catch (err) {
+      alert("Share failed: " + err.message);
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
+  function copyShareUrl() {
+    if (!shareUrl) return;
+    navigator.clipboard.writeText(shareUrl).catch(() => {});
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2500);
   }
 
   /* ── Scroll to bottom ───────────────────────────────────────────────── */
@@ -1025,19 +1086,59 @@ export default function DashboardPage() {
               </span>
             )}
             {selectedDoc && (
-              <button
-                onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
-                  background: showInsights ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)",
-                  border: showInsights ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 8, fontSize: 12, fontWeight: 600,
-                  color: showInsights ? "#c4b5fd" : "rgba(255,255,255,0.6)",
-                  cursor: "pointer", transition: "all 0.15s",
-                }}
-              >
-                <InsightIcon /> Insights
-              </button>
+              <>
+                {/* Clear chat — only show when there are messages */}
+                {messages.length > 0 && (
+                  <button
+                    onClick={handleClearChat}
+                    title="Clear chat history"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
+                      background: "rgba(239,68,68,0.08)",
+                      border: "1px solid rgba(239,68,68,0.2)",
+                      borderRadius: 8, fontSize: 12, fontWeight: 600,
+                      color: "rgba(248,113,113,0.8)",
+                      cursor: "pointer", transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.18)"; e.currentTarget.style.color = "#f87171"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.08)"; e.currentTarget.style.color = "rgba(248,113,113,0.8)"; }}
+                  >
+                    <TrashIcon /> Clear
+                  </button>
+                )}
+                <button
+                  onClick={handleShareChat}
+                  disabled={shareLoading}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
+                    background: shareUrl ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.05)",
+                    border: shareUrl ? "1px solid rgba(34,197,94,0.35)" : "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    color: shareUrl ? "#4ade80" : "rgba(255,255,255,0.6)",
+                    cursor: shareLoading ? "not-allowed" : "pointer",
+                    opacity: shareLoading ? 0.7 : 1,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {shareLoading
+                    ? <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Sharing…</>
+                    : <><ShareIcon /> Share</>
+                  }
+                </button>
+                <button
+                  onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
+                    background: showInsights ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)",
+                    border: showInsights ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    color: showInsights ? "#c4b5fd" : "rgba(255,255,255,0.6)",
+                    cursor: "pointer", transition: "all 0.15s",
+                  }}
+                >
+                  <InsightIcon /> Insights
+                </button>
+              </>
             )}
             {docs.length >= 2 && (
               <button
@@ -1107,6 +1208,12 @@ export default function DashboardPage() {
             <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
               {!selectedDoc ? (
                 <WelcomeScreen onUpload={() => fileInputRef.current?.click()} />
+              ) : historyLoading ? (
+                /* Loading history spinner */
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "calc(100% - 32px)", gap: 12 }}>
+                  <div style={{ width: 32, height: 32, border: "3px solid rgba(124,58,237,0.25)", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", margin: 0 }}>Loading chat history…</p>
+                </div>
               ) : messages.length === 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "calc(100% - 32px)", textAlign: "center", padding: "24px" }}>
                   <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, boxShadow: "0 8px 24px rgba(124,58,237,0.35)" }}>
@@ -1234,6 +1341,66 @@ export default function DashboardPage() {
           onClose={() => setUpgradePopup(null)}
           user={user}
         />
+      )}
+
+      {/* Share URL modal */}
+      {shareUrl && (
+        <div
+          onClick={() => setShareUrl(null)}
+          style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(10px)" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: "100%", maxWidth: 460, background: "#0d0d22", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 22, padding: 28, boxShadow: "0 40px 100px rgba(0,0,0,0.85)", position: "relative", animation: "popIn 0.22s cubic-bezier(0.34,1.56,0.64,1)" }}
+          >
+            <button
+              onClick={() => setShareUrl(null)}
+              style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "4px 9px", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 12 }}
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg,rgba(124,58,237,0.2),rgba(34,197,94,0.12))", border: "1px solid rgba(124,58,237,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                <svg width="20" height="20" fill="none" stroke="#a78bfa" viewBox="0 0 24 24" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </div>
+              <p style={{ fontSize: 17, fontWeight: 800, color: "white", margin: "0 0 4px" }}>Your share link is ready!</p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0 }}>Anyone with this link can view this chat — read only</p>
+            </div>
+
+            {/* URL bar + copy */}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14 }}>
+              <div style={{ flex: 1, padding: "10px 13px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 9, fontSize: 12, color: "rgba(255,255,255,0.55)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {shareUrl}
+              </div>
+              <button
+                onClick={copyShareUrl}
+                style={{ padding: "10px 16px", background: shareCopied ? "rgba(34,197,94,0.18)" : "linear-gradient(135deg,#7c3aed,#4f46e5)", border: shareCopied ? "1px solid rgba(34,197,94,0.35)" : "none", borderRadius: 9, fontSize: 12, fontWeight: 700, color: shareCopied ? "#4ade80" : "white", cursor: "pointer", flexShrink: 0, transition: "all 0.2s", whiteSpace: "nowrap" }}
+              >
+                {shareCopied ? "✓ Copied!" : "Copy link"}
+              </button>
+            </div>
+
+            {/* Social share buttons */}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => { const t = encodeURIComponent(`Check out this AI PDF chat: ${shareUrl}`); window.open(`https://wa.me/?text=${t}`, "_blank"); }}
+                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 12px", background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.25)", borderRadius: 9, fontSize: 12, fontWeight: 600, color: "#4ade80", cursor: "pointer", transition: "opacity 0.2s" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+              </button>
+              <button
+                onClick={() => { const t = encodeURIComponent("Check out this AI PDF chat on Intellixy 🤖📄"); const u = encodeURIComponent(shareUrl); window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`, "_blank"); }}
+                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 9, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.65)", cursor: "pointer", transition: "opacity 0.2s" }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                Share on X
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Copy toast */}

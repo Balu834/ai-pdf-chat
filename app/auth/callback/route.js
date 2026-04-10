@@ -2,27 +2,39 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const code  = searchParams.get("code");
-  const error = searchParams.get("error");
+  const { searchParams, origin, pathname } = new URL(request.url);
+  const code             = searchParams.get("code");
+  const error            = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
     "https://ai-pdf-chat-steel-kappa.vercel.app";
 
-  // OAuth error from Supabase/Google
+  // ── Debug: log every hit so you can trace in Vercel → Functions logs ────
+  console.log("[auth/callback] hit", {
+    origin,
+    pathname,
+    hasCode:  !!code,
+    hasError: !!error,
+    // List cookie names present — verifier should appear here if PKCE works
+    cookieNames: request.cookies.getAll().map((c) => c.name),
+  });
+
+  // ── OAuth error returned by Supabase / Google ────────────────────────────
   if (error) {
+    console.error("[auth/callback] OAuth error:", error, errorDescription);
     const msg = encodeURIComponent(errorDescription || error);
     return NextResponse.redirect(`${siteUrl}/login?error=${msg}`);
   }
 
-  // No code → just send to dashboard (email/password login lands here too)
+  // ── No code — shouldn't happen in normal flow, send to dashboard ─────────
   if (!code) {
+    console.warn("[auth/callback] no code param — redirecting to dashboard");
     return NextResponse.redirect(`${siteUrl}/dashboard`);
   }
 
-  // Build the redirect response FIRST, then attach session cookies to it
+  // ── Build the redirect response FIRST so we can write session cookies to it
   const response = NextResponse.redirect(`${siteUrl}/dashboard`);
 
   const supabase = createServerClient(
@@ -30,11 +42,11 @@ export async function GET(request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        // Read from the incoming request
+        // Read verifier from the *incoming* request cookies
         getAll() {
           return request.cookies.getAll();
         },
-        // Write onto the outgoing response (this is what saves the session)
+        // Write session tokens onto the *outgoing* response cookies
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
@@ -44,14 +56,31 @@ export async function GET(request) {
     }
   );
 
-  const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error: sessionError } =
+    await supabase.auth.exchangeCodeForSession(code);
 
   if (sessionError) {
-    console.error("[auth/callback] exchangeCodeForSession failed:", sessionError.message);
+    // ── This is where "PKCE code verifier not found" surfaces ─────────────
+    // Causes:
+    //  1. redirectTo in signInWithOAuth pointed to a DIFFERENT origin than
+    //     the one that made the request (e.g. hardcoded production URL while
+    //     running on localhost) → verifier cookie domain mismatch.
+    //  2. http://localhost:3000/auth/callback not added to Supabase Dashboard
+    //     → Supabase rewrites the redirect to Site URL, crossing origins.
+    //  3. Same ?code= used twice — codes are single-use.
+    console.error("[auth/callback] exchangeCodeForSession FAILED:", {
+      message:     sessionError.message,
+      status:      sessionError.status,
+      // Show which verifier-related cookies were present (or absent)
+      verifierCookies: request.cookies
+        .getAll()
+        .filter((c) => c.name.includes("verifier") || c.name.includes("code"))
+        .map((c) => c.name),
+    });
     const msg = encodeURIComponent(sessionError.message);
     return NextResponse.redirect(`${siteUrl}/login?error=${msg}`);
   }
 
-  // Session cookies are now set on `response` — user is logged in
+  console.log("[auth/callback] session exchanged OK for user:", data.user?.id);
   return response;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase-browser";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -32,7 +32,6 @@ export default function ResetPasswordPage() {
       // New PKCE flow: ?code=xxx — exchange it for a session
       if (code) {
         try {
-          const supabase = createClient();
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
             setErrorMsg(error.message);
@@ -48,7 +47,6 @@ export default function ResetPasswordPage() {
       }
 
       // Legacy flow: #access_token hash — listen for PASSWORD_RECOVERY event
-      const supabase = createClient();
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === "PASSWORD_RECOVERY") setPageState("ready");
       });
@@ -82,7 +80,6 @@ export default function ResetPasswordPage() {
     }
     setLoading(true);
     try {
-      const supabase = createClient();
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       setPageState("success");
