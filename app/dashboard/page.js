@@ -7,7 +7,7 @@ import RazorpayButton from "@/components/RazorpayButton";
 
 /* ─── ICONS ──────────────────────────────────────────────────────────────── */
 const PdfIcon = () => (
-  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8" style={{ flexShrink: 0 }}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
     <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
     <line strokeLinecap="round" x1="16" y1="13" x2="8" y2="13"/>
@@ -16,8 +16,7 @@ const PdfIcon = () => (
 );
 const SendIcon = () => (
   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-    <line x1="22" y1="2" x2="11" y2="13"/>
-    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
   </svg>
 );
 const MenuIcon = () => (
@@ -26,7 +25,7 @@ const MenuIcon = () => (
   </svg>
 );
 const PlusIcon = () => (
-  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
   </svg>
 );
@@ -38,19 +37,19 @@ const UploadIcon = () => (
   </svg>
 );
 const LogoutIcon = () => (
-  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
     <polyline strokeLinecap="round" strokeLinejoin="round" points="16 17 21 12 16 7"/>
     <line strokeLinecap="round" x1="21" y1="12" x2="9" y2="12"/>
   </svg>
 );
 const SparkleIcon = () => (
-  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
   </svg>
 );
 const CopyIcon = () => (
-  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
     <rect x="9" y="9" width="13" height="13" rx="2"/>
     <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
   </svg>
@@ -63,42 +62,48 @@ const TrashIcon = () => (
   </svg>
 );
 const CrownIcon = () => (
-  <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
+  <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
     <path d="M12 2L9 9H2l5.5 4L5 20h14l-2.5-7L22 9h-7z"/>
   </svg>
 );
 const ShareIcon = () => (
-  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
     <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
   </svg>
 );
 const InsightIcon = () => (
-  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
   </svg>
 );
 const CompareIcon = () => (
-  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/>
   </svg>
 );
 const CloseIcon = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 );
 const CheckIcon = () => (
-  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
     <polyline points="20 6 9 17 4 12"/>
   </svg>
 );
 const MicIcon = ({ active }) => (
-  <svg width="16" height="16" fill="none" stroke={active ? "#a78bfa" : "currentColor"} viewBox="0 0 24 24" strokeWidth="2">
+  <svg width="15" height="15" fill="none" stroke={active ? "#a78bfa" : "currentColor"} viewBox="0 0 24 24" strokeWidth="2">
     <rect x="9" y="2" width="6" height="11" rx="3"/>
     <path strokeLinecap="round" d="M5 10a7 7 0 0014 0"/>
     <line strokeLinecap="round" x1="12" y1="21" x2="12" y2="17"/>
     <line strokeLinecap="round" x1="9" y1="21" x2="15" y2="21"/>
+  </svg>
+);
+const ShieldIcon = () => (
+  <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
   </svg>
 );
 
@@ -115,130 +120,231 @@ function timeAgo(ts) {
 
 const SMART_ACTIONS = [
   { label: "✦ Summarize", prompt: "Summarize this document in 3-4 sentences covering the main points." },
-  { label: "🧒 ELI5", prompt: "Explain this document like I'm 5 years old, in simple plain language." },
+  { label: "🧒 ELI5",      prompt: "Explain this document like I'm 5 years old, in simple plain language." },
   { label: "📌 Key Points", prompt: "List the most important key points from this document as bullet points." },
-  { label: "⚠️ Find Risks", prompt: "Identify any risks, warnings, issues or concerns mentioned in this document." },
-  { label: "❓ Questions", prompt: "Generate 5 insightful questions someone might ask about this document." },
+  { label: "⚠️ Risks",     prompt: "Identify any risks, warnings, issues or concerns mentioned in this document." },
+  { label: "❓ Questions",  prompt: "Generate 5 insightful questions someone might ask about this document." },
 ];
 
 /* ─── DESIGN TOKENS ─────────────────────────────────────────────────────── */
 const C = {
-  bg: "#09090f",
-  sidebar: "#0d0d1c",
-  surface: "#111127",
-  surfaceHover: "#17172e",
-  border: "rgba(255,255,255,0.07)",
-  borderHover: "rgba(255,255,255,0.12)",
-  accent: "#7c3aed",
-  accentLight: "#a78bfa",
-  accentGlow: "rgba(124,58,237,0.35)",
-  cyan: "#06b6d4",
-  textPrimary: "#f0f0f8",
-  textSecondary: "rgba(240,240,248,0.55)",
-  textMuted: "rgba(240,240,248,0.28)",
-  danger: "#ef4444",
-  dangerSoft: "rgba(239,68,68,0.12)",
-  gold: "#fbbf24",
-  green: "#4ade80",
+  bg:           "#07071a",
+  sidebar:      "rgba(10,10,28,0.92)",
+  glass:        "rgba(255,255,255,0.04)",
+  glassBorder:  "rgba(255,255,255,0.08)",
+  glassHover:   "rgba(255,255,255,0.07)",
+  surface:      "rgba(255,255,255,0.05)",
+  surfaceHover: "rgba(255,255,255,0.08)",
+  accent:       "#7c3aed",
+  accentLight:  "#a78bfa",
+  accentGlow:   "rgba(124,58,237,0.4)",
+  cyan:         "#06b6d4",
+  textPrimary:  "#f0f0f8",
+  textSecondary:"rgba(240,240,248,0.6)",
+  textMuted:    "rgba(240,240,248,0.3)",
+  danger:       "#ef4444",
+  dangerSoft:   "rgba(239,68,68,0.1)",
+  gold:         "#fbbf24",
+  green:        "#4ade80",
 };
+
+/* ─── SHIMMER SKELETON ───────────────────────────────────────────────────── */
+function Shimmer({ w = "100%", h = 14, r = 8, style = {} }) {
+  return (
+    <div style={{ width: w, height: h, borderRadius: r, background: "linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.6s ease-in-out infinite", ...style }} />
+  );
+}
+
+function SidebarSkeleton() {
+  return (
+    <div style={{ padding: "8px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
+      {[1,2,3,4].map((i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", borderRadius: 9 }}>
+          <Shimmer w={16} h={16} r={4} />
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+            <Shimmer h={11} r={5} style={{ width: `${60 + i * 8}%` }} />
+            <Shimmer h={9} r={4} style={{ width: "40%" }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MessageSkeleton() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 740, margin: "0 auto" }}>
+      {[false, true, false].map((isUser, i) => (
+        <div key={i} style={{ display: "flex", gap: 10, justifyContent: isUser ? "flex-end" : "flex-start" }}>
+          {!isUser && <Shimmer w={34} h={34} r={10} />}
+          <div style={{ maxWidth: "70%", display: "flex", flexDirection: "column", gap: 5 }}>
+            <Shimmer w={isUser ? 160 : 260} h={44} r={isUser ? "18px 18px 4px 18px" : "4px 18px 18px 18px"} />
+            {!isUser && <Shimmer w={80} h={9} r={4} />}
+          </div>
+          {isUser && <Shimmer w={34} h={34} r={10} />}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /* ─── UPGRADE POPUP ─────────────────────────────────────────────────────── */
 function UpgradePopup({ reason, onClose, user }) {
   const isPdf = reason === "pdf";
   return (
-    <AnimatePresence>
+    <motion.div
+      key="upgrade-backdrop"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(16px)" }}
+    >
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(12px)" }}
+        initial={{ opacity: 0, scale: 0.86, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92 }}
+        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: 420, background: "rgba(15,12,40,0.96)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: 28, padding: "36px 32px", textAlign: "center", boxShadow: "0 0 0 1px rgba(124,58,237,0.1), 0 40px 120px rgba(0,0,0,0.95), 0 0 100px rgba(124,58,237,0.07)", backdropFilter: "blur(24px)", position: "relative" }}
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.88, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 10 }}
-          transition={{ type: "spring", damping: 22, stiffness: 280 }}
-          onClick={(e) => e.stopPropagation()}
-          style={{ width: "100%", maxWidth: 420, background: "#0f0f23", border: `1px solid rgba(124,58,237,0.35)`, borderRadius: 24, padding: 36, textAlign: "center", boxShadow: `0 40px 100px rgba(0,0,0,0.9), 0 0 80px rgba(124,58,237,0.08)`, position: "relative" }}
-        >
-          <button onClick={onClose} style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "4px 8px", cursor: "pointer", color: C.textMuted, fontSize: 12, lineHeight: 1 }}>✕</button>
-          <div style={{ width: 64, height: 64, borderRadius: 20, background: "linear-gradient(135deg,rgba(124,58,237,0.2),rgba(6,182,212,0.1))", border: `1px solid rgba(124,58,237,0.3)`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 28 }}>
-            {isPdf ? "📄" : "💬"}
+        <button onClick={onClose} style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "4px 9px", cursor: "pointer", color: C.textMuted, fontSize: 12, lineHeight: 1 }}>✕</button>
+
+        {/* Badge */}
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, color: "#f87171", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", padding: "4px 12px", borderRadius: 99, marginBottom: 16 }}>
+          ⚡ FREE LIMIT REACHED
+        </div>
+
+        <div style={{ width: 68, height: 68, borderRadius: 22, background: "linear-gradient(135deg,rgba(124,58,237,0.22),rgba(6,182,212,0.12))", border: "1px solid rgba(124,58,237,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", fontSize: 30 }}>
+          {isPdf ? "📄" : "💬"}
+        </div>
+
+        <h2 style={{ fontSize: 22, fontWeight: 900, color: C.textPrimary, margin: "0 0 8px", letterSpacing: "-0.4px" }}>
+          {isPdf ? "PDF limit reached" : "Daily limit reached"}
+        </h2>
+        <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 24px", lineHeight: 1.65 }}>
+          {isPdf ? "You've used all 5 free PDF uploads." : "You've used all 20 free questions today."}
+          {" "}Upgrade to Pro for unlimited access.
+        </p>
+
+        {/* Pro card */}
+        <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.05))", border: "1px solid rgba(124,58,237,0.22)", borderRadius: 18, padding: "20px 18px", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12 }}>
+            <CrownIcon /><span style={{ fontSize: 12, fontWeight: 800, color: C.gold, letterSpacing: "0.04em" }}>INTELLIXY PRO</span>
           </div>
-          <p style={{ fontSize: 10, fontWeight: 700, color: C.accentLight, textTransform: "uppercase", letterSpacing: "0.12em", margin: "0 0 8px" }}>Free limit reached</p>
-          <h2 style={{ fontSize: 22, fontWeight: 900, color: C.textPrimary, margin: "0 0 6px", letterSpacing: "-0.4px" }}>You've hit your free limit</h2>
-          <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 24px", lineHeight: 1.6 }}>
-            {isPdf ? "You've used all 5 free PDF uploads." : "You've used all 20 free questions today."}{" "}
-            Upgrade for unlimited access.
-          </p>
-          <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.12),rgba(6,182,212,0.06))", border: `1px solid rgba(124,58,237,0.25)`, borderRadius: 16, padding: "18px 20px", marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 10 }}>
-              <CrownIcon style={{ fill: C.gold }} /><span style={{ fontSize: 12, fontWeight: 700, color: C.gold }}>Intellixy Pro</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, marginBottom: 14 }}>
-              <span style={{ fontSize: 40, fontWeight: 900, color: C.textPrimary, lineHeight: 1 }}>₹299</span>
-              <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 6 }}>/month</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {["Unlimited PDF uploads", "Unlimited questions per day", "PDF Compare feature", "Priority AI responses"].map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.textSecondary }}>
-                  <svg width="13" height="13" fill="none" stroke={C.green} viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>{f}
-                </div>
-              ))}
-            </div>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 3, marginBottom: 16 }}>
+            <span style={{ fontSize: 42, fontWeight: 900, color: C.textPrimary, lineHeight: 1 }}>₹299</span>
+            <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 7 }}>/mo</span>
           </div>
-          <RazorpayButton user={user} style={{ width: "100%", padding: "14px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 14, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.45)", letterSpacing: "-0.2px", marginBottom: 10, transition: "opacity 0.2s" }}>
-            Upgrade Now →
-          </RazorpayButton>
-          <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>Secure · Razorpay · Cancel anytime</p>
-        </motion.div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            {["Unlimited PDF uploads", "Unlimited questions/day", "PDF Compare & Insights", "Priority AI responses", "Share chat links"].map((f) => (
+              <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.textSecondary }}>
+                <span style={{ color: C.green, flexShrink: 0 }}><CheckIcon /></span>{f}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <RazorpayButton user={user} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 14, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.5)", marginBottom: 12, transition: "opacity 0.2s" }}>
+          Upgrade Now — ₹299/mo →
+        </RazorpayButton>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, color: C.textMuted }}>
+          <ShieldIcon /> Secure payment · Razorpay · Cancel anytime
+        </div>
       </motion.div>
-    </AnimatePresence>
+    </motion.div>
+  );
+}
+
+/* ─── INLINE UPGRADE BANNER ──────────────────────────────────────────────── */
+function UpgradeBanner({ type, onUpgrade }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      style={{ margin: "8px 0", padding: "14px 18px", background: "linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.06))", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, backdropFilter: "blur(8px)" }}
+    >
+      <div>
+        <p style={{ fontSize: 13, fontWeight: 700, color: C.textPrimary, margin: "0 0 2px" }}>
+          {type === "question" ? "🔒 Daily limit reached" : "📄 PDF limit reached"}
+        </p>
+        <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>
+          {type === "question" ? "Upgrade for unlimited questions" : "Upgrade to add more PDFs"}
+        </p>
+      </div>
+      <motion.button
+        whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+        onClick={onUpgrade}
+        style={{ padding: "8px 16px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+      >
+        Upgrade →
+      </motion.button>
+    </motion.div>
   );
 }
 
 /* ─── WELCOME SCREEN ────────────────────────────────────────────────────── */
 function WelcomeScreen({ onUpload }) {
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, textAlign: "center" }}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }}>
-        <div style={{ width: 72, height: 72, borderRadius: 22, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 50px rgba(124,58,237,0.4)", margin: "0 auto 24px" }}>
-          <svg width="32" height="32" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-            <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
-          </svg>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", textAlign: "center", minHeight: 0 }}>
+      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.4,0,0.2,1] }}>
+        {/* Glowing icon */}
+        <div style={{ position: "relative", width: 80, height: 80, margin: "0 auto 28px" }}>
+          <div style={{ position: "absolute", inset: -12, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)" }} />
+          <div style={{ width: 80, height: 80, borderRadius: 24, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 60px rgba(124,58,237,0.45)", position: "relative" }}>
+            <svg width="34" height="34" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="1.8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
         </div>
-        <h2 style={{ fontSize: 24, fontWeight: 800, color: C.textPrimary, margin: "0 0 10px", letterSpacing: "-0.4px" }}>Chat with your PDFs</h2>
-        <p style={{ fontSize: 14, color: C.textSecondary, maxWidth: 320, margin: "0 auto 28px", lineHeight: 1.65 }}>
-          Upload a PDF and get instant AI-powered answers, insights, and summaries.
+
+        <h2 style={{ fontSize: 26, fontWeight: 900, color: C.textPrimary, margin: "0 0 10px", letterSpacing: "-0.5px" }}>
+          Chat with your PDFs
+        </h2>
+        <p style={{ fontSize: 14, color: C.textSecondary, maxWidth: 340, margin: "0 auto 32px", lineHeight: 1.7 }}>
+          Upload any PDF and get instant AI answers, summaries, and key insights — in seconds.
         </p>
+
         <motion.button
-          whileHover={{ scale: 1.03, boxShadow: "0 16px 48px rgba(124,58,237,0.55)" }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.04, boxShadow: "0 20px 60px rgba(124,58,237,0.6)" }}
+          whileTap={{ scale: 0.96 }}
           onClick={onUpload}
-          style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 26px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontWeight: 700, fontSize: 14, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 28px rgba(124,58,237,0.4)" }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "14px 28px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontWeight: 700, fontSize: 14, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.45)" }}
         >
           <UploadIcon /> Upload your first PDF
         </motion.button>
+
+        {/* Trust badge */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 16, fontSize: 11, color: C.textMuted }}>
+          <ShieldIcon /><span>Your files are private and never shared</span>
+        </div>
       </motion.div>
+
+      {/* Feature cards */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.18, duration: 0.4, ease: "easeOut" }}
+        transition={{ delay: 0.2, duration: 0.4 }}
         className="feature-grid"
-        style={{ marginTop: 44, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, maxWidth: 500, width: "100%" }}
+        style={{ marginTop: 48, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, maxWidth: 520, width: "100%" }}
       >
         {[
-          { icon: "💬", title: "Smart Q&A", desc: "Ask anything about your document" },
-          { icon: "⚡", title: "Instant answers", desc: "AI-powered document analysis" },
-          { icon: "🔒", title: "Secure", desc: "Your files are private" },
-        ].map((f) => (
-          <div key={f.title} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 14px", textAlign: "left" }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>{f.icon}</div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.textPrimary, margin: "0 0 4px" }}>{f.title}</p>
+          { icon: "💬", title: "Smart Q&A", desc: "Ask anything, get precise answers" },
+          { icon: "⚡", title: "Instant insights", desc: "AI summarizes key points" },
+          { icon: "🔒", title: "100% Private", desc: "Your data is never sold" },
+        ].map((f, i) => (
+          <motion.div
+            key={f.title}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28 + i * 0.07 }}
+            style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 16, padding: "16px 14px", textAlign: "left", backdropFilter: "blur(8px)" }}
+          >
+            <div style={{ fontSize: 22, marginBottom: 9 }}>{f.icon}</div>
+            <p style={{ fontSize: 12, fontWeight: 700, color: C.textPrimary, margin: "0 0 4px" }}>{f.title}</p>
             <p style={{ fontSize: 11, color: C.textMuted, margin: 0, lineHeight: 1.5 }}>{f.desc}</p>
-          </div>
+          </motion.div>
         ))}
       </motion.div>
     </div>
@@ -250,13 +356,13 @@ function ChatMessage({ msg, onCopy, onShare }) {
   const isUser = msg.role === "user";
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+      transition={{ duration: 0.24, ease: [0.4,0,0.2,1] }}
       style={{ display: "flex", gap: 10, justifyContent: isUser ? "flex-end" : "flex-start", alignItems: "flex-start" }}
     >
       {!isUser && (
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, boxShadow: "0 4px 16px rgba(124,58,237,0.35)" }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, boxShadow: "0 4px 18px rgba(124,58,237,0.4)" }}>
           <SparkleIcon />
         </div>
       )}
@@ -264,39 +370,47 @@ function ChatMessage({ msg, onCopy, onShare }) {
         <div style={{
           padding: isUser ? "11px 16px" : "13px 17px",
           borderRadius: isUser ? "20px 20px 5px 20px" : "5px 20px 20px 20px",
-          fontSize: 14,
-          lineHeight: 1.7,
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
+          fontSize: 14, lineHeight: 1.72, whiteSpace: "pre-wrap", wordBreak: "break-word",
           background: isUser
             ? "linear-gradient(135deg,#7c3aed,#6d28d9)"
-            : C.surface,
-          border: isUser ? "none" : `1px solid ${C.border}`,
-          color: isUser ? "white" : "rgba(240,240,248,0.9)",
-          boxShadow: isUser ? "0 4px 20px rgba(124,58,237,0.28)" : "none",
+            : "rgba(255,255,255,0.05)",
+          border: isUser ? "none" : "1px solid rgba(255,255,255,0.08)",
+          color: isUser ? "white" : "rgba(240,240,248,0.92)",
+          boxShadow: isUser ? "0 4px 22px rgba(124,58,237,0.3)" : "none",
+          backdropFilter: isUser ? "none" : "blur(8px)",
         }}>
           {msg.content}
           {msg.streaming && (
             <motion.span
               animate={{ opacity: [1, 0, 1] }}
               transition={{ duration: 0.85, repeat: Infinity, ease: "steps(1)" }}
-              style={{ display: "inline-block", width: 2.5, height: "1em", marginLeft: 2, background: C.accentLight, borderRadius: 2, verticalAlign: "text-bottom" }}
+              style={{ display: "inline-block", width: 2, height: "1em", marginLeft: 2, background: C.accentLight, borderRadius: 2, verticalAlign: "text-bottom" }}
             />
           )}
         </div>
         {!isUser && !msg.streaming && msg.content && (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, paddingLeft: 4 }}>
-            <button onClick={() => onCopy(msg.content)} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.color = C.textSecondary} onMouseLeave={(e) => e.currentTarget.style.color = C.textMuted}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, paddingLeft: 4 }}>
+            <button
+              onClick={() => onCopy(msg.content)}
+              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
+              onMouseEnter={(e) => e.currentTarget.style.color = C.textSecondary}
+              onMouseLeave={(e) => e.currentTarget.style.color = C.textMuted}
+            >
               <CopyIcon /> Copy
             </button>
-            <button onClick={() => onShare(msg.content)} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(167,139,250,0.5)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.color = C.accentLight} onMouseLeave={(e) => e.currentTarget.style.color = "rgba(167,139,250,0.5)"}>
+            <button
+              onClick={() => onShare(msg.content)}
+              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(167,139,250,0.5)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
+              onMouseEnter={(e) => e.currentTarget.style.color = C.accentLight}
+              onMouseLeave={(e) => e.currentTarget.style.color = "rgba(167,139,250,0.5)"}
+            >
               🔗 Share
             </button>
           </div>
         )}
       </div>
       {isUser && (
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: C.surface, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 12, fontWeight: 700, color: C.textSecondary }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 12, fontWeight: 700, color: C.textSecondary }}>
           U
         </div>
       )}
@@ -310,7 +424,6 @@ function InsightsPanel({ doc, onClose, onAskQuestion, preloaded, preloading }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Use preloaded insights when they arrive
   useEffect(() => { if (preloaded) setInsights(preloaded); }, [preloaded]);
 
   useEffect(() => {
@@ -337,73 +450,84 @@ function InsightsPanel({ doc, onClose, onAskQuestion, preloaded, preloading }) {
 
   return (
     <motion.div
-      initial={{ x: 40, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 40, opacity: 0 }}
-      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }}
+      transition={{ duration: 0.26, ease: [0.4,0,0.2,1] }}
       className="right-panel"
-      style={{ width: 300, borderLeft: `1px solid ${C.border}`, background: C.sidebar, display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}
+      style={{ width: 300, borderLeft: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,10,26,0.9)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}
     >
-      <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+      <div style={{ height: 57, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ color: C.accentLight }}><InsightIcon /></span>
           <span style={{ fontSize: 13, fontWeight: 700, color: C.textPrimary }}>AI Insights</span>
         </div>
-        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 4, borderRadius: 6, transition: "color 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.color = C.textSecondary} onMouseLeave={(e) => e.currentTarget.style.color = C.textMuted}>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 4 }}>
           <CloseIcon />
         </button>
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
+        {/* Skeleton while preloading */}
+        {(loading || preloading) && !insights && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 4 }}>
+            <div style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.14)", borderRadius: 12, padding: 14 }}>
+              <Shimmer h={9} r={5} style={{ width: "35%", marginBottom: 10 }} />
+              <Shimmer h={12} r={5} style={{ marginBottom: 6 }} />
+              <Shimmer h={12} r={5} style={{ width: "85%", marginBottom: 6 }} />
+              <Shimmer h={12} r={5} style={{ width: "70%" }} />
+            </div>
+            <div style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 14 }}>
+              <Shimmer h={9} r={5} style={{ width: "40%", marginBottom: 12 }} />
+              {[0,1,2].map((j) => <div key={j} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}><Shimmer w={13} h={13} r={99} /><Shimmer h={11} r={5} /></div>)}
+            </div>
+          </div>
+        )}
+
         {!insights && !loading && !preloading && (
           <div style={{ textAlign: "center", paddingTop: 28 }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>✨</div>
+            <div style={{ fontSize: 34, marginBottom: 12 }}>✨</div>
             <p style={{ fontSize: 13, color: C.textSecondary, marginBottom: 18, lineHeight: 1.55 }}>
               Generate AI insights for <strong style={{ color: C.textPrimary }}>{doc?.file_name}</strong>
             </p>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={generateInsights} style={{ padding: "10px 20px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, cursor: "pointer", width: "100%" }}>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={generateInsights}
+              style={{ padding: "11px 20px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, cursor: "pointer", width: "100%" }}>
               Generate Insights
             </motion.button>
             {error && <p style={{ fontSize: 12, color: "#f87171", marginTop: 10 }}>{error}</p>}
           </div>
         )}
-        {(loading || preloading) && (
-          <div style={{ textAlign: "center", paddingTop: 40 }}>
-            <div style={{ width: 34, height: 34, border: "3px solid rgba(124,58,237,0.25)", borderTopColor: C.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 14px" }} />
-            <p style={{ fontSize: 13, color: C.textMuted }}>Analyzing document…</p>
-          </div>
-        )}
+
         {insights && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: 12, padding: 14 }}>
-              <p style={{ fontSize: 9, fontWeight: 700, color: C.accentLight, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 7px" }}>Summary</p>
+              <p style={{ fontSize: 9, fontWeight: 700, color: C.accentLight, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Summary</p>
               <p style={{ fontSize: 13, color: C.textSecondary, lineHeight: 1.65, margin: 0 }}>{insights.summary}</p>
             </div>
             {insights.key_points?.length > 0 && (
-              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14 }}>
+              <div style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 14 }}>
                 <p style={{ fontSize: 9, fontWeight: 700, color: C.accentLight, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Key Points</p>
                 <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
-                  {insights.key_points.map((point, i) => (
+                  {insights.key_points.map((pt, i) => (
                     <li key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                       <span style={{ color: C.accent, flexShrink: 0, marginTop: 1 }}><CheckIcon /></span>
-                      <span style={{ fontSize: 12, color: C.textSecondary, lineHeight: 1.55 }}>{point}</span>
+                      <span style={{ fontSize: 12, color: C.textSecondary, lineHeight: 1.55 }}>{pt}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
             {insights.suggested_questions?.length > 0 && (
-              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14 }}>
+              <div style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 14 }}>
                 <p style={{ fontSize: 9, fontWeight: 700, color: C.accentLight, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Try asking</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {insights.suggested_questions.map((q, i) => (
-                    <motion.button key={i} whileHover={{ scale: 1.01, borderColor: "rgba(124,58,237,0.4)" }} onClick={() => onAskQuestion(q)} style={{ padding: "8px 12px", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: 9, fontSize: 12, color: C.accentLight, cursor: "pointer", textAlign: "left", lineHeight: 1.4, transition: "all 0.15s" }}>
+                    <motion.button key={i} whileHover={{ scale: 1.01 }} onClick={() => onAskQuestion(q)}
+                      style={{ padding: "8px 11px", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: 8, fontSize: 12, color: C.accentLight, cursor: "pointer", textAlign: "left", lineHeight: 1.4, transition: "all 0.15s" }}>
                       {q}
                     </motion.button>
                   ))}
                 </div>
               </div>
             )}
-            <button onClick={generateInsights} style={{ padding: "8px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12, color: C.textMuted, cursor: "pointer" }}>
+            <button onClick={generateInsights} style={{ padding: "8px", background: "transparent", border: `1px solid ${C.glassBorder}`, borderRadius: 8, fontSize: 12, color: C.textMuted, cursor: "pointer" }}>
               Regenerate
             </button>
           </div>
@@ -434,31 +558,27 @@ function ComparePanel({ docs, onClose }) {
     finally { setLoading(false); }
   }
 
-  const selStyle = { width: "100%", padding: "10px 12px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 9, fontSize: 13, color: C.textPrimary, outline: "none", cursor: "pointer" };
+  const selStyle = { width: "100%", padding: "10px 12px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 9, fontSize: 13, color: C.textPrimary, outline: "none", cursor: "pointer" };
 
   return (
     <motion.div
-      initial={{ x: 40, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 40, opacity: 0 }}
-      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }}
+      transition={{ duration: 0.26, ease: [0.4,0,0.2,1] }}
       className="right-panel"
-      style={{ width: 340, borderLeft: `1px solid ${C.border}`, background: C.sidebar, display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}
+      style={{ width: 340, borderLeft: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,10,26,0.9)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}
     >
-      <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+      <div style={{ height: 57, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ color: C.accentLight }}><CompareIcon /></span>
           <span style={{ fontSize: 13, fontWeight: 700, color: C.textPrimary }}>Compare PDFs</span>
         </div>
-        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 4, borderRadius: 6 }}>
-          <CloseIcon />
-        </button>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 4 }}><CloseIcon /></button>
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
         {docs.length < 2 ? (
           <div style={{ textAlign: "center", paddingTop: 32 }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
-            <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.6 }}>Upload at least <strong style={{ color: C.textPrimary }}>2 PDFs</strong> to compare them.</p>
+            <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.6 }}>Upload at least <strong style={{ color: C.textPrimary }}>2 PDFs</strong> to compare.</p>
           </div>
         ) : (
           <>
@@ -469,7 +589,7 @@ function ComparePanel({ docs, onClose }) {
                 {docs.map((d) => <option key={d.id} value={d.id} style={{ background: "#0d0d1a" }}>{d.file_name}</option>)}
               </select>
             </div>
-            <div style={{ textAlign: "center", margin: "6px 0", color: C.textMuted, fontSize: 12, fontWeight: 600 }}>vs</div>
+            <div style={{ textAlign: "center", margin: "6px 0", color: C.textMuted, fontSize: 12 }}>vs</div>
             <div style={{ marginBottom: 14 }}>
               <p style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, margin: "0 0 6px" }}>Document 2</p>
               <select value={doc2Id} onChange={(e) => { setDoc2Id(e.target.value); setResult(null); setError(null); }} style={selStyle}>
@@ -477,18 +597,19 @@ function ComparePanel({ docs, onClose }) {
                 {docs.map((d) => <option key={d.id} value={d.id} style={{ background: "#0d0d1a" }}>{d.file_name}</option>)}
               </select>
             </div>
-            <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleCompare} disabled={loading || !doc1Id || !doc2Id} style={{ width: "100%", padding: "11px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, cursor: loading || !doc1Id || !doc2Id ? "not-allowed" : "pointer", opacity: loading || !doc1Id || !doc2Id ? 0.6 : 1, marginBottom: 14, transition: "opacity 0.2s" }}>
+            <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleCompare} disabled={loading || !doc1Id || !doc2Id}
+              style={{ width: "100%", padding: "11px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, cursor: loading || !doc1Id || !doc2Id ? "not-allowed" : "pointer", opacity: loading || !doc1Id || !doc2Id ? 0.6 : 1, marginBottom: 14 }}>
               {loading ? "Comparing…" : "Compare Documents"}
             </motion.button>
-            {loading && <div style={{ textAlign: "center", padding: "12px 0" }}><div style={{ width: 30, height: 30, border: "3px solid rgba(124,58,237,0.25)", borderTopColor: C.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 8px" }} /><p style={{ fontSize: 12, color: C.textMuted }}>Analyzing both documents…</p></div>}
-            {error && <div style={{ padding: "10px 12px", background: C.dangerSoft, border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, marginBottom: 10 }}><p style={{ fontSize: 12, color: "#f87171", margin: 0 }}>{error}</p></div>}
+            {loading && <div style={{ textAlign: "center", padding: "12px 0" }}><div style={{ width: 30, height: 30, border: "3px solid rgba(124,58,237,0.22)", borderTopColor: C.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 8px" }} /><p style={{ fontSize: 12, color: C.textMuted }}>Analyzing…</p></div>}
+            {error && <div style={{ padding: "10px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: 8, marginBottom: 10 }}><p style={{ fontSize: 12, color: "#f87171", margin: 0 }}>{error}</p></div>}
             {result && (
-              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
+              <div style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 16 }}>
                 <p style={{ fontSize: 9, fontWeight: 700, color: C.accentLight, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Comparison Result</p>
                 <div style={{ fontSize: 13, color: C.textSecondary, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
                   {result.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
                     part.startsWith("**") && part.endsWith("**")
-                      ? <strong key={i} style={{ color: C.textPrimary, display: "block", marginTop: i > 0 ? 10 : 0 }}>{part.slice(2, -2)}</strong>
+                      ? <strong key={i} style={{ color: C.textPrimary, display: "block", marginTop: i > 0 ? 10 : 0 }}>{part.slice(2,-2)}</strong>
                       : <span key={i}>{part}</span>
                   )}
                 </div>
@@ -501,12 +622,57 @@ function ComparePanel({ docs, onClose }) {
   );
 }
 
+/* ─── HEADER BUTTON ──────────────────────────────────────────────────────── */
+function HeaderBtn({ onClick, disabled, active, color = "default", children }) {
+  const s = {
+    default: { bg: "rgba(255,255,255,0.04)", bd: "rgba(255,255,255,0.08)", cl: "rgba(240,240,248,0.55)", aBg: "rgba(124,58,237,0.16)", aBd: "rgba(124,58,237,0.35)", aCl: "#c4b5fd" },
+    purple:  { bg: "rgba(255,255,255,0.04)", bd: "rgba(255,255,255,0.08)", cl: "rgba(240,240,248,0.55)", aBg: "rgba(124,58,237,0.16)", aBd: "rgba(124,58,237,0.35)", aCl: "#c4b5fd" },
+    red:     { bg: "rgba(239,68,68,0.06)",   bd: "rgba(239,68,68,0.16)",   cl: "rgba(248,113,113,0.7)",  aBg: "rgba(239,68,68,0.15)",  aBd: "rgba(239,68,68,0.35)",  aCl: "#f87171" },
+    green:   { bg: "rgba(34,197,94,0.06)",   bd: "rgba(34,197,94,0.16)",   cl: "rgba(74,222,128,0.7)",   aBg: "rgba(34,197,94,0.14)",  aBd: "rgba(34,197,94,0.32)",  aCl: "#4ade80" },
+  }[color] || {};
+  return (
+    <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.94 }} onClick={onClick} disabled={disabled}
+      style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 11px", background: active ? s.aBg : s.bg, border: `1px solid ${active ? s.aBd : s.bd}`, borderRadius: 9, fontSize: 12, fontWeight: 600, color: active ? s.aCl : s.cl, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1, backdropFilter: "blur(8px)", transition: "all 0.15s" }}>
+      {children}
+    </motion.button>
+  );
+}
+
+/* ─── EMPTY CHAT STATE ───────────────────────────────────────────────────── */
+function EmptyChatState({ doc, onSetInput, inputRef }) {
+  const prompts = ["What is this document about?", "List the main topics", "Any important dates or numbers?", "Summarize in 3 sentences"];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32 }}
+      style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", textAlign: "center", padding: "24px 20px" }}
+    >
+      <div style={{ width: 54, height: 54, borderRadius: 16, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 12px 36px rgba(124,58,237,0.4)" }}>
+        <SparkleIcon />
+      </div>
+      <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: "0 0 8px", letterSpacing: "-0.2px" }}>{doc.file_name}</h3>
+      <p style={{ fontSize: 13, color: C.textMuted, margin: "0 0 24px", maxWidth: 360, lineHeight: 1.65 }}>
+        Ready to answer questions about this document. Try a prompt or use a smart action above.
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 520 }}>
+        {prompts.map((q) => (
+          <motion.button key={q} whileHover={{ scale: 1.03, borderColor: "rgba(124,58,237,0.35)" }} whileTap={{ scale: 0.97 }}
+            onClick={() => { onSetInput(q); inputRef.current?.focus(); }}
+            style={{ padding: "8px 14px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 9, fontSize: 12, color: C.textSecondary, cursor: "pointer", backdropFilter: "blur(8px)", transition: "all 0.15s" }}>
+            {q}
+          </motion.button>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 /* ─── MAIN DASHBOARD ─────────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [docs, setDocs] = useState([]);
+  const [docsLoading, setDocsLoading] = useState(true);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -529,16 +695,18 @@ export default function DashboardPage() {
   const [shareUrl, setShareUrl] = useState(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+
   const [listening, setListening] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
   const recognitionRef = useRef(null);
 
-  const [autoInsights, setAutoInsights] = useState(null);       // auto-loaded insights
+  const [autoInsights, setAutoInsights] = useState(null);
   const [autoInsightsLoading, setAutoInsightsLoading] = useState(false);
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const chatScrollRef = useRef(null);
 
   /* ── Auth guard ── */
   useEffect(() => {
@@ -565,7 +733,7 @@ export default function DashboardPage() {
       if (data?.plan) {
         setPlan(data.plan);
         if (data.plan === "pro") {
-          setUsage((prev) => ({ ...prev, maxPdfs: Infinity, maxQuestions: Infinity }));
+          setUsage((p) => ({ ...p, maxPdfs: Infinity, maxQuestions: Infinity }));
           if (data.razorpay_subscription_id) setSubscriptionSource("razorpay");
           else if (data.stripe_subscription_id) setSubscriptionSource("stripe");
         }
@@ -576,15 +744,17 @@ export default function DashboardPage() {
   async function fetchUsage(userId) {
     try {
       const { count: pdfCount } = await supabase.from("documents").select("id", { count: "exact", head: true }).eq("user_id", userId);
-      const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+      const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
       const { count: qCount } = await supabase.from("question_usage").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", startOfDay.toISOString());
-      setUsage((prev) => ({ ...prev, pdfs: pdfCount ?? 0, questions: qCount ?? 0 }));
+      setUsage((p) => ({ ...p, pdfs: pdfCount ?? 0, questions: qCount ?? 0 }));
     } catch {}
   }
 
   const fetchDocs = useCallback(async (userId) => {
+    setDocsLoading(true);
     const { data, error } = await supabase.from("documents").select("id, file_name, file_url, created_at").eq("user_id", userId).order("created_at", { ascending: false });
     if (!error && data) setDocs(data);
+    setDocsLoading(false);
   }, []);
 
   async function handleUpload(e) {
@@ -615,8 +785,7 @@ export default function DashboardPage() {
 
   async function selectDoc(doc) {
     setSelectedDoc(doc); setMessages([]); setLimitError(null);
-    setSidebarOpen(false); setShowCompare(false); setShareUrl(null);
-    setShowInsights(true); // auto-open insights panel
+    setSidebarOpen(false); setShowCompare(false); setShareUrl(null); setShowInsights(true);
     setHistoryLoading(true);
     try {
       const res = await fetch(`/api/messages?documentId=${doc.id}`);
@@ -651,49 +820,33 @@ export default function DashboardPage() {
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, fileUrl: selectedDoc.file_url }) });
       if (!res.ok) {
         const data = await res.json();
-        if (data.limitExceeded) { setLimitError(data.error); setMessages((prev) => prev.filter((m) => m.id !== aiMsgId)); setUpgradePopup("question"); }
-        else { setMessages((prev) => prev.map((m) => m.id === aiMsgId ? { ...m, content: data.error || "Request failed.", streaming: false } : m)); }
+        if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.filter((m) => m.id !== aiMsgId)); setUpgradePopup("question"); }
+        else { setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: data.error || "Request failed.", streaming: false } : m)); }
         return;
       }
       const contentType = res.headers.get("content-type") || "";
       if (contentType.includes("application/json")) {
         const data = await res.json();
-        setMessages((prev) => prev.map((m) => m.id === aiMsgId ? { ...m, content: "```json\n" + JSON.stringify(data.data, null, 2) + "\n```", streaming: false } : m));
+        setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "```json\n" + JSON.stringify(data.data, null, 2) + "\n```", streaming: false } : m));
         return;
       }
-
-      // ── SSE stream reader ───────────────────────────────────────────
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let full = "";
-
+      const reader = res.body.getReader(); const decoder = new TextDecoder(); let buffer = ""; let full = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
-
-        // Process complete SSE lines
-        const lines = buffer.split("\n");
-        buffer = lines.pop(); // keep incomplete last line
-
+        const lines = buffer.split("\n"); buffer = lines.pop();
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6).trim();
           if (payload === "[DONE]" || payload === "[ERROR]") break;
-          // Unescape newlines encoded by server
-          const token = payload.replace(/\\n/g, "\n");
-          full += token;
-          setMessages((prev) =>
-            prev.map((m) => m.id === aiMsgId ? { ...m, content: full } : m)
-          );
+          full += payload.replace(/\\n/g, "\n");
+          setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: full } : m));
         }
       }
-
-      setMessages((prev) => prev.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
+      setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
     } catch {
-      setMessages((prev) => prev.map((m) => m.id === aiMsgId ? { ...m, content: "Something went wrong. Please try again.", streaming: false } : m));
+      setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "Something went wrong. Please try again.", streaming: false } : m));
     } finally {
       setAiStreaming(false);
       if (user) fetchUsage(user.id);
@@ -719,9 +872,9 @@ export default function DashboardPage() {
   function copyText(text) { navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); }
 
   function shareAnswer(text) {
-    const shareText = `${text.slice(0, 280)}${text.length > 280 ? "…" : ""}\n\n— via Intellixy`;
-    if (navigator.share) { navigator.share({ text: shareText, url: window.location.href }).catch(() => {}); }
-    else { navigator.clipboard.writeText(shareText).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    const t = `${text.slice(0, 280)}${text.length > 280 ? "…" : ""}\n\n— via Intellixy`;
+    if (navigator.share) { navigator.share({ text: t, url: window.location.href }).catch(() => {}); }
+    else { navigator.clipboard.writeText(t).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); }
   }
 
   async function handleShareChat() {
@@ -742,15 +895,13 @@ export default function DashboardPage() {
     setShareCopied(true); setTimeout(() => setShareCopied(false), 2500);
   }
 
-  // Auto-scroll: always scroll on new message; during streaming only scroll if near bottom
-  const chatScrollRef = useRef(null);
+  /* ── Smart auto-scroll ── */
   useEffect(() => {
     const container = chatScrollRef.current;
     if (!container) return;
-    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+    const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
     const lastMsg = messages[messages.length - 1];
-    const isNewMessage = lastMsg && !lastMsg.streaming && messages.length > 0;
-    if (isNearBottom || isNewMessage) {
+    if (nearBottom || (lastMsg && !lastMsg.streaming)) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
@@ -762,31 +913,21 @@ export default function DashboardPage() {
     setVoiceError(null);
     const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (!SR) { setVoiceError("Voice input not supported in this browser."); return; }
-    if (listening) {
-      recognitionRef.current?.stop();
-      setListening(false);
-      return;
-    }
+    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
     const rec = new SR();
-    rec.lang = "en-US";
-    rec.interimResults = true;
-    rec.continuous = false;
+    rec.lang = "en-US"; rec.interimResults = true; rec.continuous = false;
     recognitionRef.current = rec;
     rec.onstart = () => setListening(true);
-    rec.onresult = (e) => {
-      const transcript = Array.from(e.results).map((r) => r[0].transcript).join("");
-      setInput(transcript);
-    };
+    rec.onresult = (e) => { const t = Array.from(e.results).map((r) => r[0].transcript).join(""); setInput(t); };
     rec.onerror = (e) => { setVoiceError("Mic error: " + e.error); setListening(false); };
     rec.onend = () => setListening(false);
     rec.start();
   }
 
-  /* ── Auto-fetch insights when a doc is selected ── */
+  /* ── Auto-load insights on doc select ── */
   useEffect(() => {
     if (!selectedDoc) { setAutoInsights(null); return; }
-    setAutoInsights(null);
-    setAutoInsightsLoading(true);
+    setAutoInsights(null); setAutoInsightsLoading(true);
     fetch(`/api/insights?documentId=${selectedDoc.id}`)
       .then((r) => r.json())
       .then((data) => { if (data?.summary) setAutoInsights(data); })
@@ -799,7 +940,7 @@ export default function DashboardPage() {
     return (
       <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ width: 40, height: 40, border: `3px solid rgba(124,58,237,0.2)`, borderTopColor: C.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+          <div style={{ width: 42, height: 42, border: "3px solid rgba(124,58,237,0.18)", borderTopColor: C.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
           <p style={{ fontSize: 13, color: C.textMuted }}>Loading…</p>
         </div>
       </div>
@@ -815,32 +956,32 @@ export default function DashboardPage() {
   return (
     <div style={{ display: "flex", height: "100vh", background: C.bg, overflow: "hidden", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
 
+      {/* ── Ambient background glow ── */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+        <div style={{ position: "absolute", top: "-20%", left: "-10%", width: "50%", height: "50%", borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)" }} />
+        <div style={{ position: "absolute", bottom: "-10%", right: "-10%", width: "40%", height: "40%", borderRadius: "50%", background: "radial-gradient(circle, rgba(6,182,212,0.05) 0%, transparent 70%)" }} />
+      </div>
+
       {/* ── Mobile sidebar backdrop ── */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+          <motion.div key="backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,0.72)", backdropFilter: "blur(4px)" }}
-          />
+            style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }} />
         )}
       </AnimatePresence>
 
       {/* ── SIDEBAR ── */}
-      <aside className="sidebar" style={{ width: 260, background: C.sidebar, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+      <aside className="sidebar" style={{ width: 260, background: C.sidebar, backdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", flexShrink: 0, position: "relative", zIndex: 1 }}>
 
-        {/* Logo */}
-        <div style={{ height: 58, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(124,58,237,0.45)", flexShrink: 0 }}>
-            <span style={{ fontSize: 15, fontWeight: 900, color: "white" }}>I</span>
+        {/* Logo row */}
+        <div style={{ height: 58, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(124,58,237,0.5)", flexShrink: 0 }}>
+            <span style={{ fontSize: 14, fontWeight: 900, color: "white" }}>I</span>
           </div>
           <span style={{ fontSize: 16, fontWeight: 800, color: C.textPrimary, letterSpacing: "-0.3px" }}>Intellixy</span>
           {plan === "pro" && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "2px 7px", borderRadius: 99, marginLeft: "auto" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "3px 8px", borderRadius: 99, marginLeft: "auto" }}>
               <CrownIcon /> PRO
             </span>
           )}
@@ -852,62 +993,43 @@ export default function DashboardPage() {
             whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
             onClick={() => pdfLimitHit ? setUpgradePopup("pdf") : fileInputRef.current?.click()}
             disabled={uploading}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-              padding: "10px 14px", fontSize: 13, fontWeight: 600, color: "white",
-              background: pdfLimitHit ? "rgba(239,68,68,0.12)" : "linear-gradient(135deg,rgba(124,58,237,0.75),rgba(79,70,229,0.75))",
-              border: pdfLimitHit ? "1px solid rgba(239,68,68,0.25)" : `1px solid rgba(124,58,237,0.3)`,
-              borderRadius: 10, cursor: uploading ? "not-allowed" : "pointer",
-              opacity: uploading ? 0.7 : 1, transition: "all 0.2s",
-            }}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 14px", fontSize: 13, fontWeight: 600, color: "white", background: pdfLimitHit ? "rgba(239,68,68,0.1)" : "linear-gradient(135deg,rgba(124,58,237,0.7),rgba(79,70,229,0.7))", border: pdfLimitHit ? "1px solid rgba(239,68,68,0.22)" : "1px solid rgba(124,58,237,0.3)", borderRadius: 10, cursor: uploading ? "not-allowed" : "pointer", opacity: uploading ? 0.7 : 1, backdropFilter: "blur(8px)" }}
           >
             {uploading
-              ? <><div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.35)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Uploading…</>
-              : pdfLimitHit
-              ? <><span style={{ fontSize: 13 }}>🔒</span> PDF limit reached</>
+              ? <><div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Uploading…</>
+              : pdfLimitHit ? <><span>🔒</span> PDF limit reached</>
               : <><PlusIcon /> New PDF</>
             }
           </motion.button>
           <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} style={{ display: "none" }} />
         </div>
 
-        {/* PDF list */}
+        {/* PDF list with skeleton */}
         <div style={{ flex: 1, overflowY: "auto", padding: "4px 8px" }}>
-          {docs.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "36px 16px" }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>📂</div>
+          {docsLoading ? (
+            <SidebarSkeleton />
+          ) : docs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 16px" }}>
+              <div style={{ fontSize: 28, marginBottom: 10 }}>📂</div>
               <p style={{ fontSize: 12, color: C.textMuted, margin: "0 0 4px" }}>No PDFs yet</p>
               <p style={{ fontSize: 11, color: "rgba(240,240,248,0.15)", margin: 0 }}>Upload one to get started</p>
             </div>
           ) : (
             docs.map((doc) => {
-              const isSelected = selectedDoc?.id === doc.id;
+              const isSel = selectedDoc?.id === doc.id;
               return (
-                <motion.div
-                  key={doc.id}
-                  layout
-                  onClick={() => selectDoc(doc)}
-                  whileHover={{ backgroundColor: isSelected ? undefined : C.surfaceHover }}
-                  style={{
-                    display: "flex", alignItems: "flex-start", gap: 9, padding: "9px 10px",
-                    borderRadius: 9, cursor: "pointer", marginBottom: 2,
-                    background: isSelected ? "rgba(124,58,237,0.16)" : "transparent",
-                    border: isSelected ? "1px solid rgba(124,58,237,0.25)" : "1px solid transparent",
-                    transition: "background 0.15s, border-color 0.15s",
-                  }}
+                <motion.div key={doc.id} layout onClick={() => selectDoc(doc)}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 9, padding: "9px 10px", borderRadius: 9, cursor: "pointer", marginBottom: 2, background: isSel ? "rgba(124,58,237,0.14)" : "transparent", border: isSel ? "1px solid rgba(124,58,237,0.24)" : "1px solid transparent", transition: "all 0.15s", backdropFilter: isSel ? "blur(8px)" : "none" }}
+                  whileHover={{ backgroundColor: isSel ? undefined : "rgba(255,255,255,0.04)" }}
                 >
-                  <span style={{ color: isSelected ? C.accentLight : C.textMuted, marginTop: 1, flexShrink: 0 }}><PdfIcon /></span>
+                  <span style={{ color: isSel ? C.accentLight : C.textMuted, marginTop: 1 }}><PdfIcon /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 12, fontWeight: 500, color: isSelected ? "#e2d9f7" : C.textSecondary, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.file_name}</p>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: isSel ? "#e2d9f7" : C.textSecondary, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.file_name}</p>
                     <p style={{ fontSize: 10, color: C.textMuted, margin: "2px 0 0" }}>{timeAgo(doc.created_at)}</p>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
-                    className="doc-delete-btn"
-                    style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 2, borderRadius: 5, flexShrink: 0, opacity: 0, transition: "opacity 0.15s" }}
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete(doc); }} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 2, borderRadius: 5, opacity: 0, transition: "opacity 0.15s" }}
                     onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
-                    onMouseLeave={(e) => e.currentTarget.style.opacity = "0"}
-                  >
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = "0"}>
                     <TrashIcon />
                   </button>
                 </motion.div>
@@ -916,47 +1038,40 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Usage bar */}
+        {/* Usage bars */}
         {plan !== "pro" && (
-          <div style={{ margin: "0 10px 8px", background: "rgba(255,255,255,0.02)", border: `1px solid ${C.border}`, borderRadius: 10, padding: 12 }}>
+          <div style={{ margin: "0 10px 8px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 12, backdropFilter: "blur(8px)" }}>
             <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>Usage Today</p>
-            {[
-              { label: "PDFs", used: usage.pdfs, max: usage.maxPdfs },
-              { label: "Questions", used: usage.questions, max: usage.maxQuestions },
-            ].map(({ label, used, max }) => (
+            {[{ label: "PDFs", used: usage.pdfs, max: usage.maxPdfs }, { label: "Questions", used: usage.questions, max: usage.maxQuestions }].map(({ label, used, max }) => (
               <div key={label} style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontSize: 11, color: C.textMuted }}>{label}</span>
                   <span style={{ fontSize: 11, fontWeight: 600, color: used >= max ? "#f87171" : C.textMuted }}>{used} / {max}</span>
                 </div>
-                <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min((used / max) * 100, 100)}%` }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
-                    style={{ height: "100%", borderRadius: 99, background: used >= max ? "linear-gradient(90deg,#ef4444,#dc2626)" : used / max > 0.7 ? "linear-gradient(90deg,#f59e0b,#d97706)" : "linear-gradient(90deg,#7c3aed,#4f46e5)" }}
-                  />
+                <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((used / max) * 100, 100)}%` }} transition={{ duration: 0.7, ease: "easeOut" }}
+                    style={{ height: "100%", borderRadius: 99, background: used >= max ? "linear-gradient(90deg,#ef4444,#dc2626)" : used / max > 0.7 ? "linear-gradient(90deg,#f59e0b,#d97706)" : "linear-gradient(90deg,#7c3aed,#4f46e5)" }} />
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Sidebar footer */}
-        <div style={{ borderTop: `1px solid ${C.border}`, padding: 10, flexShrink: 0 }}>
+        {/* Footer */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: 10, flexShrink: 0 }}>
           {plan !== "pro" ? (
-            <RazorpayButton user={user} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", fontSize: 12, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: 9, cursor: "pointer", marginBottom: 8, transition: "all 0.2s" }}>
+            <RazorpayButton user={user} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", fontSize: 12, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.16)", borderRadius: 9, cursor: "pointer", marginBottom: 8, backdropFilter: "blur(8px)" }}>
               <CrownIcon /> Upgrade to Pro · ₹299/mo
             </RazorpayButton>
           ) : (
             <div style={{ marginBottom: 8 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginBottom: 6 }}>
-                <CrownIcon style={{ fill: C.gold }} /><span style={{ fontSize: 11, fontWeight: 700, color: C.gold }}>Pro Plan Active</span>
+                <CrownIcon /><span style={{ fontSize: 11, fontWeight: 700, color: C.gold }}>Pro Plan Active</span>
               </div>
               {subscriptionSource === "razorpay" ? (
-                <a href="https://dashboard.razorpay.com/subscriptions" target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: C.textMuted, background: "transparent", border: `1px solid ${C.border}`, borderRadius: 8, textAlign: "center", textDecoration: "none", boxSizing: "border-box" }}>Manage Subscription ↗</a>
+                <a href="https://dashboard.razorpay.com/subscriptions" target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: C.textMuted, background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, textAlign: "center", textDecoration: "none", boxSizing: "border-box" }}>Manage Subscription ↗</a>
               ) : (
-                <button onClick={handleManageSubscription} disabled={upgradingStripe} style={{ width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: C.textMuted, background: "transparent", border: `1px solid ${C.border}`, borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1 }}>
+                <button onClick={handleManageSubscription} disabled={upgradingStripe} style={{ width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: C.textMuted, background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1 }}>
                   {upgradingStripe ? "Loading…" : "Manage Subscription"}
                 </button>
               )}
@@ -973,21 +1088,14 @@ export default function DashboardPage() {
       </aside>
 
       {/* ── MAIN WRAPPER ── */}
-      <div className="main-wrapper" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="main-wrapper" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", zIndex: 1 }}>
 
-        {/* ── HEADER ── */}
-        <header style={{ height: 58, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(9,9,15,0.92)", backdropFilter: "blur(12px)" }}>
-          {/* Hamburger — mobile only */}
-          <motion.button
-            whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
-            onClick={() => setSidebarOpen(true)}
-            className="menu-btn"
-            style={{ background: "none", border: "none", cursor: "pointer", color: C.textSecondary, padding: 6, borderRadius: 8, flexShrink: 0 }}
-          >
+        {/* ── GLASS HEADER ── */}
+        <header style={{ height: 58, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, background: "rgba(7,7,26,0.8)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 10 }}>
+          <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={() => setSidebarOpen(true)} className="menu-btn" style={{ background: "none", border: "none", cursor: "pointer", color: C.textSecondary, padding: 6, borderRadius: 8, flexShrink: 0 }}>
             <MenuIcon />
           </motion.button>
 
-          {/* Title */}
           {selectedDoc ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
               <span style={{ color: C.accentLight, flexShrink: 0 }}><PdfIcon /></span>
@@ -997,13 +1105,12 @@ export default function DashboardPage() {
             <span style={{ fontSize: 14, fontWeight: 500, color: C.textMuted, flex: 1 }}>Select a PDF to start chatting</span>
           )}
 
-          {/* Action buttons */}
           <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
             {selectedDoc && (
               <>
                 {messages.length > 0 && (
                   <HeaderBtn onClick={handleClearChat} color="red">
-                    <TrashIcon /> <span className="btn-text">Clear</span>
+                    <TrashIcon /><span className="btn-text"> Clear</span>
                   </HeaderBtn>
                 )}
                 <HeaderBtn onClick={handleShareChat} disabled={shareLoading} active={!!shareUrl} color={shareUrl ? "green" : "default"}>
@@ -1013,13 +1120,13 @@ export default function DashboardPage() {
                   }
                 </HeaderBtn>
                 <HeaderBtn onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }} active={showInsights} color="purple">
-                  <InsightIcon /> <span className="btn-text">Insights</span>
+                  <InsightIcon /><span className="btn-text"> Insights</span>
                 </HeaderBtn>
               </>
             )}
             {docs.length >= 2 && (
               <HeaderBtn onClick={() => { setShowCompare(!showCompare); setShowInsights(false); }} active={showCompare} color="purple">
-                <CompareIcon /> <span className="btn-text">Compare</span>
+                <CompareIcon /><span className="btn-text"> Compare</span>
               </HeaderBtn>
             )}
           </div>
@@ -1035,25 +1142,18 @@ export default function DashboardPage() {
             <AnimatePresence>
               {selectedDoc && (
                 <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
+                  initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                   className="smart-bar"
-                  style={{ padding: "10px 16px 4px", display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0, borderBottom: `1px solid ${C.border}` }}
+                  style={{ padding: "10px 16px 6px", display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(7,7,26,0.5)", backdropFilter: "blur(12px)" }}
                 >
                   {SMART_ACTIONS.map((action, i) => (
-                    <motion.button
-                      key={action.label}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.04, duration: 0.18 }}
-                      whileHover={{ scale: 1.03, backgroundColor: "rgba(124,58,237,0.15)", borderColor: "rgba(124,58,237,0.35)" }}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => handleSmartAction(action.prompt)}
-                      disabled={aiStreaming}
-                      style={{ padding: "5px 13px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`, borderRadius: 99, fontSize: 12, fontWeight: 500, color: C.textSecondary, cursor: aiStreaming ? "not-allowed" : "pointer", opacity: aiStreaming ? 0.45 : 1, whiteSpace: "nowrap", transition: "background 0.15s, border-color 0.15s, color 0.15s" }}
-                    >
+                    <motion.button key={action.label}
+                      initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.04 }}
+                      whileHover={{ scale: 1.04, backgroundColor: "rgba(124,58,237,0.14)", borderColor: "rgba(124,58,237,0.32)" }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSmartAction(action.prompt)} disabled={aiStreaming}
+                      style={{ padding: "5px 12px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 99, fontSize: 12, fontWeight: 500, color: C.textSecondary, cursor: aiStreaming ? "not-allowed" : "pointer", opacity: aiStreaming ? 0.45 : 1, whiteSpace: "nowrap", backdropFilter: "blur(8px)", transition: "all 0.15s" }}>
                       {action.label}
                     </motion.button>
                   ))}
@@ -1061,41 +1161,14 @@ export default function DashboardPage() {
               )}
             </AnimatePresence>
 
-            {/* Messages area */}
-            <div ref={chatScrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
+            {/* Messages */}
+            <div ref={chatScrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px 8px" }}>
               {!selectedDoc ? (
                 <WelcomeScreen onUpload={() => fileInputRef.current?.click()} />
               ) : historyLoading ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 14 }}>
-                  <div style={{ width: 34, height: 34, border: `3px solid rgba(124,58,237,0.2)`, borderTopColor: C.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                  <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>Loading chat history…</p>
-                </div>
+                <div style={{ maxWidth: 740, margin: "0 auto", paddingTop: 16 }}><MessageSkeleton /></div>
               ) : messages.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", textAlign: "center", padding: 24 }}
-                >
-                  <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 10px 32px rgba(124,58,237,0.4)" }}>
-                    <SparkleIcon />
-                  </div>
-                  <h3 style={{ fontSize: 17, fontWeight: 700, color: C.textPrimary, margin: "0 0 8px", letterSpacing: "-0.3px" }}>{selectedDoc.file_name}</h3>
-                  <p style={{ fontSize: 13, color: C.textMuted, margin: "0 0 22px", maxWidth: 360, lineHeight: 1.6 }}>Ask anything about this document, or use a smart action above.</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 500 }}>
-                    {["What is this document about?", "List the main topics", "Any important dates or numbers?", "Summarize in 3 sentences"].map((q) => (
-                      <motion.button
-                        key={q}
-                        whileHover={{ scale: 1.03, borderColor: "rgba(124,58,237,0.3)", color: C.textSecondary }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                        style={{ padding: "8px 15px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 9, fontSize: 12, color: C.textMuted, cursor: "pointer", transition: "all 0.15s" }}
-                      >
-                        {q}
-                      </motion.button>
-                    ))}
-                  </div>
-                </motion.div>
+                <EmptyChatState doc={selectedDoc} onSetInput={setInput} inputRef={inputRef} />
               ) : (
                 <div style={{ maxWidth: 740, margin: "0 auto", display: "flex", flexDirection: "column", gap: 18, paddingBottom: 8 }}>
                   {messages.map((msg) => (
@@ -1106,100 +1179,72 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Limit error */}
-            <AnimatePresence>
-              {limitError && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                  style={{ margin: "0 16px 8px", padding: "10px 14px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.22)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}
+            {/* ── STICKY INPUT AREA ── */}
+            <div className="input-area" style={{ padding: "8px 16px 14px", flexShrink: 0, background: "rgba(7,7,26,0.88)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.05)", position: "sticky", bottom: 0, zIndex: 5 }}>
+              {!selectedDoc ? (
+                /* No PDF selected — nudge */
+                <div style={{ maxWidth: 740, margin: "0 auto", padding: "12px 16px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, display: "flex", alignItems: "center", gap: 10, backdropFilter: "blur(8px)" }}>
+                  <span style={{ fontSize: 16 }}>👈</span>
+                  <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>Select a PDF from the sidebar to start chatting</p>
+                </div>
+              ) : qLimitHit ? (
+                /* Question limit — inline upgrade */
+                <div style={{ maxWidth: 740, margin: "0 auto" }}>
+                  <UpgradeBanner type="question" onUpgrade={() => setUpgradePopup("question")} />
+                </div>
+              ) : (
+                /* Input form */
+                <form
+                  onSubmit={handleSend}
+                  style={{ maxWidth: 740, margin: "0 auto" }}
                 >
-                  <p style={{ fontSize: 12, color: "#fbbf24", margin: 0 }}>{limitError}</p>
-                  <button onClick={handleUpgrade} disabled={upgradingStripe} style={{ padding: "5px 12px", background: "#f59e0b", color: "black", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 7, cursor: "pointer", flexShrink: 0 }}>
-                    {upgradingStripe ? "…" : "Upgrade"}
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Input bar */}
-            {selectedDoc && (
-              <div style={{ padding: "8px 16px 18px", flexShrink: 0 }}>
-                {qLimitHit ? (
-                  <div style={{ maxWidth: 740, margin: "0 auto", padding: "14px 18px", background: C.dangerSoft, border: "1px solid rgba(239,68,68,0.2)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#f87171", margin: "0 0 2px" }}>🔒 Daily question limit reached</p>
-                      <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>Upgrade to Pro for unlimited questions</p>
-                    </div>
-                    <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={() => setUpgradePopup("question")} style={{ padding: "9px 16px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 10, cursor: "pointer", flexShrink: 0 }}>
-                      Upgrade Now
-                    </motion.button>
-                  </div>
-                ) : (
-                  <form
-                    onSubmit={handleSend}
-                    style={{ maxWidth: 740, margin: "0 auto", display: "flex", alignItems: "flex-end", gap: 10, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "12px 14px", transition: "border-color 0.2s", boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = "rgba(124,58,237,0.4)"}
-                    onBlur={(e) => e.currentTarget.style.borderColor = C.border}
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 8, background: C.glass, border: "1px solid rgba(255,255,255,0.09)", borderRadius: 18, padding: "11px 13px", backdropFilter: "blur(12px)", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.45)"; e.currentTarget.style.boxShadow = "0 4px 32px rgba(124,58,237,0.12)"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.35)"; }}
                   >
-                    <textarea
-                      ref={inputRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={`Ask about ${selectedDoc.file_name}…`}
-                      disabled={aiStreaming}
-                      rows={1}
-                      suppressHydrationWarning
+                    <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
+                      placeholder={`Ask about ${selectedDoc.file_name}…`} disabled={aiStreaming} rows={1} suppressHydrationWarning
                       style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit" }}
                       onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
                     />
-                    {/* Mic button */}
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
-                      onClick={toggleVoice}
-                      title={listening ? "Stop recording" : "Voice input"}
-                      style={{ width: 38, height: 38, borderRadius: 12, background: listening ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.05)", border: listening ? "1px solid rgba(124,58,237,0.45)" : `1px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: listening ? C.accentLight : C.textMuted, transition: "all 0.2s", position: "relative" }}
-                    >
+                    {/* Mic */}
+                    <motion.button type="button" whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={toggleVoice} title={listening ? "Stop" : "Voice input"}
+                      style={{ width: 36, height: 36, borderRadius: 10, background: listening ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.04)", border: listening ? "1px solid rgba(124,58,237,0.42)" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: listening ? C.accentLight : C.textMuted, transition: "all 0.2s", position: "relative" }}>
                       <MicIcon active={listening} />
-                      {listening && <span style={{ position: "absolute", top: 6, right: 6, width: 7, height: 7, borderRadius: "50%", background: "#ef4444", animation: "pulse-dot 1.2s ease-in-out infinite" }} />}
+                      {listening && <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#ef4444", animation: "pulseDot 1.2s ease-in-out infinite" }} />}
                     </motion.button>
-
-                    {/* Send button */}
-                    <motion.button
+                    {/* Send */}
+                    <motion.button type="submit" disabled={!input.trim() || aiStreaming}
                       whileHover={input.trim() && !aiStreaming ? { scale: 1.08 } : {}}
                       whileTap={input.trim() && !aiStreaming ? { scale: 0.92 } : {}}
-                      type="submit"
-                      disabled={!input.trim() || aiStreaming}
-                      style={{ width: 38, height: 38, borderRadius: 12, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", cursor: !input.trim() || aiStreaming ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: !input.trim() || aiStreaming ? 0.4 : 1, transition: "opacity 0.2s", color: "white", boxShadow: input.trim() && !aiStreaming ? "0 4px 14px rgba(124,58,237,0.5)" : "none" }}
-                    >
+                      style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", cursor: !input.trim() || aiStreaming ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: !input.trim() || aiStreaming ? 0.38 : 1, transition: "opacity 0.2s", color: "white", boxShadow: input.trim() && !aiStreaming ? "0 4px 16px rgba(124,58,237,0.55)" : "none" }}>
                       {aiStreaming
-                        ? <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.35)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                        ? <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
                         : <SendIcon />
                       }
                     </motion.button>
-                  </form>
-                )}
-                {voiceError && <p style={{ textAlign: "center", fontSize: 11, color: "#f87171", marginTop: 5 }}>{voiceError}</p>}
-                {listening && <p style={{ textAlign: "center", fontSize: 11, color: C.accentLight, marginTop: 5, animation: "pulse-dot 1.5s ease-in-out infinite" }}>🎙 Listening… speak now</p>}
-                <p style={{ textAlign: "center", fontSize: 10, color: "rgba(240,240,248,0.15)", marginTop: 5 }}>
-                  Answers are grounded in your PDF content only
-                </p>
+                  </div>
+
+                  {/* Status lines */}
+                  {voiceError && <p style={{ textAlign: "center", fontSize: 11, color: "#f87171", marginTop: 5 }}>{voiceError}</p>}
+                  {listening && <p style={{ textAlign: "center", fontSize: 11, color: C.accentLight, marginTop: 5 }}>🎙 Listening… speak now</p>}
+                </form>
+              )}
+
+              {/* Trust indicator */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 8, fontSize: 10, color: "rgba(240,240,248,0.18)" }}>
+                <ShieldIcon />
+                <span>End-to-end encrypted · Your data is never sold · Delete anytime</span>
               </div>
-            )}
+            </div>
           </div>
 
           {/* ── RIGHT PANEL ── */}
           <AnimatePresence>
             {rightPanelOpen && showInsights && selectedDoc && (
-              <InsightsPanel
-                key="insights"
-                doc={selectedDoc}
-                onClose={() => setShowInsights(false)}
+              <InsightsPanel key="insights" doc={selectedDoc} onClose={() => setShowInsights(false)}
                 onAskQuestion={(q) => { setShowInsights(false); setTimeout(() => handleSend(null, q), 100); }}
-                preloaded={autoInsights}
-                preloading={autoInsightsLoading}
-              />
+                preloaded={autoInsights} preloading={autoInsightsLoading} />
             )}
             {rightPanelOpen && showCompare && (
               <ComparePanel key="compare" docs={docs} onClose={() => setShowCompare(false)} />
@@ -1213,45 +1258,39 @@ export default function DashboardPage() {
         {upgradePopup && <UpgradePopup key="upgrade" reason={upgradePopup} onClose={() => setUpgradePopup(null)} user={user} />}
       </AnimatePresence>
 
-      {/* ── SHARE URL MODAL ── */}
+      {/* ── SHARE MODAL ── */}
       <AnimatePresence>
         {shareUrl && (
-          <motion.div
-            key="share-modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <motion.div key="share-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setShareUrl(null)}
-            style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(12px)" }}
+            style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(16px)" }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.88, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            <motion.div initial={{ opacity: 0, scale: 0.86, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ type: "spring", damping: 22, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              style={{ width: "100%", maxWidth: 460, background: "#0d0d22", border: `1px solid rgba(124,58,237,0.28)`, borderRadius: 22, padding: 28, boxShadow: "0 40px 100px rgba(0,0,0,0.9)", position: "relative" }}
+              style={{ width: "100%", maxWidth: 460, background: "rgba(13,12,34,0.96)", border: "1px solid rgba(124,58,237,0.28)", borderRadius: 24, padding: 28, backdropFilter: "blur(24px)", boxShadow: "0 40px 120px rgba(0,0,0,0.95)", position: "relative" }}
             >
-              <button onClick={() => setShareUrl(null)} style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, borderRadius: 7, padding: "4px 9px", cursor: "pointer", color: C.textMuted, fontSize: 12 }}>✕</button>
+              <button onClick={() => setShareUrl(null)} style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, padding: "4px 9px", cursor: "pointer", color: C.textMuted, fontSize: 12 }}>✕</button>
               <div style={{ textAlign: "center", marginBottom: 20 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(34,197,94,0.1))", border: `1px solid rgba(124,58,237,0.25)`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(34,197,94,0.1))", border: "1px solid rgba(124,58,237,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
                   <ShareIcon />
                 </div>
                 <p style={{ fontSize: 17, fontWeight: 800, color: C.textPrimary, margin: "0 0 4px" }}>Your share link is ready!</p>
                 <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>Anyone with this link can view this chat — read only</p>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14 }}>
-                <div style={{ flex: 1, padding: "10px 13px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 9, fontSize: 12, color: C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shareUrl}</div>
-                <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={copyShareUrl} style={{ padding: "10px 16px", background: shareCopied ? "rgba(34,197,94,0.16)" : "linear-gradient(135deg,#7c3aed,#4f46e5)", border: shareCopied ? "1px solid rgba(34,197,94,0.3)" : "none", borderRadius: 9, fontSize: 12, fontWeight: 700, color: shareCopied ? C.green : "white", cursor: "pointer", flexShrink: 0, transition: "all 0.2s", whiteSpace: "nowrap" }}>
+                <div style={{ flex: 1, padding: "10px 13px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 9, fontSize: 12, color: C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shareUrl}</div>
+                <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={copyShareUrl}
+                  style={{ padding: "10px 16px", background: shareCopied ? "rgba(34,197,94,0.16)" : "linear-gradient(135deg,#7c3aed,#4f46e5)", border: shareCopied ? "1px solid rgba(34,197,94,0.3)" : "none", borderRadius: 9, fontSize: 12, fontWeight: 700, color: shareCopied ? C.green : "white", cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
                   {shareCopied ? "✓ Copied!" : "Copy link"}
                 </motion.button>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <motion.button whileHover={{ opacity: 0.8 }} onClick={() => { const t = encodeURIComponent(`Check out this AI PDF chat: ${shareUrl}`); window.open(`https://wa.me/?text=${t}`, "_blank"); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 12px", background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.22)", borderRadius: 9, fontSize: 12, fontWeight: 600, color: C.green, cursor: "pointer" }}>
+                <motion.button whileHover={{ opacity: 0.8 }} onClick={() => { const t = encodeURIComponent(`Check out this AI PDF chat: ${shareUrl}`); window.open(`https://wa.me/?text=${t}`, "_blank"); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 12px", background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.2)", borderRadius: 9, fontSize: 12, fontWeight: 600, color: C.green, cursor: "pointer" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                   WhatsApp
                 </motion.button>
-                <motion.button whileHover={{ opacity: 0.8 }} onClick={() => { const t = encodeURIComponent("Check out this AI PDF chat on Intellixy 🤖📄"); const u = encodeURIComponent(shareUrl); window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`, "_blank"); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, borderRadius: 9, fontSize: 12, fontWeight: 600, color: C.textSecondary, cursor: "pointer" }}>
+                <motion.button whileHover={{ opacity: 0.8 }} onClick={() => { const t = encodeURIComponent("Check out this AI PDF chat on Intellixy 🤖📄"); const u = encodeURIComponent(shareUrl); window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`, "_blank"); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 12px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 9, fontSize: 12, fontWeight: 600, color: C.textSecondary, cursor: "pointer" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                   Share on X
                 </motion.button>
@@ -1264,13 +1303,9 @@ export default function DashboardPage() {
       {/* ── COPY TOAST ── */}
       <AnimatePresence>
         {copied && (
-          <motion.div
-            key="copy-toast"
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8 }}
-            style={{ position: "fixed", bottom: 24, right: 24, padding: "10px 18px", background: "#1a1a2e", border: `1px solid ${C.border}`, color: C.textPrimary, fontSize: 13, borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.5)", zIndex: 100 }}
-          >
+          <motion.div key="copy-toast"
+            initial={{ opacity: 0, y: 14, scale: 0.93 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8 }}
+            style={{ position: "fixed", bottom: 24, right: 24, padding: "10px 18px", background: "rgba(20,18,48,0.95)", border: "1px solid rgba(255,255,255,0.1)", color: C.textPrimary, fontSize: 13, borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.5)", zIndex: 100, backdropFilter: "blur(12px)" }}>
             Copied to clipboard ✓
           </motion.div>
         )}
@@ -1279,20 +1314,17 @@ export default function DashboardPage() {
       {/* ── UPGRADED TOAST ── */}
       <AnimatePresence>
         {showUpgradedToast && (
-          <motion.div
-            key="upgraded-toast"
-            initial={{ opacity: 0, y: 20, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12 }}
+          <motion.div key="pro-toast"
+            initial={{ opacity: 0, y: 24, scale: 0.92 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14 }}
             transition={{ type: "spring", damping: 20, stiffness: 260 }}
-            style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", padding: "14px 22px", background: "linear-gradient(135deg,rgba(34,197,94,0.13),rgba(16,185,129,0.08))", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 14, boxShadow: "0 8px 36px rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "center", gap: 12, whiteSpace: "nowrap" }}
+            style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", padding: "14px 22px", background: "rgba(10,26,16,0.95)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 14, boxShadow: "0 8px 36px rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "center", gap: 12, whiteSpace: "nowrap", backdropFilter: "blur(16px)" }}
           >
             <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(34,197,94,0.18)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="14" height="14" fill="none" stroke={C.green} viewBox="0 0 24 24" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <CheckIcon />
             </div>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Welcome to Pro! 🎉</p>
-              <p style={{ fontSize: 11, color: C.textMuted, margin: "2px 0 0" }}>You now have unlimited PDFs and questions.</p>
+              <p style={{ fontSize: 11, color: C.textMuted, margin: "2px 0 0" }}>Unlimited PDFs and questions — forever.</p>
             </div>
             <motion.button whileHover={{ scale: 1.15 }} onClick={() => setShowUpgradedToast(false)} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 4, marginLeft: 4, flexShrink: 0 }}>
               <CloseIcon />
@@ -1302,67 +1334,37 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       <style>{`
-        @keyframes spin      { to { transform: rotate(360deg); } }
-        @keyframes blink     { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
-        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+        @keyframes spin     { to { transform: rotate(360deg); } }
+        @keyframes shimmer  { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes pulseDot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
 
-        /* ── Desktop: sidebar is a flex child ── */
+        /* Desktop: sidebar inline */
         @media (min-width: 769px) {
-          .sidebar   { position: relative !important; transform: none !important; z-index: auto !important; }
-          .menu-btn  { display: none !important; }
+          .sidebar    { position: relative !important; transform: none !important; z-index: auto !important; }
+          .menu-btn   { display: none !important; }
         }
 
-        /* ── Mobile ── */
+        /* Mobile */
         @media (max-width: 768px) {
           .sidebar     { position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transform: ${sidebarOpen ? "translateX(0)" : "translateX(-100%)"}; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
           .main-wrapper{ margin-left: 0 !important; }
-          .menu-btn    { display: flex !important; }
+          .menu-btn    { display: flex !important; align-items: center; }
           .header-actions .btn-text { display: none; }
           .smart-bar   { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
           .smart-bar::-webkit-scrollbar { display: none; }
           .feature-grid{ grid-template-columns: 1fr !important; max-width: 100% !important; }
           .right-panel { position: fixed !important; inset: 0 !important; width: 100% !important; z-index: 50 !important; border-left: none !important; }
+          .input-area  { position: sticky; bottom: 0; }
         }
 
-        /* Textarea placeholder */
-        textarea::placeholder { color: rgba(240,240,248,0.28); }
+        textarea::placeholder { color: rgba(240,240,248,0.25); }
         textarea { scrollbar-width: none; }
         textarea::-webkit-scrollbar { display: none; }
 
-        /* Doc item hover shows delete btn */
-        .doc-item:hover .doc-delete-btn { opacity: 1 !important; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.25); border-radius: 99px; }
       `}</style>
     </div>
-  );
-}
-
-/* ─── HEADER BUTTON HELPER ───────────────────────────────────────────────── */
-function HeaderBtn({ onClick, disabled, active, color = "default", children }) {
-  const colorMap = {
-    default: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.09)", color: "rgba(240,240,248,0.6)", activeBg: "rgba(124,58,237,0.18)", activeBorder: "rgba(124,58,237,0.38)", activeColor: "#c4b5fd" },
-    purple:  { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.09)", color: "rgba(240,240,248,0.6)", activeBg: "rgba(124,58,237,0.18)", activeBorder: "rgba(124,58,237,0.38)", activeColor: "#c4b5fd" },
-    red:     { bg: "rgba(239,68,68,0.07)", border: "rgba(239,68,68,0.18)", color: "rgba(248,113,113,0.75)", activeBg: "rgba(239,68,68,0.18)", activeBorder: "rgba(239,68,68,0.4)", activeColor: "#f87171" },
-    green:   { bg: "rgba(34,197,94,0.07)", border: "rgba(34,197,94,0.18)", color: "rgba(74,222,128,0.75)", activeBg: "rgba(34,197,94,0.15)", activeBorder: "rgba(34,197,94,0.35)", activeColor: "#4ade80" },
-  };
-  const s = colorMap[color] || colorMap.default;
-  return (
-    <motion.button
-      whileHover={{ scale: 1.04 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
-        background: active ? s.activeBg : s.bg,
-        border: `1px solid ${active ? s.activeBorder : s.border}`,
-        borderRadius: 9, fontSize: 12, fontWeight: 600,
-        color: active ? s.activeColor : s.color,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.65 : 1,
-        transition: "all 0.15s",
-      }}
-    >
-      {children}
-    </motion.button>
   );
 }
