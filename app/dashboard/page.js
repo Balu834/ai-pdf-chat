@@ -204,7 +204,7 @@ function WelcomeScreen({ onUpload }) {
       >
         <UploadIcon /> Upload your first PDF
       </button>
-      <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, maxWidth: 480 }}>
+      <div className="feature-grid" style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, maxWidth: 480 }}>
         {[
           { icon: "💬", title: "Smart Q&A", desc: "Ask anything about your document" },
           { icon: "⚡", title: "Instant answers", desc: "Smart AI document analysis" },
@@ -317,7 +317,7 @@ function InsightsPanel({ doc, onClose, onAskQuestion }) {
   }
 
   return (
-    <div style={{ width: 300, borderLeft: "1px solid rgba(255,255,255,0.07)", background: "#0a0a1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
+    <div className="right-panel" style={{ width: 300, borderLeft: "1px solid rgba(255,255,255,0.07)", background: "#0a0a1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
       {/* Header */}
       <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -446,7 +446,7 @@ function ComparePanel({ docs, onClose }) {
   const selectStyle = { width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 13, color: "white", outline: "none", cursor: "pointer" };
 
   return (
-    <div style={{ width: 340, borderLeft: "1px solid rgba(255,255,255,0.07)", background: "#0a0a1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
+    <div className="right-panel" style={{ width: 340, borderLeft: "1px solid rgba(255,255,255,0.07)", background: "#0a0a1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
       <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ color: "#a78bfa" }}><CompareIcon /></div>
@@ -1058,13 +1058,14 @@ export default function DashboardPage() {
       </aside>
 
       {/* ── MAIN + RIGHT PANEL wrapper ────────────────────────────────────── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", marginLeft: 240, overflow: "hidden" }}>
+      <div className="main-wrapper" style={{ flex: 1, display: "flex", flexDirection: "column", marginLeft: 240, overflow: "hidden" }}>
 
         {/* ── HEADER ────────────────────────────────────────────────────── */}
         <header style={{ height: 56, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, background: "rgba(13,13,26,0.95)" }}>
           <button
             onClick={() => setSidebarOpen(true)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", padding: 6, borderRadius: 6, display: "none" }}
+            className="menu-btn"
+            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", padding: 6, borderRadius: 6 }}
           >
             <MenuIcon />
           </button>
@@ -1079,7 +1080,7 @@ export default function DashboardPage() {
           )}
 
           {/* Header action buttons */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
             {plan === "pro" && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "3px 10px", borderRadius: 99 }}>
                 <CrownIcon /> PRO
@@ -1103,7 +1104,7 @@ export default function DashboardPage() {
                     onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.18)"; e.currentTarget.style.color = "#f87171"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.08)"; e.currentTarget.style.color = "rgba(248,113,113,0.8)"; }}
                   >
-                    <TrashIcon /> Clear
+                    <TrashIcon /> <span className="btn-text">Clear</span>
                   </button>
                 )}
                 <button
@@ -1122,7 +1123,7 @@ export default function DashboardPage() {
                 >
                   {shareLoading
                     ? <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Sharing…</>
-                    : <><ShareIcon /> Share</>
+                    : <><ShareIcon /> <span className="btn-text">Share</span></>
                   }
                 </button>
                 <button
@@ -1136,7 +1137,7 @@ export default function DashboardPage() {
                     cursor: "pointer", transition: "all 0.15s",
                   }}
                 >
-                  <InsightIcon /> Insights
+                  <InsightIcon /> <span className="btn-text">Insights</span>
                 </button>
               </>
             )}
@@ -1152,7 +1153,7 @@ export default function DashboardPage() {
                   cursor: "pointer", transition: "all 0.15s",
                 }}
               >
-                <CompareIcon /> Compare
+                <CompareIcon /> <span className="btn-text">Compare</span>
               </button>
             )}
           </div>
@@ -1166,7 +1167,7 @@ export default function DashboardPage() {
 
             {/* Smart action bar */}
             {selectedDoc && (
-              <div style={{ padding: "10px 16px 0", display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0 }}>
+              <div className="smart-bar" style={{ padding: "10px 16px 0", display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0 }}>
                 {SMART_ACTIONS.map((action) => (
                   <button
                     key={action.label}
@@ -1427,16 +1428,34 @@ export default function DashboardPage() {
       )}
 
       <style>{`
-        @media (max-width: 768px) {
-          .md-sidebar { transform: ${sidebarOpen ? "translateX(0)" : "translateX(-100%)"}; }
-        }
-        @media (min-width: 769px) {
-          .md-sidebar { transform: translateX(0) !important; position: relative !important; z-index: auto !important; }
-        }
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes popIn { from { opacity: 0; transform: scale(0.88) translateY(16px) } to { opacity: 1; transform: scale(1) translateY(0) } }
         @keyframes blink { 0%,100% { opacity: 1 } 50% { opacity: 0 } }
         @keyframes spin { to { transform: rotate(360deg) } }
+
+        /* ── Desktop: sidebar inline in flex row ── */
+        @media (min-width: 769px) {
+          .md-sidebar { transform: translateX(0) !important; position: relative !important; z-index: auto !important; }
+          .menu-btn { display: none !important; }
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+          .md-sidebar { transform: ${sidebarOpen ? "translateX(0)" : "translateX(-100%)"}; }
+          .main-wrapper { margin-left: 0 !important; }
+          .menu-btn { display: flex !important; align-items: center; }
+          .header-actions .btn-text { display: none; }
+          .smart-bar { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+          .smart-bar::-webkit-scrollbar { display: none; }
+          .feature-grid { grid-template-columns: 1fr !important; max-width: 100% !important; }
+          .right-panel {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100% !important;
+            z-index: 50 !important;
+            border-left: none !important;
+          }
+        }
       `}</style>
     </div>
   );
