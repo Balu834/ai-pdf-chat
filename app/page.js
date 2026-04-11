@@ -4,7 +4,7 @@ import DemoVideo from "@/components/DemoVideo";
 // ─── REPLACE THIS WITH YOUR YOUTUBE VIDEO ID ────────────────────────────────
 // YouTube URL: https://www.youtube.com/watch?v=YOUR_VIDEO_ID
 //                                              ↑↑↑↑↑↑↑↑↑↑↑↑ paste here
-const DEMO_VIDEO_ID = "YOUR_VIDEO_ID";
+const DEMO_VIDEO_ID = "9_hnyQxFUjI";
 
 export const metadata = {
   title: "Intellixy — Stop Reading PDFs. Start Chatting with Them.",
