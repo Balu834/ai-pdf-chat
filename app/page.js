@@ -1,4 +1,10 @@
 import ProPlanCTA from "@/components/ProPlanCTA";
+import DemoVideo from "@/components/DemoVideo";
+
+// ─── REPLACE THIS WITH YOUR YOUTUBE VIDEO ID ────────────────────────────────
+// YouTube URL: https://www.youtube.com/watch?v=YOUR_VIDEO_ID
+//                                              ↑↑↑↑↑↑↑↑↑↑↑↑ paste here
+const DEMO_VIDEO_ID = "YOUR_VIDEO_ID";
 
 export const metadata = {
   title: "Intellixy — Stop Reading PDFs. Start Chatting with Them.",
@@ -467,28 +473,34 @@ export default function HomePage() {
       <section id="demo" className="px-4 sm:px-6 py-16 sm:py-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10 sm:mb-12">
-            <span className="inline-block text-xs font-bold uppercase px-4 py-1.5 rounded-full mb-4" style={{ color: "#fbbf24", letterSpacing: "0.1em", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>Live Demo</span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-3" style={{ letterSpacing: "-0.5px" }}>See it working</h2>
-            <p className="text-base sm:text-lg" style={{ color: "rgba(255,255,255,0.4)" }}>Watch how fast it turns a complex PDF into simple answers.</p>
+            <span
+              className="inline-block text-xs font-bold uppercase px-4 py-1.5 rounded-full mb-4"
+              style={{ color: "#fbbf24", letterSpacing: "0.1em", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
+            >
+              Live Demo
+            </span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-3" style={{ letterSpacing: "-0.5px" }}>
+              See it in 60 seconds
+            </h2>
+            <p className="text-sm sm:text-base" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Watch how fast it answers questions from a real PDF ⚡
+            </p>
           </div>
-          <div className="relative w-full rounded-2xl overflow-hidden flex items-center justify-center"
-            style={{ aspectRatio: "16/9", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", boxShadow: "0 30px 70px rgba(0,0,0,0.5)" }}>
-            <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.12),rgba(6,182,212,0.07))" }} />
-            <div className="absolute bottom-4 sm:bottom-7 left-4 sm:left-10 text-xs px-3 sm:px-4 py-2 hidden xs:block"
-              style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "14px 14px 3px 14px", color: "rgba(255,255,255,0.5)" }}>
-              What are the payment terms?
-            </div>
-            <div className="absolute top-4 sm:top-7 right-4 sm:right-10 text-xs px-3 sm:px-4 py-2 hidden xs:block"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px 14px 14px 3px", color: "rgba(255,255,255,0.5)" }}>
-              Payment due within <strong style={{ color: "#a78bfa" }}>30 days</strong>...
-            </div>
-            <div className="relative flex flex-col items-center gap-3 z-10">
-              <a href="/login" className="flex items-center justify-center rounded-full"
-                style={{ width: 72, height: 72, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", boxShadow: "0 16px 48px rgba(124,58,237,0.5), 0 0 0 14px rgba(124,58,237,0.1)", transition: "transform 0.2s" }}>
-                <svg width="26" height="26" fill="white" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-              </a>
-              <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>Click to try live — free</p>
-            </div>
+
+          <DemoVideo videoId={DEMO_VIDEO_ID} />
+
+          {/* Post-video CTA nudge */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+            <a
+              href="/login"
+              className="btn-primary w-full sm:w-auto text-center text-sm font-bold text-white rounded-full px-8 py-3"
+              style={{ boxShadow: "0 6px 24px rgba(124,58,237,0.35)" }}
+            >
+              Try it yourself — free →
+            </a>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              No sign-up friction · Live in 30 seconds
+            </p>
           </div>
         </div>
       </section>
