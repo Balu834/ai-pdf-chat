@@ -472,6 +472,8 @@ export default function HomePage() {
       {/* ── DEMO ────────────────────────────────────────────────────────── */}
       <section id="demo" className="px-4 sm:px-6 py-16 sm:py-24">
         <div className="max-w-3xl mx-auto">
+
+          {/* Section header */}
           <div className="text-center mb-10 sm:mb-12">
             <span
               className="inline-block text-xs font-bold uppercase px-4 py-1.5 rounded-full mb-4"
@@ -479,29 +481,88 @@ export default function HomePage() {
             >
               Live Demo
             </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-3" style={{ letterSpacing: "-0.5px" }}>
+            <h2
+              className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-3"
+              style={{ letterSpacing: "-0.5px" }}
+            >
               See it in 60 seconds
             </h2>
             <p className="text-sm sm:text-base" style={{ color: "rgba(255,255,255,0.4)" }}>
-              Watch how fast it answers questions from a real PDF ⚡
+              A real PDF. A real question. An answer in under 2 seconds ⚡
             </p>
           </div>
 
+          {/* Video player */}
           <DemoVideo videoId={DEMO_VIDEO_ID} />
 
-          {/* Post-video CTA nudge */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+          {/* ── POST-WATCH CONVERSION BLOCK ── */}
+          <div
+            className="mt-8 rounded-2xl px-6 py-8 sm:px-10 sm:py-10 text-center"
+            style={{
+              background: "linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.05))",
+              border: "1px solid rgba(124,58,237,0.22)",
+            }}
+          >
+            {/* Social proof — above headline so it primes trust first */}
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5 text-xs font-semibold"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                color: "rgba(255,255,255,0.5)",
+              }}
+            >
+              <div className="flex">
+                {["#a78bfa","#06b6d4","#f472b6","#34d399","#fbbf24"].map((c, i) => (
+                  <div
+                    key={c}
+                    className="flex items-center justify-center rounded-full text-xs font-bold flex-shrink-0"
+                    style={{ width: 22, height: 22, background: `${c}22`, border: `2px solid ${c}88`, marginLeft: i === 0 ? 0 : -7, color: c, fontSize: 9 }}
+                  >
+                    {["A","R","S","K","M"][i]}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-0.5" style={{ fontSize: 10 }}>
+                {[1,2,3,4,5].map(s => <span key={s} style={{ color: "#fbbf24" }}>★</span>)}
+              </div>
+              <span>500+ users saving hours every week</span>
+            </div>
+
+            {/* Headline — references what they just watched */}
+            <h3
+              className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-3"
+              style={{ letterSpacing: "-0.4px", lineHeight: 1.2 }}
+            >
+              Your PDFs are next.
+            </h3>
+            <p
+              className="text-sm sm:text-base mb-6 mx-auto"
+              style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 420 }}
+            >
+              Upload any document and start asking questions — same experience, on your own files, right now.
+            </p>
+
+            {/* Primary CTA */}
             <a
               href="/login"
-              className="btn-primary w-full sm:w-auto text-center text-sm font-bold text-white rounded-full px-8 py-3"
-              style={{ boxShadow: "0 6px 24px rgba(124,58,237,0.35)" }}
+              className="btn-primary inline-flex items-center justify-center gap-2 w-full sm:w-auto font-extrabold text-white rounded-full"
+              style={{
+                padding: "15px 36px",
+                fontSize: 15,
+                boxShadow: "0 10px 40px rgba(124,58,237,0.5)",
+                letterSpacing: "-0.2px",
+              }}
             >
-              Try it yourself — free →
+              Start Free — 10 Questions Included →
             </a>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
-              No sign-up friction · Live in 30 seconds
+
+            {/* Trust line */}
+            <p className="mt-4 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              No credit card required &nbsp;·&nbsp; Instant access &nbsp;·&nbsp; Live in 30 seconds
             </p>
           </div>
+
         </div>
       </section>
 
