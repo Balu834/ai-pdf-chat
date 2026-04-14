@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
 import { checkPdfLimit, checkQuestionLimit, FREE_PLAN } from "@/lib/limits";
-import { getUserPlan } from "@/lib/user-plan";
+import { getUserPlan, isProActive } from "@/lib/user-plan";
 
 export async function GET() {
   try {
@@ -12,26 +12,28 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [pdfs, questions, planData] = await Promise.all([
+    const [pdfs, questions, planData, proActive] = await Promise.all([
       checkPdfLimit(supabase, user.id),
       checkQuestionLimit(supabase, user.id),
       getUserPlan(user.id),
+      isProActive(user.id),
     ]);
-
-    const isPro = planData.plan === "pro";
 
     return NextResponse.json({
       email: user.email,
       plan: planData.plan,
+      is_pro_active: proActive,
+      pro_expires_at: planData.pro_expires_at ?? null,
+      subscription_status: planData.subscription_status ?? "inactive",
       pdfs: {
-        used: isPro ? 0 : pdfs.count,
-        max: isPro ? null : FREE_PLAN.maxPdfs,
-        remaining: isPro ? null : pdfs.remaining,
+        used: proActive ? 0 : pdfs.count,
+        max: proActive ? null : FREE_PLAN.maxPdfs,
+        remaining: proActive ? null : pdfs.remaining,
       },
       questions: {
-        used: isPro ? 0 : questions.count,
-        max: isPro ? null : FREE_PLAN.maxQuestions,
-        remaining: isPro ? null : questions.remaining,
+        used: proActive ? 0 : questions.count,
+        max: proActive ? null : FREE_PLAN.maxQuestions,
+        remaining: proActive ? null : questions.remaining,
       },
     });
   } catch (err) {

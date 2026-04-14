@@ -106,6 +106,45 @@ const ShieldIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
   </svg>
 );
+const HomeIcon = () => (
+  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 21V12h6v9"/>
+  </svg>
+);
+const FilesIcon = () => (
+  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+    <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
+    <line strokeLinecap="round" x1="16" y1="13" x2="8" y2="13"/>
+    <line strokeLinecap="round" x1="16" y1="17" x2="8" y2="17"/>
+  </svg>
+);
+const ChatNavIcon = () => (
+  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+  </svg>
+);
+const BillingNavIcon = () => (
+  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <rect strokeLinecap="round" strokeLinejoin="round" x="2" y="5" width="20" height="14" rx="2"/>
+    <line strokeLinecap="round" x1="2" y1="10" x2="22" y2="10"/>
+  </svg>
+);
+const SettingsNavIcon = () => (
+  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <circle cx="12" cy="12" r="3"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+  </svg>
+);
+
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", Icon: HomeIcon },
+  { id: "pdfs",      label: "My PDFs",   Icon: FilesIcon },
+  { id: "chat",      label: "Chat",       Icon: ChatNavIcon },
+  { id: "billing",   label: "Billing",    Icon: BillingNavIcon },
+  { id: "settings",  label: "Settings",   Icon: SettingsNavIcon },
+];
 
 /* ─── HELPERS ────────────────────────────────────────────────────────────── */
 function timeAgo(ts) {
@@ -189,81 +228,160 @@ function MessageSkeleton() {
 }
 
 /* ─── UPGRADE POPUP ─────────────────────────────────────────────────────── */
-function UpgradePopup({ reason, onClose, user }) {
+function UpgradePopup({ reason, onClose, user, usage }) {
   const isPdf = reason === "pdf";
+  const [couponInput, setCouponInput]   = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponData, setCouponData]     = useState(null);
+  const [couponError, setCouponError]   = useState(null);
+  const [showCoupon, setShowCoupon]     = useState(false);
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true); setCouponError(null); setCouponData(null);
+    try {
+      const res  = await fetch("/api/coupons/validate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: couponInput.trim() }) });
+      const data = await res.json();
+      if (data.valid) setCouponData(data); else setCouponError(data.error || "Invalid coupon");
+    } catch { setCouponError("Could not validate coupon"); }
+    finally { setCouponLoading(false); }
+  }
+
+  const used    = isPdf ? (usage?.pdfs ?? 0)       : (usage?.questions ?? 0);
+  const max     = isPdf ? (usage?.maxPdfs ?? 5)    : (usage?.maxQuestions ?? 10);
+  const headline = isPdf
+    ? `You've uploaded ${used}/${max} free PDFs`
+    : `You've asked ${used}/${max} free questions`;
+  const subline  = isPdf
+    ? "You've used your free PDF slots. Upgrade to keep uploading without limits."
+    : "You're clearly getting value from Intellixy — upgrade to keep the momentum going.";
+
   return (
     <motion.div
       key="upgrade-backdrop"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
-      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(16px)" }}
+      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(20px)" }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.86, y: 24 }}
+        initial={{ opacity: 0, scale: 0.88, y: 28 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92 }}
-        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+        exit={{ opacity: 0, scale: 0.94, y: 8 }}
+        transition={{ type: "spring", damping: 22, stiffness: 320 }}
         onClick={(e) => e.stopPropagation()}
-        style={{ width: "100%", maxWidth: 420, background: "rgba(15,12,40,0.96)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: 28, padding: "36px 32px", textAlign: "center", boxShadow: "0 0 0 1px rgba(124,58,237,0.1), 0 40px 120px rgba(0,0,0,0.95), 0 0 100px rgba(124,58,237,0.07)", backdropFilter: "blur(24px)", position: "relative" }}
+        style={{ width: "100%", maxWidth: 430, background: "linear-gradient(160deg,rgba(18,14,52,0.98),rgba(9,8,28,0.98))", border: "1px solid rgba(124,58,237,0.4)", borderRadius: 28, padding: "32px 28px 28px", textAlign: "center", boxShadow: "0 0 0 1px rgba(124,58,237,0.08), 0 50px 140px rgba(0,0,0,0.9), 0 0 120px rgba(124,58,237,0.08)", backdropFilter: "blur(24px)", position: "relative", overflow: "hidden" }}
       >
-        <button onClick={onClose} style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "4px 9px", cursor: "pointer", color: C.textMuted, fontSize: 12, lineHeight: 1 }}>✕</button>
+        {/* Purple glow top */}
+        <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 300, height: 160, background: "radial-gradient(ellipse,rgba(124,58,237,0.2) 0%,transparent 70%)", pointerEvents: "none" }} />
 
-        {/* Badge */}
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, color: "#f87171", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", padding: "4px 12px", borderRadius: 99, marginBottom: 16 }}>
-          ⚡ FREE LIMIT REACHED
-        </div>
+        <button onClick={onClose} style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "4px 9px", cursor: "pointer", color: C.textMuted, fontSize: 12, lineHeight: 1, zIndex: 1 }}>✕</button>
 
-        <div style={{ width: 68, height: 68, borderRadius: 22, background: "linear-gradient(135deg,rgba(124,58,237,0.22),rgba(6,182,212,0.12))", border: "1px solid rgba(124,58,237,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", fontSize: 30 }}>
-          {isPdf ? "📄" : "💬"}
-        </div>
+        <div style={{ position: "relative" }}>
+          {/* Usage pill */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: "#f87171", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", padding: "5px 12px", borderRadius: 99, marginBottom: 18 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f87171", display: "inline-block", animation: "pulseDot 1.2s ease-in-out infinite" }} />
+            {isPdf ? `${used}/${max} PDFs used` : `${used}/${max} questions used`}
+          </div>
 
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: C.textPrimary, margin: "0 0 8px", letterSpacing: "-0.4px" }}>
-          {isPdf ? "You've used all 5 free PDFs" : "You've used all 10 free questions"}
-        </h2>
-        <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 20px", lineHeight: 1.65 }}>
-          {isPdf
-            ? "Upgrade to Pro and never worry about limits again."
-            : "You're clearly getting value — upgrade to keep going."}
-        </p>
+          {/* Icon */}
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 28, boxShadow: "0 12px 40px rgba(124,58,237,0.5)" }}>
+            {isPdf ? "📄" : "💬"}
+          </div>
 
-        {/* Pro card */}
-        <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.05))", border: "1px solid rgba(124,58,237,0.22)", borderRadius: 18, padding: "18px 16px", marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <CrownIcon /><span style={{ fontSize: 12, fontWeight: 800, color: C.gold, letterSpacing: "0.04em" }}>INTELLIXY PRO</span>
+          <h2 style={{ fontSize: 21, fontWeight: 900, color: C.textPrimary, margin: "0 0 8px", letterSpacing: "-0.4px", lineHeight: 1.25 }}>
+            {headline}
+          </h2>
+          <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 20px", lineHeight: 1.65 }}>
+            {subline}
+          </p>
+
+          {/* Pricing card with gradient border */}
+          <div style={{ background: "linear-gradient(135deg,#7c3aed22,#06b6d418)", border: "1px solid rgba(124,58,237,0.28)", borderRadius: 18, padding: "16px 16px 14px", marginBottom: 14, textAlign: "left" }}>
+            {/* Header row */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <CrownIcon />
+                <span style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: "0.05em" }}>INTELLIXY PRO</span>
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 800, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.28)", padding: "3px 9px", borderRadius: 99, letterSpacing: "0.04em" }}>🔥 EARLY BIRD PRICE</span>
             </div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)", padding: "3px 8px", borderRadius: 99 }}>Save 60%</span>
+
+            {/* Price anchor */}
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 5 }}>₹499</span>
+              <span style={{ fontSize: 36, fontWeight: 900, color: C.textPrimary, lineHeight: 1, letterSpacing: "-1px" }}>₹299</span>
+              <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 4 }}>/month</span>
+            </div>
+
+            {/* Features 2-col */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 10px" }}>
+              {[
+                "Unlimited PDF uploads",
+                "Unlimited questions",
+                "Delete PDFs anytime",
+                "PDF Compare & Insights",
+                "Share chat links",
+                "Priority support",
+              ].map((f) => (
+                <div key={f} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: C.textSecondary }}>
+                  <span style={{ color: C.green, flexShrink: 0 }}><CheckIcon /></span>{f}
+                </div>
+              ))}
+            </div>
           </div>
-          {/* Anchored price */}
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 6 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 6 }}>₹499</span>
-            <span style={{ fontSize: 38, fontWeight: 900, color: C.textPrimary, lineHeight: 1 }}>₹299</span>
-            <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 5 }}>/mo</span>
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.22)", padding: "3px 9px", borderRadius: 99 }}>
-              🔥 Early user discount — Save 40%
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {["Unlimited PDF uploads","Unlimited questions","Delete PDFs anytime","PDF Compare & Insights","Share chat links"].map((f) => (
-              <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.textSecondary }}>
-                <span style={{ color: C.green, flexShrink: 0 }}><CheckIcon /></span>{f}
+
+          {/* Coupon toggle */}
+          {!showCoupon ? (
+            <button onClick={() => setShowCoupon(true)} style={{ background: "none", border: "none", fontSize: 11, color: C.textMuted, cursor: "pointer", marginBottom: 10, textDecoration: "underline" }}>
+              Have a coupon code?
+            </button>
+          ) : (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input
+                  value={couponInput}
+                  onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponData(null); setCouponError(null); }}
+                  onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                  placeholder="Enter coupon code"
+                  style={{ flex: 1, padding: "9px 12px", fontSize: 12, background: "rgba(255,255,255,0.04)", border: couponData ? "1px solid rgba(74,222,128,0.4)" : couponError ? "1px solid rgba(248,113,113,0.4)" : "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: C.textPrimary, outline: "none" }}
+                />
+                <button onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()}
+                  style={{ padding: "9px 14px", fontSize: 12, fontWeight: 700, background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 10, color: C.accentLight, cursor: couponLoading || !couponInput.trim() ? "not-allowed" : "pointer", opacity: couponLoading || !couponInput.trim() ? 0.5 : 1 }}>
+                  {couponLoading ? "…" : "Apply"}
+                </button>
+              </div>
+              {couponData && <p style={{ fontSize: 11, color: "#4ade80", margin: "6px 0 0" }}>✓ <strong>{couponData.code}</strong> — {couponData.savings_display}</p>}
+              {couponError && <p style={{ fontSize: 11, color: "#f87171", margin: "6px 0 0" }}>{couponError}</p>}
+            </div>
+          )}
+
+          {/* Discounted price row */}
+          {couponData && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 10, padding: "10px", background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: 10 }}>
+              <span style={{ fontSize: 13, color: C.textMuted, textDecoration: "line-through" }}>₹{couponData.original_amount_paise / 100}</span>
+              <span style={{ fontSize: 22, fontWeight: 900, color: "#4ade80" }}>₹{couponData.final_amount_paise / 100}</span>
+              <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 700 }}>({couponData.savings_display})</span>
+            </div>
+          )}
+
+          {/* CTA */}
+          <RazorpayButton user={user} couponData={couponData}
+            style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 14, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 36px rgba(124,58,237,0.55)", marginBottom: 14, transition: "opacity 0.2s", letterSpacing: "-0.2px" }}>
+            {couponData ? `Pay ₹${couponData.final_amount_paise / 100} — Upgrade Now →` : "Upgrade to Pro — ₹299/mo →"}
+          </RazorpayButton>
+
+          {/* Trust row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
+            {[
+              { icon: "🔒", text: "Secure via Razorpay" },
+              { icon: "✦", text: "7-day free trial" },
+              { icon: "↩", text: "Cancel anytime" },
+            ].map(({ icon, text }) => (
+              <div key={text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10.5, color: "rgba(240,240,248,0.3)", fontWeight: 500 }}>
+                <span style={{ fontSize: 10 }}>{icon}</span>{text}
               </div>
             ))}
           </div>
-        </div>
-
-        <RazorpayButton user={user} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 14, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.5)", marginBottom: 10, transition: "opacity 0.2s" }}>
-          Upgrade Now — ₹299/mo →
-        </RazorpayButton>
-        <p style={{ fontSize: 11, color: C.textMuted, margin: "0 0 4px", textAlign: "center" }}>
-          Most users upgrade in under 2 minutes.
-        </p>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, color: "rgba(240,240,248,0.22)" }}>
-          <ShieldIcon /> Secure · Razorpay · Cancel anytime
         </div>
       </motion.div>
     </motion.div>
@@ -271,28 +389,98 @@ function UpgradePopup({ reason, onClose, user }) {
 }
 
 /* ─── INLINE UPGRADE BANNER ──────────────────────────────────────────────── */
-function UpgradeBanner({ type, onUpgrade }) {
+function UpgradeBanner({ type, onUpgrade, usage }) {
+  const used = type === "question" ? (usage?.questions ?? 0) : (usage?.pdfs ?? 0);
+  const max  = type === "question" ? (usage?.maxQuestions ?? 10) : (usage?.maxPdfs ?? 5);
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      style={{ margin: "8px 0", padding: "14px 18px", background: "linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.06))", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, backdropFilter: "blur(8px)" }}
+      transition={{ type: "spring", damping: 22, stiffness: 300 }}
+      style={{ margin: "8px 0", padding: "16px 18px", background: "linear-gradient(135deg,rgba(239,68,68,0.08),rgba(124,58,237,0.06))", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 16, backdropFilter: "blur(8px)" }}
     >
-      <div>
-        <p style={{ fontSize: 13, fontWeight: 700, color: C.textPrimary, margin: "0 0 2px" }}>
-          {type === "question" ? "🔒 Daily limit reached" : "📄 PDF limit reached"}
-        </p>
-        <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>
-          {type === "question" ? "Upgrade for unlimited questions (lifetime)" : "Upgrade for unlimited PDF uploads"}
-        </p>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+            <span style={{ fontSize: 13 }}>🔒</span>
+            <p style={{ fontSize: 13, fontWeight: 800, color: "#f87171", margin: 0, letterSpacing: "-0.2px" }}>
+              {type === "question" ? `${used}/${max} questions used — limit reached` : `${used}/${max} PDFs used — limit reached`}
+            </p>
+          </div>
+          <p style={{ fontSize: 12, color: C.textMuted, margin: 0, lineHeight: 1.55 }}>
+            {type === "question"
+              ? "Upgrade to Pro for unlimited questions, forever."
+              : "Upgrade to Pro for unlimited PDF uploads and questions."}
+          </p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.04, boxShadow: "0 8px 28px rgba(124,58,237,0.5)" }}
+          whileTap={{ scale: 0.96 }}
+          onClick={onUpgrade}
+          style={{ padding: "10px 18px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, boxShadow: "0 4px 18px rgba(124,58,237,0.4)" }}
+        >
+          Upgrade — ₹299/mo →
+        </motion.button>
       </div>
-      <motion.button
-        whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-        onClick={onUpgrade}
-        style={{ padding: "8px 16px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
-      >
-        Upgrade →
-      </motion.button>
+      {/* Trust micro-row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {["✓ Cancel anytime", "✓ 7-day free trial", "✓ Secure via Razorpay"].map((t) => (
+          <span key={t} style={{ fontSize: 10.5, color: "rgba(240,240,248,0.28)", fontWeight: 500 }}>{t}</span>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── LOCKED MESSAGE (blur + upgrade) ───────────────────────────────────── */
+function LockedMessage({ onUpgrade }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      style={{ display: "flex", gap: 12, alignItems: "flex-start" }}
+    >
+      {/* AI avatar */}
+      <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, boxShadow: "0 4px 18px rgba(124,58,237,0.35)", opacity: 0.5 }}>
+        <SparkleIcon />
+      </div>
+
+      <div style={{ maxWidth: "65%", flex: 1 }}>
+        {/* Blurred preview */}
+        <div style={{ position: "relative", borderRadius: "5px 20px 20px 20px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 6 }}>
+          {/* Fake text lines */}
+          <div style={{ padding: "14px 18px", background: "rgba(255,255,255,0.05)", userSelect: "none" }}>
+            {[100, 88, 95, 72, 60].map((w, i) => (
+              <div key={i} style={{ height: 13, width: `${w}%`, borderRadius: 6, background: "rgba(255,255,255,0.09)", marginBottom: i < 4 ? 8 : 0 }} />
+            ))}
+          </div>
+          {/* Blur overlay */}
+          <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(6px)", background: "linear-gradient(to bottom,transparent 0%,rgba(9,8,28,0.65) 40%,rgba(9,8,28,0.92) 70%)" }} />
+          {/* Lock CTA */}
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "14px 16px", textAlign: "center" }}>
+            <div style={{ fontSize: 18, marginBottom: 6 }}>🔒</div>
+            <p style={{ fontSize: 12, fontWeight: 700, color: C.textPrimary, margin: "0 0 10px", lineHeight: 1.4 }}>
+              You've reached your question limit
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.04, boxShadow: "0 8px 28px rgba(124,58,237,0.55)" }}
+              whileTap={{ scale: 0.96 }}
+              onClick={onUpgrade}
+              style={{ padding: "9px 20px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.5)", whiteSpace: "nowrap" }}
+            >
+              Unlock full answer — ₹299/mo →
+            </motion.button>
+          </div>
+        </div>
+        {/* Trust micro-row */}
+        <div style={{ display: "flex", gap: 10, paddingLeft: 2 }}>
+          {["✓ Cancel anytime", "✓ 7-day free trial"].map((t) => (
+            <span key={t} style={{ fontSize: 10, color: "rgba(240,240,248,0.22)", fontWeight: 500 }}>{t}</span>
+          ))}
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -384,67 +572,190 @@ function WelcomeScreen({ onUpload, usage, plan }) {
   );
 }
 
+/* ─── MARKDOWN RENDERER ──────────────────────────────────────────────────── */
+function renderMarkdown(text) {
+  // Split by code blocks first, then process inline
+  const segments = text.split(/(```[\s\S]*?```|`[^`]+`)/g);
+  return segments.map((seg, i) => {
+    // Fenced code block
+    if (seg.startsWith("```")) {
+      const inner = seg.slice(3).replace(/^[a-z]*\n/, "").replace(/```$/, "").trimEnd();
+      return (
+        <pre key={i} style={{ margin: "10px 0", padding: "13px 16px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, fontSize: 12.5, lineHeight: 1.65, overflowX: "auto", fontFamily: "'Fira Code','Cascadia Code',monospace", color: "#e2e8f0", whiteSpace: "pre" }}>
+          {inner}
+        </pre>
+      );
+    }
+    // Inline code
+    if (seg.startsWith("`") && seg.endsWith("`")) {
+      return <code key={i} style={{ fontSize: 12.5, padding: "2px 6px", background: "rgba(124,58,237,0.18)", border: "1px solid rgba(124,58,237,0.22)", borderRadius: 5, fontFamily: "monospace", color: "#c4b5fd" }}>{seg.slice(1, -1)}</code>;
+    }
+    // Process lines for headers, bullets, bold
+    const lines = seg.split("\n");
+    return lines.map((line, li) => {
+      const key = `${i}-${li}`;
+      // H3
+      if (/^### /.test(line)) return <p key={key} style={{ fontSize: 13, fontWeight: 800, color: "rgba(240,240,248,0.95)", margin: "14px 0 5px", letterSpacing: "-0.2px" }}>{parseBold(line.slice(4))}</p>;
+      // H2
+      if (/^## /.test(line))  return <p key={key} style={{ fontSize: 14, fontWeight: 800, color: "rgba(240,240,248,0.98)", margin: "16px 0 6px", letterSpacing: "-0.3px" }}>{parseBold(line.slice(3))}</p>;
+      // H1
+      if (/^# /.test(line))   return <p key={key} style={{ fontSize: 15, fontWeight: 900, color: "rgba(240,240,248,0.98)", margin: "18px 0 8px", letterSpacing: "-0.4px" }}>{parseBold(line.slice(2))}</p>;
+      // Bullet (- or *)
+      if (/^[-*] /.test(line)) return <div key={key} style={{ display: "flex", gap: 8, margin: "4px 0" }}><span style={{ color: C.accentLight, flexShrink: 0, marginTop: 1 }}>•</span><span>{parseBold(line.slice(2))}</span></div>;
+      // Numbered list
+      const numMatch = line.match(/^(\d+)\. /);
+      if (numMatch) return <div key={key} style={{ display: "flex", gap: 8, margin: "4px 0" }}><span style={{ color: C.accentLight, flexShrink: 0, minWidth: 16, marginTop: 1 }}>{numMatch[1]}.</span><span>{parseBold(line.slice(numMatch[0].length))}</span></div>;
+      // Horizontal rule
+      if (/^---+$/.test(line.trim())) return <hr key={key} style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.07)", margin: "12px 0" }} />;
+      // Empty line → spacing
+      if (line.trim() === "") return li > 0 ? <div key={key} style={{ height: 8 }} /> : null;
+      // Regular line
+      return <span key={key} style={{ display: "block" }}>{parseBold(line)}</span>;
+    });
+  });
+}
+
+function parseBold(text) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith("**") && part.endsWith("**")
+      ? <strong key={i} style={{ color: "rgba(240,240,248,0.98)", fontWeight: 700 }}>{part.slice(2, -2)}</strong>
+      : part
+  );
+}
+
+/* ─── TYPING DOTS ────────────────────────────────────────────────────────── */
+function TypingDots() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 2px" }}>
+      {[0, 1, 2].map((i) => (
+        <motion.span key={i}
+          animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}
+          style={{ display: "block", width: 7, height: 7, borderRadius: "50%", background: C.accentLight }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* ─── CHAT MESSAGE ───────────────────────────────────────────────────────── */
-function ChatMessage({ msg, onCopy, onShare }) {
-  const isUser = msg.role === "user";
+function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgrade }) {
+  const isUser     = msg.role === "user";
+  const isThinking = msg.streaming && !msg.content;
+
+  // Locked message — limit hit
+  if (msg.locked) return <LockedMessage onUpgrade={onUpgrade} />;
+
+  const [feedback, setFeedback] = useState(null); // null | "up" | "down"
+  const [copied,   setCopied]   = useState(false);
+
+  function handleCopy() {
+    onCopy(msg.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, ease: [0.4,0,0.2,1] }}
-      style={{ display: "flex", gap: 10, justifyContent: isUser ? "flex-end" : "flex-start", alignItems: "flex-start" }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      style={{ display: "flex", gap: 12, justifyContent: isUser ? "flex-end" : "flex-start", alignItems: "flex-start" }}
     >
+      {/* AI avatar */}
       {!isUser && (
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, boxShadow: "0 4px 18px rgba(124,58,237,0.4)" }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, boxShadow: "0 4px 18px rgba(124,58,237,0.35)" }}>
           <SparkleIcon />
         </div>
       )}
-      <div style={{ maxWidth: "78%", display: "flex", flexDirection: "column", gap: 5 }}>
+
+      <div style={{ maxWidth: "65%", display: "flex", flexDirection: "column", gap: 6 }}>
+        {/* Bubble */}
         <div style={{
-          padding: isUser ? "11px 16px" : "13px 17px",
+          padding: isUser ? "11px 17px" : isThinking ? "14px 18px" : "14px 18px",
           borderRadius: isUser ? "20px 20px 5px 20px" : "5px 20px 20px 20px",
-          fontSize: 14, lineHeight: 1.72, whiteSpace: "pre-wrap", wordBreak: "break-word", overflowWrap: "break-word",
+          fontSize: 14,
+          lineHeight: 1.82,
+          wordBreak: "break-word",
+          overflowWrap: "break-word",
           background: isUser
             ? "linear-gradient(135deg,#7c3aed,#6d28d9)"
             : "rgba(255,255,255,0.05)",
           border: isUser ? "none" : "1px solid rgba(255,255,255,0.08)",
           color: isUser ? "white" : "rgba(240,240,248,0.92)",
-          boxShadow: isUser ? "0 4px 22px rgba(124,58,237,0.3)" : "none",
+          boxShadow: isUser ? "0 4px 22px rgba(124,58,237,0.28)" : "none",
           backdropFilter: isUser ? "none" : "blur(8px)",
         }}>
-          {msg.content}
-          {msg.streaming && (
-            <motion.span
-              animate={{ opacity: [1, 0, 1] }}
-              transition={{ duration: 0.85, repeat: Infinity, ease: "steps(1)" }}
-              style={{ display: "inline-block", width: 2, height: "1em", marginLeft: 2, background: C.accentLight, borderRadius: 2, verticalAlign: "text-bottom" }}
-            />
+          {isThinking ? (
+            <TypingDots />
+          ) : isUser ? (
+            <span style={{ whiteSpace: "pre-wrap" }}>{msg.content}</span>
+          ) : (
+            <>
+              {renderMarkdown(msg.content)}
+              {msg.streaming && (
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.55, repeat: Infinity, ease: "steps(1)" }}
+                  style={{ display: "inline-block", width: 2, height: "0.95em", marginLeft: 2, background: C.accentLight, borderRadius: 2, verticalAlign: "text-bottom" }}
+                />
+              )}
+            </>
           )}
         </div>
+
+        {/* Actions row — shown after response completes */}
         {!isUser && !msg.streaming && msg.content && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, paddingLeft: 4 }}>
-            <button
-              onClick={() => onCopy(msg.content)}
-              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
-              onMouseEnter={(e) => e.currentTarget.style.color = C.textSecondary}
-              onMouseLeave={(e) => e.currentTarget.style.color = C.textMuted}
-            >
-              <CopyIcon /> Copy
-            </button>
-            <button
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.05 }}
+            style={{ display: "flex", alignItems: "center", gap: 4, paddingLeft: 2 }}
+          >
+            {/* Copy */}
+            <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+              onClick={handleCopy}
+              title="Copy response"
+              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: copied ? C.green : C.textMuted, background: copied ? "rgba(74,222,128,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${copied ? "rgba(74,222,128,0.22)" : "rgba(255,255,255,0.07)"}`, borderRadius: 7, padding: "4px 9px", cursor: "pointer", transition: "all 0.15s" }}>
+              {copied ? <svg width="11" height="11" fill="none" stroke={C.green} viewBox="0 0 24 24" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> : <CopyIcon />}
+              {copied ? "Copied!" : "Copy"}
+            </motion.button>
+
+            {/* Share */}
+            <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
               onClick={() => onShare(msg.content)}
-              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(167,139,250,0.5)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
-              onMouseEnter={(e) => e.currentTarget.style.color = C.accentLight}
-              onMouseLeave={(e) => e.currentTarget.style.color = "rgba(167,139,250,0.5)"}
-            >
-              🔗 Share
-            </button>
-          </div>
+              title="Share"
+              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: C.textMuted, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 7, padding: "4px 9px", cursor: "pointer", transition: "all 0.15s" }}>
+              <ShareIcon /> Share
+            </motion.button>
+
+            {/* Divider */}
+            <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.07)", margin: "0 2px" }} />
+
+            {/* Thumbs up */}
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+              onClick={() => setFeedback(feedback === "up" ? null : "up")}
+              title="Good response"
+              style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, background: feedback === "up" ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${feedback === "up" ? "rgba(74,222,128,0.3)" : "rgba(255,255,255,0.07)"}`, borderRadius: 7, cursor: "pointer", transition: "all 0.15s" }}>
+              👍
+            </motion.button>
+
+            {/* Thumbs down */}
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+              onClick={() => setFeedback(feedback === "down" ? null : "down")}
+              title="Poor response"
+              style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, background: feedback === "down" ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${feedback === "down" ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.07)"}`, borderRadius: 7, cursor: "pointer", transition: "all 0.15s" }}>
+              👎
+            </motion.button>
+          </motion.div>
         )}
       </div>
+
+      {/* User avatar */}
       {isUser && (
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 12, fontWeight: 700, color: C.textSecondary }}>
-          U
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontSize: 13, fontWeight: 800, color: C.textSecondary }}>
+          {userInitial}
         </div>
       )}
     </motion.div>
@@ -699,10 +1010,424 @@ function EmptyChatState({ doc, onSetInput, inputRef }) {
   );
 }
 
+/* ─── DASHBOARD HOME VIEW ────────────────────────────────────────────────── */
+function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, user, onViewChange }) {
+  const isPro = plan === "pro";
+  const questionsUsed = usage?.questions ?? 0;
+  const questionsMax  = isPro ? "∞" : (usage?.maxQuestions ?? 10);
+  const pdfsUsed      = docs.length;
+  const pdfsMax       = isPro ? "∞" : (usage?.maxPdfs ?? 5);
+  const daysLeft      = isTrial && trialEnd ? Math.max(0, Math.ceil((new Date(trialEnd) - Date.now()) / 86400000)) : null;
+  const recentDocs    = [...docs].slice(0, 5);
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 40px" }}>
+      {/* Welcome row */}
+      <div style={{ marginBottom: 28 }}>
+        <p style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Overview</p>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: C.textPrimary, margin: 0, letterSpacing: "-0.5px" }}>
+          Welcome back{user?.email ? `, ${user.email.split("@")[0]}` : ""} 👋
+        </h1>
+      </div>
+
+      {/* Trial banner */}
+      {isTrial && daysLeft !== null && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, padding: "14px 18px", borderRadius: 14, marginBottom: 22, background: daysLeft <= 2 ? "rgba(239,68,68,0.08)" : "rgba(6,182,212,0.07)", border: `1px solid ${daysLeft <= 2 ? "rgba(239,68,68,0.25)" : "rgba(6,182,212,0.22)"}` }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>{daysLeft <= 2 ? "⚠️" : "🎁"}</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: daysLeft <= 2 ? "#f87171" : "#06b6d4", margin: "0 0 2px" }}>
+                {daysLeft === 0 ? "Your free trial ends today!" : `Free trial — ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`}
+              </p>
+              <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>
+                Ends {new Date(trialEnd).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              </p>
+            </div>
+          </div>
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onUpgradeClick}
+            style={{ padding: "9px 18px", fontSize: 12, fontWeight: 700, color: "white", background: daysLeft <= 2 ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#7c3aed,#06b6d4)", border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap" }}>
+            Upgrade — ₹299/mo →
+          </motion.button>
+        </motion.div>
+      )}
+
+      {/* Stats grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 28 }} className="stats-grid">
+        {[
+          {
+            label: "Total PDFs",
+            value: pdfsUsed,
+            sub: isPro ? "Unlimited plan" : `${pdfsMax} max on free`,
+            icon: "📄",
+            color: C.accentLight,
+            glow: "rgba(124,58,237,0.12)",
+          },
+          {
+            label: "Questions Used",
+            value: questionsUsed,
+            sub: isPro ? "Unlimited questions" : `${questionsMax} lifetime`,
+            icon: "💬",
+            color: "#06b6d4",
+            glow: "rgba(6,182,212,0.1)",
+          },
+          {
+            label: "Plan",
+            value: isPro ? "Pro" : "Free",
+            sub: isPro ? (proExpiresAt ? `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}` : "Active") : "Upgrade for unlimited",
+            icon: isPro ? "👑" : "🔓",
+            color: isPro ? C.gold : C.textMuted,
+            glow: isPro ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.03)",
+          },
+        ].map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.35 }}
+            style={{ background: `linear-gradient(135deg,${stat.glow},rgba(255,255,255,0.02))`, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "18px 18px", backdropFilter: "blur(12px)" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</span>
+              <span style={{ fontSize: 20 }}>{stat.icon}</span>
+            </div>
+            <p style={{ fontSize: 30, fontWeight: 900, color: stat.color, margin: "0 0 4px", letterSpacing: "-1px", lineHeight: 1 }}>{stat.value}</p>
+            <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>{stat.sub}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Quick actions */}
+      <div style={{ marginBottom: 28 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Quick Actions</p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onUpload}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: "linear-gradient(135deg,rgba(124,58,237,0.6),rgba(79,70,229,0.5))", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 12, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer", backdropFilter: "blur(8px)" }}>
+            <PlusIcon /> Upload New PDF
+          </motion.button>
+          {docs.length > 0 && (
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => onViewChange("chat")}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, fontSize: 13, fontWeight: 600, color: C.textSecondary, cursor: "pointer", backdropFilter: "blur(8px)" }}>
+              <ChatNavIcon /> Start Chatting
+            </motion.button>
+          )}
+          {!isPro && (
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onUpgradeClick}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 12, fontSize: 13, fontWeight: 600, color: C.gold, cursor: "pointer", backdropFilter: "blur(8px)" }}>
+              <CrownIcon /> Upgrade to Pro
+            </motion.button>
+          )}
+        </div>
+      </div>
+
+      {/* Recent PDFs */}
+      <div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>Recent PDFs</p>
+          {docs.length > 5 && (
+            <button onClick={() => onViewChange("pdfs")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, color: C.accentLight }}>View all →</button>
+          )}
+        </div>
+        {recentDocs.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "32px 20px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 16 }}>
+            <div style={{ fontSize: 32, marginBottom: 10 }}>📂</div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: C.textPrimary, margin: "0 0 4px" }}>No PDFs yet</p>
+            <p style={{ fontSize: 12, color: C.textMuted, margin: "0 0 16px" }}>Upload your first PDF to get started</p>
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onUpload}
+              style={{ padding: "9px 18px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 10, cursor: "pointer" }}>
+              Upload PDF →
+            </motion.button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {recentDocs.map((doc, i) => (
+              <motion.div key={doc.id}
+                initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => { onSelectDoc(doc); onViewChange("chat"); }}
+                whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, cursor: "pointer", transition: "all 0.15s" }}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,rgba(124,58,237,0.2),rgba(79,70,229,0.15))", border: "1px solid rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <PdfIcon />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary, margin: "0 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.file_name}</p>
+                  <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>{timeAgo(doc.created_at)}</p>
+                </div>
+                <span style={{ fontSize: 11, color: C.accentLight, flexShrink: 0, fontWeight: 600 }}>Chat →</span>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── MY PDFS VIEW ───────────────────────────────────────────────────────── */
+function MyPDFsView({ docs, docsLoading, plan, onUpload, onSelectDoc, onDelete, onViewChange }) {
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 40px" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Library</p>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: C.textPrimary, margin: 0, letterSpacing: "-0.5px" }}>My PDFs</h1>
+        </div>
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onUpload}
+          style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: "linear-gradient(135deg,rgba(124,58,237,0.7),rgba(79,70,229,0.6))", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 12, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>
+          <PlusIcon /> Upload PDF
+        </motion.button>
+      </div>
+
+      {docsLoading ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 12 }}>
+          {[1,2,3,4].map((i) => <Shimmer key={i} w="100%" h={130} r={14} />)}
+        </div>
+      ) : docs.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 20px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 20 }}>
+          <div style={{ fontSize: 48, marginBottom: 14 }}>📂</div>
+          <p style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: "0 0 6px" }}>No PDFs uploaded yet</p>
+          <p style={{ fontSize: 13, color: C.textMuted, margin: "0 0 20px" }}>Upload a PDF to start asking questions</p>
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onUpload}
+            style={{ padding: "12px 24px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 13, fontWeight: 700, border: "none", borderRadius: 12, cursor: "pointer" }}>
+            Upload your first PDF →
+          </motion.button>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 12 }} className="pdf-grid">
+          {docs.map((doc, i) => (
+            <motion.div key={doc.id}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "18px 16px", display: "flex", flexDirection: "column", gap: 10, position: "relative", overflow: "hidden" }}
+            >
+              {/* Glow */}
+              <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.08),transparent 70%)", pointerEvents: "none" }} />
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(79,70,229,0.12))", border: "1px solid rgba(124,58,237,0.22)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="20" height="20" fill="none" stroke={C.accentLight} viewBox="0 0 24 24" strokeWidth="1.8">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: C.textPrimary, margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.file_name}</p>
+                <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>{timeAgo(doc.created_at)}</p>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => { onSelectDoc(doc); onViewChange("chat"); }}
+                  style={{ flex: 1, padding: "8px 10px", background: "linear-gradient(135deg,rgba(124,58,237,0.5),rgba(79,70,229,0.4))", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 9, fontSize: 12, fontWeight: 600, color: "white", cursor: "pointer" }}>
+                  Chat →
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}
+                  onClick={() => onDelete(doc)}
+                  title={plan !== "pro" ? "Pro only" : "Delete"}
+                  style={{ width: 34, height: 34, padding: 0, background: plan !== "pro" ? "rgba(255,255,255,0.03)" : "rgba(239,68,68,0.08)", border: `1px solid ${plan !== "pro" ? "rgba(255,255,255,0.07)" : "rgba(239,68,68,0.2)"}`, borderRadius: 9, fontSize: plan !== "pro" ? 11 : undefined, color: plan !== "pro" ? C.textMuted : C.danger, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {plan !== "pro" ? "🔒" : <TrashIcon />}
+                </motion.button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── BILLING VIEW ───────────────────────────────────────────────────────── */
+function BillingView({ plan, proExpiresAt, graceUntil, isTrial, trialEnd, subscriptionCancelled, subscriptionSource, onUpgradeClick, onCancelSubscription, cancellingSubscription, onManageSubscription, upgradingStripe, user }) {
+  const isPro = plan === "pro";
+  const daysLeft = isTrial && trialEnd ? Math.max(0, Math.ceil((new Date(trialEnd) - Date.now()) / 86400000)) : null;
+  const inGrace = graceUntil && new Date(graceUntil) > new Date();
+  const graceDaysLeft = inGrace ? Math.max(1, Math.ceil((new Date(graceUntil) - Date.now()) / 86400000)) : null;
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 40px", maxWidth: 680 }}>
+      <div style={{ marginBottom: 28 }}>
+        <p style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Account</p>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: C.textPrimary, margin: 0, letterSpacing: "-0.5px" }}>Billing & Plan</h1>
+      </div>
+
+      {/* Grace period warning banner */}
+      {inGrace && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.28)", borderRadius: 14, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>⚠️</span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24", margin: "0 0 2px" }}>Payment failed — grace period active</p>
+            <p style={{ fontSize: 12, color: "rgba(251,191,36,0.7)", margin: 0 }}>
+              Your Pro access continues for {graceDaysLeft} more day{graceDaysLeft !== 1 ? "s" : ""}. Update your payment method to keep access.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Current plan card */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+        style={{ background: isPro ? "linear-gradient(135deg,rgba(124,58,237,0.12),rgba(6,182,212,0.07))" : C.glass, border: `1px solid ${isPro ? (inGrace ? "rgba(245,158,11,0.35)" : "rgba(124,58,237,0.28)") : C.glassBorder}`, borderRadius: 20, padding: "22px 22px", marginBottom: 16 }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: isPro ? "linear-gradient(135deg,#7c3aed,#06b6d4)" : "rgba(255,255,255,0.05)", border: isPro ? "none" : `1px solid ${C.glassBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>
+            {isPro ? "👑" : "🔓"}
+          </div>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 800, color: C.textPrimary, margin: "0 0 3px" }}>
+              {isPro ? (isTrial ? "Pro Trial" : "Pro Plan") : "Free Plan"}
+            </p>
+            <p style={{ fontSize: 12, color: C.textMuted, margin: 0 }}>
+              {isPro
+                ? (isTrial
+                    ? `Trial ends ${new Date(trialEnd).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`
+                    : proExpiresAt
+                      ? (subscriptionCancelled
+                          ? `Access until ${new Date(proExpiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`
+                          : `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`)
+                      : "Active — no expiry")
+                : "Limited to 5 PDFs and 10 questions"}
+            </p>
+          </div>
+          {isPro && !subscriptionCancelled && !inGrace && (
+            <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.22)", padding: "4px 10px", borderRadius: 99 }}>Active</span>
+          )}
+          {isPro && inGrace && (
+            <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.28)", padding: "4px 10px", borderRadius: 99 }}>Grace Period</span>
+          )}
+          {subscriptionCancelled && (
+            <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, color: "#f87171", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)", padding: "4px 10px", borderRadius: 99 }}>Cancelled</span>
+          )}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+          {[
+            { label: "PDF Uploads", value: isPro ? "Unlimited" : "5 lifetime" },
+            { label: "AI Questions", value: isPro ? "Unlimited" : "10 lifetime" },
+            { label: "PDF Compare", value: isPro ? "✓ Included" : "✗ Pro only" },
+            { label: "AI Insights", value: isPro ? "✓ Included" : "✗ Pro only" },
+            { label: "Delete PDFs", value: isPro ? "✓ Included" : "✗ Pro only" },
+            { label: "Share Chats", value: isPro ? "✓ Included" : "✗ Pro only" },
+          ].map(({ label, value }) => (
+            <div key={label} style={{ padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
+              <p style={{ fontSize: 10, fontWeight: 600, color: C.textMuted, margin: "0 0 3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: value.startsWith("✓") ? C.green : value.startsWith("✗") ? "rgba(248,113,113,0.7)" : C.textPrimary, margin: 0 }}>{value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        {!isPro ? (
+          <div style={{ display: "flex", gap: 8 }}>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onUpgradeClick}
+              style={{ flex: 1, padding: "12px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 13, fontWeight: 700, border: "none", borderRadius: 12, cursor: "pointer", boxShadow: "0 6px 24px rgba(124,58,237,0.4)" }}>
+              Upgrade to Pro — ₹299/mo →
+            </motion.button>
+          </div>
+        ) : subscriptionSource === "razorpay" && !subscriptionCancelled ? (
+          <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={onCancelSubscription} disabled={cancellingSubscription}
+            style={{ padding: "10px 18px", background: "transparent", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, fontSize: 12, fontWeight: 600, color: "#f87171", cursor: cancellingSubscription ? "not-allowed" : "pointer", opacity: cancellingSubscription ? 0.6 : 1 }}>
+            {cancellingSubscription ? "Cancelling…" : "Cancel Subscription"}
+          </motion.button>
+        ) : subscriptionSource === "stripe" ? (
+          <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={onManageSubscription} disabled={upgradingStripe}
+            style={{ padding: "10px 18px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, fontSize: 12, fontWeight: 600, color: C.textSecondary, cursor: upgradingStripe ? "not-allowed" : "pointer" }}>
+            {upgradingStripe ? "Loading…" : "Manage Subscription"}
+          </motion.button>
+        ) : null}
+      </motion.div>
+
+      {/* Pro offer for free users */}
+      {!isPro && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          style={{ padding: "22px", background: "linear-gradient(135deg,rgba(124,58,237,0.08),rgba(6,182,212,0.04))", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 20 }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <CrownIcon /><span style={{ fontSize: 12, fontWeight: 800, color: C.gold, letterSpacing: "0.04em" }}>INTELLIXY PRO</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.22)", padding: "3px 8px", borderRadius: 99 }}>Save 40%</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 16 }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 4 }}>₹499</span>
+            <span style={{ fontSize: 40, fontWeight: 900, color: C.textPrimary, lineHeight: 1 }}>₹299</span>
+            <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 4 }}>/mo</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.textMuted }}>
+            <ShieldIcon /> Secure · Razorpay · Cancel anytime
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+/* ─── SETTINGS VIEW ──────────────────────────────────────────────────────── */
+function SettingsView({ user, onSignOut }) {
+  const email    = user?.email || "";
+  const initial  = email.charAt(0).toUpperCase();
+  const provider = user?.app_metadata?.provider || "email";
+  const joined   = user?.created_at ? new Date(user.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—";
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 40px", maxWidth: 560 }}>
+      <div style={{ marginBottom: 28 }}>
+        <p style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Account</p>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: C.textPrimary, margin: 0, letterSpacing: "-0.5px" }}>Settings</h1>
+      </div>
+
+      {/* Profile card */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+        style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 20, padding: "22px", marginBottom: 14 }}
+      >
+        <p style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>Profile</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "white", flexShrink: 0 }}>{initial}</div>
+          <div>
+            <p style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, margin: "0 0 3px" }}>{email}</p>
+            <p style={{ fontSize: 12, color: C.textMuted, margin: 0, textTransform: "capitalize" }}>Signed in via {provider}</p>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            { label: "Email", value: email },
+            { label: "Account created", value: joined },
+            { label: "Auth provider", value: provider.charAt(0).toUpperCase() + provider.slice(1) },
+          ].map(({ label, value }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10 }}>
+              <span style={{ fontSize: 12, color: C.textMuted }}>{label}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary }}>{value}</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Danger zone */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+        style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.14)", borderRadius: 20, padding: "22px" }}
+      >
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#f87171", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 14px" }}>Session</p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary, margin: "0 0 3px" }}>Sign out</p>
+            <p style={{ fontSize: 12, color: C.textMuted, margin: 0 }}>End your current session</p>
+          </div>
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} onClick={onSignOut}
+            style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 10, fontSize: 12, fontWeight: 600, color: "#f87171", cursor: "pointer" }}>
+            <LogoutIcon /> Sign Out
+          </motion.button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 /* ─── MAIN DASHBOARD ─────────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState("dashboard"); // "dashboard" | "pdfs" | "chat" | "billing" | "settings"
 
   const [docs, setDocs] = useState([]);
   const [docsLoading, setDocsLoading] = useState(true);
@@ -717,8 +1442,14 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [limitError, setLimitError] = useState(null);
   const [plan, setPlan] = useState("free");
+  const [proExpiresAt, setProExpiresAt] = useState(null);
+  const [graceUntil, setGraceUntil] = useState(null);
+  const [isTrial, setIsTrial] = useState(false);
+  const [trialEnd, setTrialEnd] = useState(null);
   const [subscriptionSource, setSubscriptionSource] = useState(null);
   const [upgradingStripe, setUpgradingStripe] = useState(false);
+  const [cancellingSubscription, setCancellingSubscription] = useState(false);
+  const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
   const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 10, loading: true });
 
   const [showInsights, setShowInsights] = useState(false);
@@ -760,12 +1491,80 @@ export default function DashboardPage() {
     }
   }, []);
 
+  /* ── Real-time Pro sync — no refresh needed ── */
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`user_plan_${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event:  "UPDATE",
+          schema: "public",
+          table:  "user_plans",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const row = payload.new;
+          if (!row) return;
+
+          const now = new Date();
+          const isActive =
+            row.plan === "pro" &&
+            (!row.pro_expires_at ||
+              new Date(row.pro_expires_at) > now ||
+              (row.grace_until && new Date(row.grace_until) > now));
+
+          setPlan(isActive ? "pro" : "free");
+          setProExpiresAt(row.pro_expires_at ?? null);
+          setGraceUntil(row.grace_until ?? null);
+          setIsTrial(row.is_trial ?? false);
+          setTrialEnd(row.trial_end ?? null);
+
+          if (row.subscription_status === "cancelled") setSubscriptionCancelled(true);
+          if (row.subscription_status === "active")    setSubscriptionCancelled(false);
+
+          if (isActive) {
+            setUsage((p) => ({ ...p, maxPdfs: Infinity, maxQuestions: Infinity }));
+            if (row.razorpay_subscription_id) setSubscriptionSource("razorpay");
+            else if (row.stripe_subscription_id) setSubscriptionSource("stripe");
+            // Show toast if upgrading from free → pro without page reload
+            setShowUpgradedToast(true);
+            setTimeout(() => setShowUpgradedToast(false), 6000);
+          } else {
+            setUsage((p) => ({ ...p, maxPdfs: 5, maxQuestions: 10 }));
+            setSubscriptionSource(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   async function fetchPlan(userId) {
     try {
-      const { data } = await supabase.from("user_plans").select("plan, stripe_subscription_id, razorpay_subscription_id").eq("user_id", userId).maybeSingle();
+      const { data } = await supabase
+        .from("user_plans")
+        .select("plan, pro_expires_at, grace_until, subscription_status, is_trial, trial_end, stripe_subscription_id, razorpay_subscription_id")
+        .eq("user_id", userId)
+        .maybeSingle();
       if (data?.plan) {
-        setPlan(data.plan);
-        if (data.plan === "pro") {
+        const now = new Date();
+        // Active if: plan=pro AND (no expiry OR expiry > now OR still in grace period)
+        const isActive =
+          data.plan === "pro" &&
+          (!data.pro_expires_at ||
+            new Date(data.pro_expires_at) > now ||
+            (data.grace_until && new Date(data.grace_until) > now));
+        setPlan(isActive ? "pro" : "free");
+        setProExpiresAt(data.pro_expires_at ?? null);
+        setGraceUntil(data.grace_until ?? null);
+        if (data.subscription_status === "cancelled") setSubscriptionCancelled(true);
+        setIsTrial(data.is_trial ?? false);
+        setTrialEnd(data.trial_end ?? null);
+        if (isActive) {
           setUsage((p) => ({ ...p, maxPdfs: Infinity, maxQuestions: Infinity }));
           if (data.razorpay_subscription_id) setSubscriptionSource("razorpay");
           else if (data.stripe_subscription_id) setSubscriptionSource("stripe");
@@ -779,11 +1578,24 @@ export default function DashboardPage() {
       const res = await fetch("/api/usage");
       if (!res.ok) return;
       const data = await res.json();
+      // Update plan state from usage response (expiry-aware)
+      if (data.plan) {
+        const isActive =
+          data.is_pro_active === true ||
+          (data.plan === "pro" &&
+            (!data.pro_expires_at || new Date(data.pro_expires_at) > new Date()));
+        setPlan(isActive ? "pro" : "free");
+        setProExpiresAt(data.pro_expires_at ?? null);
+        if (isActive) {
+          setUsage({ pdfs: 0, questions: 0, maxPdfs: Infinity, maxQuestions: Infinity, loading: false });
+          return;
+        }
+      }
       setUsage({
-        pdfs:       data.pdfs?.used      ?? 0,
-        questions:  data.questions?.used ?? 0,
-        maxPdfs:    data.pdfs?.max       ?? 5,
-        maxQuestions: data.questions?.max ?? 10,
+        pdfs:         data.pdfs?.used      ?? 0,
+        questions:    data.questions?.used ?? 0,
+        maxPdfs:      data.pdfs?.max       ?? 5,
+        maxQuestions: data.questions?.max  ?? 10,
         loading: false,
       });
     } catch {
@@ -834,6 +1646,7 @@ export default function DashboardPage() {
   async function selectDoc(doc) {
     setSelectedDoc(doc); setMessages([]); setLimitError(null);
     setSidebarOpen(false); setShowCompare(false); setShareUrl(null); setShowInsights(true);
+    setView("chat");
     setHistoryLoading(true);
     try {
       const res = await fetch(`/api/messages?documentId=${doc.id}`);
@@ -868,7 +1681,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, fileUrl: selectedDoc.file_url }) });
       if (!res.ok) {
         const data = await res.json();
-        if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.filter((m) => m.id !== aiMsgId)); setUpgradePopup("question"); }
+        if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "", streaming: false, locked: true } : m)); setUpgradePopup("question"); }
         else { setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: data.error || "Request failed.", streaming: false } : m)); }
         return;
       }
@@ -914,6 +1727,19 @@ export default function DashboardPage() {
     setUpgradingStripe(true);
     try { const res = await fetch("/api/stripe/portal", { method: "POST" }); const data = await res.json(); if (data.url) window.location.href = data.url; else alert(data.error || "Could not open portal"); }
     catch { alert("Could not open portal"); } finally { setUpgradingStripe(false); }
+  }
+
+  async function handleCancelSubscription() {
+    if (!confirm("Cancel your Pro subscription?\n\nYou'll keep Pro access until your current period ends. No refund is issued for the remaining days.")) return;
+    setCancellingSubscription(true);
+    try {
+      const res = await fetch("/api/razorpay/cancel-subscription", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Could not cancel subscription"); return; }
+      setSubscriptionCancelled(true);
+      alert(`Subscription cancelled. You keep Pro access until ${new Date(data.pro_expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.`);
+    } catch { alert("Could not cancel subscription. Please try again."); }
+    finally { setCancellingSubscription(false); }
   }
 
   async function handleSignOut() { await supabase.auth.signOut(); window.location.href = "/login"; }
@@ -1021,7 +1847,7 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ── SIDEBAR ── */}
-      <aside className="sidebar" style={{ width: 260, background: C.sidebar, backdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", flexShrink: 0, position: "relative", zIndex: 1 }}>
+      <aside className="sidebar" style={{ width: 240, background: C.sidebar, backdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", flexShrink: 0, position: "relative", zIndex: 1 }}>
 
         {/* Logo row */}
         <div style={{ height: 58, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
@@ -1030,22 +1856,47 @@ export default function DashboardPage() {
           </div>
           <span style={{ fontSize: 16, fontWeight: 800, color: C.textPrimary, letterSpacing: "-0.3px" }}>Intellixy</span>
           {plan === "pro" && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "3px 8px", borderRadius: 99, marginLeft: "auto" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "3px 8px", borderRadius: 99, marginLeft: "auto", flexShrink: 0 }}>
               <CrownIcon /> PRO
             </span>
           )}
         </div>
 
+        {/* Navigation */}
+        <nav style={{ padding: "10px 8px 0", flexShrink: 0 }}>
+          {NAV_ITEMS.map(({ id, label, Icon }) => {
+            const isActive = view === id;
+            return (
+              <motion.button key={id}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setView(id)}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", marginBottom: 2, borderRadius: 9, fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? C.accentLight : C.textMuted, background: isActive ? "rgba(124,58,237,0.12)" : "transparent", border: isActive ? "1px solid rgba(124,58,237,0.22)" : "1px solid transparent", cursor: "pointer", textAlign: "left", transition: "all 0.15s", backdropFilter: isActive ? "blur(8px)" : "none" }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = C.textSecondary; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.textMuted; } }}
+              >
+                <span style={{ flexShrink: 0 }}><Icon /></span>
+                {label}
+                {id === "chat" && selectedDoc && (
+                  <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: C.accentLight, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)", padding: "2px 6px", borderRadius: 99, flexShrink: 0 }}>Active</span>
+                )}
+              </motion.button>
+            );
+          })}
+        </nav>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "10px 12px 8px" }} />
+
         {/* Upload button */}
-        <div style={{ padding: "12px 12px 8px", flexShrink: 0 }}>
+        <div style={{ padding: "0 8px 6px", flexShrink: 0 }}>
           <motion.button
             whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
             onClick={() => pdfLimitHit ? setUpgradePopup("pdf") : fileInputRef.current?.click()}
             disabled={uploading}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 14px", fontSize: 13, fontWeight: 600, color: "white", background: pdfLimitHit ? "rgba(239,68,68,0.1)" : "linear-gradient(135deg,rgba(124,58,237,0.7),rgba(79,70,229,0.7))", border: pdfLimitHit ? "1px solid rgba(239,68,68,0.22)" : "1px solid rgba(124,58,237,0.3)", borderRadius: 10, cursor: uploading ? "not-allowed" : "pointer", opacity: uploading ? 0.7 : 1, backdropFilter: "blur(8px)" }}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 14px", fontSize: 12, fontWeight: 600, color: "white", background: pdfLimitHit ? "rgba(239,68,68,0.1)" : "linear-gradient(135deg,rgba(124,58,237,0.65),rgba(79,70,229,0.6))", border: pdfLimitHit ? "1px solid rgba(239,68,68,0.22)" : "1px solid rgba(124,58,237,0.3)", borderRadius: 9, cursor: uploading ? "not-allowed" : "pointer", opacity: uploading ? 0.7 : 1, backdropFilter: "blur(8px)" }}
           >
             {uploading
-              ? <><div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Uploading…</>
+              ? <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Uploading…</>
               : pdfLimitHit ? <><span>🔒</span> PDF limit reached</>
               : <><PlusIcon /> New PDF</>
             }
@@ -1054,24 +1905,24 @@ export default function DashboardPage() {
         </div>
 
         {/* PDF list with skeleton */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "4px 8px" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 8px 4px" }}>
+          <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", margin: "2px 4px 6px", paddingLeft: 4 }}>Recent PDFs</p>
           {docsLoading ? (
             <SidebarSkeleton />
           ) : docs.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 16px" }}>
-              <div style={{ fontSize: 28, marginBottom: 10 }}>📂</div>
-              <p style={{ fontSize: 12, color: C.textMuted, margin: "0 0 4px" }}>No PDFs yet</p>
-              <p style={{ fontSize: 11, color: "rgba(240,240,248,0.15)", margin: 0 }}>Upload one to get started</p>
+            <div style={{ textAlign: "center", padding: "20px 12px" }}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>📂</div>
+              <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>No PDFs yet</p>
             </div>
           ) : (
             docs.map((doc) => {
               const isSel = selectedDoc?.id === doc.id;
               return (
                 <motion.div key={doc.id} layout onClick={() => selectDoc(doc)}
-                  style={{ display: "flex", alignItems: "flex-start", gap: 9, padding: "9px 10px", borderRadius: 9, cursor: "pointer", marginBottom: 2, background: isSel ? "rgba(124,58,237,0.14)" : "transparent", border: isSel ? "1px solid rgba(124,58,237,0.24)" : "1px solid transparent", transition: "all 0.15s", backdropFilter: isSel ? "blur(8px)" : "none" }}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", borderRadius: 9, cursor: "pointer", marginBottom: 2, background: isSel ? "rgba(124,58,237,0.14)" : "transparent", border: isSel ? "1px solid rgba(124,58,237,0.24)" : "1px solid transparent", transition: "all 0.15s" }}
                   whileHover={{ backgroundColor: isSel ? undefined : "rgba(255,255,255,0.04)" }}
                 >
-                  <span style={{ color: isSel ? C.accentLight : C.textMuted, marginTop: 1 }}><PdfIcon /></span>
+                  <span style={{ color: isSel ? C.accentLight : C.textMuted, marginTop: 1, flexShrink: 0 }}><PdfIcon /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 12, fontWeight: 500, color: isSel ? "#e2d9f7" : C.textSecondary, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.file_name}</p>
                     <p style={{ fontSize: 10, color: C.textMuted, margin: "2px 0 0" }}>{timeAgo(doc.created_at)}</p>
@@ -1079,7 +1930,7 @@ export default function DashboardPage() {
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(doc); }}
                     title={plan !== "pro" ? "Pro feature — upgrade to delete" : `Delete ${doc.file_name}`}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: plan !== "pro" ? C.textMuted : C.danger, padding: 2, borderRadius: 5, opacity: 0, transition: "opacity 0.15s", fontSize: plan !== "pro" ? 11 : undefined }}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: plan !== "pro" ? C.textMuted : C.danger, padding: 2, borderRadius: 5, opacity: 0, transition: "opacity 0.15s", fontSize: plan !== "pro" ? 11 : undefined, flexShrink: 0 }}
                     onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
                     onMouseLeave={(e) => e.currentTarget.style.opacity = "0"}>
                     {plan !== "pro" ? "🔒" : <TrashIcon />}
@@ -1092,71 +1943,66 @@ export default function DashboardPage() {
 
         {/* Usage bars */}
         {plan !== "pro" && (
-          <div style={{ margin: "0 10px 8px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 12, backdropFilter: "blur(8px)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>Free Plan Usage</p>
-              <span style={{ fontSize: 9, color: C.textMuted }}>lifetime</span>
-            </div>
-            {[{ label: "PDFs", used: usage.pdfs, max: usage.maxPdfs }, { label: "Questions", used: usage.questions, max: usage.maxQuestions }].map(({ label, used, max }) => {
-              const remaining = Math.max(0, max - used);
-              const pct = Math.min((used / max) * 100, 100);
-              const isOut = used >= max;
-              const isLow = !isOut && pct >= 70;
+          <div style={{ margin: "0 8px 6px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 10, backdropFilter: "blur(8px)" }}>
+            <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Free Plan Usage</p>
+            {[
+              { label: "PDFs",      used: usage.pdfs,      max: usage.maxPdfs },
+              { label: "Questions", used: usage.questions,  max: usage.maxQuestions },
+            ].map(({ label, used, max }) => {
+              const pct    = Math.min((used / max) * 100, 100);
+              const isOut  = used >= max;
+              const isHigh = !isOut && pct >= 60;
+              const barColor = isOut  ? "linear-gradient(90deg,#ef4444,#dc2626)"
+                             : isHigh ? "linear-gradient(90deg,#f59e0b,#ea580c)"
+                             :          "linear-gradient(90deg,#7c3aed,#4f46e5)";
+              const labelColor = isOut ? "#f87171" : isHigh ? "#f59e0b" : C.textMuted;
               return (
-                <div key={label} style={{ marginBottom: 10 }}>
+                <div key={label} style={{ marginBottom: 9 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: C.textMuted }}>{label}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: isOut ? "#f87171" : isLow ? "#f59e0b" : C.green }}>
-                      {isOut ? "Limit reached" : `${remaining} left`}
-                    </span>
+                    <span style={{ fontSize: 11, color: labelColor, fontWeight: isOut || isHigh ? 700 : 400 }}>{label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: labelColor }}>{used}/{max} used</span>
                   </div>
                   <div style={{ height: 4, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.7, ease: "easeOut" }}
-                      style={{ height: "100%", borderRadius: 99, background: isOut ? "linear-gradient(90deg,#ef4444,#dc2626)" : isLow ? "linear-gradient(90deg,#f59e0b,#d97706)" : "linear-gradient(90deg,#7c3aed,#4f46e5)" }} />
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: [0.22,1,0.36,1] }}
+                      style={{ height: "100%", borderRadius: 99, background: barColor }} />
                   </div>
-                  {isOut && (
-                    <p style={{ fontSize: 10, color: "#f87171", margin: "4px 0 0", lineHeight: 1.4 }}>
-                      Upgrade to Pro for unlimited {label.toLowerCase()}
-                    </p>
-                  )}
-                  {isLow && !isOut && (
-                    <p style={{ fontSize: 10, color: "#f59e0b", margin: "4px 0 0", lineHeight: 1.4 }}>
-                      Almost used up — upgrade before you run out
-                    </p>
-                  )}
+                  {isOut  && <p style={{ fontSize: 10, color: "#f87171", margin: "3px 0 0", fontWeight: 600 }}>Limit reached — upgrade to continue</p>}
+                  {isHigh && <p style={{ fontSize: 10, color: "#f59e0b", margin: "3px 0 0" }}>Almost full — upgrade before you run out</p>}
                 </div>
               );
             })}
-            <motion.button
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setUpgradePopup("pdf")}
-              style={{ width: "100%", padding: "8px", marginTop: 2, fontSize: 11, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, cursor: "pointer" }}
-            >
-              ✦ Get unlimited access — ₹299/mo
-            </motion.button>
           </div>
         )}
 
         {/* Footer */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: 10, flexShrink: 0 }}>
-          {plan !== "pro" ? (
-            <RazorpayButton user={user} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", fontSize: 12, fontWeight: 700, color: C.gold, background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 9, cursor: "pointer", marginBottom: 8, backdropFilter: "blur(8px)" }}>
-              <CrownIcon /> Upgrade to Pro · ₹299/mo
-            </RazorpayButton>
-          ) : (
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginBottom: 6 }}>
-                <CrownIcon /><span style={{ fontSize: 11, fontWeight: 700, color: C.gold }}>Pro Plan Active</span>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "8px 10px", flexShrink: 0 }}>
+          {/* Sticky upgrade CTA — free users only */}
+          {plan !== "pro" && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setUpgradePopup("pdf")}
+              style={{ width: "100%", padding: "10px 14px", marginBottom: 8, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", border: "none", borderRadius: 10, cursor: "pointer", position: "relative", overflow: "hidden" }}
+            >
+              {/* Animated shimmer sweep */}
+              <motion.div
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: "linear", repeatDelay: 1.5 }}
+                style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)", transform: "skewX(-15deg)", pointerEvents: "none" }}
+              />
+              <div style={{ position: "relative" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <CrownIcon />
+                  <span style={{ fontSize: 12, fontWeight: 800, color: "white", letterSpacing: "-0.1px" }}>Upgrade to Pro</span>
+                </div>
+                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", margin: "2px 0 0", letterSpacing: "0.01em" }}>
+                  Limited offer · ₹299/month
+                </p>
               </div>
-              {subscriptionSource === "razorpay" ? (
-                <a href="https://dashboard.razorpay.com/subscriptions" target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: C.textMuted, background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, textAlign: "center", textDecoration: "none", boxSizing: "border-box" }}>Manage Subscription ↗</a>
-              ) : (
-                <button onClick={handleManageSubscription} disabled={upgradingStripe} style={{ width: "100%", padding: "7px", fontSize: 11, fontWeight: 600, color: C.textMuted, background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, cursor: upgradingStripe ? "not-allowed" : "pointer", opacity: upgradingStripe ? 0.6 : 1 }}>
-                  {upgradingStripe ? "Loading…" : "Manage Subscription"}
-                </button>
-              )}
-            </div>
+            </motion.button>
           )}
+
+          {/* User row */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px" }}>
             <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "white", flexShrink: 0 }}>{userInitial}</div>
             <p style={{ fontSize: 11, color: C.textMuted, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{userEmail}</p>
@@ -1176,47 +2022,92 @@ export default function DashboardPage() {
             <MenuIcon />
           </motion.button>
 
-          {selectedDoc ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
-              <span style={{ color: C.accentLight, flexShrink: 0 }}><PdfIcon /></span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedDoc.file_name}</span>
-            </div>
+          {view === "chat" ? (
+            selectedDoc ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                <span style={{ color: C.accentLight, flexShrink: 0 }}><PdfIcon /></span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: C.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedDoc.file_name}</span>
+              </div>
+            ) : (
+              <span style={{ fontSize: 14, fontWeight: 500, color: C.textMuted, flex: 1 }}>Select a PDF to start chatting</span>
+            )
           ) : (
-            <span style={{ fontSize: 14, fontWeight: 500, color: C.textMuted, flex: 1 }}>Select a PDF to start chatting</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: C.textPrimary, flex: 1 }}>
+              {view === "dashboard" ? "Dashboard" : view === "pdfs" ? "My PDFs" : view === "billing" ? "Billing & Plan" : "Settings"}
+            </span>
           )}
 
-          <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            {selectedDoc && (
-              <>
-                {messages.length > 0 && (
-                  <HeaderBtn onClick={handleClearChat} color="red">
-                    <TrashIcon /><span className="btn-text"> Clear</span>
+          {view === "chat" && (
+            <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+              {selectedDoc && (
+                <>
+                  {messages.length > 0 && (
+                    <HeaderBtn onClick={handleClearChat} color="red">
+                      <TrashIcon /><span className="btn-text"> Clear</span>
+                    </HeaderBtn>
+                  )}
+                  <HeaderBtn onClick={handleShareChat} disabled={shareLoading} active={!!shareUrl} color={shareUrl ? "green" : "default"}>
+                    {shareLoading
+                      ? <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /><span className="btn-text"> Sharing…</span></>
+                      : <><ShareIcon /><span className="btn-text"> Share</span></>
+                    }
                   </HeaderBtn>
-                )}
-                <HeaderBtn onClick={handleShareChat} disabled={shareLoading} active={!!shareUrl} color={shareUrl ? "green" : "default"}>
-                  {shareLoading
-                    ? <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /><span className="btn-text"> Sharing…</span></>
-                    : <><ShareIcon /><span className="btn-text"> Share</span></>
-                  }
+                  <HeaderBtn onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }} active={showInsights} color="purple">
+                    <InsightIcon /><span className="btn-text"> Insights</span>
+                  </HeaderBtn>
+                </>
+              )}
+              {docs.length >= 2 && (
+                <HeaderBtn onClick={() => { setShowCompare(!showCompare); setShowInsights(false); }} active={showCompare} color="purple">
+                  <CompareIcon /><span className="btn-text"> Compare</span>
                 </HeaderBtn>
-                <HeaderBtn onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }} active={showInsights} color="purple">
-                  <InsightIcon /><span className="btn-text"> Insights</span>
-                </HeaderBtn>
-              </>
-            )}
-            {docs.length >= 2 && (
-              <HeaderBtn onClick={() => { setShowCompare(!showCompare); setShowInsights(false); }} active={showCompare} color="purple">
-                <CompareIcon /><span className="btn-text"> Compare</span>
-              </HeaderBtn>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </header>
 
         {/* ── CONTENT ROW ── */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
+          {/* ── NON-CHAT VIEWS ── */}
+          {view === "dashboard" && (
+            <DashboardHomeView
+              docs={docs} usage={usage} plan={plan} proExpiresAt={proExpiresAt}
+              isTrial={isTrial} trialEnd={trialEnd}
+              onUpload={() => fileInputRef.current?.click()}
+              onSelectDoc={selectDoc}
+              onUpgradeClick={() => setUpgradePopup("pdf")}
+              user={user}
+              onViewChange={setView}
+            />
+          )}
+          {view === "pdfs" && (
+            <MyPDFsView
+              docs={docs} docsLoading={docsLoading} plan={plan}
+              onUpload={() => fileInputRef.current?.click()}
+              onSelectDoc={selectDoc}
+              onDelete={handleDelete}
+              onViewChange={setView}
+            />
+          )}
+          {view === "billing" && (
+            <BillingView
+              plan={plan} proExpiresAt={proExpiresAt} graceUntil={graceUntil} isTrial={isTrial} trialEnd={trialEnd}
+              subscriptionCancelled={subscriptionCancelled} subscriptionSource={subscriptionSource}
+              onUpgradeClick={() => setUpgradePopup("pdf")}
+              onCancelSubscription={handleCancelSubscription}
+              cancellingSubscription={cancellingSubscription}
+              onManageSubscription={handleManageSubscription}
+              upgradingStripe={upgradingStripe}
+              user={user}
+            />
+          )}
+          {view === "settings" && (
+            <SettingsView user={user} onSignOut={handleSignOut} />
+          )}
+
           {/* ── CHAT COLUMN ── */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
+          <div style={{ flex: 1, display: view === "chat" ? "flex" : "none", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
 
             {/* Smart action chips */}
             <AnimatePresence>
@@ -1241,6 +2132,30 @@ export default function DashboardPage() {
               )}
             </AnimatePresence>
 
+            {/* Trial banner */}
+            {isTrial && trialEnd && (() => {
+              const daysLeft = Math.max(0, Math.ceil((new Date(trialEnd) - Date.now()) / 86400000));
+              const urgent = daysLeft <= 2;
+              return (
+                <div style={{ flexShrink: 0, padding: "8px 16px 0" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, padding: "10px 16px", borderRadius: 12, background: urgent ? "rgba(239,68,68,0.08)" : "rgba(6,182,212,0.07)", border: `1px solid ${urgent ? "rgba(239,68,68,0.25)" : "rgba(6,182,212,0.2)"}` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 15 }}>{urgent ? "⚠️" : "🎁"}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: urgent ? "#f87171" : "#06b6d4" }}>
+                        {daysLeft === 0 ? "Your free trial ends today!" : `Free trial · ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`}
+                      </span>
+                      <span style={{ fontSize: 11, color: C.textMuted }}>
+                        Ends {new Date(trialEnd).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                      </span>
+                    </div>
+                    <button onClick={() => setUpgradePopup("pdf")} style={{ fontSize: 11, fontWeight: 700, color: "white", background: urgent ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#7c3aed,#06b6d4)", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer", whiteSpace: "nowrap" }}>
+                      Upgrade — ₹299/mo →
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Messages */}
             <div ref={chatScrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px 8px" }}>
               {!selectedDoc ? (
@@ -1250,9 +2165,9 @@ export default function DashboardPage() {
               ) : messages.length === 0 ? (
                 <EmptyChatState doc={selectedDoc} onSetInput={setInput} inputRef={inputRef} />
               ) : (
-                <div style={{ maxWidth: 740, margin: "0 auto", display: "flex", flexDirection: "column", gap: 18, paddingBottom: 8 }}>
+                <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22, paddingBottom: 12 }}>
                   {messages.map((msg) => (
-                    <ChatMessage key={msg.id} msg={msg} onCopy={copyText} onShare={shareAnswer} />
+                    <ChatMessage key={msg.id} msg={msg} onCopy={copyText} onShare={shareAnswer} userInitial={userInitial} onUpgrade={() => setUpgradePopup("question")} />
                   ))}
                   <div ref={messagesEndRef} />
                 </div>
@@ -1270,7 +2185,7 @@ export default function DashboardPage() {
               ) : qLimitHit ? (
                 /* Question limit — inline upgrade */
                 <div style={{ maxWidth: 740, margin: "0 auto" }}>
-                  <UpgradeBanner type="question" onUpgrade={() => setUpgradePopup("question")} />
+                  <UpgradeBanner type="question" onUpgrade={() => setUpgradePopup("question")} usage={usage} />
                 </div>
               ) : (
                 /* Input form */
@@ -1319,23 +2234,25 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ── RIGHT PANEL ── */}
-          <AnimatePresence>
-            {rightPanelOpen && showInsights && selectedDoc && (
-              <InsightsPanel key="insights" doc={selectedDoc} onClose={() => setShowInsights(false)}
-                onAskQuestion={(q) => { setShowInsights(false); setTimeout(() => handleSend(null, q), 100); }}
-                preloaded={autoInsights} preloading={autoInsightsLoading} />
-            )}
-            {rightPanelOpen && showCompare && (
-              <ComparePanel key="compare" docs={docs} onClose={() => setShowCompare(false)} />
-            )}
-          </AnimatePresence>
+          {/* ── RIGHT PANEL (chat view only) ── */}
+          {view === "chat" && (
+            <AnimatePresence>
+              {rightPanelOpen && showInsights && selectedDoc && (
+                <InsightsPanel key="insights" doc={selectedDoc} onClose={() => setShowInsights(false)}
+                  onAskQuestion={(q) => { setShowInsights(false); setTimeout(() => handleSend(null, q), 100); }}
+                  preloaded={autoInsights} preloading={autoInsightsLoading} />
+              )}
+              {rightPanelOpen && showCompare && (
+                <ComparePanel key="compare" docs={docs} onClose={() => setShowCompare(false)} />
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </div>
 
       {/* ── UPGRADE POPUP ── */}
       <AnimatePresence>
-        {upgradePopup && <UpgradePopup key="upgrade" reason={upgradePopup} onClose={() => setUpgradePopup(null)} user={user} />}
+        {upgradePopup && <UpgradePopup key="upgrade" reason={upgradePopup} onClose={() => setUpgradePopup(null)} user={user} usage={usage} />}
       </AnimatePresence>
 
       {/* ── SHARE MODAL ── */}
@@ -1426,7 +2343,7 @@ export default function DashboardPage() {
 
         /* Mobile */
         @media (max-width: 768px) {
-          .sidebar     { position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transform: ${sidebarOpen ? "translateX(0)" : "translateX(-100%)"}; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+          .sidebar     { position: fixed; top: 0; left: 0; bottom: 0; width: 260px !important; z-index: 50; transform: ${sidebarOpen ? "translateX(0)" : "translateX(-100%)"}; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
           .main-wrapper{ margin-left: 0 !important; }
           .menu-btn    { display: flex !important; align-items: center; }
           .header-actions .btn-text { display: none; }
@@ -1435,6 +2352,12 @@ export default function DashboardPage() {
           .feature-grid{ grid-template-columns: 1fr !important; max-width: 100% !important; }
           .right-panel { position: fixed !important; inset: 0 !important; width: 100% !important; z-index: 50 !important; border-left: none !important; }
           .input-area  { position: sticky; bottom: 0; }
+          .stats-grid  { grid-template-columns: 1fr !important; }
+          .pdf-grid    { grid-template-columns: 1fr !important; }
+        }
+
+        @media (max-width: 500px) {
+          .stats-grid { grid-template-columns: 1fr 1fr !important; }
         }
 
         textarea::placeholder { color: rgba(240,240,248,0.25); }

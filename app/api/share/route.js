@@ -32,7 +32,7 @@ export async function POST(request) {
       .maybeSingle();
 
     if (existing) {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ai-pdf-chat-steel-kappa.vercel.app";
+      const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app";
       return NextResponse.json({ shareId: existing.id, url: `${siteUrl}/share/${existing.id}` });
     }
 
@@ -48,7 +48,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Failed to create share link" }, { status: 500 });
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ai-pdf-chat-steel-kappa.vercel.app";
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app";
     return NextResponse.json({ shareId: share.id, url: `${siteUrl}/share/${share.id}` });
   } catch (err) {
     console.error("[api/share]", err);

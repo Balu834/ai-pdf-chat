@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
-import { checkPdfLimit, recordPdfUpload, FREE_PLAN } from "@/lib/limits";
+import { checkUploadLimit, recordPdfUpload, LIMITS } from "@/lib/subscription";
 
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
@@ -46,10 +46,25 @@ export async function POST(req) {
     }
 
     // ── PDF limit ─────────────────────────────────────────────
-    const { exceeded } = await checkPdfLimit(supabase, user.id);
-    if (exceeded) {
+    // checkUploadLimit throws on DB/env errors → caught below as 500.
+    // This guarantees paid users never get a 403 due to infrastructure failures.
+    let limitCheck;
+    try {
+      limitCheck = await checkUploadLimit(user.id);
+    } catch (limitErr) {
+      console.error("[UPLOAD] Subscription check failed:", limitErr.message);
+      return NextResponse.json({ error: "Could not verify subscription. Please try again." }, { status: 500 });
+    }
+    // Debug log — visible in Vercel function logs and local dev console.
+    // Shows plan/usage for every upload attempt; remove once stable.
+    console.log(
+      `[UPLOAD] user=${user.id} plan=${limitCheck.isPro ? "pro" : "free"} ` +
+      `used=${limitCheck.used}/${limitCheck.limit ?? "∞"} allowed=${limitCheck.allowed}`
+    );
+
+    if (!limitCheck.allowed) {
       return NextResponse.json(
-        { error: `PDF limit reached (${FREE_PLAN.maxPdfs} lifetime). Upgrade to Pro for unlimited uploads.`, limitExceeded: true },
+        { error: `PDF limit reached (${LIMITS.free.pdfs} lifetime). Upgrade to Pro for unlimited uploads.`, limitExceeded: true },
         { status: 403 }
       );
     }

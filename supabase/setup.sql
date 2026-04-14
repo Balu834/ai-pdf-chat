@@ -397,7 +397,52 @@ returns void language sql security definer as $$
 $$;
 
 -- ─────────────────────────────────────────────
--- 6. RPC: similarity search for RAG
+-- 6. Subscription expiry — add columns to user_plans
+--    Run this block in the Supabase SQL editor.
+-- ─────────────────────────────────────────────
+
+-- pro_expires_at: when the current Pro period ends (null = no expiry / legacy)
+-- next_billing_date: set from the Razorpay webhook payload
+alter table user_plans
+  add column if not exists pro_expires_at       timestamptz,
+  add column if not exists next_billing_date    timestamptz,
+  add column if not exists subscription_status  text
+    default 'inactive'
+    check (subscription_status in ('active', 'cancelled', 'halted', 'completed', 'expired', 'inactive'));
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- webhook_events: idempotency guard — prevents double-processing the same event
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists webhook_events (
+  event_id    text primary key,   -- Razorpay event_id (globally unique per event)
+  event_type  text not null,
+  processed_at timestamptz default now()
+);
+
+-- Helper: atomically extend (or set) pro_expires_at by 30 days on renewal.
+-- p_next_billing: pass the next charge timestamp from Razorpay webhook (or null).
+-- Called by the webhook when subscription.charged fires.
+create or replace function extend_pro_subscription(
+  p_user_id       uuid,
+  p_next_billing  timestamptz default null
+)
+returns void language sql security definer as $$
+  update user_plans
+  set
+    plan                 = 'pro',
+    subscription_status  = 'active',
+    -- Extend from current expiry if it's in the future, otherwise from now
+    pro_expires_at       = greatest(coalesce(pro_expires_at, now()), now())
+                           + interval '30 days',
+    next_billing_date    = coalesce(p_next_billing, next_billing_date),
+    -- Payment succeeded — clear any grace period from a prior failure
+    grace_until          = null,
+    updated_at           = now()
+  where user_id = p_user_id;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 7. RPC: similarity search for RAG
 -- ─────────────────────────────────────────────
 
 create or replace function match_document_chunks(
@@ -421,3 +466,136 @@ as $$
   order by dc.embedding <=> query_embedding
   limit match_count;
 $$;
+
+-- ─────────────────────────────────────────────
+-- 8. Trigger: auto-provision user_plans on signup
+--
+-- WHY: if user_plans has no row for a user, every subscription
+-- check returns DEFAULT_PLAN (free) silently, causing paid users
+-- to see "limit reached" immediately after signup.
+--
+-- This trigger fires AFTER every auth.users INSERT and guarantees
+-- every account has a row. The lazy upsert in getUserPlan() is a
+-- belt-and-suspenders fallback for users who signed up before this
+-- trigger existed.
+-- ─────────────────────────────────────────────
+
+create or replace function handle_new_user()
+returns trigger language plpgsql security definer as $$
+begin
+  insert into public.user_plans (user_id, plan, subscription_status, updated_at)
+  values (new.id, 'free', 'inactive', now())
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure handle_new_user();
+
+-- One-time backfill: create free-plan rows for every existing user who has none.
+-- Safe to run multiple times (ON CONFLICT DO NOTHING).
+insert into public.user_plans (user_id, plan, subscription_status, updated_at)
+select id, 'free', 'inactive', now()
+from   auth.users
+on conflict (user_id) do nothing;
+
+-- ─────────────────────────────────────────────
+-- 8a. Enable Realtime on user_plans
+--     Required for the dashboard's real-time Pro sync.
+--     Run once in Supabase SQL editor.
+-- ─────────────────────────────────────────────
+
+alter publication supabase_realtime add table user_plans;
+
+-- ─────────────────────────────────────────────
+-- 8b. Grace period column on user_plans
+--     Set when a payment fails (subscription.halted / past_due).
+--     User stays Pro until grace_until; cron downgrades after.
+-- ─────────────────────────────────────────────
+
+alter table user_plans
+  add column if not exists grace_until timestamptz;
+
+-- ─────────────────────────────────────────────
+-- 8. Free trial columns on user_plans
+-- ─────────────────────────────────────────────
+
+alter table user_plans
+  add column if not exists is_trial    boolean not null default false,
+  add column if not exists trial_start timestamptz,
+  add column if not exists trial_end   timestamptz;
+
+-- ─────────────────────────────────────────────
+-- 9. Coupons + coupon usage tracking
+-- ─────────────────────────────────────────────
+
+create table if not exists coupons (
+  id             bigint primary key generated always as identity,
+  code           text not null unique,
+  discount_type  text not null check (discount_type in ('percentage', 'fixed')),
+  discount_value numeric(10,2) not null,   -- e.g. 50 = 50% or ₹50
+  expiry_date    timestamptz,              -- null = never expires
+  usage_limit    int,                      -- null = unlimited
+  used_count     int not null default 0,
+  active         boolean not null default true,
+  created_at     timestamptz default now()
+);
+
+-- coupon_uses: one record per user+coupon combination (prevents abuse)
+create table if not exists coupon_uses (
+  id         bigint primary key generated always as identity,
+  coupon_id  bigint references coupons(id) on delete cascade not null,
+  user_id    uuid references auth.users(id) on delete cascade not null,
+  used_at    timestamptz default now(),
+  unique (coupon_id, user_id)              -- each user can use a coupon only once
+);
+
+create index if not exists coupon_uses_user_idx on coupon_uses (user_id);
+
+alter table coupons     enable row level security;
+alter table coupon_uses enable row level security;
+
+-- Admins (service role) manage coupons; users cannot see them
+drop policy if exists "coupons_no_public_read" on coupons;
+create policy "coupons_no_public_read" on coupons for select using (false);
+
+drop policy if exists "coupon_uses_select_own" on coupon_uses;
+create policy "coupon_uses_select_own" on coupon_uses
+  for select using (auth.uid() = user_id);
+
+-- Atomically increment coupon used_count (called from verify-payment)
+create or replace function increment_coupon_used(p_coupon_id bigint)
+returns void language sql security definer as $$
+  update coupons set used_count = used_count + 1 where id = p_coupon_id;
+$$;
+
+-- ─────────────────────────────────────────────
+-- 10. Payments ledger
+-- ─────────────────────────────────────────────
+
+create table if not exists payments (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid references auth.users(id) on delete cascade not null,
+  payment_id      text not null unique,  -- Razorpay payment_id
+  order_id        text,                 -- Razorpay order_id (one-time)
+  subscription_id text,                 -- Razorpay subscription_id (recurring)
+  amount          int not null,         -- actual charged amount in paise
+  original_amount int not null,         -- pre-discount amount in paise
+  currency        text not null default 'INR',
+  status          text not null default 'captured',
+  coupon_code     text,
+  discount_amount int not null default 0,
+  created_at      timestamptz default now()
+);
+
+create index if not exists payments_user_idx    on payments (user_id, created_at desc);
+create index if not exists payments_created_idx on payments (created_at desc);
+
+alter table payments enable row level security;
+
+drop policy if exists "payments_select_own" on payments;
+create policy "payments_select_own" on payments
+  for select using (auth.uid() = user_id);

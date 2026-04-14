@@ -11,20 +11,10 @@ export async function POST(req) {
     const supabase = await createClient();
 
     // Always resolve to the production domain — never throw over missing env
+    // Always use the canonical production domain — prevents preview-URL mismatches
     const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_PROJECT_PRODUCTION_URL
-        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-        : null) ||
-      (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : null) ||
-      // Read from the incoming request host as last resort
-      (() => {
-        const host = req.headers.get("host") || "";
-        const proto = host.startsWith("localhost") ? "http" : "https";
-        return host ? `${proto}://${host}` : "https://intellixy.vercel.app";
-      })();
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://intellixy.vercel.app";
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${siteUrl}/reset-password`,

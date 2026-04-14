@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { startTrial } from "@/lib/trial";
 
 export async function GET(request) {
   const { searchParams, origin, pathname } = new URL(request.url);
@@ -8,8 +9,8 @@ export async function GET(request) {
   const errorDescription = searchParams.get("error_description");
 
   const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://ai-pdf-chat-steel-kappa.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "https://intellixy.vercel.app";
 
   // ── Debug: log every hit so you can trace in Vercel → Functions logs ────
   console.log("[auth/callback] hit", {
@@ -82,5 +83,11 @@ export async function GET(request) {
   }
 
   console.log("[auth/callback] session exchanged OK for user:", data.user?.id);
+
+  // Start 7-day free trial for brand new users (no-op for returning users)
+  if (data.user?.id) {
+    await startTrial(data.user.id);
+  }
+
   return response;
 }

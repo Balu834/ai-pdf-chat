@@ -6,7 +6,7 @@ export default function SuccessPage() {
   const [count, setCount] = useState(5);
 
   useEffect(() => {
-    if (count <= 0) { window.location.href = "/dashboard"; return; }
+    if (count <= 0) { window.location.href = "/dashboard?upgraded=1"; return; }
     const t = setTimeout(() => setCount((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [count]);
@@ -80,7 +80,7 @@ export default function SuccessPage() {
         </div>
 
         <a
-          href="/dashboard"
+          href="/dashboard?upgraded=1"
           style={{
             display: "inline-block",
             padding: "13px 32px",

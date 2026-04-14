@@ -52,6 +52,17 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // ── Admin guard: only emails listed in ADMIN_EMAILS may access /admin ───
+  if (pathname.startsWith("/admin")) {
+    if (!user) return NextResponse.redirect(new URL("/login", request.url));
+    const adminEmails = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase());
+    if (!adminEmails.includes(user.email?.toLowerCase())) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
+
   // ── Return the supabaseResponse (not a plain NextResponse.next()) so the
   //    refreshed session cookies are always forwarded to the browser.
   return supabaseResponse;
