@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import pdf from "pdf-parse";
-import { createClient } from "@/lib/supabase-server-client";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { checkUploadLimit, recordPdfUpload, LIMITS } from "@/lib/subscription";
 
 const CHUNK_SIZE = 800;
@@ -37,10 +38,30 @@ async function embedChunks(openai, chunks) {
 
 export async function POST(req) {
   try {
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    /** @type {import('@supabase/ssr').CookieMethodsServer} */
+    const cookieMethods = {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {}
+      },
+    };
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      { cookies: cookieMethods }
+    );
 
     // ── Auth ──────────────────────────────────────────────────
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log("USER:", user);
+    console.log("USER ID:", user?.id);
     if (authError || !user) {
       console.error("[UPLOAD] Auth failed:", authError?.message ?? "no user in session");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
