@@ -1,73 +1,86 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server-client";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function GET() {
   const results = {};
 
-  // 1. Check env vars (values hidden, just presence)
+  // 1. Env vars (presence only — never log values)
   results.env = {
-    NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL:   !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
-    STRIPE_SECRET_KEY: !!process.env.STRIPE_SECRET_KEY,
-    STRIPE_PRO_PRICE_ID: !!process.env.STRIPE_PRO_PRICE_ID,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "(not set)",
+    SUPABASE_SERVICE_ROLE_KEY:  !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    OPENAI_API_KEY:             !!process.env.OPENAI_API_KEY,
+    NEXT_PUBLIC_APP_URL:        process.env.NEXT_PUBLIC_APP_URL || "(not set)",
   };
 
-  // 2. Check Supabase auth
+  // 2. Auth — use same client as upload route so the result is comparable
+  let userId = null;
   try {
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     const { data: { user }, error } = await supabase.auth.getUser();
+    userId = user?.id ?? null;
     results.auth = error
       ? { ok: false, error: error.message }
-      : { ok: true, user: user?.email || "not logged in" };
+      : { ok: !!user, user_id: user?.id ?? null, email: user?.email ?? "not logged in" };
   } catch (e) {
     results.auth = { ok: false, error: e.message };
   }
 
-  // 3. Check storage bucket
+  // 3. Subscription row (service-role so RLS doesn't interfere)
+  if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const admin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const { data, error } = await admin
+        .from("user_plans")
+        .select("plan, subscription_status, pro_expires_at, grace_until")
+        .eq("user_id", userId)
+        .maybeSingle();
+      results.subscription = error
+        ? { ok: false, error: error.message }
+        : { ok: true, row: data ?? "NO ROW — will be auto-provisioned as free" };
+    } catch (e) {
+      results.subscription = { ok: false, error: e.message };
+    }
+  } else {
+    results.subscription = { ok: false, reason: "skipped — no user or missing service role key" };
+  }
+
+  // 4. Usage stats
+  if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const admin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const { data, error } = await admin
+        .from("user_stats")
+        .select("total_pdfs, total_questions")
+        .eq("user_id", userId)
+        .maybeSingle();
+      results.usage = error
+        ? { ok: false, error: error.message }
+        : { ok: true, stats: data ?? { total_pdfs: 0, total_questions: 0 } };
+    } catch (e) {
+      results.usage = { ok: false, error: e.message };
+    }
+  }
+
+  // 5. Storage bucket
   try {
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     const { data, error } = await supabase.storage.getBucket("pdfs");
     results.storage_bucket = error
       ? { ok: false, error: error.message }
       : { ok: true, bucket: data.name, public: data.public };
   } catch (e) {
     results.storage_bucket = { ok: false, error: e.message };
-  }
-
-  // 4. Check documents table
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase.from("documents").select("id").limit(1);
-    results.documents_table = error
-      ? { ok: false, error: error.message }
-      : { ok: true };
-  } catch (e) {
-    results.documents_table = { ok: false, error: e.message };
-  }
-
-  // 5. Check question_usage table
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase.from("question_usage").select("id").limit(1);
-    results.question_usage_table = error
-      ? { ok: false, error: error.message }
-      : { ok: true };
-  } catch (e) {
-    results.question_usage_table = { ok: false, error: e.message };
-  }
-
-  // 6. Check user_plans table
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase.from("user_plans").select("user_id").limit(1);
-    results.user_plans_table = error
-      ? { ok: false, error: error.message }
-      : { ok: true };
-  } catch (e) {
-    results.user_plans_table = { ok: false, error: e.message };
   }
 
   return NextResponse.json(results, { status: 200 });

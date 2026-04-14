@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import pdf from "pdf-parse";
-import { createClient } from "@/lib/supabase-server-client";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import { checkUploadLimit, recordPdfUpload, LIMITS } from "@/lib/subscription";
 
 const CHUNK_SIZE = 800;
@@ -37,11 +38,16 @@ async function embedChunks(openai, chunks) {
 
 export async function POST(req) {
   try {
-    const supabase = await createClient();
+    // createRouteHandlerClient reads the refreshed session cookie that
+    // middleware wrote — avoids the stale-cookie issue where getUser()
+    // returns null even when the browser session is valid.
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
     // ── Auth ──────────────────────────────────────────────────
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error("[UPLOAD] Auth failed:", authError?.message ?? "no user in session");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
