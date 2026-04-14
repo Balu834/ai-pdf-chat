@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(node --input-type=module --eval \"import\\('./app/page.js'\\)\")",
+      "Bash(npx next:*)",
+      "Bash(npx --no next lint)",
+      "Bash(node_modules/.bin/next lint:*)",
+      "Bash(node_modules/.bin/next build:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
