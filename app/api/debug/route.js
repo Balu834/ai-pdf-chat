@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase-server-client";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function GET() {
@@ -8,18 +7,17 @@ export async function GET() {
 
   // 1. Env vars (presence only — never log values)
   results.env = {
-    NEXT_PUBLIC_SUPABASE_URL:   !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL:      !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_ROLE_KEY:  !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    OPENAI_API_KEY:             !!process.env.OPENAI_API_KEY,
-    NEXT_PUBLIC_APP_URL:        process.env.NEXT_PUBLIC_APP_URL || "(not set)",
+    SUPABASE_SERVICE_ROLE_KEY:     !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    OPENAI_API_KEY:                !!process.env.OPENAI_API_KEY,
+    NEXT_PUBLIC_APP_URL:           process.env.NEXT_PUBLIC_APP_URL || "(not set)",
   };
 
-  // 2. Auth — use same client as upload route so the result is comparable
+  // 2. Auth — same client as upload route
   let userId = null;
   try {
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     userId = user?.id ?? null;
     results.auth = error
@@ -29,7 +27,7 @@ export async function GET() {
     results.auth = { ok: false, error: e.message };
   }
 
-  // 3. Subscription row (service-role so RLS doesn't interfere)
+  // 3. Subscription row (service-role bypasses RLS)
   if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const admin = createAdminClient(
@@ -73,14 +71,28 @@ export async function GET() {
 
   // 5. Storage bucket
   try {
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     const { data, error } = await supabase.storage.getBucket("pdfs");
     results.storage_bucket = error
       ? { ok: false, error: error.message }
       : { ok: true, bucket: data.name, public: data.public };
   } catch (e) {
     results.storage_bucket = { ok: false, error: e.message };
+  }
+
+  // 6. Tables accessible
+  try {
+    const supabase = await createClient();
+    const [docs, plans] = await Promise.all([
+      supabase.from("documents").select("id").limit(1),
+      supabase.from("user_plans").select("user_id").limit(1),
+    ]);
+    results.tables = {
+      documents:  docs.error  ? { ok: false, error: docs.error.message  } : { ok: true },
+      user_plans: plans.error ? { ok: false, error: plans.error.message } : { ok: true },
+    };
+  } catch (e) {
+    results.tables = { ok: false, error: e.message };
   }
 
   return NextResponse.json(results, { status: 200 });
