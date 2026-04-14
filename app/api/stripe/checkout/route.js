@@ -72,9 +72,14 @@ export async function POST() {
       payment_method_types: ["card"],
       line_items: [{ price: process.env.STRIPE_PRO_PRICE_ID, quantity: 1 }],
       success_url: `${appUrl}/dashboard?upgraded=1`,
-      cancel_url: `${appUrl}/dashboard`,
+      cancel_url:  `${appUrl}/dashboard`,
+      // supabase_user_id in both places so resolveUserId() works regardless
+      // of which Stripe event fires first.
       metadata: { supabase_user_id: user.id },
       subscription_data: { metadata: { supabase_user_id: user.id } },
+      // Expand subscription so checkout.session.completed has current_period_end
+      // without requiring a second API call in the webhook.
+      expand: ["subscription"],
     });
 
     console.log("[checkout] Session created:", session.id);
