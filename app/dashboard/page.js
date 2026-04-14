@@ -1511,10 +1511,11 @@ export default function DashboardPage() {
 
           const now = new Date();
           const isActive =
-            row.plan === "pro" &&
-            (!row.pro_expires_at ||
-              new Date(row.pro_expires_at) > now ||
-              (row.grace_until && new Date(row.grace_until) > now));
+            row.plan === "pro" && (
+              row.subscription_status === "active" ||
+              (row.pro_expires_at && new Date(row.pro_expires_at) > now) ||
+              (row.grace_until    && new Date(row.grace_until)    > now)
+            );
 
           setPlan(isActive ? "pro" : "free");
           setProExpiresAt(row.pro_expires_at ?? null);
@@ -1552,12 +1553,16 @@ export default function DashboardPage() {
         .maybeSingle();
       if (data?.plan) {
         const now = new Date();
-        // Active if: plan=pro AND (no expiry OR expiry > now OR still in grace period)
+        // Three independent signals — any one grants Pro access (mirrors backend isPro logic):
+        //  1. subscription_status = "active"  — DB says subscription is live right now
+        //  2. pro_expires_at > now             — paid period explicitly still running
+        //  3. grace_until > now                — payment failed, 3-day grace window
         const isActive =
-          data.plan === "pro" &&
-          (!data.pro_expires_at ||
-            new Date(data.pro_expires_at) > now ||
-            (data.grace_until && new Date(data.grace_until) > now));
+          data.plan === "pro" && (
+            data.subscription_status === "active" ||
+            (data.pro_expires_at && new Date(data.pro_expires_at) > now) ||
+            (data.grace_until    && new Date(data.grace_until)    > now)
+          );
         setPlan(isActive ? "pro" : "free");
         setProExpiresAt(data.pro_expires_at ?? null);
         setGraceUntil(data.grace_until ?? null);
@@ -1580,10 +1585,15 @@ export default function DashboardPage() {
       const data = await res.json();
       // Update plan state from usage response (expiry-aware)
       if (data.plan) {
+        // Trust the server-computed is_pro_active if present, otherwise apply three-signal check
+        const now = new Date();
         const isActive =
           data.is_pro_active === true ||
-          (data.plan === "pro" &&
-            (!data.pro_expires_at || new Date(data.pro_expires_at) > new Date()));
+          (data.plan === "pro" && (
+            data.subscription_status === "active" ||
+            (data.pro_expires_at && new Date(data.pro_expires_at) > now) ||
+            (data.grace_until    && new Date(data.grace_until)    > now)
+          ));
         setPlan(isActive ? "pro" : "free");
         setProExpiresAt(data.pro_expires_at ?? null);
         if (isActive) {

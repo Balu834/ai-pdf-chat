@@ -85,3 +85,43 @@ button { font-family: inherit; }
   50%       { opacity: 0.5; }
 }
 .pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+
+/* ── Shimmer skeleton ────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Pulsing dot (upgrade popup) ─────────────────────────────────────────── */
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1);   opacity: 1;   }
+  50%       { transform: scale(1.4); opacity: 0.5; }
+}
+
+/* ── Responsive: dashboard feature grid ─────────────────────────────────── */
+@media (max-width: 560px) {
+  .feature-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Responsive: right panels (insights / compare) ──────────────────────── */
+@media (max-width: 768px) {
+  .right-panel {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    z-index: 100;
+  }
+}
+
+/* ── Sidebar mobile overlay ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+  }
+}
