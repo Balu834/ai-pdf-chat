@@ -44,6 +44,7 @@ export default function RazorpayButton({ user, couponData, style, children }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ coupon_code: couponData.code }),
+          credentials: "include",
         });
         if (!res.ok) {
           const d = await res.json();
@@ -80,6 +81,7 @@ export default function RazorpayButton({ user, couponData, style, children }) {
                   discount_paise:        couponData.discount_amount_paise,
                   final_amount_paise:    couponData.final_amount_paise,
                 }),
+                credentials: "include",
               });
               if (!verify.ok) {
                 const err = await verify.json();
@@ -102,7 +104,7 @@ export default function RazorpayButton({ user, couponData, style, children }) {
 
       } else {
         // ── Subscription path: auto-renewing monthly subscription ───────────
-        const res = await fetch("/api/create-subscription", { method: "POST" });
+        const res = await fetch("/api/create-subscription", { method: "POST", credentials: "include" });
         if (!res.ok) {
           const d = await res.json();
           alert(d.error || "Could not initiate payment. Please try again.");
@@ -131,6 +133,7 @@ export default function RazorpayButton({ user, couponData, style, children }) {
                   razorpay_subscription_id: response.razorpay_subscription_id,
                   razorpay_signature:       response.razorpay_signature,
                 }),
+                credentials: "include",
               });
               if (!verify.ok) {
                 const err = await verify.json();
