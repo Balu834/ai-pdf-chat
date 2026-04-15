@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
-import { checkUploadLimit, recordPdfUpload, LIMITS } from "@/lib/subscription";
+import { checkUploadLimit, LIMITS } from "@/lib/subscription";
 
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
@@ -124,9 +124,6 @@ export async function POST(req) {
       console.error("[UPLOAD] DB error:", dbError.message);
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
-
-    // ── Increment lifetime PDF counter ────────────────────────
-    await recordPdfUpload(user.id);
 
     // ── Embeddings (blocking — Vercel kills background tasks after response) ──
     if (process.env.OPENAI_API_KEY) {

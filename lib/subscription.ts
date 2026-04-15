@@ -176,19 +176,22 @@ export async function checkUploadLimit(userId: string): Promise<UploadLimitCheck
     return { allowed: true, used: 0, limit: null, isPro: true };
   }
 
+  // Count directly from documents table — always accurate.
+  // user_stats.total_pdfs is a derived counter that can drift if the
+  // increment_total_pdfs RPC fails or documents are deleted without
+  // decrementing. A live COUNT(*) is the only reliable source of truth.
   const db = getAdminClient();
-  const { data, error } = await db
-    .from("user_stats")
-    .select("total_pdfs")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const { count, error } = await db
+    .from("documents")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
 
   if (error) {
-    console.error("[subscription] checkUploadLimit stats read failed for", userId, "—", error.message);
+    console.error("[subscription] checkUploadLimit doc count failed for", userId, "—", error.message);
     throw new Error(`Usage check failed: ${error.message}`);
   }
 
-  const used  = data?.total_pdfs ?? 0;
+  const used  = count ?? 0;
   const limit = LIMITS.free.pdfs;
 
   return { allowed: used < limit, used, limit, isPro: false };
