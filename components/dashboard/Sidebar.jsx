@@ -1,8 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { C, NAV_ITEMS, timeAgo } from "./tokens";
-import { PlusIcon, LogoutIcon, TrashIcon, CrownIcon, PdfIcon } from "./icons";
+import { C, timeAgo } from "./tokens";
+import { PlusIcon, LogoutIcon, TrashIcon, CrownIcon, PdfIcon, HomeIcon, FilesIcon, ChatNavIcon, BillingNavIcon, SettingsNavIcon } from "./icons";
+
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", Icon: HomeIcon },
+  { id: "pdfs",      label: "My PDFs",   Icon: FilesIcon },
+  { id: "chat",      label: "Chat",       Icon: ChatNavIcon },
+  { id: "billing",   label: "Billing",    Icon: BillingNavIcon },
+  { id: "settings",  label: "Settings",   Icon: SettingsNavIcon },
+];
 import { SidebarSkeleton } from "./Shimmer";
 
 export default function Sidebar({ user, plan, docs, docsLoading, selectedDoc, view, usage, uploading, onViewChange, onSignOut, onSelectDoc, onDelete, onUploadClick, onUpgradeClick }) {

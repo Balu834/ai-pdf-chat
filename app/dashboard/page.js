@@ -173,7 +173,7 @@ export default function DashboardPage() {
 
   async function fetchUsage() {
     try {
-      const res = await fetch("/api/usage");
+      const res = await fetch("/api/usage", { credentials: "include" });
       if (!res.ok) return;
       const data = await res.json();
       if (data.plan) {
@@ -217,7 +217,7 @@ export default function DashboardPage() {
     setUploading(true);
     try {
       const form = new FormData(); form.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const res = await fetch("/api/upload", { method: "POST", body: form, credentials: "include" });
       const data = await res.json();
       if (!res.ok) { if (data.limitExceeded) { setUpgradePopup("pdf"); return; } throw new Error(data.error || "Upload failed"); }
       await fetchDocs(user.id); await fetchUsage();
@@ -229,7 +229,7 @@ export default function DashboardPage() {
     if (plan !== "pro") { setUpgradePopup("pdf"); return; }
     if (!confirm(`Delete "${doc.file_name}"?`)) return;
     try {
-      const res = await fetch("/api/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: doc.id, fileUrl: doc.file_url }) });
+      const res = await fetch("/api/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: doc.id, fileUrl: doc.file_url }), credentials: "include" });
       const data = await res.json();
       if (!res.ok) { if (data.proRequired) { setUpgradePopup("pdf"); return; } throw new Error(data.error || "Delete failed"); }
       if (selectedDoc?.id === doc.id) { setSelectedDoc(null); setMessages([]); setShowInsights(false); setShowCompare(false); }
@@ -243,7 +243,7 @@ export default function DashboardPage() {
     setView("chat");
     setHistoryLoading(true);
     try {
-      const res = await fetch(`/api/messages?documentId=${doc.id}`);
+      const res = await fetch(`/api/messages?documentId=${doc.id}`, { credentials: "include" });
       if (res.ok) {
         const history = await res.json();
         setMessages(history.map((m) => ({ id: m.id, role: m.role, content: m.message })));
@@ -256,7 +256,7 @@ export default function DashboardPage() {
     if (!selectedDoc) return;
     if (!confirm(`Clear all chat history for "${selectedDoc.file_name}"?`)) return;
     try {
-      await fetch(`/api/messages?documentId=${selectedDoc.id}`, { method: "DELETE" });
+      await fetch(`/api/messages?documentId=${selectedDoc.id}`, { method: "DELETE", credentials: "include" });
       setMessages([]);
     } catch (err) { alert("Could not clear chat: " + err.message); }
   }
@@ -272,7 +272,7 @@ export default function DashboardPage() {
     const aiMsgId = Date.now() + 1;
     setMessages((prev) => [...prev, { role: "assistant", content: "", id: aiMsgId, streaming: true }]);
     try {
-      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, fileUrl: selectedDoc.file_url }) });
+      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, fileUrl: selectedDoc.file_url }), credentials: "include" });
       if (!res.ok) {
         const data = await res.json();
         if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "", streaming: false, locked: true } : m)); setUpgradePopup("question"); }
@@ -313,7 +313,7 @@ export default function DashboardPage() {
 
   async function handleManageSubscription() {
     setUpgradingStripe(true);
-    try { const res = await fetch("/api/stripe/portal", { method: "POST" }); const data = await res.json(); if (data.url) window.location.href = data.url; else alert(data.error || "Could not open portal"); }
+    try { const res = await fetch("/api/stripe/portal", { method: "POST", credentials: "include" }); const data = await res.json(); if (data.url) window.location.href = data.url; else alert(data.error || "Could not open portal"); }
     catch { alert("Could not open portal"); } finally { setUpgradingStripe(false); }
   }
 
@@ -321,7 +321,7 @@ export default function DashboardPage() {
     if (!confirm("Cancel your Pro subscription?\n\nYou'll keep Pro access until your current period ends.")) return;
     setCancellingSubscription(true);
     try {
-      const res = await fetch("/api/razorpay/cancel-subscription", { method: "POST" });
+      const res = await fetch("/api/razorpay/cancel-subscription", { method: "POST", credentials: "include" });
       const data = await res.json();
       if (!res.ok) { alert(data.error || "Could not cancel subscription"); return; }
       setSubscriptionCancelled(true);
@@ -344,7 +344,7 @@ export default function DashboardPage() {
     if (!selectedDoc || shareLoading) return;
     setShareLoading(true);
     try {
-      const res = await fetch("/api/share", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: selectedDoc.id }) });
+      const res = await fetch("/api/share", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: selectedDoc.id }), credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
       setShareUrl(data.url);
@@ -391,7 +391,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!selectedDoc) { setAutoInsights(null); return; }
     setAutoInsights(null); setAutoInsightsLoading(true);
-    fetch(`/api/insights?documentId=${selectedDoc.id}`)
+    fetch(`/api/insights?documentId=${selectedDoc.id}`, { credentials: "include" })
       .then((r) => r.json())
       .then((data) => { if (data?.summary) setAutoInsights(data); })
       .catch(() => {})
