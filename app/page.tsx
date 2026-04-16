@@ -370,69 +370,125 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── DEMO ───────────────────────────────────────────────────────────── */}
-      <section id="demo" style={{ position: "relative", zIndex: 1, padding: "0 max(24px,calc((100vw - 1280px)/2)) 120px" }}>
-        <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
-          style={{ textAlign: "center", marginBottom: 56 }}>
-          <div style={{ display: "inline-block", background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.25)", borderRadius: 99, padding: "5px 14px", fontSize: "0.75rem", color: "#06b6d4", fontWeight: 600, marginBottom: 16, letterSpacing: "0.08em", textTransform: "uppercase" }}>See it in action</div>
-          <h2 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 auto 16px", lineHeight: 1.15 }}>
-            Watch Intellixy work live
+      {/* ── DEMO VIDEO ─────────────────────────────────────────────────────── */}
+      <section id="demo" style={{ position: "relative", zIndex: 1, padding: "100px max(24px,calc((100vw - 1280px)/2))" }}>
+
+        {/* Section header */}
+        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55 }}
+          style={{ textAlign: "center", marginBottom: 64 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 99, padding: "5px 16px", fontSize: "0.75rem", color: "#f87171", fontWeight: 700, marginBottom: 20, letterSpacing: "0.07em", textTransform: "uppercase" }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#ef4444"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+            Demo Video
+          </div>
+          <h2 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 auto 18px", lineHeight: 1.12 }}>
+            See it in action 🎥
           </h2>
-          <p style={{ fontSize: "1.05rem", color: "rgba(240,240,248,0.5)", maxWidth: 480, margin: "0 auto" }}>
-            Upload a PDF, ask a question, get a structured answer — in under 2 seconds.
+          <p style={{ fontSize: "1.1rem", color: "rgba(240,240,248,0.5)", margin: "0 auto", maxWidth: 520, lineHeight: 1.65 }}>
+            Upload a PDF → Ask questions → Get instant answers
           </p>
         </motion.div>
 
-        {/* Two-column: video + mock chat */}
-        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 48, alignItems: "center", maxWidth: 1100, margin: "0 auto" }} className="demo-grid">
+        {/* Two-column layout: phone video + mock chat */}
+        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 56, alignItems: "center", maxWidth: 1100, margin: "0 auto" }} className="demo-grid">
 
-          {/* Phone frame with YouTube Shorts embed */}
+          {/* ── LEFT: Gradient-bordered phone video ── */}
           <motion.div
-            initial={{ opacity: 0, x: -32 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
-            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}
+            initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}
           >
-            {/* Phone shell */}
+            {/* Gradient border shell */}
             <div style={{
-              position: "relative", width: 260, borderRadius: 36,
-              background: "#0a0a18",
-              border: "2px solid rgba(255,255,255,0.12)",
-              boxShadow: "0 40px 100px rgba(124,58,237,0.3), 0 0 0 1px rgba(255,255,255,0.04) inset",
-              overflow: "hidden",
-              paddingTop: 18, paddingBottom: 18,
+              position: "relative",
+              padding: 3,
+              borderRadius: 44,
+              background: "linear-gradient(145deg, #7c3aed, #4f46e5, #06b6d4)",
+              boxShadow: "0 0 60px rgba(124,58,237,0.45), 0 0 120px rgba(6,182,212,0.2), 0 40px 80px rgba(0,0,0,0.6)",
             }}>
-              {/* Notch */}
-              <div style={{ width: 80, height: 22, background: "#0a0a18", borderRadius: "0 0 14px 14px", margin: "0 auto 6px", position: "relative", zIndex: 2, border: "2px solid rgba(255,255,255,0.08)", borderTop: "none" }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.18)", margin: "7px auto 0" }} />
+              {/* Animated glow ring */}
+              <div style={{
+                position: "absolute", inset: -8, borderRadius: 52, zIndex: -1,
+                background: "linear-gradient(145deg, rgba(124,58,237,0.3), rgba(6,182,212,0.2))",
+                filter: "blur(20px)",
+              }} />
+
+              {/* Phone body */}
+              <div style={{
+                width: 260,
+                borderRadius: 42,
+                background: "#0a0a18",
+                overflow: "hidden",
+                paddingTop: 16,
+                paddingBottom: 16,
+              }}>
+                {/* Notch bar */}
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+                  <div style={{ width: 90, height: 24, background: "#111122", borderRadius: "0 0 16px 16px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
+                    <div style={{ width: 40, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.1)" }} />
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
+                  </div>
+                </div>
+
+                {/* Video area */}
+                <div style={{ margin: "0 8px", borderRadius: 24, overflow: "hidden", aspectRatio: "9/16", background: "#000", position: "relative" }}>
+                  <iframe
+                    src="https://www.youtube.com/embed/3iaD8iVudk4?rel=0&modestbranding=1&loop=1&playlist=3iaD8iVudk4&color=white"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+                    title="Intellixy — AI PDF Chat Demo"
+                  />
+                </div>
+
+                {/* Home indicator */}
+                <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
+                  <div style={{ width: 90, height: 4, background: "rgba(255,255,255,0.22)", borderRadius: 99 }} />
+                </div>
               </div>
-              {/* Video */}
-              <div style={{ margin: "0 6px", borderRadius: 20, overflow: "hidden", aspectRatio: "9/16", background: "#000" }}>
-                <iframe
-                  src="https://www.youtube.com/embed/3iaD8iVudk4?autoplay=0&rel=0&modestbranding=1&loop=1&playlist=3iaD8iVudk4"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-                  title="Intellixy Demo"
-                />
-              </div>
-              {/* Home bar */}
-              <div style={{ width: 80, height: 4, background: "rgba(255,255,255,0.2)", borderRadius: 99, margin: "12px auto 0" }} />
             </div>
 
-            {/* Watch on YouTube link */}
-            <a
-              href="https://youtube.com/shorts/3iaD8iVudk4?feature=share"
-              target="_blank" rel="noopener noreferrer"
-              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.8rem", color: "rgba(240,240,248,0.4)", textDecoration: "none", transition: "color 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.color = "rgba(240,240,248,0.8)"}
-              onMouseLeave={e => e.currentTarget.style.color = "rgba(240,240,248,0.4)"}
+            {/* Watch full video link */}
+            <a href="https://youtube.com/shorts/3iaD8iVudk4?feature=share" target="_blank" rel="noopener noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: "0.82rem", fontWeight: 600, color: "rgba(240,240,248,0.4)", textDecoration: "none", padding: "8px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 99, transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.color = "rgba(240,240,248,0.85)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "rgba(240,240,248,0.4)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-              Watch on YouTube
+              Watch full video on YouTube
             </a>
+
+            {/* Step indicators */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
+              {[
+                { step: "1", label: "Upload any PDF", icon: "📄" },
+                { step: "2", label: "Ask a question",  icon: "💬" },
+                { step: "3", label: "Get instant AI answers", icon: "⚡" },
+              ].map(({ step, label, icon }) => (
+                <div key={step} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
+                  <div style={{ width: 26, height: 26, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, color: "white", flexShrink: 0 }}>{step}</div>
+                  <span style={{ fontSize: 14 }}>{icon}</span>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "rgba(240,240,248,0.7)" }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
-          {/* Mock chat (right side) */}
-          <motion.div initial={{ opacity: 0, x: 32 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}>
+          {/* ── RIGHT: Animated mock chat ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            {/* Label */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "inline-block", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 99, padding: "4px 14px", fontSize: "0.72rem", color: "#a78bfa", fontWeight: 700, marginBottom: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                Live Product Preview
+              </div>
+              <h3 style={{ fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 8px", lineHeight: 1.2 }}>
+                Ask anything about your document
+              </h3>
+              <p style={{ fontSize: "0.9rem", color: "rgba(240,240,248,0.45)", margin: 0, lineHeight: 1.6 }}>
+                Real AI responses — structured, precise, and instant.
+              </p>
+            </div>
             <DemoChat />
           </motion.div>
         </div>
