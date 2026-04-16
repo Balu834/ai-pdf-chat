@@ -17,6 +17,7 @@ import { UpgradePopup, UpgradeBanner } from "@/components/dashboard/UpgradePopup
 import { MessageSkeleton } from "@/components/dashboard/Shimmer";
 import { C, SMART_ACTIONS } from "@/components/dashboard/tokens";
 import { MenuIcon, ShareIcon, InsightIcon, CompareIcon, TrashIcon, SendIcon, MicIcon, ShieldIcon, CloseIcon, CheckIcon } from "@/components/dashboard/icons";
+import OnboardingOverlay from "@/components/dashboard/OnboardingOverlay";
 
 /* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
 const STATUS_STEPS = [
@@ -47,6 +48,52 @@ function StreamingStatusBar() {
         {STATUS_STEPS[idx]}
       </motion.span>
     </div>
+  );
+}
+
+/* ─── QUESTION PROGRESS BAR ─────────────────────────────────────────────── */
+function QuestionProgressBar({ usage, onUpgrade }) {
+  const used = usage?.questions ?? 0;
+  const max  = usage?.maxQuestions ?? 10;
+  const pct  = Math.min(100, Math.round((used / max) * 100));
+  const left = Math.max(0, max - used);
+  const urgent = left <= 2;
+  const warn   = left <= 4;
+  const barColor = urgent ? "#ef4444" : warn ? "#f59e0b" : "#7c3aed";
+
+  if (used === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+      style={{ maxWidth: 740, margin: "0 auto 6px", padding: "7px 12px", background: urgent ? "rgba(239,68,68,0.06)" : "rgba(124,58,237,0.05)", border: `1px solid ${urgent ? "rgba(239,68,68,0.18)" : "rgba(124,58,237,0.12)"}`, borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}
+    >
+      {/* Bar */}
+      <div style={{ flex: 1, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          style={{ height: "100%", borderRadius: 99, background: `linear-gradient(90deg, ${barColor}, ${barColor}cc)` }}
+        />
+      </div>
+
+      {/* Label */}
+      <span style={{ fontSize: 11, fontWeight: 700, color: urgent ? "#f87171" : warn ? "#f59e0b" : C.textMuted, whiteSpace: "nowrap" }}>
+        {urgent ? `⚠️ ${left} question${left !== 1 ? "s" : ""} left` : `${used}/${max} questions used`}
+      </span>
+
+      {/* Upgrade nudge */}
+      {(urgent || warn) && (
+        <motion.button
+          whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+          onClick={onUpgrade}
+          style={{ padding: "3px 10px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", borderRadius: 6, fontSize: 10.5, fontWeight: 700, color: "white", cursor: "pointer", whiteSpace: "nowrap" }}
+        >
+          Upgrade →
+        </motion.button>
+      )}
+    </motion.div>
   );
 }
 
@@ -106,6 +153,11 @@ export default function DashboardPage() {
   const [listening, setListening] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
   const recognitionRef = useRef(null);
+
+  /* ── Onboarding ── */
+  const [onboardingStep, setOnboardingStep] = useState(undefined);
+  const [apiError, setApiError] = useState(null);   // { msg, retryText }
+  const [retryLoading, setRetryLoading] = useState(false);
 
   /* ── Rotating placeholder ── */
   const PLACEHOLDERS = useMemo(() => [
@@ -266,18 +318,61 @@ export default function DashboardPage() {
     const { data, error } = await supabase.from("documents").select("id, file_name, file_url, created_at").eq("user_id", userId).order("created_at", { ascending: false });
     if (!error && data) setDocs(data);
     setDocsLoading(false);
+    return data || [];
   }, []);
 
   async function handleUpload(e) {
     const file = e.target.files?.[0];
     if (!file || !file.name.endsWith(".pdf")) return;
     setUploading(true);
+    const isFirstDoc = docs.length === 0;
     try {
       const form = new FormData(); form.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: form, credentials: "include" });
       const data = await res.json();
       if (!res.ok) { if (data.limitExceeded) { setUpgradePopup("pdf"); return; } throw new Error(data.error || "Upload failed"); }
-      await fetchDocs(user.id); await fetchUsage();
+      const newDocs = await fetchDocs(user.id); await fetchUsage();
+
+      /* ── First-upload onboarding: auto-select + auto-summarize ── */
+      if (isFirstDoc && newDocs.length > 0) {
+        const newDoc = newDocs[0];
+        // Switch to chat view and load the doc
+        setSelectedDoc(newDoc); setMessages([]); setLimitError(null);
+        setSidebarOpen(false); setShowCompare(false); setShareUrl(null); setShowInsights(false);
+        setView("chat");
+        // Advance onboarding to "try" step
+        setOnboardingStep(2);
+        // Auto-fire summary directly with the doc we just got (bypasses selectedDoc state timing)
+        const summaryText = "Give me a structured summary of this document covering the main topics, key details, and any important notes.";
+        setTimeout(async () => {
+          const userMsgId = Date.now();
+          const aiMsgId   = Date.now() + 1;
+          setAiStreaming(true);
+          setMessages([
+            { role: "user", content: summaryText, id: userMsgId },
+            { role: "assistant", content: "", id: aiMsgId, streaming: true },
+          ]);
+          try {
+            const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: summaryText, fileUrl: newDoc.file_url }), credentials: "include" });
+            if (!res.ok) { const d = await res.json(); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: d.error || "Summary failed.", streaming: false } : m)); return; }
+            const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = ""; let full = "";
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buf += decoder.decode(value, { stream: true });
+              const lines = buf.split("\n"); buf = lines.pop();
+              for (const line of lines) {
+                if (!line.startsWith("data: ")) continue;
+                const raw = line.slice(6); if (raw.trim() === "[DONE]" || raw.trim() === "[ERROR]") break;
+                full += raw.replace(/\\n/g, "\n");
+                setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: full } : m));
+              }
+            }
+            setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
+          } catch { setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "Unable to summarize. Please type a question.", streaming: false } : m)); }
+          finally { setAiStreaming(false); fetchUsage(); }
+        }, 500);
+      }
     } catch (err) { alert("Upload failed: " + err.message); }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
   }
@@ -322,7 +417,7 @@ export default function DashboardPage() {
     e?.preventDefault();
     const text = (overrideText ?? input).trim();
     if (!text || !selectedDoc || aiStreaming) return;
-    setInput(""); setLimitError(null);
+    setInput(""); setLimitError(null); setApiError(null);
     const userMsg = { role: "user", content: text, id: Date.now() };
     setMessages((prev) => [...prev, userMsg]);
     setAiStreaming(true);
@@ -358,12 +453,30 @@ export default function DashboardPage() {
         }
       }
       setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
-    } catch {
-      setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "Something went wrong. Please try again.", streaming: false } : m));
+    } catch (err) {
+      // Classify the error for a user-friendly message
+      let errorMsg = "Something went wrong. Please try again.";
+      if (err instanceof TypeError && (err.message.includes("fetch") || err.message.includes("network") || err.message.includes("Failed to fetch"))) {
+        errorMsg = "⚠️ Unable to connect. Check your internet connection and try again.";
+        setApiError({ msg: errorMsg, retryText: text });
+      } else if (err?.name === "AbortError") {
+        errorMsg = "Request timed out. Please try again.";
+      } else {
+        setApiError({ msg: errorMsg, retryText: text });
+      }
+      setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: errorMsg, streaming: false, isError: true } : m));
     } finally {
       setAiStreaming(false);
       if (user) fetchUsage();
     }
+  }
+
+  async function handleRetry() {
+    if (!apiError?.retryText || retryLoading) return;
+    setRetryLoading(true);
+    setApiError(null);
+    await handleSend(null, apiError.retryText);
+    setRetryLoading(false);
   }
 
   function handleSmartAction(prompt) { if (!selectedDoc || aiStreaming) return; handleSend(null, prompt); }
@@ -681,6 +794,37 @@ export default function DashboardPage() {
 
             {/* Input area */}
             <div className="input-area" style={{ padding: "8px 16px 14px", flexShrink: 0, background: "rgba(7,7,26,0.88)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.05)", position: "sticky", bottom: 0, zIndex: 5 }}>
+
+              {/* API connection error banner */}
+              <AnimatePresence>
+                {apiError && !aiStreaming && (
+                  <motion.div
+                    key="api-error"
+                    initial={{ opacity: 0, y: 4, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    style={{ maxWidth: 740, margin: "0 auto 8px", padding: "9px 14px", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <span style={{ fontSize: 13 }}>⚠️</span>
+                    <span style={{ flex: 1, fontSize: 12, color: "#fca5a5", lineHeight: 1.4 }}>{apiError.msg}</span>
+                    <motion.button
+                      whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                      onClick={handleRetry}
+                      disabled={retryLoading}
+                      style={{ padding: "5px 12px", background: "rgba(239,68,68,0.18)", border: "1px solid rgba(239,68,68,0.35)", borderRadius: 7, fontSize: 11.5, fontWeight: 700, color: "#fca5a5", cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 5 }}
+                    >
+                      {retryLoading ? <div style={{ width: 10, height: 10, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#fca5a5", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> : "↺"} Retry
+                    </motion.button>
+                    <button onClick={() => setApiError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#f87171", fontSize: 14, padding: 2, lineHeight: 1 }}>×</button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Question usage progress bar */}
+              {plan !== "pro" && selectedDoc && !qLimitHit && (
+                <QuestionProgressBar usage={usage} onUpgrade={() => setUpgradePopup("question")} />
+              )}
+
               {!selectedDoc ? (
                 <div style={{ maxWidth: 740, margin: "0 auto", padding: "12px 16px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, display: "flex", alignItems: "center", gap: 10, backdropFilter: "blur(8px)" }}>
                   <span style={{ fontSize: 16 }}>👈</span>
@@ -747,6 +891,19 @@ export default function DashboardPage() {
 
       {/* Hidden file input */}
       <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} style={{ display: "none" }} />
+
+      {/* Onboarding overlay — shown to new users */}
+      <OnboardingOverlay
+        step={onboardingStep}
+        onUpload={() => fileInputRef.current?.click()}
+        onDismiss={() => setOnboardingStep(undefined)}
+        onPromptClick={(prompt) => {
+          if (selectedDoc) {
+            setView("chat");
+            handleSend(null, prompt);
+          }
+        }}
+      />
 
       {/* Upgrade popup */}
       <AnimatePresence>

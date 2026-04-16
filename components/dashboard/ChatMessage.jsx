@@ -275,8 +275,10 @@ export default function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgra
           overflowWrap: "break-word",
           background: isUser
             ? "linear-gradient(135deg,#7c3aed,#6d28d9)"
-            : "rgba(255,255,255,0.04)",
-          border: isUser ? "none" : "1px solid rgba(255,255,255,0.08)",
+            : msg.isError
+              ? "rgba(239,68,68,0.06)"
+              : "rgba(255,255,255,0.04)",
+          border: isUser ? "none" : msg.isError ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(255,255,255,0.08)",
           color: isUser ? "white" : "rgba(240,240,248,0.92)",
           boxShadow: isUser ? "0 4px 22px rgba(124,58,237,0.28)" : "none",
           backdropFilter: isUser ? "none" : "blur(8px)",
