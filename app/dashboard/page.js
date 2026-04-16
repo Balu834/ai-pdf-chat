@@ -18,6 +18,7 @@ import { MessageSkeleton } from "@/components/dashboard/Shimmer";
 import { C, SMART_ACTIONS } from "@/components/dashboard/tokens";
 import { MenuIcon, ShareIcon, InsightIcon, CompareIcon, TrashIcon, SendIcon, MicIcon, ShieldIcon, CloseIcon, CheckIcon } from "@/components/dashboard/icons";
 import OnboardingOverlay from "@/components/dashboard/OnboardingOverlay";
+import ToastContainer from "@/components/ui/Toast";
 
 /* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
 const STATUS_STEPS = [
@@ -158,6 +159,15 @@ export default function DashboardPage() {
   const [onboardingStep, setOnboardingStep] = useState(undefined);
   const [apiError, setApiError] = useState(null);   // { msg, retryText }
   const [retryLoading, setRetryLoading] = useState(false);
+
+  /* ── Toast notifications ── */
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((message, type = "success", duration = 4200) => {
+    const id = Date.now() + Math.random();
+    setToasts((p) => [...p.slice(-3), { id, message, type, duration }]);
+    setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), duration);
+  }, []);
+  const dismissToast = useCallback((id) => setToasts((p) => p.filter((t) => t.id !== id)), []);
 
   /* ── Rotating placeholder ── */
   const PLACEHOLDERS = useMemo(() => [
@@ -332,6 +342,7 @@ export default function DashboardPage() {
       const data = await res.json();
       if (!res.ok) { if (data.limitExceeded) { setUpgradePopup("pdf"); return; } throw new Error(data.error || "Upload failed"); }
       const newDocs = await fetchDocs(user.id); await fetchUsage();
+      addToast(`"${file.name}" uploaded successfully!`, "success");
 
       /* ── First-upload onboarding: auto-select + auto-summarize ── */
       if (isFirstDoc && newDocs.length > 0) {
@@ -373,7 +384,10 @@ export default function DashboardPage() {
           finally { setAiStreaming(false); fetchUsage(); }
         }, 500);
       }
-    } catch (err) { alert("Upload failed: " + err.message); }
+    } catch (err) {
+      const msg = err.message || "Upload failed";
+      addToast(msg.includes("limit") ? "⚠️ Upload limit reached. Upgrade to continue." : `Upload failed: ${msg}`, "error", 6000);
+    }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
   }
 
@@ -386,7 +400,8 @@ export default function DashboardPage() {
       if (!res.ok) { if (data.proRequired) { setUpgradePopup("pdf"); return; } throw new Error(data.error || "Delete failed"); }
       if (selectedDoc?.id === doc.id) { setSelectedDoc(null); setMessages([]); setShowInsights(false); setShowCompare(false); }
       await fetchDocs(user.id);
-    } catch (err) { alert("Delete failed: " + err.message); }
+      addToast(`"${doc.file_name}" deleted`, "info");
+    } catch (err) { addToast("Delete failed: " + (err.message || "Please try again"), "error"); }
   }
 
   async function selectDoc(doc) {
@@ -410,7 +425,7 @@ export default function DashboardPage() {
     try {
       await fetch(`/api/messages?documentId=${selectedDoc.id}`, { method: "DELETE", credentials: "include" });
       setMessages([]);
-    } catch (err) { alert("Could not clear chat: " + err.message); }
+    } catch (err) { addToast("Could not clear chat: " + (err.message || "Please try again"), "error"); }
   }
 
   async function handleSend(e, overrideText) {
@@ -483,8 +498,8 @@ export default function DashboardPage() {
 
   async function handleManageSubscription() {
     setUpgradingStripe(true);
-    try { const res = await fetch("/api/stripe/portal", { method: "POST", credentials: "include" }); const data = await res.json(); if (data.url) window.location.href = data.url; else alert(data.error || "Could not open portal"); }
-    catch { alert("Could not open portal"); } finally { setUpgradingStripe(false); }
+    try { const res = await fetch("/api/stripe/portal", { method: "POST", credentials: "include" }); const data = await res.json(); if (data.url) window.location.href = data.url; else addToast(data.error || "Could not open billing portal", "error"); }
+    catch { addToast("Could not open billing portal", "error"); } finally { setUpgradingStripe(false); }
   }
 
   async function handleCancelSubscription() {
@@ -493,10 +508,10 @@ export default function DashboardPage() {
     try {
       const res = await fetch("/api/razorpay/cancel-subscription", { method: "POST", credentials: "include" });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || "Could not cancel subscription"); return; }
+      if (!res.ok) { addToast(data.error || "Could not cancel subscription", "error"); return; }
       setSubscriptionCancelled(true);
-      alert(`Subscription cancelled. You keep Pro access until ${new Date(data.pro_expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.`);
-    } catch { alert("Could not cancel subscription. Please try again."); }
+      addToast(`Subscription cancelled. Pro access continues until ${new Date(data.pro_expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.`, "info", 8000);
+    } catch { addToast("Could not cancel subscription. Please try again.", "error"); }
     finally { setCancellingSubscription(false); }
   }
 
@@ -518,7 +533,7 @@ export default function DashboardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
       setShareUrl(data.url);
-    } catch (err) { alert("Share failed: " + err.message); }
+    } catch (err) { addToast("Share failed: " + (err.message || "Please try again"), "error"); }
     finally { setShareLoading(false); }
   }
 
@@ -904,6 +919,9 @@ export default function DashboardPage() {
           }
         }}
       />
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       {/* Upgrade popup */}
       <AnimatePresence>

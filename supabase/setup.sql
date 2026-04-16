@@ -603,17 +603,32 @@ drop policy if exists "payments_select_own" on payments;
 --
 -- Atomically checks whether the user is under the free PDF limit and inserts
 -- the document row in ONE transaction, preventing the race condition where two
--- simultaneous requests both read count=4 and both get allowed.
+-- simultaneous requests both read count=N and both get allowed past the limit.
 --
--- Returns: the new document row on success, or raises an exception if limit is
--- exceeded so the caller can detect the error and return 403.
+-- Returns: the new document UUID on success.
+-- Raises:  'LIMIT_EXCEEDED' exception when count >= p_limit (→ caller returns 403).
+--
+-- FIX NOTES (schema-cache error resolution):
+--   • Drop old signatures before recreating — avoids PostgREST overload ambiguity.
+--   • p_file_size is int (not bigint) — JSON integers from JS map cleanly to int;
+--     bigint causes "could not find function" in some PostgREST versions because
+--     PostgREST won't auto-coerce a JSON number to bigint without an explicit cast.
+--   • NOTIFY at the end forces PostgREST to reload its schema cache immediately
+--     without needing a manual restart.
+--
+-- Run this block in Supabase → SQL Editor to apply the fix.
 -- ─────────────────────────────────────────────────────────────────────────────
+
+-- Drop every known overload so there's no ambiguous match in the schema cache.
+drop function if exists insert_document_if_under_limit(uuid, text, text, bigint, int);
+drop function if exists insert_document_if_under_limit(uuid, text, text, int, int);
+
 create or replace function insert_document_if_under_limit(
   p_user_id   uuid,
   p_file_name text,
   p_file_url  text,
-  p_file_size bigint,
-  p_limit     int   -- 5 for free users; pass 2147483647 for unlimited Pro
+  p_file_size int,   -- int covers files up to ~2 GB; JS Number serialises cleanly
+  p_limit     int    -- pass FREE_LIMIT for free users; 2147483647 for Pro / unlimited
 )
 returns uuid
 language plpgsql security definer as $$
@@ -621,13 +636,18 @@ declare
   v_count int;
   v_id    uuid;
 begin
-  -- Count existing documents for this user (row-level lock via FOR UPDATE)
+  -- Advisory lock per-user so concurrent uploads from the same account
+  -- don't both read count=N and both slip under the limit.
+  perform pg_advisory_xact_lock(hashtext(p_user_id::text));
+
   select count(*) into v_count
   from   documents
   where  user_id = p_user_id;
 
   if v_count >= p_limit then
-    raise exception 'LIMIT_EXCEEDED' using hint = 'pdf_limit';
+    raise exception 'LIMIT_EXCEEDED'
+      using hint = 'pdf_limit',
+            detail = format('user %s has %s docs, limit is %s', p_user_id, v_count, p_limit);
   end if;
 
   insert into documents (user_id, file_name, file_url, file_size)
@@ -637,5 +657,10 @@ begin
   return v_id;
 end;
 $$;
+
+-- Force PostgREST to reload its schema cache immediately.
+-- Without this, the new function won't be visible until the next auto-reload
+-- (which can take several minutes on Supabase's hosted PostgREST).
+notify pgrst, 'reload schema';
 create policy "payments_select_own" on payments
   for select using (auth.uid() = user_id);
