@@ -129,6 +129,9 @@ export default function DashboardPage() {
 
   const [historyLoading, setHistoryLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);   // 0-100
+  const [uploadPhase, setUploadPhase] = useState("idle");    // 'idle'|'uploading'|'processing'
+  const [uploadFileName, setUploadFileName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [limitError, setLimitError] = useState(null);
@@ -333,27 +336,111 @@ export default function DashboardPage() {
 
   async function handleUpload(e) {
     const file = e.target.files?.[0];
-    if (!file || !file.name.endsWith(".pdf")) return;
+    if (!file) return;
+
+    // ── Type validation ───────────────────────────────────────────────────────
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      addToast("Only PDF files are supported.", "error");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // ── Size validation ───────────────────────────────────────────────────────
+    const FREE_MAX = 5  * 1024 * 1024;  // 5 MB
+    const PRO_MAX  = 50 * 1024 * 1024;  // 50 MB
+    const maxBytes = plan === "pro" ? PRO_MAX : FREE_MAX;
+    if (file.size > maxBytes) {
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      if (plan !== "pro") {
+        addToast(`File is ${sizeMB} MB — free plan max is 5 MB. Upgrade Pro for 50 MB.`, "warning", 8000);
+        setUpgradePopup("pdf");
+      } else {
+        addToast(`File is ${sizeMB} MB — max allowed is 50 MB.`, "error");
+      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // ── Start upload ──────────────────────────────────────────────────────────
     setUploading(true);
+    setUploadProgress(0);
+    setUploadPhase("uploading");
+    setUploadFileName(file.name);
     const isFirstDoc = docs.length === 0;
+
     try {
-      const form = new FormData(); form.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: form, credentials: "include" });
-      const data = await res.json();
-      if (!res.ok) { if (data.limitExceeded) { setUpgradePopup("pdf"); return; } throw new Error(data.error || "Upload failed"); }
-      const newDocs = await fetchDocs(user.id); await fetchUsage();
+      // Step 1 — Upload file DIRECTLY to Supabase Storage from the browser.
+      // File never passes through Next.js/Vercel → no server bandwidth, no
+      // timeout risk, and XHR fires real onUploadProgress events (0–88 %).
+      const safeName    = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storagePath = `${user.id}/${Date.now()}-${safeName}`;
+
+      const { error: storageError } = await supabase.storage
+        .from("pdfs")
+        .upload(storagePath, file, {
+          contentType: "application/pdf",
+          upsert:      false,
+          // onUploadProgress available in @supabase/storage-js ≥ 2.5.1
+          // (bundled in supabase-js ≥ 2.39). Internally switches to XHR.
+          onUploadProgress: ({ loaded, total }) => {
+            // Reserve 88–100 % for the server processing phase
+            setUploadProgress(Math.min(88, Math.round((loaded / total) * 88)));
+          },
+        });
+
+      if (storageError) {
+        const msg = storageError.message || "";
+        if (msg.includes("Bucket not found") || storageError.statusCode === "404") {
+          addToast("Storage bucket 'pdfs' not found. Contact support.", "error", 8000);
+        } else if (msg.includes("Duplicate") || msg.includes("already exists")) {
+          addToast("This file was already uploaded. Rename it and try again.", "warning");
+        } else if (msg.includes("Payload too large") || storageError.statusCode === "413") {
+          addToast(`File too large for storage. Please try a smaller PDF.`, "error");
+        } else {
+          addToast(`Storage error: ${msg || "Upload failed. Please retry."}`, "error");
+        }
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from("pdfs").getPublicUrl(storagePath);
+      const fileUrl = urlData.publicUrl;
+
+      // Step 2 — Switch to processing phase (server creates DB row + embeddings).
+      setUploadPhase("processing");
+      setUploadProgress(92);
+
+      const processRes = await fetch("/api/process-upload", {
+        method:      "POST",
+        headers:     { "Content-Type": "application/json" },
+        body:        JSON.stringify({ storagePath, fileName: file.name, fileSize: file.size, fileUrl }),
+        credentials: "include",
+      });
+
+      const processData = await processRes.json();
+
+      if (!processRes.ok) {
+        // Storage upload succeeded but server failed → remove orphaned file
+        supabase.storage.from("pdfs").remove([storagePath]).catch(() => {});
+
+        if (processData.limitExceeded) { setUpgradePopup("pdf"); return; }
+        throw new Error(processData.error || "Server processing failed");
+      }
+
+      setUploadProgress(100);
+
+      // Step 3 — Refresh state and show success feedback
+      const newDocs = await fetchDocs(user.id);
+      await fetchUsage();
       addToast(`"${file.name}" uploaded successfully!`, "success");
 
       /* ── First-upload onboarding: auto-select + auto-summarize ── */
       if (isFirstDoc && newDocs.length > 0) {
         const newDoc = newDocs[0];
-        // Switch to chat view and load the doc
         setSelectedDoc(newDoc); setMessages([]); setLimitError(null);
         setSidebarOpen(false); setShowCompare(false); setShareUrl(null); setShowInsights(false);
         setView("chat");
-        // Advance onboarding to "try" step
         setOnboardingStep(2);
-        // Auto-fire summary directly with the doc we just got (bypasses selectedDoc state timing)
         const summaryText = "Give me a structured summary of this document covering the main topics, key details, and any important notes.";
         setTimeout(async () => {
           const userMsgId = Date.now();
@@ -386,9 +473,21 @@ export default function DashboardPage() {
       }
     } catch (err) {
       const msg = err.message || "Upload failed";
-      addToast(msg.includes("limit") ? "⚠️ Upload limit reached. Upgrade to continue." : `Upload failed: ${msg}`, "error", 6000);
+      addToast(
+        msg.includes("limit") ? "⚠️ Upload limit reached. Upgrade to continue." : `Upload failed: ${msg}`,
+        "error",
+        6000
+      );
+    } finally {
+      // Small delay so the 100 % state is visible before the bar disappears
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+        setUploadPhase("idle");
+        setUploadFileName("");
+      }, uploadProgress === 100 ? 900 : 0);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-    finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
   }
 
   async function handleDelete(doc) {
@@ -919,6 +1018,101 @@ export default function DashboardPage() {
           }
         }}
       />
+
+      {/* ── Upload progress card ────────────────────────────────────────────── */}
+      {/* Fixed bottom-left, separate from top-right toasts so they never overlap */}
+      <AnimatePresence>
+        {uploading && (
+          <motion.div
+            key="upload-progress"
+            initial={{ opacity: 0, y: 24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0,  scale: 1    }}
+            exit={{    opacity: 0, y: 16, scale: 0.96, transition: { duration: 0.2 } }}
+            style={{
+              position:     "fixed",
+              bottom:        24,
+              left:          24,
+              zIndex:        9998,
+              width:         300,
+              background:    "rgba(10,10,28,0.97)",
+              border:        "1px solid rgba(124,58,237,0.35)",
+              borderRadius:  16,
+              padding:       "14px 16px",
+              backdropFilter: "blur(20px)",
+              boxShadow:     "0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(124,58,237,0.1)",
+            }}
+          >
+            {/* Header row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              {/* Animated icon */}
+              <div style={{
+                width: 32, height: 32, borderRadius: 9,
+                background: uploadPhase === "processing" ? "rgba(6,182,212,0.15)" : "rgba(124,58,237,0.15)",
+                border: `1px solid ${uploadPhase === "processing" ? "rgba(6,182,212,0.3)" : "rgba(124,58,237,0.3)"}`,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                {uploadProgress === 100
+                  ? <span style={{ fontSize: 14 }}>✓</span>
+                  : uploadPhase === "processing"
+                    ? <div style={{ width: 14, height: 14, border: "2px solid rgba(6,182,212,0.3)", borderTopColor: "#06b6d4", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                    : <div style={{ width: 14, height: 14, border: "2px solid rgba(124,58,237,0.3)", borderTopColor: "#a78bfa", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                }
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "rgba(240,240,255,0.92)", margin: 0, lineHeight: 1.3,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {uploadProgress === 100
+                    ? "Upload complete!"
+                    : uploadPhase === "processing"
+                      ? "Processing document…"
+                      : `Uploading…`
+                  }
+                </p>
+                <p style={{ fontSize: 10.5, color: "rgba(160,160,200,0.65)", margin: "2px 0 0",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {uploadFileName}
+                </p>
+              </div>
+
+              <span style={{ fontSize: 12, fontWeight: 800, color: uploadProgress === 100 ? "#4ade80" : "#a78bfa",
+                flexShrink: 0, minWidth: 36, textAlign: "right" }}>
+                {uploadProgress}%
+              </span>
+            </div>
+
+            {/* Progress bar */}
+            <div style={{ height: 5, borderRadius: 99, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+              <motion.div
+                animate={{ width: `${uploadProgress}%` }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                style={{
+                  height: "100%",
+                  borderRadius: 99,
+                  background: uploadProgress === 100
+                    ? "linear-gradient(90deg,#22c55e,#4ade80)"
+                    : uploadPhase === "processing"
+                      ? "linear-gradient(90deg,#06b6d4,#7c3aed)"
+                      : "linear-gradient(90deg,#7c3aed,#a78bfa)",
+                  boxShadow: uploadPhase === "processing"
+                    ? "0 0 8px rgba(6,182,212,0.6)"
+                    : "0 0 8px rgba(124,58,237,0.6)",
+                }}
+              />
+            </div>
+
+            {/* Phase label */}
+            <p style={{ fontSize: 10, color: "rgba(140,140,180,0.5)", margin: "7px 0 0", textAlign: "center" }}>
+              {uploadPhase === "uploading"
+                ? "Uploading to secure storage…"
+                : uploadProgress === 100
+                  ? "Generating AI embeddings ✓"
+                  : "Extracting text & generating AI embeddings…"
+              }
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Toast notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
