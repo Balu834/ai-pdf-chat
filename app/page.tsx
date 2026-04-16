@@ -347,7 +347,8 @@ export default function Home() {
             Start Free Trial
             <ArrowRight size={18} />
           </button>
-          <a href="#demo" style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(240,240,248,0.65)", textDecoration: "none", fontSize: "0.95rem", fontWeight: 500, border: "1px solid rgba(255,255,255,0.12)", padding: "15px 28px", borderRadius: 14, transition: "all 0.2s", backdropFilter: "blur(8px)" }}
+          <a href="https://youtube.com/shorts/3iaD8iVudk4?feature=share" target="_blank" rel="noopener noreferrer"
+            style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(240,240,248,0.65)", textDecoration: "none", fontSize: "0.95rem", fontWeight: 500, border: "1px solid rgba(255,255,255,0.12)", padding: "15px 28px", borderRadius: 14, transition: "all 0.2s", backdropFilter: "blur(8px)" }}
             onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.25)"; e.currentTarget.style.color="#f0f0f8" }}
             onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.12)"; e.currentTarget.style.color="rgba(240,240,248,0.65)" }}
           >
@@ -373,15 +374,68 @@ export default function Home() {
       <section id="demo" style={{ position: "relative", zIndex: 1, padding: "0 max(24px,calc((100vw - 1280px)/2)) 120px" }}>
         <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
           style={{ textAlign: "center", marginBottom: 56 }}>
-          <div style={{ display: "inline-block", background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.25)", borderRadius: 99, padding: "5px 14px", fontSize: "0.75rem", color: "#06b6d4", fontWeight: 600, marginBottom: 16, letterSpacing: "0.08em", textTransform: "uppercase" }}>Live Preview</div>
+          <div style={{ display: "inline-block", background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.25)", borderRadius: 99, padding: "5px 14px", fontSize: "0.75rem", color: "#06b6d4", fontWeight: 600, marginBottom: 16, letterSpacing: "0.08em", textTransform: "uppercase" }}>See it in action</div>
           <h2 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 auto 16px", lineHeight: 1.15 }}>
-            See Intellixy in action
+            Watch Intellixy work live
           </h2>
           <p style={{ fontSize: "1.05rem", color: "rgba(240,240,248,0.5)", maxWidth: 480, margin: "0 auto" }}>
             Upload a PDF, ask a question, get a structured answer — in under 2 seconds.
           </p>
         </motion.div>
-        <DemoChat />
+
+        {/* Two-column: video + mock chat */}
+        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 48, alignItems: "center", maxWidth: 1100, margin: "0 auto" }} className="demo-grid">
+
+          {/* Phone frame with YouTube Shorts embed */}
+          <motion.div
+            initial={{ opacity: 0, x: -32 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}
+          >
+            {/* Phone shell */}
+            <div style={{
+              position: "relative", width: 260, borderRadius: 36,
+              background: "#0a0a18",
+              border: "2px solid rgba(255,255,255,0.12)",
+              boxShadow: "0 40px 100px rgba(124,58,237,0.3), 0 0 0 1px rgba(255,255,255,0.04) inset",
+              overflow: "hidden",
+              paddingTop: 18, paddingBottom: 18,
+            }}>
+              {/* Notch */}
+              <div style={{ width: 80, height: 22, background: "#0a0a18", borderRadius: "0 0 14px 14px", margin: "0 auto 6px", position: "relative", zIndex: 2, border: "2px solid rgba(255,255,255,0.08)", borderTop: "none" }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.18)", margin: "7px auto 0" }} />
+              </div>
+              {/* Video */}
+              <div style={{ margin: "0 6px", borderRadius: 20, overflow: "hidden", aspectRatio: "9/16", background: "#000" }}>
+                <iframe
+                  src="https://www.youtube.com/embed/3iaD8iVudk4?autoplay=0&rel=0&modestbranding=1&loop=1&playlist=3iaD8iVudk4"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+                  title="Intellixy Demo"
+                />
+              </div>
+              {/* Home bar */}
+              <div style={{ width: 80, height: 4, background: "rgba(255,255,255,0.2)", borderRadius: 99, margin: "12px auto 0" }} />
+            </div>
+
+            {/* Watch on YouTube link */}
+            <a
+              href="https://youtube.com/shorts/3iaD8iVudk4?feature=share"
+              target="_blank" rel="noopener noreferrer"
+              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.8rem", color: "rgba(240,240,248,0.4)", textDecoration: "none", transition: "color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.color = "rgba(240,240,248,0.8)"}
+              onMouseLeave={e => e.currentTarget.style.color = "rgba(240,240,248,0.4)"}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+              Watch on YouTube
+            </a>
+          </motion.div>
+
+          {/* Mock chat (right side) */}
+          <motion.div initial={{ opacity: 0, x: 32 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}>
+            <DemoChat />
+          </motion.div>
+        </div>
       </section>
 
       {/* ── PROBLEM → SOLUTION ─────────────────────────────────────────────── */}
@@ -627,10 +681,12 @@ export default function Home() {
           .features-grid  { grid-template-columns: 1fr 1fr !important; }
           .testimonials-grid { grid-template-columns: 1fr !important; }
           .pricing-grid   { grid-template-columns: 1fr !important; max-width: 480px !important; }
+          .demo-grid      { grid-template-columns: 1fr !important; justify-items: center; }
         }
         @media (max-width: 600px) {
           .features-grid  { grid-template-columns: 1fr !important; }
           .hidden-mobile  { display: none !important; }
+          .demo-grid      { grid-template-columns: 1fr !important; justify-items: center; }
         }
       `}</style>
     </main>
