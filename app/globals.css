@@ -8,11 +8,53 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   padding: 0;
-  background: #09090f;
+  /* Deep-space gradient: near-black navy → slightly lighter indigo */
+  background: #0B0B1A;
+  background-image:
+    linear-gradient(135deg, #0B0B1A 0%, #0F0F2A 55%, #131330 100%);
   color: #fafafa;
   font-family: var(--font-inter, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Global ambient glow blobs (fixed, behind everything) ───────────────── */
+/* These render at the viewport layer so they show on any page that doesn't
+   set its own opaque background.  pointer-events: none so they never
+   interfere with clicks.  z-index:-1 keeps them under all content.        */
+
+body::before {
+  content: "";
+  position: fixed;
+  top: -18%;
+  left: -12%;
+  width: 55vw;
+  height: 55vw;
+  max-width: 780px;
+  max-height: 780px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.13) 0%, transparent 68%);
+  filter: blur(72px);
+  pointer-events: none;
+  z-index: -1;
+  will-change: transform;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  bottom: -18%;
+  right: -10%;
+  width: 50vw;
+  height: 50vw;
+  max-width: 700px;
+  max-height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.10) 0%, transparent 68%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: -1;
+  will-change: transform;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -130,4 +172,43 @@ button { font-family: inherit; }
     background: rgba(0,0,0,0.6);
     backdrop-filter: blur(4px);
   }
+}
+
+/* ── Premium background utilities ───────────────────────────────────────── */
+
+/* Dot grid overlay — apply className="bg-grid" to any section/page wrapper  */
+.bg-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.055) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+/* Centre spotlight — apply to a full-screen container for auth/blank pages  */
+.bg-spotlight {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.14) 0%, transparent 70%);
+}
+
+/* Gradient-text utility (consistent with landing page) */
+.gradient-text-purple-cyan {
+  background: linear-gradient(135deg, #c4b5fd, #06b6d4, #a78bfa);
+  background-size: 200% 200%;
+  animation: gradMove 4s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Noise texture overlay (very subtle, adds micro-texture depth) */
+.bg-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
 }
