@@ -75,30 +75,38 @@ export async function POST(req) {
       );
     }
 
-    // ── PDF count limit ───────────────────────────────────────────────────────
-    let limitCheck;
+    // ── PDF count pre-check (fast-fail, non-blocking on error) ──────────────
+    // This is an early-exit optimisation only. The authoritative limit check
+    // is inside insert_document_if_under_limit (which reads the plan itself).
+    // If this check errors for any infra reason we log it and continue — the
+    // DB function will gate correctly. We NEVER block a legitimate user because
+    // of a transient subscription read failure.
     try {
-      limitCheck = await checkUploadLimit(user.id);
-    } catch (e) {
-      console.error("[PROCESS-UPLOAD] Subscription check failed:", e.message);
-      return NextResponse.json(
-        { error: "Could not verify subscription. Please try again." },
-        { status: 500 }
+      const limitCheck = await checkUploadLimit(user.id);
+      console.log(
+        `[PROCESS-UPLOAD] pre-check user=${user.id} ` +
+        `plan=${limitCheck.isPro ? "pro" : "free"} ` +
+        `used=${limitCheck.used}/${limitCheck.limit ?? "∞"} ` +
+        `allowed=${limitCheck.allowed}`
       );
-    }
-
-    console.log(
-      `[PROCESS-UPLOAD] user=${user.id} plan=${limitCheck.isPro ? "pro" : "free"} ` +
-      `used=${limitCheck.used}/${limitCheck.limit ?? "∞"} allowed=${limitCheck.allowed}`
-    );
-
-    if (!limitCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: `PDF limit reached (${LIMITS.free.pdfs} lifetime). Upgrade to Pro for unlimited uploads.`,
-          limitExceeded: true,
-        },
-        { status: 403 }
+      // Only hard-stop when we are certain the free limit is exceeded.
+      // isPro users always pass (limit=null). On a borderline count the DB
+      // function with its advisory lock is the final word.
+      if (!limitCheck.isPro && !limitCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: `PDF limit reached (${LIMITS.free.pdfs} free uploads). Upgrade to Pro for unlimited uploads.`,
+            limitExceeded: true,
+          },
+          { status: 403 }
+        );
+      }
+    } catch (preCheckErr) {
+      // Log and proceed — don't turn an infra hiccup into a user-facing 500.
+      // The DB function is the authoritative gate and will block if truly over limit.
+      console.warn(
+        `[PROCESS-UPLOAD] subscription pre-check failed for ${user.id} — ` +
+        `continuing to DB gate. Error: ${preCheckErr.message}`
       );
     }
 
@@ -135,29 +143,36 @@ export async function POST(req) {
     }
 
     // ── Atomic DB insert ──────────────────────────────────────────────────────
-    const pdfLimit = limitCheck.isPro ? 2147483647 : LIMITS.free.pdfs;
+    // p_limit is intentionally NOT passed — the DB function reads the user's
+    // plan from user_plans itself and decides the limit. This guarantees the
+    // limit is always correct even if the server-side subscription check above
+    // returned a stale or incorrect result.
     const { data: docId, error: dbError } = await adminDb.rpc(
       "insert_document_if_under_limit",
       {
         p_user_id:   user.id,
         p_file_name: fileName,
         p_file_url:  fileUrl,
-        p_file_size: Math.min(size, 2147483647), // guard against int overflow
-        p_limit:     pdfLimit,
+        p_file_size: Math.min(size, 2147483647), // guard: JS numbers fit in int
       }
     );
 
     if (dbError) {
       if (dbError.message?.includes("LIMIT_EXCEEDED")) {
+        console.log(`[PROCESS-UPLOAD] DB gate: LIMIT_EXCEEDED for ${user.id} — detail: ${dbError.message}`);
         return NextResponse.json(
           {
-            error: `PDF limit reached (${LIMITS.free.pdfs} lifetime). Upgrade to Pro for unlimited uploads.`,
+            error: `PDF limit reached (${LIMITS.free.pdfs} free uploads). Upgrade to Pro for unlimited uploads.`,
             limitExceeded: true,
           },
           { status: 403 }
         );
       }
-      console.error("[PROCESS-UPLOAD] DB error:", dbError.message);
+      if (dbError.message?.includes("NULL_USER_ID")) {
+        console.error("[PROCESS-UPLOAD] NULL_USER_ID from DB — auth session may have expired");
+        return NextResponse.json({ error: "Session expired. Please refresh and try again." }, { status: 401 });
+      }
+      console.error("[PROCESS-UPLOAD] DB error:", dbError.message, "| code:", dbError.code);
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 

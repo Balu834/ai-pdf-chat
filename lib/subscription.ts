@@ -48,7 +48,7 @@ export interface QuestionLimitCheck {
 
 export const LIMITS = {
   free: {
-    pdfs:      5,   // lifetime
+    pdfs:      3,   // lifetime — matches insert_document_if_under_limit DB function
     questions: 10,  // lifetime
   },
 } as const;

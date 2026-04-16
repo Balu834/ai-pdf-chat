@@ -56,21 +56,49 @@ export async function GET(request) {
     results.subscription = { ok: false, reason: "skipped — no user or missing service role key" };
   }
 
-  // 4. Usage stats
+  // 4. Usage stats + live upload gate diagnosis
   if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const admin = createAdminClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
-      const { data, error } = await admin
-        .from("user_stats")
-        .select("total_pdfs, total_questions")
-        .eq("user_id", userId)
-        .maybeSingle();
-      results.usage = error
-        ? { ok: false, error: error.message }
-        : { ok: true, stats: data ?? { total_pdfs: 0, total_questions: 0 } };
+
+      const [statsRes, docCountRes] = await Promise.all([
+        admin.from("user_stats").select("total_pdfs, total_questions").eq("user_id", userId).maybeSingle(),
+        admin.from("documents").select("id", { count: "exact", head: true }).eq("user_id", userId),
+      ]);
+
+      // Replicate the three-signal isPro logic from subscription.ts
+      const row = results.subscription?.row;
+      const now = new Date();
+      const isPro = row && row !== "NO ROW — will be auto-provisioned as free"
+        && row.plan === "pro"
+        && (
+          row.subscription_status === "active"
+          || (row.pro_expires_at && new Date(row.pro_expires_at) > now)
+          || (row.grace_until    && new Date(row.grace_until)    > now)
+        );
+
+      const docCount  = docCountRes.count ?? 0;
+      const freeLimit = 3;
+      const limit     = isPro ? 100000 : freeLimit;
+
+      results.upload_gate = {
+        doc_count:     docCount,
+        limit,
+        remaining:     Math.max(0, limit - docCount),
+        allowed:       docCount < limit,
+        plan_is_pro:   !!isPro,
+        // signals breakdown
+        signal_active: row?.subscription_status === "active",
+        signal_period: !!(row?.pro_expires_at && new Date(row.pro_expires_at) > now),
+        signal_grace:  !!(row?.grace_until    && new Date(row.grace_until)    > now),
+      };
+
+      results.usage = statsRes.error
+        ? { ok: false, error: statsRes.error.message }
+        : { ok: true, stats: statsRes.data ?? { total_pdfs: 0, total_questions: 0 } };
     } catch (e) {
       results.usage = { ok: false, error: e.message };
     }
