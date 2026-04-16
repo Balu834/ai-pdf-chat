@@ -18,43 +18,63 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Global ambient glow blobs (fixed, behind everything) ───────────────── */
-/* These render at the viewport layer so they show on any page that doesn't
-   set its own opaque background.  pointer-events: none so they never
-   interfere with clicks.  z-index:-1 keeps them under all content.        */
+/* ── Animated glow blobs (rendered by <AnimatedBackground> component) ───── */
+/* Static body::before / body::after replaced by the React component so we  */
+/* can drive parallax via rAF + layer CSS float animation on top.            */
 
-body::before {
-  content: "";
-  position: fixed;
+/* Parallax wrappers — JS writes transform here via ref (no animation set,  */
+/* GPU-composited thanks to will-change).                                    */
+.blob-parallax-1 {
+  position: absolute;
   top: -18%;
   left: -12%;
+  will-change: transform;
+}
+.blob-parallax-2 {
+  position: absolute;
+  bottom: -18%;
+  right: -10%;
+  will-change: transform;
+}
+
+/* Blob inner divs — carry the CSS keyframe float animation independently.  */
+/* Using a second layer keeps the parallax offset (outer) and float (inner)  */
+/* transforms from conflicting.                                               */
+.blob-purple {
   width: 55vw;
   height: 55vw;
   max-width: 780px;
   max-height: 780px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.13) 0%, transparent 68%);
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 68%);
   filter: blur(72px);
-  pointer-events: none;
-  z-index: -1;
+  animation: blobFloat1 12s ease-in-out infinite;
   will-change: transform;
 }
-
-body::after {
-  content: "";
-  position: fixed;
-  bottom: -18%;
-  right: -10%;
+.blob-cyan {
   width: 50vw;
   height: 50vw;
   max-width: 700px;
   max-height: 700px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.10) 0%, transparent 68%);
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.14) 0%, transparent 68%);
   filter: blur(80px);
-  pointer-events: none;
-  z-index: -1;
+  animation: blobFloat2 15s ease-in-out infinite;
   will-change: transform;
+}
+
+/* Drifting gradient overlay — sits behind blobs, adds slow colour movement. */
+.bg-gradient-drift {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.05) 0%,
+    transparent            45%,
+    rgba(6, 182, 212, 0.05) 100%
+  );
+  background-size: 300% 300%;
+  animation: gradientDrift 22s ease infinite;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -88,6 +108,31 @@ button { font-family: inherit; }
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ── Background animation keyframes ─────────────────────────────────────── */
+
+/* Purple blob: drifts slightly up-right then back, gentle scale breathe     */
+@keyframes blobFloat1 {
+  0%,  100% { transform: translate(0px,   0px)   scale(1);    }
+  25%        { transform: translate(26px, -20px)  scale(1.06); }
+  50%        { transform: translate(14px,  10px)  scale(1.02); }
+  75%        { transform: translate(-18px, 16px)  scale(0.96); }
+}
+
+/* Cyan blob: counter-phase so the two blobs never peak at the same time     */
+@keyframes blobFloat2 {
+  0%,  100% { transform: translate(0px,    0px)  scale(1);    }
+  25%        { transform: translate(-22px,  16px) scale(1.05); }
+  50%        { transform: translate(-10px, -12px) scale(0.97); }
+  75%        { transform: translate(20px,  -18px) scale(1.04); }
+}
+
+/* Gradient overlay: slow background-position drift for hue shift effect     */
+@keyframes gradientDrift {
+  0%,  100% { background-position: 0%   50%; }
+  33%        { background-position: 60%  30%; }
+  66%        { background-position: 100% 70%; }
 }
 
 .animate-fadeUp   { animation: fadeUp 0.7s ease both; }

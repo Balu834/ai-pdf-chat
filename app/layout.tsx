@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Analytics from "@/components/Analytics";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -71,6 +72,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body suppressHydrationWarning>
+        <AnimatedBackground />
         {children}
         <Analytics />
       </body>
