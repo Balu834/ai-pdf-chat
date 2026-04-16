@@ -104,14 +104,8 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
     finally  { setCouponLoading(false); }
   }
 
-  const used     = isPdf ? (usage?.pdfs ?? 0)       : (usage?.questions ?? 0);
-  const max      = isPdf ? (usage?.maxPdfs ?? 3)     : (usage?.maxQuestions ?? 5);
-  const headline = isPdf
-    ? "You've hit your free PDF limit"
-    : "You've used all your free questions";
-  const subline  = isPdf
-    ? "Upload unlimited PDFs and never hit a wall again."
-    : "You're clearly getting value — don't stop now.";
+  const used     = isPdf ? (usage?.pdfs ?? 0)    : (usage?.questions ?? 0);
+  const max      = isPdf ? (usage?.maxPdfs ?? 3)  : (usage?.maxQuestions ?? 5);
 
   return (
     <motion.div
@@ -154,60 +148,69 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             {isPdf ? `${used}/${max} PDFs used` : `${used}/${max} questions used`}
           </div>
 
-          {/* Icon */}
-          <div style={{ width: 66, height: 66, borderRadius: 20, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 28, boxShadow: "0 14px 48px rgba(124,58,237,0.55)" }}>
-            {isPdf ? "📄" : "💬"}
+          {/* Warning icon */}
+          <div style={{ width: 58, height: 58, borderRadius: 18, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.28)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", fontSize: 26 }}>
+            ⚠️
           </div>
 
-          <h2 style={{ fontSize: 22, fontWeight: 900, color: C.textPrimary, margin: "0 0 8px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>
-            {headline}
+          {/* Headline */}
+          <h2 style={{ fontSize: 21, fontWeight: 900, color: C.textPrimary, margin: "0 0 6px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>
+            You've reached your free limit
           </h2>
-          <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 22px", lineHeight: 1.65 }}>
-            {subline}
+
+          {/* Subline with the hook */}
+          <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 6px", lineHeight: 1.65 }}>
+            {isPdf
+              ? `You've uploaded ${used}/${max} free PDFs.`
+              : `You've asked ${used}/${max} questions today.`}
+          </p>
+          <p style={{ fontSize: 13, color: "rgba(240,240,248,0.5)", margin: "0 0 22px", lineHeight: 1.65 }}>
+            But here's the thing 👇<br />
+            <span style={{ color: C.accentLight, fontWeight: 600 }}>Your document still has more insights waiting…</span>
           </p>
 
           {/* Pricing card */}
           <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.14),rgba(6,182,212,0.1))", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 18, padding: "16px 16px 14px", marginBottom: 12, textAlign: "left" }}>
             {/* Header row */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 13 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <CrownIcon />
                 <span style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: "0.06em" }}>INTELLIXY PRO</span>
               </div>
               <span style={{ fontSize: 9, fontWeight: 800, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.28)", padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>
-                🔥 LAUNCH PRICE
+                🔥 LIMITED OFFER
               </span>
             </div>
 
-            {/* Price */}
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 6 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 4 }}>₹999</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(248,113,113,0.7)", textDecoration: "line-through", paddingBottom: 4 }}>₹299</span>
-              <span style={{ fontSize: 38, fontWeight: 900, color: C.textPrimary, lineHeight: 1, letterSpacing: "-1.5px" }}>₹199</span>
-              <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 4 }}>/month</span>
-              <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", padding: "3px 8px", borderRadius: 7, marginLeft: 4, paddingBottom: 4 }}>EARLY BIRD</span>
-            </div>
-            {/* Countdown */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-              <span style={{ fontSize: 10, color: "#f87171" }}>🔥</span>
-              <span style={{ fontSize: 10.5, color: "#f87171", fontWeight: 700 }}>Price goes up to ₹299 in</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "#fbbf24", fontVariantNumeric: "tabular-nums", letterSpacing: "0.05em" }}>{countdown}</span>
-            </div>
-
-            {/* Features */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 10px" }}>
+            {/* Features — exact copy from spec */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
               {[
-                "Unlimited PDF uploads",
-                "Unlimited questions",
-                "Delete PDFs anytime",
-                "PDF Compare & Insights",
-                "Share chat links",
-                "Priority AI responses",
-              ].map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: C.textSecondary }}>
-                  <span style={{ color: C.green, flexShrink: 0 }}><CheckIcon /></span>{f}
+                { icon: "✅", text: "Unlimited PDF chats" },
+                { icon: "⚡", text: "Faster AI responses" },
+                { icon: "📊", text: "Deep insights (risks, key points, summaries)" },
+                { icon: "🔍", text: "Smarter answers with context" },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12.5, color: C.textSecondary }}>
+                  <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                  <span>{text}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Price */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 12 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 3 }}>₹299</span>
+                <span style={{ fontSize: 36, fontWeight: 900, color: C.textPrimary, lineHeight: 1, letterSpacing: "-1.5px" }}>₹199</span>
+                <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 3 }}>/month</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", padding: "3px 8px", borderRadius: 6, marginLeft: 2, paddingBottom: 3 }}>EARLY BIRD</span>
+              </div>
+              {/* Countdown */}
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ fontSize: 10, color: "#f87171" }}>🔥</span>
+                <span style={{ fontSize: 10.5, color: "#f87171", fontWeight: 600 }}>Offer ends in</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#fbbf24", fontVariantNumeric: "tabular-nums" }}>{countdown}</span>
+              </div>
             </div>
           </div>
 
@@ -262,7 +265,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
           >
             {couponData
               ? `Pay ₹${couponData.final_amount_paise / 100} — Upgrade Now →`
-              : "Upgrade to Pro — ₹199/mo →"}
+              : "👉 Upgrade to PRO — ₹199/mo →"}
           </RazorpayButton>
 
           {/* Trust strip */}
@@ -310,36 +313,51 @@ export function UpgradeBanner({ type, onUpgrade, usage }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0,  scale: 1 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", damping: 22, stiffness: 300 }}
-      style={{ margin: "8px 0", padding: "16px 18px", background: "linear-gradient(135deg,rgba(239,68,68,0.08),rgba(124,58,237,0.06))", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 16, backdropFilter: "blur(8px)" }}
+      style={{ margin: "8px 0", padding: "16px 18px", background: "linear-gradient(135deg,rgba(239,68,68,0.07),rgba(124,58,237,0.07))", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 16, backdropFilter: "blur(8px)" }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-            <span style={{ fontSize: 13 }}>🔒</span>
-            <p style={{ fontSize: 13, fontWeight: 800, color: "#f87171", margin: 0, letterSpacing: "-0.2px" }}>
-              {type === "question" ? `${used}/${max} questions used — limit reached` : `${used}/${max} PDFs used — limit reached`}
-            </p>
-          </div>
-          <p style={{ fontSize: 12, color: "rgba(240,240,248,0.3)", margin: 0, lineHeight: 1.55 }}>
-            {type === "question"
-              ? "Upgrade to Pro for unlimited questions, forever."
-              : "Upgrade to Pro for unlimited PDF uploads and questions."}
+      {/* Top row */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontSize: 13.5, fontWeight: 800, color: "#f87171", margin: "0 0 3px", letterSpacing: "-0.2px" }}>
+            ⚠️ You've reached your free limit
           </p>
+          <p style={{ fontSize: 12, color: "rgba(240,240,248,0.45)", margin: "0 0 10px", lineHeight: 1.55 }}>
+            {type === "question"
+              ? `You've asked ${used}/${max} questions. Your document still has more insights waiting…`
+              : `You've uploaded ${used}/${max} free PDFs. Unlock unlimited uploads to keep going.`}
+          </p>
+          {/* Feature pills */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {["✅ Unlimited PDF chats", "⚡ Faster AI", "📊 Deep insights", "🔍 Smarter answers"].map((f) => (
+              <span key={f} style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(240,240,248,0.55)", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 99, padding: "3px 9px" }}>{f}</span>
+            ))}
+          </div>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.04, boxShadow: "0 8px 28px rgba(124,58,237,0.55)" }}
-          whileTap={{ scale: 0.96 }}
-          onClick={onUpgrade}
-          style={{ padding: "10px 18px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, boxShadow: "0 4px 18px rgba(124,58,237,0.4)" }}
-        >
-          🔥 Upgrade — ₹199/mo →
-        </motion.button>
+
+        {/* CTA block */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 2 }}>
+            <span style={{ fontSize: 10, color: C.textMuted, textDecoration: "line-through" }}>₹299</span>
+            <span style={{ fontSize: 15, fontWeight: 900, color: C.textPrimary }}>₹199</span>
+            <span style={{ fontSize: 10, color: C.textMuted }}>/mo</span>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.04, boxShadow: "0 8px 28px rgba(124,58,237,0.55)" }}
+            whileTap={{ scale: 0.96 }}
+            onClick={onUpgrade}
+            style={{ padding: "10px 20px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 12.5, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 4px 18px rgba(124,58,237,0.45)", letterSpacing: "-0.2px" }}
+          >
+            👉 Upgrade to PRO
+          </motion.button>
+        </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        {["✓ Cancel anytime", "✓ 7-day free trial", "✓ Secured by Razorpay"].map((t) => (
-          <span key={t} style={{ fontSize: 10.5, color: "rgba(240,240,248,0.28)", fontWeight: 500 }}>{t}</span>
+
+      {/* Trust strip */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 11, borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 9 }}>
+        {["🔒 Secured by Razorpay", "✓ Cancel anytime", "✓ 7-day money-back"].map((t) => (
+          <span key={t} style={{ fontSize: 10, color: "rgba(240,240,248,0.25)", fontWeight: 500 }}>{t}</span>
         ))}
       </div>
     </motion.div>
@@ -370,17 +388,20 @@ export function LockedMessage({ onUpgrade }) {
           <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(7px)", background: "linear-gradient(to bottom,transparent 0%,rgba(9,8,28,0.6) 35%,rgba(9,8,28,0.95) 65%)" }} />
           {/* CTA over blur */}
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "14px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 18, marginBottom: 6 }}>🔒</div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#f0f0f8", margin: "0 0 10px", lineHeight: 1.4 }}>
-              You've reached your question limit
+            <div style={{ fontSize: 18, marginBottom: 5 }}>⚠️</div>
+            <p style={{ fontSize: 12, fontWeight: 800, color: "#f87171", margin: "0 0 2px", lineHeight: 1.4 }}>
+              You've reached your free limit
+            </p>
+            <p style={{ fontSize: 11, color: "rgba(240,240,248,0.45)", margin: "0 0 10px" }}>
+              Your document still has more insights waiting…
             </p>
             <motion.button
               whileHover={{ scale: 1.04, boxShadow: "0 8px 28px rgba(124,58,237,0.55)" }}
               whileTap={{ scale: 0.96 }}
               onClick={onUpgrade}
-              style={{ padding: "9px 20px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.5)", whiteSpace: "nowrap" }}
+              style={{ padding: "10px 22px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 12.5, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.5)", whiteSpace: "nowrap" }}
             >
-              🔥 Unlock answer — ₹199/mo →
+              👉 Upgrade to PRO — ₹199/mo
             </motion.button>
           </div>
         </div>
