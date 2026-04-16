@@ -27,11 +27,11 @@ export const NAV_ITEM_IDS = ["dashboard", "pdfs", "chat", "billing", "settings"]
 
 /* ─── SMART ACTIONS ──────────────────────────────────────────────────────── */
 export const SMART_ACTIONS = [
-  { label: "✦ Summarize", prompt: "Summarize this document in 3-4 sentences covering the main points." },
-  { label: "🧒 ELI5",      prompt: "Explain this document like I'm 5 years old, in simple plain language." },
-  { label: "📌 Key Points", prompt: "List the most important key points from this document as bullet points." },
-  { label: "⚠️ Risks",     prompt: "Identify any risks, warnings, issues or concerns mentioned in this document." },
-  { label: "❓ Questions",  prompt: "Generate 5 insightful questions someone might ask about this document." },
+  { label: "📄 Summarize",  prompt: "Give me a structured summary of this document covering the main topics, key details, and any important notes." },
+  { label: "💡 Key Points", prompt: "List the most important key points and key values (amounts, dates, names) from this document." },
+  { label: "⚠️ Risks",      prompt: "Identify all risks, warnings, conditions, or concerns mentioned in this document." },
+  { label: "🧒 ELI5",       prompt: "Explain this document like I'm 5 years old in simple plain language." },
+  { label: "❓ Questions",   prompt: "Generate 5 smart follow-up questions someone should ask about this document." },
 ];
 
 /* ─── HELPERS ────────────────────────────────────────────────────────────── */

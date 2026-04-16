@@ -115,6 +115,12 @@ button { font-family: inherit; }
   }
 }
 
+/* ── Dashboard root: use dynamic viewport height so mobile keyboard doesn't push layout ── */
+.dashboard-root {
+  height: 100vh;        /* fallback for browsers without dvh support */
+  height: 100dvh;       /* shrinks when mobile keyboard opens — prevents layout shift */
+}
+
 /* ── Sidebar mobile overlay ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sidebar-overlay {

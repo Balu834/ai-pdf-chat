@@ -3,6 +3,13 @@ import OpenAI from "openai";
 import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
 import { checkUploadLimit, LIMITS } from "@/lib/subscription";
+import { uploadLimiter } from "@/lib/rate-limit";
+import { createClient as createAdmin } from "@supabase/supabase-js";
+
+const adminDb = createAdmin(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
@@ -46,6 +53,15 @@ export async function POST(req) {
     if (authError || !user) {
       console.error("[UPLOAD] Auth failed:", authError?.message ?? "no user in session");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // ── Rate limit ────────────────────────────────────────────
+    const rl = uploadLimiter.check(user.id);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "Too many uploads. Please wait before trying again." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+      );
     }
 
     // ── PDF limit ─────────────────────────────────────────────
@@ -113,17 +129,31 @@ export async function POST(req) {
     const { data: urlData } = supabase.storage.from("pdfs").getPublicUrl(fileName);
     const fileUrl = urlData.publicUrl;
 
-    // ── DB record ─────────────────────────────────────────────
-    const { data: docRecord, error: dbError } = await supabase
-      .from("documents")
-      .insert([{ file_name: file.name, file_url: fileUrl, file_size: file.size, user_id: user.id }])
-      .select("id")
-      .single();
+    // ── DB record (atomic limit check + insert to prevent race conditions) ──
+    const pdfLimit = limitCheck.isPro ? 2147483647 : LIMITS.free.pdfs;
+    const { data: docId, error: dbError } = await adminDb.rpc(
+      "insert_document_if_under_limit",
+      {
+        p_user_id:   user.id,
+        p_file_name: file.name,
+        p_file_url:  fileUrl,
+        p_file_size: file.size,
+        p_limit:     pdfLimit,
+      }
+    );
 
     if (dbError) {
+      if (dbError.message?.includes("LIMIT_EXCEEDED")) {
+        return NextResponse.json(
+          { error: `PDF limit reached (${LIMITS.free.pdfs} lifetime). Upgrade to Pro for unlimited uploads.`, limitExceeded: true },
+          { status: 403 }
+        );
+      }
       console.error("[UPLOAD] DB error:", dbError.message);
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
+
+    const docRecord = { id: docId };
 
     // ── Embeddings (blocking — Vercel kills background tasks after response) ──
     if (process.env.OPENAI_API_KEY) {

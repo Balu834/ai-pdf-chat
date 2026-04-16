@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@/lib/supabase-server-client";
 import { createClient as createAdmin } from "@supabase/supabase-js";
+import { sendPaymentSuccessEmail } from "@/lib/email";
 
 // Service-role client — bypasses RLS, used for all writes here
 const adminDb = createAdmin(
@@ -86,6 +87,11 @@ export async function POST(request) {
     }
 
     console.log(`[verify-payment] ✅ User ${user.id} upgraded to Pro — expires ${proExpiresAt}`);
+
+    // Send payment confirmation email (non-blocking)
+    sendPaymentSuccessEmail(user.email, chargedPaise, proExpiresAt).catch((e) =>
+      console.warn("[verify-payment] email send failed (non-fatal):", e.message)
+    );
 
     // 5. Record payment in ledger (non-blocking — log but don't fail the main flow)
     try {

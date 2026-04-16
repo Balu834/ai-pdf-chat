@@ -597,5 +597,45 @@ create index if not exists payments_created_idx on payments (created_at desc);
 alter table payments enable row level security;
 
 drop policy if exists "payments_select_own" on payments;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 11. Atomic upload gate
+--
+-- Atomically checks whether the user is under the free PDF limit and inserts
+-- the document row in ONE transaction, preventing the race condition where two
+-- simultaneous requests both read count=4 and both get allowed.
+--
+-- Returns: the new document row on success, or raises an exception if limit is
+-- exceeded so the caller can detect the error and return 403.
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace function insert_document_if_under_limit(
+  p_user_id   uuid,
+  p_file_name text,
+  p_file_url  text,
+  p_file_size bigint,
+  p_limit     int   -- 5 for free users; pass 2147483647 for unlimited Pro
+)
+returns uuid
+language plpgsql security definer as $$
+declare
+  v_count int;
+  v_id    uuid;
+begin
+  -- Count existing documents for this user (row-level lock via FOR UPDATE)
+  select count(*) into v_count
+  from   documents
+  where  user_id = p_user_id;
+
+  if v_count >= p_limit then
+    raise exception 'LIMIT_EXCEEDED' using hint = 'pdf_limit';
+  end if;
+
+  insert into documents (user_id, file_name, file_url, file_size)
+  values (p_user_id, p_file_name, p_file_url, p_file_size)
+  returning id into v_id;
+
+  return v_id;
+end;
+$$;
 create policy "payments_select_own" on payments
   for select using (auth.uid() = user_id);

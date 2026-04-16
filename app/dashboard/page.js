@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -17,6 +17,38 @@ import { UpgradePopup, UpgradeBanner } from "@/components/dashboard/UpgradePopup
 import { MessageSkeleton } from "@/components/dashboard/Shimmer";
 import { C, SMART_ACTIONS } from "@/components/dashboard/tokens";
 import { MenuIcon, ShareIcon, InsightIcon, CompareIcon, TrashIcon, SendIcon, MicIcon, ShieldIcon, CloseIcon, CheckIcon } from "@/components/dashboard/icons";
+
+/* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
+const STATUS_STEPS = [
+  "Reading document…",
+  "Analyzing context…",
+  "Extracting insights…",
+  "Composing answer…",
+];
+
+function StreamingStatusBar() {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setIdx((i) => (i + 1) % STATUS_STEPS.length), 1800);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div style={{ padding: "7px 20px", background: "rgba(124,58,237,0.06)", borderTop: "1px solid rgba(124,58,237,0.12)", display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.accentLight, animation: "pulse-dot 1.2s ease-in-out infinite", flexShrink: 0 }} />
+      <motion.span
+        key={idx}
+        initial={{ opacity: 0, x: 6 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.22 }}
+        style={{ fontSize: 11.5, color: C.accentLight, fontWeight: 600 }}
+      >
+        {STATUS_STEPS[idx]}
+      </motion.span>
+    </div>
+  );
+}
 
 /* ─── HEADER BUTTON ──────────────────────────────────────────────────────── */
 function HeaderBtn({ onClick, disabled, active, color = "default", children }) {
@@ -74,6 +106,31 @@ export default function DashboardPage() {
   const [listening, setListening] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
   const recognitionRef = useRef(null);
+
+  /* ── Rotating placeholder ── */
+  const PLACEHOLDERS = useMemo(() => [
+    "Summarize this document…",
+    "What is the total amount?",
+    "List the key risks…",
+    "Who are the parties involved?",
+    "Extract important dates…",
+    "What are the main conclusions?",
+    "Explain this in simple terms…",
+  ], []);
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [placeholderFade, setPlaceholderFade] = useState(true);
+
+  useEffect(() => {
+    if (!selectedDoc) return;
+    const id = setInterval(() => {
+      setPlaceholderFade(false);
+      setTimeout(() => {
+        setPlaceholderIdx((i) => (i + 1) % PLACEHOLDERS.length);
+        setPlaceholderFade(true);
+      }, 250);
+    }, 3500);
+    return () => clearInterval(id);
+  }, [selectedDoc, PLACEHOLDERS]);
 
   const [autoInsights, setAutoInsights] = useState(null);
   const [autoInsightsLoading, setAutoInsightsLoading] = useState(false);
@@ -415,7 +472,7 @@ export default function DashboardPage() {
   const qLimitHit = plan !== "pro" && usage.questions >= usage.maxQuestions;
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: C.bg, overflow: "hidden", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
+    <div className="dashboard-root" style={{ display: "flex", background: C.bg, overflow: "hidden", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
 
       {/* Ambient background */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
@@ -608,6 +665,20 @@ export default function DashboardPage() {
               )}
             </div>
 
+            {/* AI streaming status bar */}
+            <AnimatePresence>
+              {aiStreaming && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  style={{ flexShrink: 0, overflow: "hidden" }}
+                >
+                  <StreamingStatusBar />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Input area */}
             <div className="input-area" style={{ padding: "8px 16px 14px", flexShrink: 0, background: "rgba(7,7,26,0.88)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.05)", position: "sticky", bottom: 0, zIndex: 5 }}>
               {!selectedDoc ? (
@@ -626,8 +697,9 @@ export default function DashboardPage() {
                     onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.35)"; }}
                   >
                     <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
-                      placeholder={`Ask about ${selectedDoc.file_name}…`} disabled={aiStreaming} rows={1} suppressHydrationWarning
-                      style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit" }}
+                      placeholder={PLACEHOLDERS[placeholderIdx]}
+                      disabled={aiStreaming} rows={1} suppressHydrationWarning
+                      style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit", opacity: placeholderFade ? 1 : 0, transition: "opacity 0.25s" }}
                       onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
                     />
                     <motion.button type="button" whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={toggleVoice}

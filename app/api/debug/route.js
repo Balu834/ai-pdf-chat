@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-export async function GET() {
+export async function GET(request) {
+  // Gate behind CRON_SECRET so this is never publicly accessible.
+  // Call with: GET /api/debug  Authorization: Bearer <CRON_SECRET>
+  const authHeader = request.headers.get("authorization");
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const results = {};
 
   // 1. Env vars (presence only — never log values)

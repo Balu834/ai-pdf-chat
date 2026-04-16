@@ -11,11 +11,12 @@ const MAX_CONTEXT = 3000;
 const MAX_FALLBACK_CHARS = 12000;
 const HISTORY_LIMIT = 10;
 
-// Keywords that trigger structured extraction mode
+// Only trigger raw JSON extraction when the user explicitly asks for machine-readable output.
+// Document types like "invoice" / "resume" / "contract" should be answered in human-readable
+// structured format, NOT returned as a JSON blob.
 const EXTRACTION_TRIGGERS = [
-  "extract", "invoice", "bill", "receipt", "resume", "cv",
-  "structured", "json", "details", "billing info", "invoice data",
-  "parse", "fill form", "key fields",
+  "return json", "give me json", "output json", "as json",
+  "in json format", "json output", "machine readable",
 ];
 
 function isExtractionRequest(message) {
@@ -79,16 +80,64 @@ function streamText(text) {
   );
 }
 
+// Classify what kind of response structure fits the question
+function classifyIntent(message) {
+  const q = message.toLowerCase();
+  if (q.includes("summar") || q.includes("overview") || q.includes("what is this") || q.includes("about this") || q.includes("describe") || q.includes("eli5") || q.includes("explain")) return "summary";
+  if (q.includes("risk") || q.includes("warning") || q.includes("issue") || q.includes("concern") || q.includes("problem") || q.includes("danger")) return "risks";
+  if (q.includes("key point") || q.includes("highlight") || q.includes("main point") || q.includes("important") || q.includes("takeaway")) return "keypoints";
+  if (q.includes("extract") || q.includes("parse")) return "extraction";
+  if (q.includes("question") || q.includes("ask") || q.includes("suggest") || q.includes("what should")) return "questions";
+  return "answer";
+}
+
+const STRUCTURED_SYSTEM = (context, intent) => {
+  const base = `You are Intellixy, an expert AI document assistant. You answer questions about documents with precision and clarity.
+
+DOCUMENT CONTEXT:
+${context}
+
+─── RESPONSE FORMAT RULES ───
+Always structure your response using these emoji section headers. Include only the sections relevant to the question.
+
+📄 **Summary:**
+• 2-4 concise bullet points covering the main answer
+
+💡 **Key Details:**
+• Specific values, names, dates, amounts — formatted as "Label: **Value**"
+• Highlight monetary amounts like **₹2,400** and dates like **15 Jan 2025** in bold
+
+⚠️ **Notes / Risks:**
+• Only include if there are warnings, conditions, caveats, or risks in the document
+• Skip this section if there are none
+
+❓ **You might also ask:**
+• 2-3 short follow-up questions the user could ask next
+
+─── RULES ───
+1. Use ONLY information from the document context. Never guess or hallucinate.
+2. Bold important values: amounts, dates, names, totals.
+3. Keep bullets short (one line each). Never write paragraphs.
+4. If something is not in the document, say "Not mentioned in this document."
+5. For simple direct questions (yes/no, single values), answer briefly first, then add one Key Details section.`;
+
+  const intentOverrides = {
+    summary: `\n\nThe user wants a SUMMARY. Focus on the 📄 Summary section with 4-5 bullets covering all major topics. Add 💡 Key Details for any important numbers/dates found.`,
+    risks: `\n\nThe user is asking about RISKS or WARNINGS. Lead with ⚠️ Notes / Risks as your primary section, then add 📄 Summary if needed.`,
+    keypoints: `\n\nThe user wants KEY POINTS. Use 📄 Summary with 5-7 bullets. Add 💡 Key Details for any values.`,
+    questions: `\n\nThe user wants suggested questions. Respond with 5 smart, specific ❓ questions about this document. Format each as a clickable question.`,
+    answer: `\n\nFor direct questions: answer directly and concisely. Use Key Details to surface the specific value asked about.`,
+    extraction: `\n\nThe user wants specific data extracted from the document. Use 💡 Key Details as your primary section — list every relevant value as "Label: **Value**" bullets (amounts, dates, names, IDs, addresses, etc.). Add a 📄 Summary with 2-3 bullets for context. NEVER return raw JSON.`,
+  };
+
+  return base + (intentOverrides[intent] || intentOverrides.answer);
+};
+
 async function streamOpenAI(context, message, { supabase, userId, documentId, previousMessages = [] } = {}) {
   const lower = message.toLowerCase();
-  const isSummary = lower.includes("summar") || lower.includes("what is this") ||
-    lower.includes("what about") || lower.includes("describe") ||
-    lower.includes("overview") || lower.includes("key point") || lower.includes("about this");
+  const intent = classifyIntent(message);
 
-  // Context lives in system prompt so all conversation turns can reference it
-  const systemContent = isSummary
-    ? `You are a helpful PDF assistant. Summarize the provided document context clearly and concisely. Cover the main topics, key points, and important details.\n\nDOCUMENT CONTEXT:\n${context}`
-    : `You are an intelligent document assistant. Answer using ONLY the provided document context.\n\nRules:\n1. Identify the exact field the user is asking about (e.g. total amount, date, name).\n2. If multiple numbers exist, choose the one matching the question.\n3. Convert written amounts to numbers if asked (e.g. "Three Hundred Twenty" → 320).\n4. Do NOT return unrelated data.\n5. If the answer is not in the context, say so briefly.\n6. Be precise — one or two sentences unless a list is needed.\n\nDOCUMENT CONTEXT:\n${context}`;
+  const systemContent = STRUCTURED_SYSTEM(context, intent);
 
   const needsConversion = lower.includes("in number") || lower.includes("convert") || lower.includes("amount");
   const userContent = message + (needsConversion ? "\n\nNote: Convert any written amounts to numeric form." : "");
@@ -242,6 +291,7 @@ export async function POST(req) {
         supabase, userId: user.id, documentId: ragDocId, previousMessages,
       });
     }
+
 
     // ── Fallback: download PDF ─────────────────────────────────────
     let pdfBuffer = null;

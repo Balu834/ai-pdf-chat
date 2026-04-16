@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { startTrial } from "@/lib/trial";
+import { sendWelcomeEmail } from "@/lib/email";
+import { createClient as createAdmin } from "@supabase/supabase-js";
+
+const adminDb = createAdmin(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 export async function GET(request) {
   const { searchParams, origin, pathname } = new URL(request.url);
@@ -87,6 +94,32 @@ export async function GET(request) {
   // Start 7-day free trial for brand new users (no-op for returning users)
   if (data.user?.id) {
     await startTrial(data.user.id);
+
+    // Detect brand-new users by checking whether their user_plans row was just
+    // auto-provisioned (created_at within the last 30 seconds).
+    // New users get a welcome email; returning users don't.
+    try {
+      const { data: planRow } = await adminDb
+        .from("user_plans")
+        .select("updated_at")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      const isNewUser =
+        planRow?.updated_at &&
+        Date.now() - new Date(planRow.updated_at).getTime() < 30_000;
+
+      if (isNewUser && data.user.email) {
+        sendWelcomeEmail(
+          data.user.email,
+          data.user.user_metadata?.full_name
+        ).catch((e) =>
+          console.warn("[auth/callback] welcome email failed (non-fatal):", e.message)
+        );
+      }
+    } catch (e) {
+      console.warn("[auth/callback] new-user check threw (non-fatal):", e.message);
+    }
   }
 
   return response;
