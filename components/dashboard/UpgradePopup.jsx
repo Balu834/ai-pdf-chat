@@ -46,6 +46,35 @@ function useUpgradeCount() {
   return count;
 }
 
+/* ─── OFFER COUNTDOWN ────────────────────────────────────────────────────── */
+// Shows HH:MM:SS countdown — resets from localStorage so it feels personal
+function useOfferCountdown() {
+  const STORAGE_KEY = "intellixy_offer_deadline";
+  const getDeadline = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) return parseInt(stored, 10);
+      const deadline = Date.now() + 23 * 60 * 60 * 1000; // 23 hours
+      localStorage.setItem(STORAGE_KEY, String(deadline));
+      return deadline;
+    } catch { return Date.now() + 23 * 60 * 60 * 1000; }
+  };
+
+  const [secsLeft, setSecsLeft] = useState(0);
+  useEffect(() => {
+    const deadline = getDeadline();
+    const tick = () => setSecsLeft(Math.max(0, Math.floor((deadline - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const h = String(Math.floor(secsLeft / 3600)).padStart(2, "0");
+  const m = String(Math.floor((secsLeft % 3600) / 60)).padStart(2, "0");
+  const s = String(secsLeft % 60).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
 /* ─── UPGRADE POPUP ──────────────────────────────────────────────────────── */
 export function UpgradePopup({ reason, onClose, user, usage }) {
   const isPdf = reason === "pdf";
@@ -57,6 +86,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
 
   const proof        = useSocialProof();
   const upgradeCount = useUpgradeCount();
+  const countdown    = useOfferCountdown();
 
   async function applyCoupon() {
     if (!couponInput.trim()) return;
@@ -75,13 +105,13 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
   }
 
   const used     = isPdf ? (usage?.pdfs ?? 0)       : (usage?.questions ?? 0);
-  const max      = isPdf ? (usage?.maxPdfs ?? 5)    : (usage?.maxQuestions ?? 10);
+  const max      = isPdf ? (usage?.maxPdfs ?? 3)     : (usage?.maxQuestions ?? 5);
   const headline = isPdf
-    ? `You've used ${used}/${max} free PDFs`
-    : `You've asked ${used}/${max} free questions`;
+    ? "You've hit your free PDF limit"
+    : "You've used all your free questions";
   const subline  = isPdf
-    ? "You've hit your free limit. Upgrade once — get unlimited PDFs forever."
-    : "You're clearly getting real value. Unlock unlimited answers for ₹299/mo.";
+    ? "Upload unlimited PDFs and never hit a wall again."
+    : "You're clearly getting value — don't stop now.";
 
   return (
     <motion.div
@@ -150,11 +180,18 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             </div>
 
             {/* Price */}
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 13 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 5 }}>₹999/mo</span>
-              <span style={{ fontSize: 38, fontWeight: 900, color: C.textPrimary, lineHeight: 1, letterSpacing: "-1.5px" }}>₹299</span>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 4 }}>₹999</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(248,113,113,0.7)", textDecoration: "line-through", paddingBottom: 4 }}>₹299</span>
+              <span style={{ fontSize: 38, fontWeight: 900, color: C.textPrimary, lineHeight: 1, letterSpacing: "-1.5px" }}>₹199</span>
               <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 4 }}>/month</span>
-              <span style={{ fontSize: 10, fontWeight: 800, color: "#4ade80", background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.25)", padding: "3px 8px", borderRadius: 7, marginLeft: 4, paddingBottom: 5 }}>70% OFF</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", padding: "3px 8px", borderRadius: 7, marginLeft: 4, paddingBottom: 4 }}>EARLY BIRD</span>
+            </div>
+            {/* Countdown */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+              <span style={{ fontSize: 10, color: "#f87171" }}>🔥</span>
+              <span style={{ fontSize: 10.5, color: "#f87171", fontWeight: 700 }}>Price goes up to ₹299 in</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "#fbbf24", fontVariantNumeric: "tabular-nums", letterSpacing: "0.05em" }}>{countdown}</span>
             </div>
 
             {/* Features */}
@@ -225,7 +262,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
           >
             {couponData
               ? `Pay ₹${couponData.final_amount_paise / 100} — Upgrade Now →`
-              : "Upgrade to Pro — ₹299/mo →"}
+              : "Upgrade to Pro — ₹199/mo →"}
           </RazorpayButton>
 
           {/* Trust strip */}
@@ -268,7 +305,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
 /* ─── UPGRADE BANNER (inline, below input) ───────────────────────────────── */
 export function UpgradeBanner({ type, onUpgrade, usage }) {
   const used = type === "question" ? (usage?.questions ?? 0) : (usage?.pdfs ?? 0);
-  const max  = type === "question" ? (usage?.maxQuestions ?? 10) : (usage?.maxPdfs ?? 5);
+  const max  = type === "question" ? (usage?.maxQuestions ?? 5) : (usage?.maxPdfs ?? 3);
 
   return (
     <motion.div
@@ -297,7 +334,7 @@ export function UpgradeBanner({ type, onUpgrade, usage }) {
           onClick={onUpgrade}
           style={{ padding: "10px 18px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, boxShadow: "0 4px 18px rgba(124,58,237,0.4)" }}
         >
-          Upgrade — ₹299/mo →
+          🔥 Upgrade — ₹199/mo →
         </motion.button>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -343,7 +380,7 @@ export function LockedMessage({ onUpgrade }) {
               onClick={onUpgrade}
               style={{ padding: "9px 20px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 12, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.5)", whiteSpace: "nowrap" }}
             >
-              Unlock full answer — ₹299/mo →
+              🔥 Unlock answer — ₹199/mo →
             </motion.button>
           </div>
         </div>
