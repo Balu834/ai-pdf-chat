@@ -619,48 +619,109 @@ drop policy if exists "payments_select_own" on payments;
 -- Run this block in Supabase → SQL Editor to apply the fix.
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- Drop every known overload so there's no ambiguous match in the schema cache.
-drop function if exists insert_document_if_under_limit(uuid, text, text, bigint, int);
-drop function if exists insert_document_if_under_limit(uuid, text, text, int, int);
+-- Drop ALL known overloads (old 5-param and 4-param variants) so PostgREST
+-- never gets confused by an ambiguous match in the schema cache.
+drop function if exists public.insert_document_if_under_limit(uuid, text, text, bigint, int);
+drop function if exists public.insert_document_if_under_limit(uuid, text, text, int, int);
+drop function if exists public.insert_document_if_under_limit(uuid, text, text, int);
+drop function if exists public.insert_document_if_under_limit(text, int, text, uuid);
+drop function if exists public.insert_document_if_under_limit(text, text, text, uuid);
 
-create or replace function insert_document_if_under_limit(
+-- 4-parameter version — NO p_limit.  The function reads the user's plan from
+-- user_plans itself, so the server can never pass the wrong limit.
+create or replace function public.insert_document_if_under_limit(
   p_user_id   uuid,
   p_file_name text,
   p_file_url  text,
-  p_file_size int,   -- int covers files up to ~2 GB; JS Number serialises cleanly
-  p_limit     int    -- pass FREE_LIMIT for free users; 2147483647 for Pro / unlimited
+  p_file_size int        -- int covers files up to ~2 GB
 )
 returns uuid
-language plpgsql security definer as $$
+language plpgsql
+security definer           -- runs as function owner, bypasses RLS
+set search_path = public   -- prevent search_path injection
+as $$
 declare
-  v_count int;
-  v_id    uuid;
+  v_plan    text        := 'free';
+  v_status  text        := 'inactive';
+  v_expires timestamptz;
+  v_grace   timestamptz;
+  v_is_pro  boolean     := false;
+  v_limit   int;
+  v_count   int;
+  v_id      uuid;
 begin
-  -- Advisory lock per-user so concurrent uploads from the same account
-  -- don't both read count=N and both slip under the limit.
-  perform pg_advisory_xact_lock(hashtext(p_user_id::text));
 
-  select count(*) into v_count
-  from   documents
-  where  user_id = p_user_id;
-
-  if v_count >= p_limit then
-    raise exception 'LIMIT_EXCEEDED'
-      using hint = 'pdf_limit',
-            detail = format('user %s has %s docs, limit is %s', p_user_id, v_count, p_limit);
+  -- Guard: null user
+  if p_user_id is null then
+    raise exception 'NULL_USER_ID'
+      using hint   = 'p_user_id cannot be null',
+            detail = 'insert_document_if_under_limit received a null p_user_id';
   end if;
 
-  insert into documents (user_id, file_name, file_url, file_size)
+  -- Per-user advisory lock — prevents race-condition double-inserts
+  perform pg_advisory_xact_lock(hashtext(p_user_id::text));
+
+  -- Look up the user's plan
+  select plan, subscription_status, pro_expires_at, grace_until
+  into   v_plan, v_status, v_expires, v_grace
+  from   public.user_plans
+  where  user_id = p_user_id;
+
+  if not found then
+    -- Auto-provision a free row (trigger should have done this at signup)
+    insert into public.user_plans (user_id, plan, subscription_status, updated_at)
+    values (p_user_id, 'free', 'inactive', now())
+    on conflict (user_id) do nothing;
+    v_plan   := 'free';
+    v_status := 'inactive';
+  end if;
+
+  -- Three-signal Pro check (mirrors lib/subscription.ts exactly):
+  --   1. subscription_status = 'active'
+  --   2. pro_expires_at > now()
+  --   3. grace_until > now()
+  v_is_pro := (v_plan = 'pro') and (
+    v_status = 'active'
+    or (v_expires is not null and v_expires > now())
+    or (v_grace   is not null and v_grace   > now())
+  );
+
+  v_limit := case when v_is_pro then 100000 else 3 end;
+
+  raise notice '[upload_gate] user=% plan=% is_pro=% limit=%',
+    p_user_id, v_plan, v_is_pro, v_limit;
+
+  -- Count existing documents
+  select count(*) into v_count
+  from   public.documents
+  where  user_id = p_user_id;
+
+  if v_count >= v_limit then
+    raise exception 'LIMIT_EXCEEDED'
+      using hint   = 'pdf_limit',
+            detail = format(
+              'user=%s doc_count=%s limit=%s plan=%s is_pro=%s',
+              p_user_id, v_count, v_limit, v_plan, v_is_pro
+            );
+  end if;
+
+  -- Insert the document
+  insert into public.documents (user_id, file_name, file_url, file_size)
   values (p_user_id, p_file_name, p_file_url, p_file_size)
   returning id into v_id;
 
+  raise notice '[upload_gate] SUCCESS doc_id=% user=%', v_id, p_user_id;
   return v_id;
+
 end;
 $$;
 
+-- Grant execute to the service role used by the API
+grant execute on function public.insert_document_if_under_limit(uuid, text, text, int)
+  to service_role;
+
 -- Force PostgREST to reload its schema cache immediately.
--- Without this, the new function won't be visible until the next auto-reload
--- (which can take several minutes on Supabase's hosted PostgREST).
+-- Without this, the new function won't be visible until the next auto-reload.
 notify pgrst, 'reload schema';
 create policy "payments_select_own" on payments
   for select using (auth.uid() = user_id);

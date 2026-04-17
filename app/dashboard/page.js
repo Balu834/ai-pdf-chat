@@ -144,7 +144,7 @@ export default function DashboardPage() {
   const [upgradingStripe, setUpgradingStripe] = useState(false);
   const [cancellingSubscription, setCancellingSubscription] = useState(false);
   const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
-  const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 5, maxQuestions: 10, loading: true });
+  const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 3, maxQuestions: 5, loading: true });
 
   const [showInsights, setShowInsights] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
@@ -338,6 +338,13 @@ export default function DashboardPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // ── Auth guard ────────────────────────────────────────────────────────────
+    if (!user?.id) {
+      addToast("Session expired. Please refresh the page and sign in again.", "error");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     // ── Type validation ───────────────────────────────────────────────────────
     const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
     if (!isPdf) {
@@ -353,8 +360,8 @@ export default function DashboardPage() {
     if (file.size > maxBytes) {
       const sizeMB = (file.size / 1024 / 1024).toFixed(1);
       if (plan !== "pro") {
-        addToast(`File is ${sizeMB} MB — free plan max is 5 MB. Upgrade Pro for 50 MB.`, "warning", 8000);
-        setUpgradePopup("pdf");
+        // Size issue ≠ count limit — only show an informational toast, not the paywall popup
+        addToast(`File is ${sizeMB} MB — free plan supports PDFs up to 5 MB. Upgrade Pro for up to 50 MB.`, "warning", 8000);
       } else {
         addToast(`File is ${sizeMB} MB — max allowed is 50 MB.`, "error");
       }
@@ -368,6 +375,7 @@ export default function DashboardPage() {
     setUploadPhase("uploading");
     setUploadFileName(file.name);
     const isFirstDoc = docs.length === 0;
+    let uploadSucceeded = false;
 
     try {
       // Step 1 — Upload file DIRECTLY to Supabase Storage from the browser.
@@ -417,16 +425,33 @@ export default function DashboardPage() {
         credentials: "include",
       });
 
-      const processData = await processRes.json();
+      // Guard: Vercel gateway timeouts and proxy errors return HTML, not JSON.
+      // Calling .json() on HTML throws "Unexpected token <" which is a confusing
+      // error. Parse safely and fall back to a plain message.
+      let processData = {};
+      try {
+        processData = await processRes.json();
+      } catch {
+        processData = { error: `Server error (HTTP ${processRes.status}). Please try again.` };
+      }
 
       if (!processRes.ok) {
         // Storage upload succeeded but server failed → remove orphaned file
         supabase.storage.from("pdfs").remove([storagePath]).catch(() => {});
 
-        if (processData.limitExceeded) { setUpgradePopup("pdf"); return; }
+        if (processData.limitExceeded) {
+          // Clean up upload UI immediately before showing the paywall popup
+          setUploading(false);
+          setUploadProgress(0);
+          setUploadPhase("idle");
+          setUploadFileName("");
+          setUpgradePopup("pdf");
+          return;
+        }
         throw new Error(processData.error || "Server processing failed");
       }
 
+      uploadSucceeded = true;
       setUploadProgress(100);
 
       // Step 3 — Refresh state and show success feedback
@@ -472,20 +497,19 @@ export default function DashboardPage() {
         }, 500);
       }
     } catch (err) {
-      const msg = err.message || "Upload failed";
-      addToast(
-        msg.includes("limit") ? "⚠️ Upload limit reached. Upgrade to continue." : `Upload failed: ${msg}`,
-        "error",
-        6000
-      );
+      // Never map arbitrary errors to the paywall — only server-confirmed
+      // limitExceeded responses (handled above) should show the upgrade popup.
+      const msg = err.message || "Upload failed. Please try again.";
+      addToast(`Upload failed: ${msg}`, "error", 6000);
     } finally {
-      // Small delay so the 100 % state is visible before the bar disappears
+      // Use the local uploadSucceeded flag (not async React state) to decide
+      // whether to show the 100 % completion briefly before hiding the bar.
       setTimeout(() => {
         setUploading(false);
         setUploadProgress(0);
         setUploadPhase("idle");
         setUploadFileName("");
-      }, uploadProgress === 100 ? 900 : 0);
+      }, uploadSucceeded ? 900 : 0);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
