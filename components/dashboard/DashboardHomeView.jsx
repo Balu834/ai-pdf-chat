@@ -6,8 +6,8 @@ import { PlusIcon, UploadIcon, ShieldIcon, PdfIcon, CrownIcon, ChatNavIcon } fro
 
 /* ─── WELCOME SCREEN ────────────────────────────────────────────────────── */
 export function WelcomeScreen({ onUpload, usage, plan }) {
-  const questionsLeft = Math.max(0, (usage?.maxQuestions ?? 10) - (usage?.questions ?? 0));
-  const pdfsLeft      = Math.max(0, (usage?.maxPdfs ?? 5)       - (usage?.pdfs ?? 0));
+  const questionsLeft = Math.max(0, (usage?.maxQuestions ?? 5) - (usage?.questions ?? 0));
+  const pdfsLeft      = Math.max(0, (usage?.maxPdfs ?? 3)      - (usage?.pdfs ?? 0));
   const isPro = plan === "pro";
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", textAlign: "center", minHeight: 0 }}>
@@ -119,9 +119,9 @@ export function EmptyChatState({ doc, onSetInput, inputRef }) {
 export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, user, onViewChange }) {
   const isPro = plan === "pro";
   const questionsUsed = usage?.questions ?? 0;
-  const questionsMax  = isPro ? "∞" : (usage?.maxQuestions ?? 10);
+  const questionsMax  = isPro ? "∞" : (usage?.maxQuestions ?? 5);
   const pdfsUsed      = docs.length;
-  const pdfsMax       = isPro ? "∞" : (usage?.maxPdfs ?? 5);
+  const pdfsMax       = isPro ? "∞" : (usage?.maxPdfs ?? 3);
   const daysLeft      = isTrial && trialEnd ? Math.max(0, Math.ceil((new Date(trialEnd) - Date.now()) / 86400000)) : null;
   const recentDocs    = [...docs].slice(0, 5);
 

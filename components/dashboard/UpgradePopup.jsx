@@ -83,6 +83,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
   const [couponData,    setCouponData]    = useState(null);
   const [couponError,   setCouponError]   = useState(null);
   const [showCoupon,    setShowCoupon]    = useState(false);
+  const [paymentError,  setPaymentError]  = useState(null);
 
   const proof        = useSocialProof();
   const upgradeCount = useUpgradeCount();
@@ -257,10 +258,19 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             </div>
           )}
 
+          {/* Payment error */}
+          {paymentError && (
+            <div style={{ marginBottom: 10, padding: "10px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.28)", borderRadius: 10, fontSize: 12, color: "#f87171" }}>
+              {paymentError}
+            </div>
+          )}
+
           {/* CTA */}
           <RazorpayButton
             user={user}
             couponData={couponData}
+            onError={(msg) => setPaymentError(msg)}
+            onSuccess={() => { window.location.href = "/success"; }}
             style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 10px 40px rgba(124,58,237,0.6)", marginBottom: 14, transition: "opacity 0.2s", letterSpacing: "-0.2px" }}
           >
             {couponData

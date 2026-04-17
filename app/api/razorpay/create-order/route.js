@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
+import { createClient } from "@/lib/supabase-server-client";
 
 export async function POST() {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       return NextResponse.json({ error: "Razorpay keys not configured" }, { status: 503 });
     }
@@ -13,10 +18,14 @@ export async function POST() {
     });
 
     const order = await razorpay.orders.create({
-      amount: 29900, // ₹299 in paise
+      amount:   29900,
       currency: "INR",
-      receipt: `receipt_${Date.now()}`,
-      notes: { plan: "pro" },
+      receipt:  `receipt_${Date.now()}`,
+      notes: {
+        plan:    "pro",
+        user_id: user.id,
+        email:   user.email || "",
+      },
     });
 
     return NextResponse.json(order);

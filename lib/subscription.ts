@@ -49,7 +49,7 @@ export interface QuestionLimitCheck {
 export const LIMITS = {
   free: {
     pdfs:      3,   // lifetime — matches insert_document_if_under_limit DB function
-    questions: 10,  // lifetime
+    questions: 5,   // lifetime
   },
 } as const;
 
@@ -137,7 +137,7 @@ export async function getSubscription(userId: string): Promise<Subscription> {
   //     renewals where pro_expires_at drifts behind but status is still "active".
   //  2. pro_expires_at > now            → paid period explicitly still running.
   //  3. grace_until > now               → payment failed, 3-day grace window.
-  const statusActive  = dbStatus === "active";
+  const statusActive  = dbStatus === "active" || dbStatus === "trial";
   const periodActive  = !!periodEnd && periodEnd > now;
   const inGracePeriod = !!graceEnd  && graceEnd  > now;
 

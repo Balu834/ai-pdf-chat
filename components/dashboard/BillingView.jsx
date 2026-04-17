@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { C } from "./tokens";
 import { CrownIcon, ShieldIcon } from "./icons";
 
-export default function BillingView({ plan, proExpiresAt, graceUntil, isTrial, trialEnd, subscriptionCancelled, subscriptionSource, onUpgradeClick, onCancelSubscription, cancellingSubscription, onManageSubscription, upgradingStripe, user }) {
+export default function BillingView({ plan, proExpiresAt, graceUntil, isTrial, trialEnd, subscriptionCancelled, onUpgradeClick, onCancelSubscription, cancellingSubscription, user }) {
   const isPro = plan === "pro";
   const daysLeft = isTrial && trialEnd ? Math.max(0, Math.ceil((new Date(trialEnd) - Date.now()) / 86400000)) : null;
   const inGrace = graceUntil && new Date(graceUntil) > new Date();
@@ -53,7 +53,7 @@ export default function BillingView({ plan, proExpiresAt, graceUntil, isTrial, t
                           ? `Access until ${new Date(proExpiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`
                           : `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`)
                       : "Active — no expiry")
-                : "Limited to 5 PDFs and 10 questions"}
+                : "Limited to 3 PDFs and 5 questions"}
             </p>
           </div>
           {isPro && !subscriptionCancelled && !inGrace && (
@@ -69,8 +69,8 @@ export default function BillingView({ plan, proExpiresAt, graceUntil, isTrial, t
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
           {[
-            { label: "PDF Uploads", value: isPro ? "Unlimited" : "5 lifetime" },
-            { label: "AI Questions", value: isPro ? "Unlimited" : "10 lifetime" },
+            { label: "PDF Uploads", value: isPro ? "Unlimited" : "3 lifetime" },
+            { label: "AI Questions", value: isPro ? "Unlimited" : "5 lifetime" },
             { label: "PDF Compare", value: isPro ? "✓ Included" : "✗ Pro only" },
             { label: "AI Insights", value: isPro ? "✓ Included" : "✗ Pro only" },
             { label: "Delete PDFs", value: isPro ? "✓ Included" : "✗ Pro only" },
@@ -89,15 +89,10 @@ export default function BillingView({ plan, proExpiresAt, graceUntil, isTrial, t
             style={{ width: "100%", padding: "12px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 13, fontWeight: 700, border: "none", borderRadius: 12, cursor: "pointer", boxShadow: "0 6px 24px rgba(124,58,237,0.4)" }}>
             Upgrade to Pro — ₹299/mo →
           </motion.button>
-        ) : subscriptionSource === "razorpay" && !subscriptionCancelled ? (
+        ) : !subscriptionCancelled ? (
           <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={onCancelSubscription} disabled={cancellingSubscription}
             style={{ padding: "10px 18px", background: "transparent", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, fontSize: 12, fontWeight: 600, color: "#f87171", cursor: cancellingSubscription ? "not-allowed" : "pointer", opacity: cancellingSubscription ? 0.6 : 1 }}>
             {cancellingSubscription ? "Cancelling…" : "Cancel Subscription"}
-          </motion.button>
-        ) : subscriptionSource === "stripe" ? (
-          <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={onManageSubscription} disabled={upgradingStripe}
-            style={{ padding: "10px 18px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, fontSize: 12, fontWeight: 600, color: C.textSecondary, cursor: upgradingStripe ? "not-allowed" : "pointer" }}>
-            {upgradingStripe ? "Loading…" : "Manage Subscription"}
           </motion.button>
         ) : null}
       </motion.div>

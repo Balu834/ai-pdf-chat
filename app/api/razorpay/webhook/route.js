@@ -169,33 +169,64 @@ export async function POST(request) {
 
   const subscriptionId = subscription.id;
 
-  // Look up which user owns this subscription
-  const userId = await getUserIdByRazorpaySubscription(subscriptionId);
+  // Look up which user owns this subscription.
+  // Primary: razorpay_subscription_id column (set by verify-subscription).
+  // Fallback: notes.user_id embedded when create-subscription created the subscription.
+  //   This handles the race where subscription.charged fires before verify-subscription
+  //   has written the razorpay_subscription_id to the DB.
+  let userId = await getUserIdByRazorpaySubscription(subscriptionId);
+
   if (!userId) {
-    // May arrive before verify-subscription has run on first charge
-    console.warn(`[webhook] No user found for subscription ${subscriptionId}`);
+    const notesUserId = subscription.notes?.user_id;
+    if (notesUserId) {
+      console.warn(`[webhook] No DB row for subscription ${subscriptionId} — using notes.user_id: ${notesUserId}`);
+      userId = notesUserId;
+    }
+  }
+
+  if (!userId) {
+    console.warn(`[webhook] Cannot identify user for subscription ${subscriptionId} — event ${event} skipped`);
     return NextResponse.json({ received: true });
   }
 
   switch (event) {
     case "subscription.charged": {
-      // Auto-renewal: extend expiry by 30 days.
+      // Auto-renewal or first charge: ensure user is Pro and extend expiry.
       const nextBillingUnix = subscription.charge_at;
       const nextBillingDate = nextBillingUnix
         ? new Date(nextBillingUnix * 1000).toISOString()
         : null;
+      const proExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
+      // Upsert first to ensure the row exists and razorpay_subscription_id is stored
+      // (handles the race where this fires before verify-subscription)
+      await admin.from("user_plans").upsert(
+        {
+          user_id:                   userId,
+          plan:                      "pro",
+          is_trial:                  false,
+          subscription_status:       "active",
+          razorpay_subscription_id:  subscriptionId,
+          pro_expires_at:            proExpiresAt,
+          next_billing_date:         nextBillingDate,
+          grace_until:               null,
+          updated_at:                new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+
+      // Also try the RPC for proper extension logic (no-op if already done above)
       const { error } = await admin.rpc("extend_pro_subscription", {
         p_user_id:      userId,
         p_next_billing: nextBillingDate,
       });
 
       if (error) {
-        console.error(`[webhook] extend_pro_subscription failed for ${userId}:`, error.message);
-        return NextResponse.json({ error: "DB update failed" }, { status: 500 });
+        // RPC is best-effort — upsert above already ensured Pro status
+        console.warn(`[webhook] extend_pro_subscription RPC failed for ${userId} (non-fatal):`, error.message);
       }
 
-      // Payment succeeded — clear any grace period that was set from a prior failure
+      // Clear any grace period that was set from a prior failure
       await admin
         .from("user_plans")
         .update({ grace_until: null, updated_at: new Date().toISOString() })

@@ -51,14 +51,9 @@ create index if not exists question_usage_user_created_idx
 create table if not exists user_plans (
   user_id                    uuid primary key references auth.users(id) on delete cascade,
   plan                       text not null default 'free' check (plan in ('free', 'pro')),
-  stripe_customer_id         text unique,
-  stripe_subscription_id     text,
   razorpay_subscription_id   text unique,
   updated_at                 timestamptz default now()
 );
-
--- Migration: add razorpay column if table already exists
-alter table user_plans add column if not exists razorpay_subscription_id text unique;
 
 -- messages: persisted chat history per document
 create table if not exists messages (

@@ -141,7 +141,6 @@ export default function DashboardPage() {
   const [isTrial, setIsTrial] = useState(false);
   const [trialEnd, setTrialEnd] = useState(null);
   const [subscriptionSource, setSubscriptionSource] = useState(null);
-  const [upgradingStripe, setUpgradingStripe] = useState(false);
   const [cancellingSubscription, setCancellingSubscription] = useState(false);
   const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
   const [usage, setUsage] = useState({ pdfs: 0, questions: 0, maxPdfs: 3, maxQuestions: 5, loading: true });
@@ -213,7 +212,7 @@ export default function DashboardPage() {
     });
   }, []);
 
-  /* ── Stripe upgrade toast ── */
+  /* ── Post-payment upgrade toast ── */
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -236,7 +235,7 @@ export default function DashboardPage() {
           const now = new Date();
           const isActive =
             row.plan === "pro" && (
-              row.subscription_status === "active" ||
+              row.subscription_status === "active" || row.subscription_status === "trial" ||
               (row.pro_expires_at && new Date(row.pro_expires_at) > now) ||
               (row.grace_until    && new Date(row.grace_until)    > now)
             );
@@ -250,11 +249,10 @@ export default function DashboardPage() {
           if (isActive) {
             setUsage((p) => ({ ...p, maxPdfs: Infinity, maxQuestions: Infinity }));
             if (row.razorpay_subscription_id) setSubscriptionSource("razorpay");
-            else if (row.stripe_subscription_id) setSubscriptionSource("stripe");
             setShowUpgradedToast(true);
             setTimeout(() => setShowUpgradedToast(false), 6000);
           } else {
-            setUsage((p) => ({ ...p, maxPdfs: 5, maxQuestions: 10 }));
+            setUsage((p) => ({ ...p, maxPdfs: 3, maxQuestions: 5 }));
             setSubscriptionSource(null);
           }
         }
@@ -267,14 +265,14 @@ export default function DashboardPage() {
     try {
       const { data } = await supabase
         .from("user_plans")
-        .select("plan, pro_expires_at, grace_until, subscription_status, is_trial, trial_end, stripe_subscription_id, razorpay_subscription_id")
+        .select("plan, pro_expires_at, grace_until, subscription_status, is_trial, trial_end, razorpay_subscription_id")
         .eq("user_id", userId)
         .maybeSingle();
       if (data?.plan) {
         const now = new Date();
         const isActive =
           data.plan === "pro" && (
-            data.subscription_status === "active" ||
+            data.subscription_status === "active" || data.subscription_status === "trial" ||
             (data.pro_expires_at && new Date(data.pro_expires_at) > now) ||
             (data.grace_until    && new Date(data.grace_until)    > now)
           );
@@ -287,7 +285,6 @@ export default function DashboardPage() {
         if (isActive) {
           setUsage((p) => ({ ...p, maxPdfs: Infinity, maxQuestions: Infinity }));
           if (data.razorpay_subscription_id) setSubscriptionSource("razorpay");
-          else if (data.stripe_subscription_id) setSubscriptionSource("stripe");
         }
       }
     } catch {}
@@ -303,7 +300,7 @@ export default function DashboardPage() {
         const isActive =
           data.is_pro_active === true ||
           (data.plan === "pro" && (
-            data.subscription_status === "active" ||
+            data.subscription_status === "active" || data.subscription_status === "trial" ||
             (data.pro_expires_at && new Date(data.pro_expires_at) > now) ||
             (data.grace_until    && new Date(data.grace_until)    > now)
           ));
@@ -317,8 +314,8 @@ export default function DashboardPage() {
       setUsage({
         pdfs:         data.pdfs?.used      ?? 0,
         questions:    data.questions?.used ?? 0,
-        maxPdfs:      data.pdfs?.max       ?? 5,
-        maxQuestions: data.questions?.max  ?? 10,
+        maxPdfs:      data.pdfs?.max       ?? 3,
+        maxQuestions: data.questions?.max  ?? 5,
         loading: false,
       });
     } catch {
@@ -619,11 +616,7 @@ export default function DashboardPage() {
 
   function handleSmartAction(prompt) { if (!selectedDoc || aiStreaming) return; handleSend(null, prompt); }
 
-  async function handleManageSubscription() {
-    setUpgradingStripe(true);
-    try { const res = await fetch("/api/stripe/portal", { method: "POST", credentials: "include" }); const data = await res.json(); if (data.url) window.location.href = data.url; else addToast(data.error || "Could not open billing portal", "error"); }
-    catch { addToast("Could not open billing portal", "error"); } finally { setUpgradingStripe(false); }
-  }
+
 
   async function handleCancelSubscription() {
     if (!confirm("Cancel your Pro subscription?\n\nYou'll keep Pro access until your current period ends.")) return;
@@ -842,8 +835,6 @@ export default function DashboardPage() {
               onUpgradeClick={() => setUpgradePopup("pdf")}
               onCancelSubscription={handleCancelSubscription}
               cancellingSubscription={cancellingSubscription}
-              onManageSubscription={handleManageSubscription}
-              upgradingStripe={upgradingStripe}
               user={user}
             />
           )}

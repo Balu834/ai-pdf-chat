@@ -31,8 +31,7 @@ alter table public.user_plans
   add column if not exists trial_start          timestamptz,
   add column if not exists trial_end            timestamptz,
   add column if not exists razorpay_subscription_id text,
-  add column if not exists stripe_customer_id   text,
-  add column if not exists stripe_subscription_id text;
+  add column if not exists razorpay_subscription_id text;
 
 -- subscription_status: add the column (no-op if it already exists).
 -- We handle the constraint separately below.
