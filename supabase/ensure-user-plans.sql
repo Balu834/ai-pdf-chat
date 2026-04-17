@@ -178,7 +178,14 @@ where not exists (
 -- (the useEffect in page.js that listens for postgres_changes on user_plans).
 -- ─────────────────────────────────────────────────────────────────────────────
 
-alter publication supabase_realtime add table public.user_plans;
+-- Wrap in DO block so it's a no-op if user_plans is already in the publication
+do $$
+begin
+  alter publication supabase_realtime add table public.user_plans;
+exception when duplicate_object then
+  null; -- already a member, nothing to do
+end;
+$$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
