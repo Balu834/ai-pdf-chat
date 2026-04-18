@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { startTrial } from "@/lib/trial";
 import { sendWelcomeEmail } from "@/lib/email";
 import { createClient as createAdmin } from "@supabase/supabase-js";
 
@@ -91,13 +90,10 @@ export async function GET(request) {
 
   console.log("[auth/callback] session exchanged OK for user:", data.user?.id);
 
-  // Start 7-day free trial for brand new users (no-op for returning users)
+  // Send welcome email to brand-new users.
+  // New user detection: user_plans row was created within the last 30 s
+  // (the on_auth_user_created trigger fires synchronously on INSERT to auth.users).
   if (data.user?.id) {
-    await startTrial(data.user.id);
-
-    // Detect brand-new users by checking whether their user_plans row was just
-    // auto-provisioned (created_at within the last 30 seconds).
-    // New users get a welcome email; returning users don't.
     try {
       const { data: planRow } = await adminDb
         .from("user_plans")

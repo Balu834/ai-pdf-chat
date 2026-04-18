@@ -100,17 +100,21 @@ export async function POST(request) {
     const proExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     const chargedPaise = final_amount_paise ?? original_amount_paise ?? 29900;
 
-    // 5. Upgrade user to Pro — use admin client to bypass RLS reliably
+    // 5. Upgrade user to Pro — use admin client to bypass RLS reliably.
+    //    One-time orders have no subscription_id or next_billing_date (single payment).
     const { error: upsertError } = await adminDb
       .from("user_plans")
       .upsert(
         {
-          user_id:             userId,
-          plan:                "pro",
-          is_trial:            false,
-          subscription_status: "active",
-          pro_expires_at:      proExpiresAt,
-          updated_at:          new Date().toISOString(),
+          user_id:                  userId,
+          plan:                     "pro",
+          is_trial:                 false,
+          subscription_status:      "active",
+          pro_expires_at:           proExpiresAt,
+          razorpay_subscription_id: null,   // one-time order — no recurring subscription
+          next_billing_date:        null,
+          grace_until:              null,
+          updated_at:               new Date().toISOString(),
         },
         { onConflict: "user_id" }
       );
