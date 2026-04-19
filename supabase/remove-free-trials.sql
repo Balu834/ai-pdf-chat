@@ -2,14 +2,18 @@
 -- remove-free-trials.sql
 --
 -- Run once in Supabase → SQL Editor.
--- Downgrades all trial users (who never paid) to free plan.
--- Users who paid and then had is_trial reset to false are NOT affected.
+-- Downgrades trial users who NEVER paid to free plan.
 --
--- Safe to re-run — only targets rows where is_trial = true AND no
--- razorpay_subscription_id exists (confirmed non-paying trial users).
+-- SAFE CONDITION: only targets rows where ALL of:
+--   1. is_trial = true                    → was granted via trial system
+--   2. razorpay_subscription_id IS NULL   → no recurring subscription
+--   3. NOT in payments table              → never made a real payment
+--
+-- This prevents downgrading legitimate one-time order payers who have
+-- razorpay_subscription_id=NULL because they paid via order (not subscription).
 -- =============================================================================
 
--- 1. Preview who will be affected BEFORE you run the update below
+-- 1. Preview who will be affected — verify this list before running Step 2
 select
   u.email,
   up.plan,
@@ -17,15 +21,21 @@ select
   up.is_trial,
   up.trial_end,
   up.pro_expires_at,
-  up.razorpay_subscription_id
+  up.razorpay_subscription_id,
+  (select count(*) from public.payments p where p.user_id = up.user_id) as payment_count
 from public.user_plans up
 join auth.users u on u.id = up.user_id
 where up.is_trial = true
   and up.razorpay_subscription_id is null
+  and not exists (
+    select 1 from public.payments p where p.user_id = up.user_id
+  )
 order by up.pro_expires_at desc;
 
--- 2. Downgrade trial-only users to free
---    (comment out the SELECT above and uncomment this block when ready)
+
+-- 2. Downgrade ONLY non-paying trial users
+--    Uncomment this block when ready — the payments check ensures
+--    real payers are never touched even if their subscription_id is null.
 /*
 update public.user_plans
 set
@@ -36,16 +46,20 @@ set
   trial_start          = null,
   trial_end            = null,
   grace_until          = null,
-  updated_at           = now()
+  updated_at           = clock_timestamp()
 where is_trial = true
-  and razorpay_subscription_id is null;
-
--- How many rows were downgraded:
-select count(*) as downgraded from public.user_plans
-where plan = 'free' and is_trial = false and subscription_status = 'inactive';
+  and razorpay_subscription_id is null
+  and not exists (
+    select 1 from public.payments p where p.user_id = user_plans.user_id
+  );
 */
 
--- 3. After the migration: confirm no trial users remain
-select count(*) as remaining_trial_users
-from public.user_plans
-where is_trial = true;
+
+-- 3. Confirm no unpaid trial users remain (paid-trial users are fine to keep)
+select count(*) as unpaid_trial_users_remaining
+from public.user_plans up
+where up.is_trial = true
+  and up.razorpay_subscription_id is null
+  and not exists (
+    select 1 from public.payments p where p.user_id = up.user_id
+  );
