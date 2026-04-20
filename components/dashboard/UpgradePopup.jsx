@@ -201,10 +201,9 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             {/* Price */}
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 12 }}>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 4 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, textDecoration: "line-through", paddingBottom: 3 }}>₹299</span>
-                <span style={{ fontSize: 36, fontWeight: 900, color: C.textPrimary, lineHeight: 1, letterSpacing: "-1.5px" }}>₹199</span>
+                <span style={{ fontSize: 36, fontWeight: 900, color: C.textPrimary, lineHeight: 1, letterSpacing: "-1.5px" }}>₹299</span>
                 <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 3 }}>/month</span>
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", padding: "3px 8px", borderRadius: 6, marginLeft: 2, paddingBottom: 3 }}>EARLY BIRD</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", padding: "3px 8px", borderRadius: 6, marginLeft: 2, paddingBottom: 3 }}>BEST VALUE</span>
               </div>
               {/* Countdown */}
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -275,7 +274,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
           >
             {couponData
               ? `Pay ₹${couponData.final_amount_paise / 100} — Upgrade Now →`
-              : "👉 Upgrade to PRO — ₹199/mo →"}
+              : "👉 Upgrade to PRO — ₹299/mo →"}
           </RazorpayButton>
 
           {/* Trust strip */}
@@ -349,8 +348,7 @@ export function UpgradeBanner({ type, onUpgrade, usage }) {
         {/* CTA block */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 2 }}>
-            <span style={{ fontSize: 10, color: C.textMuted, textDecoration: "line-through" }}>₹299</span>
-            <span style={{ fontSize: 15, fontWeight: 900, color: C.textPrimary }}>₹199</span>
+            <span style={{ fontSize: 15, fontWeight: 900, color: C.textPrimary }}>₹299</span>
             <span style={{ fontSize: 10, color: C.textMuted }}>/mo</span>
           </div>
           <motion.button
@@ -411,7 +409,7 @@ export function LockedMessage({ onUpgrade }) {
               onClick={onUpgrade}
               style={{ padding: "10px 22px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 12.5, fontWeight: 800, border: "none", borderRadius: 10, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.5)", whiteSpace: "nowrap" }}
             >
-              👉 Upgrade to PRO — ₹199/mo
+              👉 Upgrade to PRO — ₹299/mo
             </motion.button>
           </div>
         </div>
