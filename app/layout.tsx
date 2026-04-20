@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Analytics from "@/components/Analytics";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -11,6 +12,13 @@ const inter = Inter({
 });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app";
+
+export const viewport: Viewport = {
+  themeColor: "#7c3aed",
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: {
@@ -52,10 +60,16 @@ export const metadata: Metadata = {
       "Upload any PDF and get instant AI answers, summaries, and key insights in seconds.",
     images: [`${APP_URL}/og-image.png`],
   },
+  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
     apple: "/favicon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Intellixy",
   },
   robots: {
     index: true,
@@ -75,6 +89,7 @@ export default function RootLayout({
         <AnimatedBackground />
         {children}
         <Analytics />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

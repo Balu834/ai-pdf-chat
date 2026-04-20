@@ -1,0 +1,36 @@
+{
+  "name": "Intellixy – AI PDF Chat",
+  "short_name": "Intellixy",
+  "description": "Chat with your PDFs using AI. Get instant answers, summaries, and key insights in seconds.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#7c3aed",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/api/pwa-icon?size=192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/api/pwa-icon?size=512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Upload PDF",
+      "short_name": "Upload",
+      "description": "Upload and chat with a new PDF",
+      "url": "/dashboard",
+      "icons": [{ "src": "/api/pwa-icon?size=192", "sizes": "192x192" }]
+    }
+  ]
+}
