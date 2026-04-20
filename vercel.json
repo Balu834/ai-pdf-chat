@@ -25,6 +25,10 @@
     {
       "path": "/api/cron/check-subscriptions",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/send-retention-notifications",
+      "schedule": "30 4 * * *"
     }
   ]
 }
