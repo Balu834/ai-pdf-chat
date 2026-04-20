@@ -4,6 +4,7 @@ import "./globals.css";
 import Analytics from "@/components/Analytics";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import InstallPopup from "@/components/InstallPopup";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -90,6 +91,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <ServiceWorkerRegistration />
+        <InstallPopup />
       </body>
     </html>
   );

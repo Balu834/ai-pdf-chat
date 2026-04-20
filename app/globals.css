@@ -3,11 +3,19 @@
 /* ── Reset ─────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* Prevent iOS rubber-band overscroll outside scroll containers */
+  overscroll-behavior: none;
+}
 
 body {
   margin: 0;
   padding: 0;
+  /* Faster tap response on mobile — eliminates 300ms delay */
+  touch-action: manipulation;
+  /* Prevent pull-to-refresh and overscroll glow on Android */
+  overscroll-behavior: none;
   /* Deep-space gradient: near-black navy → slightly lighter indigo */
   background: #0B0B1A;
   background-image:

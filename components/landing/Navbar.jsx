@@ -4,9 +4,12 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { T } from "@/components/ui/tokens";
 import { PdfIcon } from "@/components/ui/atoms";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const { isInstallable, installApp } = usePWAInstall();
+
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", fn, { passive: true });
@@ -39,6 +42,17 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {isInstallable && (
+            <motion.button
+              onClick={installApp}
+              whileHover={{ opacity: 0.88 }}
+              whileTap={{ scale: 0.97 }}
+              className="hidden sm:flex items-center gap-1.5 text-[12px] font-bold px-3 py-[8px] rounded-full"
+              style={{ background:"rgba(124,58,237,0.15)", border:"1px solid rgba(124,58,237,0.35)", color:"#a78bfa", cursor:"pointer" }}
+            >
+              <span style={{ fontSize:13 }}>⬇</span> Install App
+            </motion.button>
+          )}
           <a href="/login" className="hidden sm:block text-[13px] font-semibold px-3 py-2 rounded-lg" style={{ color:T.muted, textDecoration:"none" }}>Log in</a>
           <motion.a href="/login"
             whileHover={{ opacity:0.88, y:-1, boxShadow:"0 12px 36px rgba(124,58,237,0.45)" }}
