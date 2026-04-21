@@ -17,7 +17,7 @@ export default function Pricing() {
           <h2 className="font-black tracking-tight mt-4 mb-3 text-[clamp(26px,5vw,50px)] leading-[1.1]">
             Start free. Upgrade when ready.
           </h2>
-          <p className="text-[16px]" style={{ color:T.muted }}>7-day free Pro trial — no credit card needed.</p>
+          <p className="text-[16px]" style={{ color:T.muted }}>Free plan included. Upgrade to Pro for unlimited access.</p>
         </motion.div>
 
         <motion.div initial="hidden" whileInView="show" viewport={VP} variants={STAGGER(0.1)}
@@ -71,7 +71,7 @@ export default function Pricing() {
                 </div>
                 <div className="flex flex-wrap gap-2 mb-6">
                   <span className="text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background:"rgba(74,222,128,0.14)", border:"1px solid rgba(74,222,128,0.28)", color:"#4ade80" }}>🎉 70% off</span>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background:"rgba(6,182,212,0.1)", border:"1px solid rgba(6,182,212,0.25)", color:"#06b6d4" }}>🎁 7-day free trial</span>
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background:"rgba(6,182,212,0.1)", border:"1px solid rgba(6,182,212,0.25)", color:"#06b6d4" }}>⚡ Instant activation</span>
                 </div>
 
                 <ul className="flex flex-col gap-2.5 list-none p-0 m-0 mb-5 flex-1">

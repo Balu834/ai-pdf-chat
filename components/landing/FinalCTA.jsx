@@ -20,7 +20,7 @@ export default function FinalCTA() {
             Start chatting with your PDFs today
           </h2>
           <p className="text-[17px] mb-3 mx-auto leading-[1.72]" style={{ color:T.muted, maxWidth:480 }}>
-            7-day free trial · No credit card · Cancel anytime.
+            Free plan available. Upgrade to Pro anytime. No credit card required to start.
           </p>
           <p className="text-[13px] mb-10" style={{ color:T.faint }}>
             Join 1,000+ professionals already saving hours every week.
@@ -30,7 +30,7 @@ export default function FinalCTA() {
             whileTap={{ scale:0.97 }}
             className="inline-flex items-center gap-2 font-extrabold text-white text-[16px] rounded-full"
             style={{ background:"linear-gradient(135deg,#7c3aed,#06b6d4)", padding:"17px 44px", textDecoration:"none", boxShadow:"0 10px 42px rgba(124,58,237,0.52)", letterSpacing:"-0.2px" }}>
-            Start Free Trial <ArrowRight size={17} />
+            Try Free Now <ArrowRight size={17} />
           </motion.a>
           <div className="flex flex-wrap justify-center gap-5 mt-6 text-[12px]" style={{ color:T.faint }}>
             {["No credit card","7-day money-back guarantee","Your data stays private"].map(t=>(

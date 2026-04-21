@@ -11,6 +11,7 @@ import Pricing from "@/components/landing/Pricing";
 import Demo from "@/components/landing/Demo";
 import FAQ from "@/components/landing/FAQ";
 import FinalCTA from "@/components/landing/FinalCTA";
+import AppInstall from "@/components/landing/AppInstall";
 import Footer from "@/components/landing/Footer";
 import ConversionBoosts from "@/components/ConversionBoosts";
 
@@ -31,6 +32,7 @@ export default function LandingPage() {
       <Pricing />
       <Demo />
       <FAQ />
+      <AppInstall />
       <FinalCTA />
       <Footer />
       <ConversionBoosts />

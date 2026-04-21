@@ -1,10 +1,19 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { T, FADE_UP, SCALE_IN } from "@/components/ui/tokens";
 import { Check, PdfIcon, ArrowRight } from "@/components/ui/atoms";
 
+const APK_URL = "/intellixy.apk"; // place APK in /public/intellixy.apk
+
 export default function Hero() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+  }, []);
+
   return (
     <section className="relative flex flex-col items-center justify-center overflow-hidden text-center"
       style={{ minHeight:"100svh", paddingTop:60 }}>
@@ -23,7 +32,6 @@ export default function Hero() {
           animate={{ scale:[1,1.08,1], opacity:[0.1,0.18,0.1] }}
           transition={{ duration:8, repeat:Infinity, ease:"easeInOut", delay:5 }}
           style={{ position:"absolute", bottom:"-10%", left:"10%", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle,rgba(139,92,246,0.18),transparent 70%)", filter:"blur(80px)" }} />
-        {/* Grid overlay */}
         <div style={{ position:"absolute", inset:0, backgroundImage:"linear-gradient(rgba(255,255,255,0.024) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.024) 1px,transparent 1px)", backgroundSize:"72px 72px", maskImage:"radial-gradient(ellipse 80% 60% at 50% 0%,black,transparent)" }} />
       </div>
 
@@ -36,7 +44,7 @@ export default function Hero() {
           <motion.span animate={{ opacity:[1,0.25,1] }} transition={{ duration:1.8, repeat:Infinity }}
             className="inline-block rounded-full flex-shrink-0"
             style={{ width:7, height:7, background:"#a78bfa" }} />
-          7-Day Free Pro Trial — No Credit Card
+          Free plan available — No credit card needed
         </motion.div>
 
         {/* Headline */}
@@ -62,30 +70,44 @@ export default function Hero() {
           in seconds using AI — from contracts to research papers.
         </motion.p>
 
-        {/* CTAs */}
+        {/* CTAs — device-aware */}
         <motion.div variants={FADE_UP} initial="hidden" animate="show" transition={{ delay:0.3 }}
           className="flex flex-wrap items-center justify-center gap-3 mb-6">
+
+          {/* Primary: always visible */}
           <motion.a href="/login"
             whileHover={{ opacity:0.9, y:-2, boxShadow:"0 24px 64px rgba(124,58,237,0.58)" }}
             whileTap={{ scale:0.97 }}
             className="inline-flex items-center gap-2 font-extrabold text-white text-[15px] tracking-tight rounded-full"
             style={{ background:"linear-gradient(135deg,#7c3aed,#06b6d4)", padding:"15px 34px", textDecoration:"none", boxShadow:"0 8px 36px rgba(124,58,237,0.45)", letterSpacing:"-0.2px" }}>
-            Start Free Trial <ArrowRight size={16} />
+            Try Free Now <ArrowRight size={16} />
           </motion.a>
-          <motion.a href="#demo"
-            whileHover={{ background:"rgba(255,255,255,0.09)", borderColor:T.borderHi, y:-2 }}
-            whileTap={{ scale:0.97 }}
-            className="inline-flex items-center gap-2 font-bold text-[15px] rounded-full"
-            style={{ background:"rgba(255,255,255,0.05)", border:`1px solid ${T.border}`, padding:"15px 28px", color:T.text, textDecoration:"none", letterSpacing:"-0.1px" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            Watch Demo
-          </motion.a>
+
+          {/* Secondary: APK on mobile, Watch Demo on desktop */}
+          {isMobile ? (
+            <motion.a href={APK_URL} download
+              whileHover={{ background:"rgba(255,255,255,0.09)", borderColor:T.borderHi, y:-2 }}
+              whileTap={{ scale:0.97 }}
+              className="inline-flex items-center gap-2 font-bold text-[15px] rounded-full"
+              style={{ background:"rgba(255,255,255,0.05)", border:`1px solid ${T.border}`, padding:"15px 28px", color:T.text, textDecoration:"none", letterSpacing:"-0.1px" }}>
+              <span style={{ fontSize:16 }}>📱</span> Install Android App
+            </motion.a>
+          ) : (
+            <motion.a href="#demo"
+              whileHover={{ background:"rgba(255,255,255,0.09)", borderColor:T.borderHi, y:-2 }}
+              whileTap={{ scale:0.97 }}
+              className="inline-flex items-center gap-2 font-bold text-[15px] rounded-full"
+              style={{ background:"rgba(255,255,255,0.05)", border:`1px solid ${T.border}`, padding:"15px 28px", color:T.text, textDecoration:"none", letterSpacing:"-0.1px" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              Watch Demo
+            </motion.a>
+          )}
         </motion.div>
 
         {/* Micro-trust */}
         <motion.div variants={FADE_UP} initial="hidden" animate="show" transition={{ delay:0.4 }}
           className="flex flex-wrap items-center justify-center gap-5 mb-16 text-[12px]" style={{ color:T.faint }}>
-          {["No credit card required","7-day money-back guarantee","Cancel anytime"].map(t => (
+          {["No credit card required","Free plan forever","Cancel anytime"].map(t => (
             <span key={t} className="flex items-center gap-1.5"><Check size={12} /> {t}</span>
           ))}
         </motion.div>
