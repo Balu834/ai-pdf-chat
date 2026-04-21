@@ -5,9 +5,17 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "start": "next start"
+    "start": "next start",
+    "android": "npx cap sync android && npx cap open android",
+    "android:sync": "npx cap sync android",
+    "android:build": "npx cap build android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.45.0",
     "@tailwindcss/postcss": "^4.2.2",

@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Android build artifacts — keep source, ignore generated build files
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
