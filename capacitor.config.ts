@@ -7,7 +7,8 @@ const config: CapacitorConfig = {
 
   server: {
     url: "https://intellixy.vercel.app",
-    cleartext: false, // HTTPS only
+    cleartext: false,      // HTTPS only — never allow http
+    androidScheme: "https",
   },
 
   android: {

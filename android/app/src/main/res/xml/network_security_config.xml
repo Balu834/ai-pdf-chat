@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network security config for Intellixy Android.
+  All traffic is HTTPS — no cleartext permitted.
+  Razorpay and Supabase domains are explicitly trusted.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- App server -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">intellixy.vercel.app</domain>
+        <domain includeSubdomains="true">vercel.app</domain>
+    </domain-config>
+
+    <!-- Razorpay payment gateway -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">razorpay.com</domain>
+        <domain includeSubdomains="true">checkout.razorpay.com</domain>
+        <domain includeSubdomains="true">api.razorpay.com</domain>
+    </domain-config>
+
+    <!-- Supabase backend -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">supabase.co</domain>
+    </domain-config>
+</network-security-config>
