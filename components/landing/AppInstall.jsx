@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { T, FADE_UP, STAGGER, VP } from "@/components/ui/tokens";
 import { Pill } from "@/components/ui/atoms";
+import { Events } from "@/lib/analytics";
 
 const APK_URL = "/intellixy.apk"; // put the APK in /public/intellixy.apk
 
@@ -106,6 +107,7 @@ export default function AppInstall() {
               <motion.a
                 href={APK_URL}
                 download="intellixy.apk"
+                onClick={Events.apkDownloadClick}
                 whileHover={{ opacity:0.9, y:-2, boxShadow:"0 20px 56px rgba(124,58,237,0.55)" }}
                 whileTap={{ scale:0.97 }}
                 className="inline-flex items-center gap-2.5 font-extrabold text-white text-[15px] rounded-full"

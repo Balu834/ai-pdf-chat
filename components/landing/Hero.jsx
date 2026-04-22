@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { T, FADE_UP, SCALE_IN } from "@/components/ui/tokens";
 import { Check, PdfIcon, ArrowRight } from "@/components/ui/atoms";
+import { Events } from "@/lib/analytics";
 
 const APK_URL = "/intellixy.apk"; // place APK in /public/intellixy.apk
 
@@ -75,7 +76,7 @@ export default function Hero() {
           className="flex flex-wrap items-center justify-center gap-3 mb-6">
 
           {/* Primary: always visible */}
-          <motion.a href="/login"
+          <motion.a href="/login" onClick={Events.tryFreeClick}
             whileHover={{ opacity:0.9, y:-2, boxShadow:"0 24px 64px rgba(124,58,237,0.58)" }}
             whileTap={{ scale:0.97 }}
             className="inline-flex items-center gap-2 font-extrabold text-white text-[15px] tracking-tight rounded-full"
@@ -85,7 +86,7 @@ export default function Hero() {
 
           {/* Secondary: APK on mobile, Watch Demo on desktop */}
           {isMobile ? (
-            <motion.a href={APK_URL} download
+            <motion.a href={APK_URL} download onClick={Events.apkDownloadClick}
               whileHover={{ background:"rgba(255,255,255,0.09)", borderColor:T.borderHi, y:-2 }}
               whileTap={{ scale:0.97 }}
               className="inline-flex items-center gap-2 font-bold text-[15px] rounded-full"
@@ -93,7 +94,7 @@ export default function Hero() {
               <span style={{ fontSize:16 }}>📱</span> Install Android App
             </motion.a>
           ) : (
-            <motion.a href="#demo"
+            <motion.a href="#demo" onClick={Events.watchDemoClick}
               whileHover={{ background:"rgba(255,255,255,0.09)", borderColor:T.borderHi, y:-2 }}
               whileTap={{ scale:0.97 }}
               className="inline-flex items-center gap-2 font-bold text-[15px] rounded-full"

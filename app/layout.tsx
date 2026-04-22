@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import Analytics from "@/components/Analytics";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
@@ -90,6 +92,8 @@ export default function RootLayout({
         <AnimatedBackground />
         {children}
         <Analytics />
+        <VercelAnalytics />
+        <SpeedInsights />
         <ServiceWorkerRegistration />
         <InstallPopup />
       </body>

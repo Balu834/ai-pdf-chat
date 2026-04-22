@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Events } from "@/lib/analytics";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -37,6 +38,7 @@ export default function RazorpayButton({ user, couponData, style, children, onEr
   }
 
   async function handlePayment() {
+    Events.paymentStart();
     setLoading(true);
     try {
       const loaded = await loadRazorpayScript();
@@ -94,6 +96,7 @@ export default function RazorpayButton({ user, couponData, style, children, onEr
                 handleError(`Payment received but verification failed. Contact support with Payment ID: ${response.razorpay_payment_id}`);
                 return;
               }
+              Events.paymentSuccess(couponData.final_amount_paise);
               setLoading(false);
               if (onSuccess) onSuccess();
               else window.location.href = "/success";
@@ -105,7 +108,7 @@ export default function RazorpayButton({ user, couponData, style, children, onEr
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on("payment.failed", (r) => handleError(`Payment failed: ${r.error.description}`));
+        rzp.on("payment.failed", () => { Events.paymentFailed(); handleError(`Payment failed: ${r.error.description}`); });
         rzp.open();
 
       } else {
@@ -146,6 +149,7 @@ export default function RazorpayButton({ user, couponData, style, children, onEr
                 handleError(`Payment received but verification failed. Contact support with Payment ID: ${response.razorpay_payment_id}`);
                 return;
               }
+              Events.paymentSuccess(29900);
               setLoading(false);
               if (onSuccess) onSuccess();
               else window.location.href = "/success";
@@ -157,7 +161,7 @@ export default function RazorpayButton({ user, couponData, style, children, onEr
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on("payment.failed", (r) => handleError(`Payment failed: ${r.error.description}`));
+        rzp.on("payment.failed", (r) => { Events.paymentFailed(); handleError(`Payment failed: ${r.error.description}`); });
         rzp.open();
       }
     } catch (err) {
