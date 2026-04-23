@@ -1,12 +1,12 @@
 {
-  "name": "Intellixy – AI PDF Chat",
+  "name": "Intellixy",
   "short_name": "Intellixy",
-  "description": "Chat with your PDFs using AI. Get instant answers, summaries, and key insights in seconds.",
-  "start_url": "/dashboard",
+  "description": "Stop reading PDFs. Start chatting with them.",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f172a",
+  "background_color": "#0a0a0a",
   "theme_color": "#7c3aed",
   "categories": ["productivity", "utilities"],
   "icons": [

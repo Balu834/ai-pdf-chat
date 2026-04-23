@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { T, FADE_UP, SCALE_IN, VP } from "@/components/ui/tokens";
 import { Pill, ArrowRight } from "@/components/ui/atoms";
 
-const DEMO_VIDEO_ID = "9_hnyQxFUjI";
+const DEMO_VIDEO_ID = "3iaD8iVudk4";
 
 export default function Demo() {
   return (
@@ -21,9 +21,9 @@ export default function Demo() {
           <div className="rounded-[22px] overflow-hidden" style={{ border:`1px solid ${T.border}`, boxShadow:"0 32px 90px rgba(0,0,0,0.6)" }}>
             <iframe
               width="100%" height="420"
-              src={`https://www.youtube.com/embed/${DEMO_VIDEO_ID}?rel=0&modestbranding=1`}
+              src={`https://www.youtube.com/embed/${DEMO_VIDEO_ID}?rel=0&modestbranding=1&loop=1&playlist=${DEMO_VIDEO_ID}`}
               title="Intellixy Demo" frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen style={{ display:"block" }} />
           </div>
         </motion.div>
@@ -35,7 +35,7 @@ export default function Demo() {
           <motion.a href="/login" whileHover={{ opacity:0.9, y:-2 }} whileTap={{ scale:0.97 }}
             className="inline-flex items-center gap-2 font-extrabold text-white text-[14px] rounded-full"
             style={{ background:"linear-gradient(135deg,#7c3aed,#06b6d4)", padding:"13px 30px", textDecoration:"none", boxShadow:"0 8px 28px rgba(124,58,237,0.45)" }}>
-            Start Free — 7-Day Pro Trial <ArrowRight />
+            Try Free Now <ArrowRight />
           </motion.a>
           <p className="text-[12px] mt-3" style={{ color:T.faint }}>No credit card · Instant access · Cancel anytime</p>
         </motion.div>
