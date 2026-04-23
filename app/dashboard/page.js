@@ -17,6 +17,7 @@ import VoiceConvBar from "@/components/dashboard/VoiceConvBar";
 import VoiceWaveform from "@/components/dashboard/VoiceWaveform";
 import { useVoiceConversation } from "@/hooks/useVoiceConversation";
 import { useMic } from "@/hooks/useMic";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { Events, trackFirstVisit } from "@/lib/analytics";
 import { UpgradePopup, UpgradeBanner } from "@/components/dashboard/UpgradePopup";
 import { MessageSkeleton } from "@/components/dashboard/Shimmer";
@@ -159,6 +160,7 @@ export default function DashboardPage() {
   const [shareCopied, setShareCopied] = useState(false);
 
   const [micError, setMicError] = useState(null);
+  const [replyTo,  setReplyTo]  = useState(null);
 
   /* ── Onboarding ── */
   const [onboardingStep, setOnboardingStep] = useState(undefined);
@@ -202,18 +204,38 @@ export default function DashboardPage() {
   const [autoInsights, setAutoInsights] = useState(null);
   const [autoInsightsLoading, setAutoInsightsLoading] = useState(false);
 
-  const fileInputRef   = useRef(null);
-  const messagesEndRef = useRef(null);
-  const inputRef       = useRef(null);
-  const chatScrollRef  = useRef(null);
-  const isNearBottomRef = useRef(true);   // true until user scrolls up
+  const fileInputRef       = useRef(null);
+  const messagesEndRef     = useRef(null);
+  const inputRef           = useRef(null);
+  const chatScrollRef      = useRef(null);
+  const isNearBottomRef    = useRef(true);   // true until user scrolls up
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const micLongPressTimer  = useRef(null);
+  const micLongPressFired  = useRef(false);
 
   /* ── Standalone mic: quick voice input → fills text field ── */
   const mic = useMic({
     onTranscript: (text) => setInput(text),
     onError: (msg) => setMicError(msg),
   });
+
+  /* ── Voice note recorder ── */
+  function handleSendVoiceNote(blob, durationMs) {
+    if (!selectedDoc) return;
+    const audioUrl = URL.createObjectURL(blob);
+    const id = Date.now();
+    setMessages((prev) => [...prev, { role: "user", type: "audio", audioUrl, durationMs, id }]);
+    voiceRecorder.reset();
+  }
+
+  const voiceRecorder = useVoiceRecorder({
+    onStop:  handleSendVoiceNote,
+    onError: (msg) => addToast(msg, "error"),
+  });
+
+  function fmtRecordDuration(sec) {
+    return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+  }
 
   /* ── Voice conversation ── */
   const lastAiMessage = messages.filter((m) => m.role === "assistant" && !m.streaming).at(-1)?.content ?? "";
@@ -574,7 +596,7 @@ export default function DashboardPage() {
     e?.preventDefault();
     const text = (overrideText ?? input).trim();
     if (!text || !selectedDoc || aiStreaming) return;
-    setInput(""); setLimitError(null); setApiError(null);
+    setInput(""); setLimitError(null); setApiError(null); setReplyTo(null);
     const userMsg = { role: "user", content: text, id: Date.now() };
     const aiMsgId = userMsg.id + 1;
     setAiStreaming(true);
@@ -955,7 +977,9 @@ export default function DashboardPage() {
                 ) : (
                   <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22, paddingBottom: 12 }}>
                     {messages.map((msg) => (
-                      <ChatMessage key={msg.id} msg={msg} onCopy={copyText} onShare={shareAnswer} userInitial={userInitial} onUpgrade={() => setUpgradePopup("question")} />
+                      <ChatMessage key={msg.id} msg={msg} onCopy={copyText} onShare={shareAnswer} userInitial={userInitial} onUpgrade={() => setUpgradePopup("question")}
+                        onReply={(m) => { setReplyTo(m); inputRef.current?.focus(); }}
+                      />
                     ))}
                     <div ref={messagesEndRef} />
                   </div>
@@ -1042,6 +1066,63 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSend} style={{ maxWidth: 740, margin: "0 auto" }}>
+
+                  {/* ── Recording overlay ── */}
+                  <AnimatePresence>
+                    {voiceRecorder.isRecording && (
+                      <motion.div
+                        key="recording-ui"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        style={{ overflow: "hidden", marginBottom: 8 }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 12 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", flexShrink: 0, boxShadow: "0 0 6px rgba(239,68,68,0.7)", animation: "pulseDot 1.2s ease-in-out infinite" }} />
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "#f87171", flexShrink: 0 }}>Recording</span>
+                          <span style={{ fontSize: 12, color: "#f87171", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{fmtRecordDuration(voiceRecorder.duration)}</span>
+                          <VoiceWaveform isActive={true} />
+                          <div style={{ flex: 1 }} />
+                          <motion.button type="button" whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}
+                            onClick={() => voiceRecorder.cancel()}
+                            style={{ padding: "4px 11px", background: "transparent", border: "1px solid rgba(239,68,68,0.35)", borderRadius: 7, fontSize: 11, fontWeight: 700, color: "#f87171", cursor: "pointer" }}>
+                            Cancel
+                          </motion.button>
+                          <motion.button type="button" whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}
+                            onClick={() => voiceRecorder.stop()}
+                            style={{ padding: "4px 11px", background: "rgba(239,68,68,0.18)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 7, fontSize: 11, fontWeight: 700, color: "white", cursor: "pointer" }}>
+                            Send
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* ── Reply preview ── */}
+                  <AnimatePresence>
+                    {replyTo && (
+                      <motion.div
+                        key="reply-preview"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        style={{ overflow: "hidden", marginBottom: 4 }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: 10, borderLeft: "3px solid #7c3aed" }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: C.accentLight, display: "block" }}>
+                              {replyTo.role === "user" ? "You" : "Intellixy AI"}
+                            </span>
+                            <span style={{ fontSize: 11.5, color: C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                              {replyTo.content?.slice(0, 90) || "Voice note"}
+                            </span>
+                          </div>
+                          <button type="button" onClick={() => setReplyTo(null)} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, fontSize: 14, lineHeight: 1, flexShrink: 0, padding: "0 2px" }}>×</button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <div style={{ display: "flex", alignItems: "flex-end", gap: 8, background: C.glass, border: "1px solid rgba(255,255,255,0.09)", borderRadius: 18, padding: "11px 13px", backdropFilter: "blur(12px)", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}
                     onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.45)"; e.currentTarget.style.boxShadow = "0 4px 32px rgba(124,58,237,0.12)"; }}
                     onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.35)"; }}
@@ -1055,15 +1136,38 @@ export default function DashboardPage() {
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
-                      onClick={() => { setMicError(null); mic.toggle(); }}
                       disabled={voiceConv.active}
-                      title={voiceConv.active ? "Stop voice conversation to use quick mic" : mic.isListening ? "Stop recording" : mic.isRequesting ? "Requesting mic…" : "Voice input"}
-                      style={{ width: 36, height: 36, borderRadius: 10, background: mic.isListening ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.04)", border: mic.isListening ? "1px solid rgba(124,58,237,0.42)" : "1px solid rgba(255,255,255,0.08)", cursor: voiceConv.active ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: mic.isListening ? C.accentLight : C.textMuted, transition: "all 0.2s", position: "relative", opacity: voiceConv.active ? 0.4 : 1 }}>
-                      {mic.isRequesting
+                      title={voiceConv.active ? "Stop voice conversation to use quick mic" : voiceRecorder.isRecording ? "Release to send · hold = record" : mic.isListening ? "Stop recording" : "Tap = voice input · Hold = voice note"}
+                      onPointerDown={(e) => {
+                        if (voiceConv.active) return;
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                        micLongPressFired.current = false;
+                        micLongPressTimer.current = setTimeout(() => {
+                          micLongPressFired.current = true;
+                          if (mic.isListening) mic.stop();
+                          setMicError(null);
+                          voiceRecorder.start();
+                        }, 480);
+                      }}
+                      onPointerUp={() => {
+                        clearTimeout(micLongPressTimer.current);
+                        if (micLongPressFired.current) {
+                          voiceRecorder.stop();
+                        } else {
+                          setMicError(null); mic.toggle();
+                        }
+                      }}
+                      onPointerCancel={() => {
+                        clearTimeout(micLongPressTimer.current);
+                        if (micLongPressFired.current) voiceRecorder.cancel();
+                      }}
+                      onContextMenu={(e) => e.preventDefault()}
+                      style={{ width: 36, height: 36, borderRadius: 10, background: voiceRecorder.isRecording ? "rgba(239,68,68,0.18)" : mic.isListening ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.04)", border: voiceRecorder.isRecording ? "1px solid rgba(239,68,68,0.5)" : mic.isListening ? "1px solid rgba(124,58,237,0.42)" : "1px solid rgba(255,255,255,0.08)", cursor: voiceConv.active ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: voiceRecorder.isRecording ? "#f87171" : mic.isListening ? C.accentLight : C.textMuted, transition: "all 0.2s", position: "relative", opacity: voiceConv.active ? 0.4 : 1, userSelect: "none", WebkitUserSelect: "none", touchAction: "none" }}>
+                      {mic.isRequesting || voiceRecorder.isRequesting
                         ? <div style={{ width: 14, height: 14, border: "2px solid rgba(167,139,250,0.3)", borderTopColor: C.accentLight, borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-                        : <MicIcon active={mic.isListening} />
+                        : <MicIcon active={mic.isListening || voiceRecorder.isRecording} />
                       }
-                      {mic.isListening && <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#ef4444", animation: "pulseDot 1.2s ease-in-out infinite" }} />}
+                      {(mic.isListening || voiceRecorder.isRecording) && <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#ef4444", animation: "pulseDot 1.2s ease-in-out infinite" }} />}
                     </motion.button>
                     <motion.button type="submit" disabled={!input.trim() || aiStreaming}
                       whileHover={input.trim() && !aiStreaming ? { scale: 1.08 } : {}}
