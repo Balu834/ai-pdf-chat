@@ -1,16 +1,22 @@
 import webpush, { PushSubscription, SendResult } from "web-push";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
+
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-webpush.setVapidDetails(
-  "mailto:support@intellixy.vercel.app",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+let vapidInitialized = false;
+function ensureVapid() {
+  if (vapidInitialized) return;
+  const pub  = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !priv) throw new Error("Missing VAPID keys — set NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY");
+  webpush.setVapidDetails("mailto:support@intellixy.vercel.app", pub, priv);
+  vapidInitialized = true;
+}
 
 export interface PushPayload {
   title: string;
@@ -26,6 +32,7 @@ export async function sendPush(
   sub: PushSubscription,
   payload: PushPayload
 ): Promise<SendResult | null> {
+  ensureVapid();
   try {
     return await webpush.sendNotification(sub, JSON.stringify(payload));
   } catch (err: any) {
