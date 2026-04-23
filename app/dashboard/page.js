@@ -13,6 +13,8 @@ import MyPDFsView from "@/components/dashboard/MyPDFsView";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import ComparePanel from "@/components/dashboard/ComparePanel";
 import ChatMessage from "@/components/dashboard/ChatMessage";
+import VoiceConvBar from "@/components/dashboard/VoiceConvBar";
+import { useVoiceConversation } from "@/hooks/useVoiceConversation";
 import { Events, trackFirstVisit } from "@/lib/analytics";
 import { UpgradePopup, UpgradeBanner } from "@/components/dashboard/UpgradePopup";
 import { MessageSkeleton } from "@/components/dashboard/Shimmer";
@@ -206,6 +208,15 @@ export default function DashboardPage() {
   const chatScrollRef  = useRef(null);
   const isNearBottomRef = useRef(true);   // true until user scrolls up
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  /* ── Voice conversation ── */
+  const lastAiMessage = messages.filter((m) => m.role === "assistant" && !m.streaming).at(-1)?.content ?? "";
+  const voiceConv = useVoiceConversation({
+    onTranscript: (text) => handleSend(null, text),
+    isThinking:   aiStreaming,
+    lastAiMessage,
+    hasDoc:       !!selectedDoc,
+  });
 
   /* ── Auth guard ── */
   useEffect(() => {
@@ -869,6 +880,12 @@ export default function DashboardPage() {
                   <CompareIcon /><span className="btn-text"> Compare</span>
                 </HeaderBtn>
               )}
+              {selectedDoc && (
+                <HeaderBtn onClick={voiceConv.toggle} active={voiceConv.active} color={voiceConv.active ? "purple" : "default"}>
+                  <MicIcon active={voiceConv.active} />
+                  <span className="btn-text"> {voiceConv.active ? "Voice On" : "Voice"}</span>
+                </HeaderBtn>
+              )}
             </div>
           )}
         </header>
@@ -934,6 +951,20 @@ export default function DashboardPage() {
                     </motion.button>
                   ))}
                 </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Voice conversation status bar */}
+            <AnimatePresence>
+              {voiceConv.active && (
+                <VoiceConvBar
+                  key="voice-bar"
+                  convState={voiceConv.convState}
+                  onStop={voiceConv.toggle}
+                  onInterrupt={voiceConv.interrupt}
+                  error={voiceConv.error}
+                  onClearError={voiceConv.clearError}
+                />
               )}
             </AnimatePresence>
 
