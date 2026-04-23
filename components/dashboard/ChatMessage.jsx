@@ -36,6 +36,41 @@ function getSectionStyle(line) {
   return null;
 }
 
+/* ─── TABLE RENDERER ─────────────────────────────────────────────────────── */
+function renderTable(tableLines, key) {
+  // tableLines[0] = header row, tableLines[1] = separator, tableLines[2+] = data rows
+  const parseRow = (line) =>
+    line.split("|").map((c) => c.trim()).filter((_, i, a) => i > 0 && i < a.length - 1);
+  const headers = parseRow(tableLines[0]);
+  const rows    = tableLines.slice(2).map(parseRow);
+  return (
+    <div key={key} style={{ overflowX: "auto", margin: "10px 0" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <thead>
+          <tr>
+            {headers.map((h, i) => (
+              <th key={i} style={{ padding: "8px 12px", background: "rgba(124,58,237,0.12)", border: "1px solid rgba(255,255,255,0.1)", color: "#f0f0f8", fontWeight: 700, textAlign: "left", whiteSpace: "nowrap" }}>
+                {parseBold(h)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri} style={{ background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+              {row.map((cell, ci) => (
+                <td key={ci} style={{ padding: "7px 12px", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(240,240,248,0.82)", verticalAlign: "top" }}>
+                  {parseBold(cell)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ─── FULL MARKDOWN + STRUCTURED RENDERER ───────────────────────────────── */
 export function renderMarkdown(text) {
   // Split into sections by emoji headers
@@ -44,6 +79,19 @@ export function renderMarkdown(text) {
   let sectionLines = [];
   let currentSection = null;
   let key = 0;
+
+  let tableBuffer = [];
+
+  function flushTable() {
+    if (tableBuffer.length < 3) {
+      // Not a real table — emit as plain lines
+      tableBuffer.forEach((l) => sectionLines.push(l));
+    } else {
+      flushSection();
+      output.push(renderTable(tableBuffer, `tbl-${key++}`));
+    }
+    tableBuffer = [];
+  }
 
   function flushSection() {
     if (!currentSection && sectionLines.length === 0) return;
@@ -65,11 +113,9 @@ export function renderMarkdown(text) {
             gap: 5,
           }}
         >
-          {/* Section header line */}
           <p style={{ margin: 0, fontSize: 12.5, fontWeight: 800, color: "#f0f0f8", letterSpacing: "-0.1px" }}>
             {parseBold(currentSection.headerText)}
           </p>
-          {/* Section body lines */}
           {sectionLines.map((sl, si) => renderLine(sl, `sl-${key}-${si}`))}
         </motion.div>
       );
@@ -84,6 +130,16 @@ export function renderMarkdown(text) {
   }
 
   for (const line of lines) {
+    const isTableRow = line.trim().startsWith("|") && line.trim().endsWith("|");
+
+    if (isTableRow) {
+      if (tableBuffer.length === 0) flushSection();
+      tableBuffer.push(line);
+      continue;
+    }
+
+    if (tableBuffer.length > 0) { flushTable(); }
+
     const sectionStyle = getSectionStyle(line);
     if (sectionStyle) {
       flushSection();
@@ -92,6 +148,8 @@ export function renderMarkdown(text) {
       sectionLines.push(line);
     }
   }
+
+  if (tableBuffer.length > 0) flushTable();
   flushSection();
 
   return output;
@@ -209,17 +267,48 @@ export function TypingDots() {
   );
 }
 
+/* ─── CODE BLOCK WITH COPY BUTTON ───────────────────────────────────────── */
+function CodeBlock({ lang, code }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(code).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <div style={{ position: "relative", margin: "10px 0", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
+      {/* Header bar: language label + copy button */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 14px", background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(180,180,220,0.5)", textTransform: "lowercase", letterSpacing: "0.3px" }}>
+          {lang || "code"}
+        </span>
+        <motion.button
+          whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.92 }}
+          onClick={copy}
+          style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 9px", background: copied ? "rgba(74,222,128,0.1)" : "rgba(255,255,255,0.06)", border: `1px solid ${copied ? "rgba(74,222,128,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 6, fontSize: 11, fontWeight: 600, color: copied ? "#4ade80" : "rgba(200,200,230,0.7)", cursor: "pointer", transition: "all 0.15s" }}
+        >
+          {copied
+            ? <><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!</>
+            : <><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</>
+          }
+        </motion.button>
+      </div>
+      <pre style={{ margin: 0, padding: "13px 16px", background: "rgba(0,0,0,0.4)", fontSize: 12.5, lineHeight: 1.65, overflowX: "auto", fontFamily: "'Fira Code','Cascadia Code','Consolas',monospace", color: "#e2e8f0", whiteSpace: "pre" }}>
+        {code}
+      </pre>
+    </div>
+  );
+}
+
 /* ─── CODE BLOCK SPLITTER ────────────────────────────────────────────────── */
 function renderWithCodeBlocks(text) {
   const segments = text.split(/(```[\s\S]*?```)/g);
   return segments.map((seg, i) => {
     if (seg.startsWith("```")) {
-      const inner = seg.slice(3).replace(/^[a-z]*\n/, "").replace(/```$/, "").trimEnd();
-      return (
-        <pre key={i} style={{ margin: "10px 0", padding: "13px 16px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, fontSize: 12.5, lineHeight: 1.65, overflowX: "auto", fontFamily: "'Fira Code','Cascadia Code',monospace", color: "#e2e8f0", whiteSpace: "pre" }}>
-          {inner}
-        </pre>
-      );
+      const firstNewline = seg.indexOf("\n");
+      const lang = firstNewline > 3 ? seg.slice(3, firstNewline).trim() : "";
+      const code = seg.slice(firstNewline > 3 ? firstNewline + 1 : 3).replace(/```$/, "").trimEnd();
+      return <CodeBlock key={i} lang={lang} code={code} />;
     }
     return <div key={i}>{renderMarkdown(seg)}</div>;
   });
