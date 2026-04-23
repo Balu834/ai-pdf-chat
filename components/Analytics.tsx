@@ -1,60 +1,53 @@
-"use client";
-
 import Script from "next/script";
 
 /**
  * Analytics — Google Analytics 4 + Microsoft Clarity
  *
- * Both are loaded with `strategy="afterInteractive"` so they never block
- * the main thread or delay the first paint.
+ * Rendered as a Server Component so NEXT_PUBLIC_* env vars are
+ * inlined at build time (no "use client" needed, no runtime miss).
  *
- * Env vars required (Vercel → Environment Variables):
- *   NEXT_PUBLIC_GA_ID        e.g. G-XXXXXXXXXX
- *   NEXT_PUBLIC_CLARITY_ID   e.g. abcdefghij
- *
- * Neither script loads in development (NODE_ENV !== "production"), so
- * local sessions don't pollute your analytics dashboards.
+ * Env vars (Vercel → Settings → Environment Variables):
+ *   NEXT_PUBLIC_GA_ID        e.g. G-26MPXY3PE2
+ *   NEXT_PUBLIC_CLARITY_ID   e.g. abcdefghij  (optional)
  */
+
+const GA_ID      = process.env.NEXT_PUBLIC_GA_ID;
+const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID;
+
 export default function Analytics() {
   if (process.env.NODE_ENV !== "production") return null;
-
-  const gaId      = process.env.NEXT_PUBLIC_GA_ID;
-  const clarityId = process.env.NEXT_PUBLIC_CLARITY_ID;
 
   return (
     <>
       {/* ── Google Analytics 4 ─────────────────────────────────────────── */}
-      {gaId && (
+      {GA_ID && (
         <>
           <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
             strategy="afterInteractive"
           />
-          <Script id="ga4-init" strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${gaId}', {
-                page_path: window.location.pathname,
-                cookie_flags: 'SameSite=None;Secure',
-              });
-            `}
-          </Script>
+          <Script id="ga4-init" strategy="afterInteractive">{`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}', {
+              page_path: window.location.pathname,
+              cookie_flags: 'SameSite=None;Secure',
+              send_page_view: true,
+            });
+          `}</Script>
         </>
       )}
 
       {/* ── Microsoft Clarity ──────────────────────────────────────────── */}
-      {clarityId && (
-        <Script id="clarity-init" strategy="afterInteractive">
-          {`
-            (function(c,l,a,r,i,t,y){
-              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "${clarityId}");
-          `}
-        </Script>
+      {CLARITY_ID && (
+        <Script id="clarity-init" strategy="afterInteractive">{`
+          (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          })(window, document, "clarity", "script", "${CLARITY_ID}");
+        `}</Script>
       )}
     </>
   );

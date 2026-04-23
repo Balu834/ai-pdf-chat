@@ -29,7 +29,7 @@ export function track(event: string, props?: Props) {
 export const Events = {
   // Landing page
   tryFreeClick:      () => track("try_free_click"),
-  apkDownloadClick:  () => track("apk_download_click"),
+  apkDownloadClick:  () => track("apk_download", { event_category: "engagement", event_label: "android_apk" }),
   watchDemoClick:    () => track("watch_demo_click"),
   pricingView:       () => track("pricing_view"),
   upgradeClick:      () => track("upgrade_click"),
