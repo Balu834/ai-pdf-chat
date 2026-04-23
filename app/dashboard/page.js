@@ -710,61 +710,103 @@ export default function DashboardPage() {
   function handleKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }
 
   /* ── Voice input ── */
+  const voiceStartingRef = useRef(false);  // prevents overlapping start calls
+
   async function toggleVoice() {
     setVoiceError(null);
 
-    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
-
-    // HTTPS guard — mic APIs require a secure context
-    if (typeof window !== "undefined" && window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
-      setVoiceError("🔒 Microphone requires a secure (HTTPS) connection.");
+    // ── Stop path ────────────────────────────────────────────────────────────
+    if (listening) {
+      // abort() releases the mic immediately (unlike stop() which waits for
+      // the current utterance to finish — that delay is what causes the
+      // "NotAllowedError even though permission is granted" bug on rapid clicks)
+      recognitionRef.current?.abort();
+      recognitionRef.current = null;
+      setListening(false);
+      voiceStartingRef.current = false;
       return;
     }
 
-    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    // Guard: prevent a second call while the first is still setting up
+    if (voiceStartingRef.current) return;
+    voiceStartingRef.current = true;
+
+    // Always kill any leftover instance before creating a new one
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+      // Give the browser one tick to release the mic handle
+      await new Promise((r) => setTimeout(r, 80));
+    }
+
+    // HTTPS guard
+    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+      setVoiceError("🔒 Microphone requires a secure (HTTPS) connection.");
+      voiceStartingRef.current = false;
+      return;
+    }
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       setVoiceError("Voice input is not supported in this browser. Try Chrome or Edge.");
+      voiceStartingRef.current = false;
       return;
     }
 
-    // Pre-check permission status so we can show a targeted message before
-    // the browser even attempts to prompt (avoids a silent failure)
+    // Permission pre-check — skip if permissions API not available
     if (navigator.permissions) {
       try {
         const status = await navigator.permissions.query({ name: "microphone" });
         if (status.state === "denied") {
           setVoiceError("🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.");
+          voiceStartingRef.current = false;
           return;
         }
-      } catch {
-        // permissions.query not supported — fall through and let SpeechRecognition handle it
-      }
+      } catch { /* not supported — let SpeechRecognition handle it */ }
     }
 
     const MIC_ERRORS = {
-      "not-allowed":  "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
-      "not-found":    "No microphone detected. Plug in a mic and try again.",
-      "not-readable": "Mic is in use by another app. Close it and try again.",
-      "aborted":      null,   // user dismissed — no message needed
-      "network":      "Network error while starting voice. Check your connection.",
+      "not-allowed":         "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
       "service-not-allowed": "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
+      "not-found":           "No microphone detected. Plug in a mic and try again.",
+      "not-readable":        "Mic is in use by another app. Close it and try again.",
+      "network":             "Network error while starting voice. Check your connection.",
+      "aborted":             null,   // we called abort() — no message needed
     };
 
     const rec = new SR();
-    rec.lang = "en-US"; rec.interimResults = true; rec.continuous = false;
+    rec.lang           = "en-US";
+    rec.interimResults = true;
+    rec.continuous     = false;
     recognitionRef.current = rec;
-    rec.onstart = () => setListening(true);
+
+    rec.onstart = () => {
+      console.debug("[voice] mic started successfully");
+      setListening(true);
+      voiceStartingRef.current = false;
+    };
+
     rec.onresult = (e) => {
       const t = Array.from(e.results).map((r) => r[0].transcript).join("");
       setInput(t);
     };
+
     rec.onerror = (e) => {
+      console.debug("[voice] error:", e.error);
       setListening(false);
+      voiceStartingRef.current = false;
+      recognitionRef.current = null;
       const msg = MIC_ERRORS[e.error];
       if (msg !== undefined) setVoiceError(msg);   // null = silent
       else setVoiceError(`Mic error: ${e.error}`);
     };
-    rec.onend = () => setListening(false);
+
+    rec.onend = () => {
+      setListening(false);
+      voiceStartingRef.current = false;
+      // Don't null the ref here — onerror may fire after onend on some browsers
+    };
+
     rec.start();
   }
 
