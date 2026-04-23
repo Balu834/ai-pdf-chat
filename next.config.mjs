@@ -12,8 +12,8 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value: [
-              // Framing: self + Razorpay iframes
-              "frame-src 'self' https://*.razorpay.com https://api.razorpay.com",
+              // Framing: self + Razorpay iframes + YouTube demo
+              "frame-src 'self' https://*.razorpay.com https://api.razorpay.com https://www.youtube.com https://youtube.com",
 
               // Scripts: self + Razorpay + Google Analytics/Tag Manager
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'" +

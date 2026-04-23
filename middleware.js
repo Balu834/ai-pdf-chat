@@ -81,6 +81,6 @@ export const config = {
      * navigation, including /login and /auth/callback — which is the
      * official Supabase SSR recommendation.
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mjs)$).*)",
   ],
 };
