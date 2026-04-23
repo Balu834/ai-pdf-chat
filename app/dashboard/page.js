@@ -14,6 +14,7 @@ import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import ComparePanel from "@/components/dashboard/ComparePanel";
 import ChatMessage from "@/components/dashboard/ChatMessage";
 import VoiceConvBar from "@/components/dashboard/VoiceConvBar";
+import VoiceWaveform from "@/components/dashboard/VoiceWaveform";
 import { useVoiceConversation } from "@/hooks/useVoiceConversation";
 import { useMic } from "@/hooks/useMic";
 import { Events, trackFirstVisit } from "@/lib/analytics";
@@ -1084,7 +1085,8 @@ export default function DashboardPage() {
                       <button onClick={() => setMicError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#f87171", fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
                     </motion.div>
                   )}
-                  {mic.isListening && <p style={{ textAlign: "center", fontSize: 11, color: C.accentLight, marginTop: 5 }}>🎙 Listening… speak now</p>}
+                  {/* Voice waveform — replaces the plain "Listening…" text */}
+                  <VoiceWaveform isActive={mic.isListening} />
                 </form>
               )}
 
