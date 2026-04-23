@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useTTS } from "@/hooks/useTTS";
 import { motion, AnimatePresence } from "framer-motion";
 import { C } from "./tokens";
 import { SparkleIcon, CopyIcon, ShareIcon } from "./icons";
@@ -323,6 +324,7 @@ export default function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgra
 
   const [feedback, setFeedback] = useState(null);
   const [copied,   setCopied]   = useState(false);
+  const { speak, pause, resume, stop, state: ttsState, supported: ttsSupported } = useTTS();
 
   function handleCopy() {
     onCopy(msg.content);
@@ -418,6 +420,17 @@ export default function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgra
               <ShareIcon /> Share
             </ActionBtn>
 
+            {/* Speak */}
+            {ttsSupported && (
+              <SpeakBtn
+                state={ttsState}
+                onSpeak={() => speak(msg.content)}
+                onPause={pause}
+                onResume={resume}
+                onStop={stop}
+              />
+            )}
+
             <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.07)", margin: "0 2px" }} />
 
             {/* Thumbs */}
@@ -434,6 +447,71 @@ export default function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgra
         </div>
       )}
     </motion.div>
+  );
+}
+
+/* ─── SPEAK BUTTON ───────────────────────────────────────────────────────── */
+function SpeakBtn({ state, onSpeak, onPause, onResume, onStop }) {
+  // Single click cycles: idle→speak | speaking→pause | paused→resume
+  // Long-press (or right-click) stops entirely — handled via onStop prop in the stop icon
+  const isSpeaking = state === "speaking";
+  const isPaused   = state === "paused";
+
+  function handleClick() {
+    if (state === "idle")     onSpeak();
+    else if (isSpeaking)     onPause();
+    else if (isPaused)       onResume();
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <motion.button
+        whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.92 }}
+        onClick={handleClick}
+        title={state === "idle" ? "Listen" : isSpeaking ? "Pause" : "Resume"}
+        style={{
+          display: "flex", alignItems: "center", gap: 4,
+          fontSize: 11, fontWeight: 600,
+          color:      isSpeaking ? "#a78bfa" : isPaused ? "#60a5fa" : C.textMuted,
+          background: isSpeaking ? "rgba(124,58,237,0.12)" : isPaused ? "rgba(96,165,250,0.1)" : "rgba(255,255,255,0.04)",
+          border:     `1px solid ${isSpeaking ? "rgba(124,58,237,0.3)" : isPaused ? "rgba(96,165,250,0.25)" : "rgba(255,255,255,0.07)"}`,
+          borderRadius: 7, padding: "4px 9px", cursor: "pointer", transition: "all 0.15s",
+        }}
+      >
+        {isSpeaking ? (
+          <>
+            {/* Animated sound bars */}
+            <span style={{ display: "flex", alignItems: "flex-end", gap: "2px", height: 11 }}>
+              {[0, 1, 2].map((i) => (
+                <motion.span key={i}
+                  animate={{ scaleY: [0.4, 1, 0.4] }}
+                  transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                  style={{ display: "block", width: 2, height: "100%", background: "#a78bfa", borderRadius: 2, transformOrigin: "bottom" }}
+                />
+              ))}
+            </span>
+            Pause
+          </>
+        ) : isPaused ? (
+          <><svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Resume</>
+        ) : (
+          <><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/></svg> Listen</>
+        )}
+      </motion.button>
+
+      {/* Stop button — only visible while speaking or paused */}
+      {state !== "idle" && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.7 }}
+          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+          onClick={onStop}
+          title="Stop"
+          style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, cursor: "pointer", color: "#f87171", flexShrink: 0 }}
+        >
+          <svg width="9" height="9" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        </motion.button>
+      )}
+    </div>
   );
 }
 
