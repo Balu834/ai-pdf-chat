@@ -200,10 +200,12 @@ export default function DashboardPage() {
   const [autoInsights, setAutoInsights] = useState(null);
   const [autoInsightsLoading, setAutoInsightsLoading] = useState(false);
 
-  const fileInputRef = useRef(null);
+  const fileInputRef   = useRef(null);
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
-  const chatScrollRef = useRef(null);
+  const inputRef       = useRef(null);
+  const chatScrollRef  = useRef(null);
+  const isNearBottomRef = useRef(true);   // true until user scrolls up
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   /* ── Auth guard ── */
   useEffect(() => {
@@ -663,16 +665,36 @@ export default function DashboardPage() {
     setShareCopied(true); setTimeout(() => setShareCopied(false), 2500);
   }
 
-  /* ── Smart auto-scroll ── */
+  /* ── Track whether user is near bottom via scroll events ── */
   useEffect(() => {
     const container = chatScrollRef.current;
     if (!container) return;
-    const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-    const lastMsg = messages[messages.length - 1];
-    if (nearBottom || (lastMsg && !lastMsg.streaming)) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    function onScroll() {
+      const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      const near = distFromBottom < 120;
+      isNearBottomRef.current = near;
+      setShowScrollBtn(!near);
     }
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => container.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* ── Auto-scroll when messages update ── */
+  useEffect(() => {
+    if (!isNearBottomRef.current) return;
+    const lastMsg = messages[messages.length - 1];
+    // instant during streaming to avoid competing smooth animations;
+    // smooth only on the final settled message
+    const behavior = lastMsg?.streaming ? "instant" : "smooth";
+    messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
   }, [messages]);
+
+  /* ── Scroll to bottom on doc switch ── */
+  useEffect(() => {
+    isNearBottomRef.current = true;
+    setShowScrollBtn(false);
+    messagesEndRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
+  }, [selectedDoc]);
 
   function handleKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }
 
@@ -894,21 +916,44 @@ export default function DashboardPage() {
             })()}
 
             {/* Messages */}
-            <div ref={chatScrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px 8px" }}>
-              {!selectedDoc ? (
-                <WelcomeScreen onUpload={() => fileInputRef.current?.click()} usage={usage} plan={plan} />
-              ) : historyLoading ? (
-                <div style={{ maxWidth: 740, margin: "0 auto", paddingTop: 16 }}><MessageSkeleton /></div>
-              ) : messages.length === 0 ? (
-                <EmptyChatState doc={selectedDoc} onSetInput={setInput} inputRef={inputRef} />
-              ) : (
-                <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22, paddingBottom: 12 }}>
-                  {messages.map((msg) => (
-                    <ChatMessage key={msg.id} msg={msg} onCopy={copyText} onShare={shareAnswer} userInitial={userInitial} onUpgrade={() => setUpgradePopup("question")} />
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
+            <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div ref={chatScrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px 8px" }}>
+                {!selectedDoc ? (
+                  <WelcomeScreen onUpload={() => fileInputRef.current?.click()} usage={usage} plan={plan} />
+                ) : historyLoading ? (
+                  <div style={{ maxWidth: 740, margin: "0 auto", paddingTop: 16 }}><MessageSkeleton /></div>
+                ) : messages.length === 0 ? (
+                  <EmptyChatState doc={selectedDoc} onSetInput={setInput} inputRef={inputRef} />
+                ) : (
+                  <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22, paddingBottom: 12 }}>
+                    {messages.map((msg) => (
+                      <ChatMessage key={msg.id} msg={msg} onCopy={copyText} onShare={shareAnswer} userInitial={userInitial} onUpgrade={() => setUpgradePopup("question")} />
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </div>
+
+              {/* Scroll-to-bottom button */}
+              <AnimatePresence>
+                {showScrollBtn && (
+                  <motion.button
+                    key="scroll-btn"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    onClick={() => {
+                      isNearBottomRef.current = true;
+                      setShowScrollBtn(false);
+                      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                    }}
+                    style={{ position: "absolute", bottom: 12, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(124,58,237,0.9)", border: "1px solid rgba(124,58,237,0.5)", borderRadius: 99, fontSize: 12, fontWeight: 700, color: "white", cursor: "pointer", backdropFilter: "blur(12px)", boxShadow: "0 4px 20px rgba(124,58,237,0.4)", zIndex: 10 }}
+                  >
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    Scroll to bottom
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* AI streaming status bar */}
