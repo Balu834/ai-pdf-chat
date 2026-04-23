@@ -11,8 +11,8 @@ import Script from "next/script";
  *   NEXT_PUBLIC_CLARITY_ID   e.g. abcdefghij  (optional)
  */
 
-const GA_ID      = process.env.NEXT_PUBLIC_GA_ID;
-const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID;
+const GA_ID      = process.env.NEXT_PUBLIC_GA_ID?.trim();
+const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID?.trim();
 
 export default function Analytics() {
   if (process.env.NODE_ENV !== "production") return null;
