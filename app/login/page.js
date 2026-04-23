@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { Events } from "@/lib/analytics";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function LoginPage() {
 
   // ── Google OAuth ──────────────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
+    Events.loginStart();
     setLoading(true);
     setStatus(null);
     const { error } = await supabase.auth.signInWithOAuth({
@@ -57,6 +59,7 @@ export default function LoginPage() {
     if (error) {
       setStatus({ type: "error", msg: error.message });
     } else {
+      Events.loginComplete("email");
       router.push("/dashboard");
     }
     setLoading(false);
@@ -67,6 +70,7 @@ export default function LoginPage() {
     if (!email || !password) return setStatus({ type: "error", msg: "Enter your email and password." });
     setLoading(true);
     setStatus(null);
+    Events.signupStart();
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -75,6 +79,7 @@ export default function LoginPage() {
     if (error) {
       setStatus({ type: "error", msg: error.message });
     } else {
+      Events.signupComplete("email");
       setStatus({ type: "success", msg: "Check your email to confirm your account." });
     }
     setLoading(false);

@@ -13,6 +13,7 @@ import MyPDFsView from "@/components/dashboard/MyPDFsView";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import ComparePanel from "@/components/dashboard/ComparePanel";
 import ChatMessage from "@/components/dashboard/ChatMessage";
+import { Events, trackFirstVisit } from "@/lib/analytics";
 import { UpgradePopup, UpgradeBanner } from "@/components/dashboard/UpgradePopup";
 import { MessageSkeleton } from "@/components/dashboard/Shimmer";
 import { C, SMART_ACTIONS } from "@/components/dashboard/tokens";
@@ -208,7 +209,7 @@ export default function DashboardPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { window.location.href = "/login"; }
-      else { setUser(user); setLoading(false); fetchDocs(user.id); fetchPlan(user.id); fetchUsage(); }
+      else { setUser(user); setLoading(false); fetchDocs(user.id); fetchPlan(user.id); fetchUsage(); trackFirstVisit(); }
     });
   }, []);
 
@@ -334,6 +335,7 @@ export default function DashboardPage() {
   async function handleUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    Events.pdfUploadStart();
 
     // ── Auth guard ────────────────────────────────────────────────────────────
     if (!user?.id) {
@@ -449,6 +451,7 @@ export default function DashboardPage() {
       }
 
       uploadSucceeded = true;
+      Events.pdfUploadSuccess(file.name, file.size / 1024);
       setUploadProgress(100);
 
       // Step 3 — Refresh state and show success feedback
@@ -588,6 +591,7 @@ export default function DashboardPage() {
         }
       }
       setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
+      Events.aiResponseGenerated();
     } catch (err) {
       // Classify the error for a user-friendly message
       let errorMsg = "Something went wrong. Please try again.";

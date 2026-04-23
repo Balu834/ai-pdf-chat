@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { T } from "@/components/ui/tokens";
-import { initScrollDepthTracking } from "@/lib/analytics";
+import { Events, initScrollDepthTracking } from "@/lib/analytics";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
 import StatsBar from "@/components/landing/StatsBar";
@@ -18,7 +18,10 @@ import Footer from "@/components/landing/Footer";
 import ConversionBoosts from "@/components/ConversionBoosts";
 
 export default function LandingPage() {
-  useEffect(() => initScrollDepthTracking(), []);
+  useEffect(() => {
+    Events.landingView();
+    return initScrollDepthTracking();
+  }, []);
 
   return (
     <div style={{

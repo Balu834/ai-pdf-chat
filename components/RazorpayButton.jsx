@@ -96,7 +96,7 @@ export default function RazorpayButton({ user, couponData, style, children, onEr
                 handleError(`Payment received but verification failed. Contact support with Payment ID: ${response.razorpay_payment_id}`);
                 return;
               }
-              Events.paymentSuccess(couponData.final_amount_paise);
+              Events.paymentSuccess(response.razorpay_payment_id, couponData.final_amount_paise);
               setLoading(false);
               if (onSuccess) onSuccess();
               else window.location.href = "/success";
@@ -149,7 +149,7 @@ export default function RazorpayButton({ user, couponData, style, children, onEr
                 handleError(`Payment received but verification failed. Contact support with Payment ID: ${response.razorpay_payment_id}`);
                 return;
               }
-              Events.paymentSuccess(29900);
+              Events.paymentSuccess(response.razorpay_payment_id, 29900);
               setLoading(false);
               if (onSuccess) onSuccess();
               else window.location.href = "/success";
