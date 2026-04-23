@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -15,6 +15,7 @@ import ComparePanel from "@/components/dashboard/ComparePanel";
 import ChatMessage from "@/components/dashboard/ChatMessage";
 import VoiceConvBar from "@/components/dashboard/VoiceConvBar";
 import { useVoiceConversation } from "@/hooks/useVoiceConversation";
+import { useMic } from "@/hooks/useMic";
 import { Events, trackFirstVisit } from "@/lib/analytics";
 import { UpgradePopup, UpgradeBanner } from "@/components/dashboard/UpgradePopup";
 import { MessageSkeleton } from "@/components/dashboard/Shimmer";
@@ -156,9 +157,7 @@ export default function DashboardPage() {
   const [shareLoading, setShareLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
-  const [listening, setListening] = useState(false);
-  const [voiceError, setVoiceError] = useState(null);
-  const recognitionRef = useRef(null);
+  const [micError, setMicError] = useState(null);
 
   /* ── Onboarding ── */
   const [onboardingStep, setOnboardingStep] = useState(undefined);
@@ -208,6 +207,12 @@ export default function DashboardPage() {
   const chatScrollRef  = useRef(null);
   const isNearBottomRef = useRef(true);   // true until user scrolls up
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  /* ── Standalone mic: quick voice input → fills text field ── */
+  const mic = useMic({
+    onTranscript: (text) => setInput(text),
+    onError: (msg) => setMicError(msg),
+  });
 
   /* ── Voice conversation ── */
   const lastAiMessage = messages.filter((m) => m.role === "assistant" && !m.streaming).at(-1)?.content ?? "";
@@ -570,10 +575,10 @@ export default function DashboardPage() {
     if (!text || !selectedDoc || aiStreaming) return;
     setInput(""); setLimitError(null); setApiError(null);
     const userMsg = { role: "user", content: text, id: Date.now() };
-    setMessages((prev) => [...prev, userMsg]);
+    const aiMsgId = userMsg.id + 1;
     setAiStreaming(true);
-    const aiMsgId = Date.now() + 1;
-    setMessages((prev) => [...prev, { role: "assistant", content: "", id: aiMsgId, streaming: true }]);
+    // Single setState = one render = one scroll event, no jump
+    setMessages((prev) => [...prev, userMsg, { role: "assistant", content: "", id: aiMsgId, streaming: true }]);
     try {
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, fileUrl: selectedDoc.file_url }), credentials: "include" });
       if (!res.ok) {
@@ -676,139 +681,45 @@ export default function DashboardPage() {
     setShareCopied(true); setTimeout(() => setShareCopied(false), 2500);
   }
 
+  /* ── Scroll helpers ── */
+  const scrollToBottom = useCallback((smooth = false) => {
+    const el = chatScrollRef.current;
+    if (!el) return;
+    // Direct scrollTop assignment is more reliable than scrollIntoView:
+    // scrollIntoView can scroll the page instead of the container on some browsers
+    if (smooth) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    else        el.scrollTop = el.scrollHeight;
+  }, []);
+
   /* ── Track whether user is near bottom via scroll events ── */
   useEffect(() => {
     const container = chatScrollRef.current;
     if (!container) return;
     function onScroll() {
-      const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-      const near = distFromBottom < 120;
-      isNearBottomRef.current = near;
-      setShowScrollBtn(!near);
+      const dist = container.scrollHeight - container.scrollTop - container.clientHeight;
+      isNearBottomRef.current = dist < 120;
+      setShowScrollBtn(dist >= 120);
     }
     container.addEventListener("scroll", onScroll, { passive: true });
     return () => container.removeEventListener("scroll", onScroll);
   }, []);
 
   /* ── Auto-scroll when messages update ── */
-  useEffect(() => {
+  // useLayoutEffect fires before paint — no visible scroll jump
+  useLayoutEffect(() => {
     if (!isNearBottomRef.current) return;
-    const lastMsg = messages[messages.length - 1];
-    // instant during streaming to avoid competing smooth animations;
-    // smooth only on the final settled message
-    const behavior = lastMsg?.streaming ? "instant" : "smooth";
-    messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
-  }, [messages]);
+    const isStreaming = !!messages[messages.length - 1]?.streaming;
+    scrollToBottom(!isStreaming); // instant during streaming, smooth on completion
+  }, [messages, scrollToBottom]);
 
   /* ── Scroll to bottom on doc switch ── */
-  useEffect(() => {
+  useLayoutEffect(() => {
     isNearBottomRef.current = true;
     setShowScrollBtn(false);
-    messagesEndRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
-  }, [selectedDoc]);
+    scrollToBottom(false);
+  }, [selectedDoc, scrollToBottom]);
 
   function handleKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }
-
-  /* ── Voice input ── */
-  const voiceStartingRef = useRef(false);  // prevents overlapping start calls
-
-  async function toggleVoice() {
-    setVoiceError(null);
-
-    // ── Stop path ────────────────────────────────────────────────────────────
-    if (listening) {
-      // abort() releases the mic immediately (unlike stop() which waits for
-      // the current utterance to finish — that delay is what causes the
-      // "NotAllowedError even though permission is granted" bug on rapid clicks)
-      recognitionRef.current?.abort();
-      recognitionRef.current = null;
-      setListening(false);
-      voiceStartingRef.current = false;
-      return;
-    }
-
-    // Guard: prevent a second call while the first is still setting up
-    if (voiceStartingRef.current) return;
-    voiceStartingRef.current = true;
-
-    // Always kill any leftover instance before creating a new one
-    if (recognitionRef.current) {
-      recognitionRef.current.abort();
-      recognitionRef.current = null;
-      // Give the browser one tick to release the mic handle
-      await new Promise((r) => setTimeout(r, 80));
-    }
-
-    // HTTPS guard
-    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
-      setVoiceError("🔒 Microphone requires a secure (HTTPS) connection.");
-      voiceStartingRef.current = false;
-      return;
-    }
-
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      setVoiceError("Voice input is not supported in this browser. Try Chrome or Edge.");
-      voiceStartingRef.current = false;
-      return;
-    }
-
-    // Permission pre-check — skip if permissions API not available
-    if (navigator.permissions) {
-      try {
-        const status = await navigator.permissions.query({ name: "microphone" });
-        if (status.state === "denied") {
-          setVoiceError("🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.");
-          voiceStartingRef.current = false;
-          return;
-        }
-      } catch { /* not supported — let SpeechRecognition handle it */ }
-    }
-
-    const MIC_ERRORS = {
-      "not-allowed":         "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
-      "service-not-allowed": "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
-      "not-found":           "No microphone detected. Plug in a mic and try again.",
-      "not-readable":        "Mic is in use by another app. Close it and try again.",
-      "network":             "Network error while starting voice. Check your connection.",
-      "aborted":             null,   // we called abort() — no message needed
-    };
-
-    const rec = new SR();
-    rec.lang           = "en-US";
-    rec.interimResults = true;
-    rec.continuous     = false;
-    recognitionRef.current = rec;
-
-    rec.onstart = () => {
-      console.debug("[voice] mic started successfully");
-      setListening(true);
-      voiceStartingRef.current = false;
-    };
-
-    rec.onresult = (e) => {
-      const t = Array.from(e.results).map((r) => r[0].transcript).join("");
-      setInput(t);
-    };
-
-    rec.onerror = (e) => {
-      console.debug("[voice] error:", e.error);
-      setListening(false);
-      voiceStartingRef.current = false;
-      recognitionRef.current = null;
-      const msg = MIC_ERRORS[e.error];
-      if (msg !== undefined) setVoiceError(msg);   // null = silent
-      else setVoiceError(`Mic error: ${e.error}`);
-    };
-
-    rec.onend = () => {
-      setListening(false);
-      voiceStartingRef.current = false;
-      // Don't null the ref here — onerror may fire after onend on some browsers
-    };
-
-    rec.start();
-  }
 
   /* ── Auto-load insights on doc select ── */
   useEffect(() => {
@@ -1061,7 +972,7 @@ export default function DashboardPage() {
                     onClick={() => {
                       isNearBottomRef.current = true;
                       setShowScrollBtn(false);
-                      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                      scrollToBottom(true);
                     }}
                     style={{ position: "absolute", bottom: 12, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(124,58,237,0.9)", border: "1px solid rgba(124,58,237,0.5)", borderRadius: 99, fontSize: 12, fontWeight: 700, color: "white", cursor: "pointer", backdropFilter: "blur(12px)", boxShadow: "0 4px 20px rgba(124,58,237,0.4)", zIndex: 10 }}
                   >
@@ -1140,10 +1051,18 @@ export default function DashboardPage() {
                       style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit", opacity: placeholderFade ? 1 : 0, transition: "opacity 0.25s" }}
                       onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
                     />
-                    <motion.button type="button" whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={toggleVoice}
-                      style={{ width: 36, height: 36, borderRadius: 10, background: listening ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.04)", border: listening ? "1px solid rgba(124,58,237,0.42)" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: listening ? C.accentLight : C.textMuted, transition: "all 0.2s", position: "relative" }}>
-                      <MicIcon active={listening} />
-                      {listening && <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#ef4444", animation: "pulseDot 1.2s ease-in-out infinite" }} />}
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+                      onClick={() => { setMicError(null); mic.toggle(); }}
+                      disabled={voiceConv.active}
+                      title={voiceConv.active ? "Stop voice conversation to use quick mic" : mic.isListening ? "Stop recording" : mic.isRequesting ? "Requesting mic…" : "Voice input"}
+                      style={{ width: 36, height: 36, borderRadius: 10, background: mic.isListening ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.04)", border: mic.isListening ? "1px solid rgba(124,58,237,0.42)" : "1px solid rgba(255,255,255,0.08)", cursor: voiceConv.active ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: mic.isListening ? C.accentLight : C.textMuted, transition: "all 0.2s", position: "relative", opacity: voiceConv.active ? 0.4 : 1 }}>
+                      {mic.isRequesting
+                        ? <div style={{ width: 14, height: 14, border: "2px solid rgba(167,139,250,0.3)", borderTopColor: C.accentLight, borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                        : <MicIcon active={mic.isListening} />
+                      }
+                      {mic.isListening && <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#ef4444", animation: "pulseDot 1.2s ease-in-out infinite" }} />}
                     </motion.button>
                     <motion.button type="submit" disabled={!input.trim() || aiStreaming}
                       whileHover={input.trim() && !aiStreaming ? { scale: 1.08 } : {}}
@@ -1155,17 +1074,17 @@ export default function DashboardPage() {
                       }
                     </motion.button>
                   </div>
-                  {voiceError && (
+                  {micError && (
                     <motion.div
                       initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
                       style={{ marginTop: 8, padding: "9px 13px", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 8 }}
                     >
                       <span style={{ fontSize: 13, flexShrink: 0 }}>🎙️</span>
-                      <span style={{ fontSize: 12, color: "#fca5a5", lineHeight: 1.5, flex: 1 }}>{voiceError}</span>
-                      <button onClick={() => setVoiceError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#f87171", fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
+                      <span style={{ fontSize: 12, color: "#fca5a5", lineHeight: 1.5, flex: 1 }}>{micError}</span>
+                      <button onClick={() => setMicError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#f87171", fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
                     </motion.div>
                   )}
-                  {listening && <p style={{ textAlign: "center", fontSize: 11, color: C.accentLight, marginTop: 5 }}>🎙 Listening… speak now</p>}
+                  {mic.isListening && <p style={{ textAlign: "center", fontSize: 11, color: C.accentLight, marginTop: 5 }}>🎙 Listening… speak now</p>}
                 </form>
               )}
 
