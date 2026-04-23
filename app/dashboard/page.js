@@ -699,17 +699,60 @@ export default function DashboardPage() {
   function handleKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }
 
   /* ── Voice input ── */
-  function toggleVoice() {
+  async function toggleVoice() {
     setVoiceError(null);
-    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
-    if (!SR) { setVoiceError("Voice input not supported in this browser."); return; }
+
     if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
+
+    // HTTPS guard — mic APIs require a secure context
+    if (typeof window !== "undefined" && window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+      setVoiceError("🔒 Microphone requires a secure (HTTPS) connection.");
+      return;
+    }
+
+    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!SR) {
+      setVoiceError("Voice input is not supported in this browser. Try Chrome or Edge.");
+      return;
+    }
+
+    // Pre-check permission status so we can show a targeted message before
+    // the browser even attempts to prompt (avoids a silent failure)
+    if (navigator.permissions) {
+      try {
+        const status = await navigator.permissions.query({ name: "microphone" });
+        if (status.state === "denied") {
+          setVoiceError("🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.");
+          return;
+        }
+      } catch {
+        // permissions.query not supported — fall through and let SpeechRecognition handle it
+      }
+    }
+
+    const MIC_ERRORS = {
+      "not-allowed":  "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
+      "not-found":    "No microphone detected. Plug in a mic and try again.",
+      "not-readable": "Mic is in use by another app. Close it and try again.",
+      "aborted":      null,   // user dismissed — no message needed
+      "network":      "Network error while starting voice. Check your connection.",
+      "service-not-allowed": "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
+    };
+
     const rec = new SR();
     rec.lang = "en-US"; rec.interimResults = true; rec.continuous = false;
     recognitionRef.current = rec;
     rec.onstart = () => setListening(true);
-    rec.onresult = (e) => { const t = Array.from(e.results).map((r) => r[0].transcript).join(""); setInput(t); };
-    rec.onerror = (e) => { setVoiceError("Mic error: " + e.error); setListening(false); };
+    rec.onresult = (e) => {
+      const t = Array.from(e.results).map((r) => r[0].transcript).join("");
+      setInput(t);
+    };
+    rec.onerror = (e) => {
+      setListening(false);
+      const msg = MIC_ERRORS[e.error];
+      if (msg !== undefined) setVoiceError(msg);   // null = silent
+      else setVoiceError(`Mic error: ${e.error}`);
+    };
     rec.onend = () => setListening(false);
     rec.start();
   }
@@ -1039,7 +1082,16 @@ export default function DashboardPage() {
                       }
                     </motion.button>
                   </div>
-                  {voiceError && <p style={{ textAlign: "center", fontSize: 11, color: "#f87171", marginTop: 5 }}>{voiceError}</p>}
+                  {voiceError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                      style={{ marginTop: 8, padding: "9px 13px", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 8 }}
+                    >
+                      <span style={{ fontSize: 13, flexShrink: 0 }}>🎙️</span>
+                      <span style={{ fontSize: 12, color: "#fca5a5", lineHeight: 1.5, flex: 1 }}>{voiceError}</span>
+                      <button onClick={() => setVoiceError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#f87171", fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
+                    </motion.div>
+                  )}
                   {listening && <p style={{ textAlign: "center", fontSize: 11, color: C.accentLight, marginTop: 5 }}>🎙 Listening… speak now</p>}
                 </form>
               )}
