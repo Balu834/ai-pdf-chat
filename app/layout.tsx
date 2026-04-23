@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Analytics from "@/components/Analytics";
+import RouteAnalytics from "@/components/RouteAnalytics";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import InstallPopup from "@/components/InstallPopup";
@@ -92,6 +94,7 @@ export default function RootLayout({
         <AnimatedBackground />
         {children}
         <Analytics />
+        <Suspense fallback={null}><RouteAnalytics /></Suspense>
         <VercelAnalytics />
         <SpeedInsights />
         <ServiceWorkerRegistration />

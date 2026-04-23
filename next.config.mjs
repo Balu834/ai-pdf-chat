@@ -3,33 +3,46 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Apply to all routes
         source: "/(.*)",
         headers: [
           {
             key: "Permissions-Policy",
-            // Allow the Web Payment API so Razorpay checkout works
             value: "payment=*, camera=(), microphone=(), geolocation=()",
           },
           {
             key: "Content-Security-Policy",
             value: [
-              // Allow Razorpay's checkout iframe
+              // Framing: self + Razorpay iframes
               "frame-src 'self' https://*.razorpay.com https://api.razorpay.com",
-              // Allow Razorpay's SDK script
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com",
-              // Allow API calls to Razorpay + Supabase realtime
-              "connect-src 'self' https://api.razorpay.com https://*.razorpay.com wss://*.supabase.co https://*.supabase.co",
+
+              // Scripts: self + Razorpay + Google Analytics/Tag Manager
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'" +
+                " https://checkout.razorpay.com" +
+                " https://www.googletagmanager.com" +
+                " https://www.google-analytics.com" +
+                " https://ssl.google-analytics.com",
+
+              // Fetch/XHR: self + Razorpay + Supabase + GA beacon
+              "connect-src 'self'" +
+                " https://api.razorpay.com https://*.razorpay.com" +
+                " wss://*.supabase.co https://*.supabase.co" +
+                " https://www.google-analytics.com" +
+                " https://analytics.google.com" +
+                " https://www.googletagmanager.com" +
+                " https://region1.google-analytics.com",
+
+              // Images: allow GA pixel
+              "img-src 'self' data: blob:" +
+                " https://www.google-analytics.com" +
+                " https://www.googletagmanager.com",
             ].join("; "),
           },
         ],
       },
       {
-        // Clickjacking protection — pages only, not API routes
         source: "/((?!api).*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          // SAMEORIGIN instead of DENY so Razorpay's parent-frame comms work
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
         ],
       },
