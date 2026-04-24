@@ -1,8 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { C, timeAgo } from "./tokens";
-import { PlusIcon, LogoutIcon, TrashIcon, CrownIcon, PdfIcon, HomeIcon, FilesIcon, ChatNavIcon, BillingNavIcon, SettingsNavIcon } from "./icons";
+import {
+  PlusIcon, LogoutIcon, TrashIcon, CrownIcon, PdfIcon,
+  HomeIcon, FilesIcon, ChatNavIcon, BillingNavIcon, SettingsNavIcon,
+} from "./icons";
+import { SidebarSkeleton } from "./Shimmer";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", Icon: HomeIcon },
@@ -11,17 +16,45 @@ const NAV_ITEMS = [
   { id: "billing",   label: "Billing",    Icon: BillingNavIcon },
   { id: "settings",  label: "Settings",   Icon: SettingsNavIcon },
 ];
-import { SidebarSkeleton } from "./Shimmer";
 
-export default function Sidebar({ user, plan, docs, docsLoading, selectedDoc, view, usage, uploading, onViewChange, onSignOut, onSelectDoc, onDelete, onUploadClick, onUpgradeClick }) {
-  const userEmail = user?.email || "";
-  const userInitial = userEmail.charAt(0).toUpperCase();
-  const pdfLimitHit = plan !== "pro" && usage.pdfs >= usage.maxPdfs;
+/* ─── Pencil icon ──────────────────────────────────────────────────────────── */
+const PencilIcon = () => (
+  <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+  </svg>
+);
+
+/* ─── Chat bubble icon ─────────────────────────────────────────────────────── */
+const ChatBubbleIcon = () => (
+  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+  </svg>
+);
+
+export default function Sidebar({
+  user, plan, docs, docsLoading, selectedDoc, view, usage, uploading,
+  sessions, sessionsLoading, activeSession,
+  onViewChange, onSignOut, onSelectDoc, onDelete, onUploadClick, onUpgradeClick,
+  onNewChat, onSelectSession, onDeleteSession, onRenameSession,
+}) {
+  const userEmail    = user?.email || "";
+  const userInitial  = userEmail.charAt(0).toUpperCase();
+  const pdfLimitHit  = plan !== "pro" && usage.pdfs >= usage.maxPdfs;
+  const hasSessions       = sessions?.length > 0;
+  const [sessionsExpanded, setSessionsExpanded] = useState(true);
+  const [hoveredSession,   setHoveredSession]   = useState(null);
 
   return (
-    <aside className="sidebar" style={{ width: 240, background: C.sidebar, backdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", flexShrink: 0, position: "relative", zIndex: 1 }}>
+    <aside className="sidebar" style={{
+      width: 240, background: C.sidebar, backdropFilter: "blur(24px)",
+      borderRight: "1px solid rgba(255,255,255,0.07)",
+      display: "flex", flexDirection: "column", flexShrink: 0,
+      position: "relative", zIndex: 1,
+    }}>
 
-      {/* Logo row */}
+      {/* Logo */}
       <div style={{ height: 58, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
         <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(124,58,237,0.5)", flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 900, color: "white" }}>I</span>
@@ -39,16 +72,14 @@ export default function Sidebar({ user, plan, docs, docsLoading, selectedDoc, vi
         {NAV_ITEMS.map(({ id, label, Icon }) => {
           const isActive = view === id;
           return (
-            <motion.button key={id}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => onViewChange(id)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", marginBottom: 2, borderRadius: 9, fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? C.accentLight : C.textMuted, background: isActive ? "rgba(124,58,237,0.12)" : "transparent", border: isActive ? "1px solid rgba(124,58,237,0.22)" : "1px solid transparent", cursor: "pointer", textAlign: "left", transition: "all 0.15s", backdropFilter: isActive ? "blur(8px)" : "none" }}
+            <motion.button key={id} whileTap={{ scale: 0.97 }} onClick={() => onViewChange(id)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", marginBottom: 2, borderRadius: 9, fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? C.accentLight : C.textMuted, background: isActive ? "rgba(124,58,237,0.12)" : "transparent", border: isActive ? "1px solid rgba(124,58,237,0.22)" : "1px solid transparent", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
               onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = C.textSecondary; } }}
               onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.textMuted; } }}
             >
               <span style={{ flexShrink: 0 }}><Icon /></span>
               {label}
-              {id === "chat" && selectedDoc && (
+              {id === "chat" && activeSession && (
                 <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: C.accentLight, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)", padding: "2px 6px", borderRadius: 99, flexShrink: 0 }}>Active</span>
               )}
             </motion.button>
@@ -74,13 +105,15 @@ export default function Sidebar({ user, plan, docs, docsLoading, selectedDoc, vi
         </motion.button>
       </div>
 
-      {/* PDF list */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 8px 4px" }}>
+      {/* Scrollable area: PDFs + Chat Sessions */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 8px 4px", display: "flex", flexDirection: "column", gap: 0 }}>
+
+        {/* ── Recent PDFs ── */}
         <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", margin: "2px 4px 6px", paddingLeft: 4 }}>Recent PDFs</p>
         {docsLoading ? (
           <SidebarSkeleton />
         ) : docs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "20px 12px" }}>
+          <div style={{ textAlign: "center", padding: "16px 12px" }}>
             <div style={{ fontSize: 22, marginBottom: 6 }}>📂</div>
             <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>No PDFs yet</p>
           </div>
@@ -109,11 +142,124 @@ export default function Sidebar({ user, plan, docs, docsLoading, selectedDoc, vi
             );
           })
         )}
+
+        {/* ── Chat Sessions (shown when a doc is active) ── */}
+        <AnimatePresence>
+          {selectedDoc && (
+            <motion.div
+              key="sessions-section"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              style={{ overflow: "hidden", marginTop: 6 }}
+            >
+              <div style={{ height: 1, background: "rgba(255,255,255,0.05)", marginBottom: 8 }} />
+
+              {/* Section header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, padding: "0 4px" }}>
+                <button
+                  onClick={() => setSessionsExpanded((v) => !v)}
+                  style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", padding: 0, flex: 1, minWidth: 0 }}
+                >
+                  <span style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", flex: 1, textAlign: "left" }}>
+                    Chats
+                  </span>
+                  <svg
+                    width="10" height="10" fill="none" stroke={C.textMuted} viewBox="0 0 24 24" strokeWidth="2.5"
+                    style={{ transform: sessionsExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 }}
+                  >
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+
+                {/* New Chat button */}
+                <motion.button
+                  whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+                  onClick={onNewChat}
+                  title="New chat"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: 6, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.25)", cursor: "pointer", color: C.accentLight, flexShrink: 0 }}
+                >
+                  <PlusIcon />
+                </motion.button>
+              </div>
+
+              <AnimatePresence>
+                {sessionsExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    {sessionsLoading ? (
+                      <div style={{ padding: "8px 10px", display: "flex", gap: 8, alignItems: "center" }}>
+                        <div style={{ width: 12, height: 12, border: "2px solid rgba(124,58,237,0.2)", borderTopColor: C.accentLight, borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                        <span style={{ fontSize: 11, color: C.textMuted }}>Loading chats…</span>
+                      </div>
+                    ) : !hasSessions ? (
+                      <div style={{ padding: "8px 10px 4px" }}>
+                        <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>No chats yet — start asking!</p>
+                      </div>
+                    ) : (
+                      sessions.map((session) => {
+                        const isActive = activeSession?.id === session.id;
+                        return (
+                          <motion.div
+                            key={session.id}
+                            layout
+                            onClick={() => onSelectSession(session)}
+                            onMouseEnter={() => setHoveredSession(session.id)}
+                            onMouseLeave={() => setHoveredSession(null)}
+                            style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 10px", borderRadius: 9, cursor: "pointer", marginBottom: 2, background: isActive ? "rgba(124,58,237,0.13)" : hoveredSession === session.id ? "rgba(255,255,255,0.04)" : "transparent", border: isActive ? "1px solid rgba(124,58,237,0.24)" : "1px solid transparent", transition: "all 0.15s" }}
+                          >
+                            <span style={{ color: isActive ? C.accentLight : C.textMuted, flexShrink: 0 }}>
+                              <ChatBubbleIcon />
+                            </span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: 12, fontWeight: isActive ? 600 : 400, color: isActive ? "#e2d9f7" : C.textSecondary, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {session.title}
+                              </p>
+                              <p style={{ fontSize: 10, color: C.textMuted, margin: "1px 0 0" }}>
+                                {timeAgo(session.updated_at)}
+                              </p>
+                            </div>
+
+                            {/* Rename + Delete — visible on row hover */}
+                            <div style={{ display: "flex", gap: 2, opacity: hoveredSession === session.id ? 1 : 0, transition: "opacity 0.15s" }}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onRenameSession(session); }}
+                                title="Rename"
+                                style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 2, borderRadius: 4 }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = C.accentLight}
+                                onMouseLeave={(e) => e.currentTarget.style.color = C.textMuted}
+                              >
+                                <PencilIcon />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onDeleteSession(session); }}
+                                title="Delete chat"
+                                style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 2, borderRadius: 4 }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = C.danger}
+                                onMouseLeave={(e) => e.currentTarget.style.color = C.textMuted}
+                              >
+                                <TrashIcon />
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Usage bars — free users only */}
       {plan !== "pro" && (
-        <div style={{ margin: "0 8px 6px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 10, backdropFilter: "blur(8px)" }}>
+        <div style={{ margin: "0 8px 6px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 10, backdropFilter: "blur(8px)", flexShrink: 0 }}>
           <p style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Free Plan Usage</p>
           {[
             { label: "PDFs",      used: usage.pdfs,      max: usage.maxPdfs },
@@ -146,11 +292,9 @@ export default function Sidebar({ user, plan, docs, docsLoading, selectedDoc, vi
 
       {/* Footer */}
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "8px 10px", flexShrink: 0 }}>
-        {/* Upgrade CTA — free users */}
         {plan !== "pro" && (
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={onUpgradeClick}
             style={{ width: "100%", padding: "10px 14px", marginBottom: 8, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", border: "none", borderRadius: 10, cursor: "pointer", position: "relative", overflow: "hidden" }}
           >
@@ -164,14 +308,10 @@ export default function Sidebar({ user, plan, docs, docsLoading, selectedDoc, vi
                 <CrownIcon />
                 <span style={{ fontSize: 12, fontWeight: 800, color: "white", letterSpacing: "-0.1px" }}>Upgrade to Pro</span>
               </div>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", margin: "2px 0 0", letterSpacing: "0.01em" }}>
-                Limited offer · ₹299/month
-              </p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", margin: "2px 0 0", letterSpacing: "0.01em" }}>Limited offer · ₹299/month</p>
             </div>
           </motion.button>
         )}
-
-        {/* User row */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px" }}>
           <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "white", flexShrink: 0 }}>{userInitial}</div>
           <p style={{ fontSize: 11, color: C.textMuted, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{userEmail}</p>
@@ -180,6 +320,7 @@ export default function Sidebar({ user, plan, docs, docsLoading, selectedDoc, vi
           </motion.button>
         </div>
       </div>
+
     </aside>
   );
 }

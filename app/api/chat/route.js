@@ -91,8 +91,16 @@ function classifyIntent(message) {
   return "answer";
 }
 
-const STRUCTURED_SYSTEM = (context, intent) => {
+const STRUCTURED_SYSTEM = (context, intent, memory = null) => {
+  let memorySection = "";
+  if (memory?.preferences || memory?.topics?.length > 0) {
+    memorySection = "\n\n─── USER CONTEXT ───";
+    if (memory.preferences) memorySection += `\nUser preference: ${memory.preferences}`;
+    if (memory.topics?.length > 0) memorySection += `\nUser's past topics: ${memory.topics.join(", ")}`;
+  }
+
   const base = `You are Intellixy, an expert AI document assistant. You answer questions about documents with precision and clarity.
+${memorySection}
 
 DOCUMENT CONTEXT:
 ${context}
@@ -119,7 +127,8 @@ Always structure your response using these emoji section headers. Include only t
 2. Bold important values: amounts, dates, names, totals.
 3. Keep bullets short (one line each). Never write paragraphs.
 4. If something is not in the document, say "Not mentioned in this document."
-5. For simple direct questions (yes/no, single values), answer briefly first, then add one Key Details section.`;
+5. For simple direct questions (yes/no, single values), answer briefly first, then add one Key Details section.
+6. Adapt response length/style to user's preference if known.`;
 
   const intentOverrides = {
     summary: `\n\nThe user wants a SUMMARY. Focus on the 📄 Summary section with 4-5 bullets covering all major topics. Add 💡 Key Details for any important numbers/dates found.`,
@@ -133,11 +142,13 @@ Always structure your response using these emoji section headers. Include only t
   return base + (intentOverrides[intent] || intentOverrides.answer);
 };
 
-async function streamOpenAI(context, message, { supabase, userId, documentId, previousMessages = [] } = {}) {
+async function streamOpenAI(context, message, {
+  supabase, userId, documentId, sessionId, previousMessages = [], memory = null,
+} = {}) {
   const lower = message.toLowerCase();
   const intent = classifyIntent(message);
 
-  const systemContent = STRUCTURED_SYSTEM(context, intent);
+  const systemContent = STRUCTURED_SYSTEM(context, intent, memory);
 
   const needsConversion = lower.includes("in number") || lower.includes("convert") || lower.includes("amount");
   const userContent = message + (needsConversion ? "\n\nNote: Convert any written amounts to numeric form." : "");
@@ -163,24 +174,31 @@ async function streamOpenAI(context, message, { supabase, userId, documentId, pr
           const token = chunk.choices[0]?.delta?.content;
           if (token) {
             fullResponse += token;
-            // Send each token as an SSE event for reliable, unbuffered delivery
             controller.enqueue(encoder.encode(sseChunk(token)));
           }
         }
-        // Signal end of stream
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (err) {
         console.error("[CHAT] Stream error:", err);
         controller.enqueue(encoder.encode("data: [ERROR]\n\n"));
       } finally {
         controller.close();
-        // Persist messages after stream completes (best-effort)
         if (supabase && userId && documentId && fullResponse) {
           try {
-            await supabase.from("messages").insert([
-              { document_id: documentId, user_id: userId, role: "user",      message },
-              { document_id: documentId, user_id: userId, role: "assistant", message: fullResponse },
-            ]);
+            const rows = [
+              { document_id: documentId, user_id: userId, role: "user",      message,       chat_session_id: sessionId || null },
+              { document_id: documentId, user_id: userId, role: "assistant", message: fullResponse, chat_session_id: sessionId || null },
+            ];
+            await supabase.from("messages").insert(rows);
+
+            // Touch session updated_at so the sidebar orders correctly
+            if (sessionId) {
+              await supabase
+                .from("chat_sessions")
+                .update({ updated_at: new Date().toISOString() })
+                .eq("id", sessionId)
+                .eq("user_id", userId);
+            }
           } catch (e) {
             console.warn("[CHAT] Message persist failed (non-fatal):", e.message);
           }
@@ -215,10 +233,21 @@ export async function POST(req) {
       );
     }
 
-    const { message, fileUrl } = await req.json();
+    const { message, fileUrl, sessionId } = await req.json();
 
     if (!fileUrl)         return NextResponse.json({ error: "fileUrl is required" }, { status: 400 });
     if (!message?.trim()) return NextResponse.json({ error: "message is required" }, { status: 400 });
+
+    // ── Fetch user memory (best-effort) ───────────────────────────
+    let memory = null;
+    try {
+      const { data: memRow } = await supabase
+        .from("user_memory")
+        .select("preferences, topics, summary")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (memRow?.preferences || memRow?.topics?.length > 0) memory = memRow;
+    } catch {}
 
     // ── Record usage ──────────────────────────────────────────────
     await recordQuestion(supabase, user.id);
@@ -265,30 +294,36 @@ export async function POST(req) {
       console.warn("[CHAT] RAG error:", ragErr.message);
     }
 
-    // ── Fetch conversation history for multi-turn context ─────────
+    // ── Fetch conversation history (session-scoped when available) ─
     let previousMessages = [];
-    if (ragDocId) {
-      try {
-        const { data: history } = await supabase
-          .from("messages")
-          .select("role, message")
-          .eq("document_id", ragDocId)
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: true })
-          .limit(HISTORY_LIMIT);
-        if (history?.length > 0) {
-          previousMessages = history.map((m) => ({ role: m.role, content: m.message }));
-          console.log("[CHAT] History loaded:", previousMessages.length, "messages");
-        }
-      } catch (histErr) {
-        console.warn("[CHAT] History fetch failed (non-fatal):", histErr.message);
+    try {
+      let histQuery = supabase
+        .from("messages")
+        .select("role, message")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(HISTORY_LIMIT);
+
+      // Prefer session-scoped history for accurate multi-turn context
+      if (sessionId) {
+        histQuery = histQuery.eq("chat_session_id", sessionId);
+      } else if (ragDocId) {
+        histQuery = histQuery.eq("document_id", ragDocId);
       }
+
+      const { data: history } = await histQuery;
+      if (history?.length > 0) {
+        previousMessages = history.map((m) => ({ role: m.role, content: m.message }));
+        console.log("[CHAT] History loaded:", previousMessages.length, "messages");
+      }
+    } catch (histErr) {
+      console.warn("[CHAT] History fetch failed (non-fatal):", histErr.message);
     }
 
     if (ragContext) {
       if (isExtractionRequest(message)) return extractStructured(ragContext, message);
       return streamOpenAI(ragContext, message, {
-        supabase, userId: user.id, documentId: ragDocId, previousMessages,
+        supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory,
       });
     }
 
@@ -359,7 +394,7 @@ export async function POST(req) {
 
     if (isExtractionRequest(message)) return extractStructured(pdfText, message);
     return streamOpenAI(pdfText, message, {
-      supabase, userId: user.id, documentId: ragDocId, previousMessages,
+      supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory,
     });
 
   } catch (err) {

@@ -15,6 +15,7 @@ import ComparePanel from "@/components/dashboard/ComparePanel";
 import ChatMessage from "@/components/dashboard/ChatMessage";
 import VoiceConvBar from "@/components/dashboard/VoiceConvBar";
 import VoiceWaveform from "@/components/dashboard/VoiceWaveform";
+import SmartSuggestions from "@/components/dashboard/SmartSuggestions";
 import { useVoiceConversation } from "@/hooks/useVoiceConversation";
 import { useMic } from "@/hooks/useMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
@@ -161,6 +162,18 @@ export default function DashboardPage() {
 
   const [micError, setMicError] = useState(null);
   const [replyTo,  setReplyTo]  = useState(null);
+
+  /* ── Chat sessions ── */
+  const [sessions,         setSessions]         = useState([]);
+  const [sessionsLoading,  setSessionsLoading]  = useState(false);
+  const [activeSession,    setActiveSession]     = useState(null);
+
+  /* ── Smart suggestions ── */
+  const [suggestions,        setSuggestions]        = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
+  /* ── Tracks whether current session has had its first message (for auto-title) ── */
+  const isFirstMsgRef = useRef(false);
 
   /* ── Onboarding ── */
   const [onboardingStep, setOnboardingStep] = useState(undefined);
@@ -571,24 +584,42 @@ export default function DashboardPage() {
   async function selectDoc(doc) {
     setSelectedDoc(doc); setMessages([]); setLimitError(null);
     setSidebarOpen(false); setShowCompare(false); setShareUrl(null); setShowInsights(true);
-    setView("chat");
-    setHistoryLoading(true);
-    try {
-      const res = await fetch(`/api/messages?documentId=${doc.id}`, { credentials: "include" });
-      if (res.ok) {
-        const history = await res.json();
-        setMessages(history.map((m) => ({ id: m.id, role: m.role, content: m.message })));
-      }
-    } catch {}
-    finally { setHistoryLoading(false); setTimeout(() => inputRef.current?.focus(), 100); }
+    setView("chat"); setSuggestions([]); setActiveSession(null); setSessions([]);
+
+    // Load or create chat sessions for this document
+    const existingSessions = await fetchSessions(doc.id);
+    let targetSession;
+
+    if (existingSessions.length === 0) {
+      targetSession = await createSession(doc.id);
+      if (targetSession) setSessions([targetSession]);
+    } else {
+      targetSession = existingSessions[0]; // most recently updated
+    }
+
+    if (targetSession) {
+      setActiveSession(targetSession);
+      await loadSessionMessages(targetSession);
+    } else {
+      setHistoryLoading(false);
+    }
+    setTimeout(() => inputRef.current?.focus(), 100);
   }
 
   async function handleClearChat() {
     if (!selectedDoc) return;
-    if (!confirm(`Clear all chat history for "${selectedDoc.file_name}"?`)) return;
+    const target = activeSession
+      ? `Clear all messages in "${activeSession.title}"?`
+      : `Clear all chat history for "${selectedDoc.file_name}"?`;
+    if (!confirm(target)) return;
     try {
-      await fetch(`/api/messages?documentId=${selectedDoc.id}`, { method: "DELETE", credentials: "include" });
+      const param = activeSession
+        ? `sessionId=${activeSession.id}`
+        : `documentId=${selectedDoc.id}`;
+      await fetch(`/api/messages?${param}`, { method: "DELETE", credentials: "include" });
       setMessages([]);
+      setSuggestions([]);
+      isFirstMsgRef.current = true;
     } catch (err) { addToast("Could not clear chat: " + (err.message || "Please try again"), "error"); }
   }
 
@@ -597,13 +628,20 @@ export default function DashboardPage() {
     const text = (overrideText ?? input).trim();
     if (!text || !selectedDoc || aiStreaming) return;
     setInput(""); setLimitError(null); setApiError(null); setReplyTo(null);
+    setSuggestions([]); setSuggestionsLoading(false);
+    const isFirst = isFirstMsgRef.current;
+    if (isFirst) isFirstMsgRef.current = false;
     const userMsg = { role: "user", content: text, id: Date.now() };
     const aiMsgId = userMsg.id + 1;
     setAiStreaming(true);
-    // Single setState = one render = one scroll event, no jump
     setMessages((prev) => [...prev, userMsg, { role: "assistant", content: "", id: aiMsgId, streaming: true }]);
     try {
-      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, fileUrl: selectedDoc.file_url }), credentials: "include" });
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, fileUrl: selectedDoc.file_url, sessionId: activeSession?.id }),
+        credentials: "include",
+      });
       if (!res.ok) {
         const data = await res.json();
         if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "", streaming: false, locked: true } : m)); setUpgradePopup("question"); }
@@ -633,6 +671,32 @@ export default function DashboardPage() {
       }
       setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
       Events.aiResponseGenerated();
+
+      // Fire post-response side-effects in background (non-blocking)
+      if (full) {
+        // 1. Smart suggestions for next question
+        fetchSuggestions(text, full);
+
+        // 2. Update AI memory silently
+        updateMemory(text, full);
+
+        // 3. Auto-generate session title from first message
+        if (isFirst && activeSession) {
+          fetch("/api/chats", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: activeSession.id, firstMessage: text }),
+            credentials: "include",
+          })
+            .then((r) => r.ok ? r.json() : null)
+            .then((updated) => {
+              if (!updated) return;
+              setSessions((prev) => prev.map((s) => s.id === updated.id ? updated : s));
+              setActiveSession(updated);
+            })
+            .catch(() => {});
+        }
+      }
     } catch (err) {
       // Classify the error for a user-friendly message
       let errorMsg = "Something went wrong. Please try again.";
@@ -660,6 +724,147 @@ export default function DashboardPage() {
   }
 
   function handleSmartAction(prompt) { if (!selectedDoc || aiStreaming) return; handleSend(null, prompt); }
+
+  /* ── Session helpers ─────────────────────────────────────────────────────── */
+
+  const fetchSessions = useCallback(async (docId) => {
+    setSessionsLoading(true);
+    try {
+      const res = await fetch(`/api/chats?documentId=${docId}`, { credentials: "include" });
+      const data = await res.json();
+      setSessions(Array.isArray(data) ? data : []);
+      return Array.isArray(data) ? data : [];
+    } catch {
+      setSessions([]);
+      return [];
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
+  const createSession = useCallback(async (docId, title = "New Chat") => {
+    try {
+      const res = await fetch("/api/chats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: docId, title }),
+        credentials: "include",
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const loadSessionMessages = useCallback(async (session) => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/messages?sessionId=${session.id}`, { credentials: "include" });
+      if (res.ok) {
+        const history = await res.json();
+        const msgs = history.map((m) => ({ id: m.id, role: m.role, content: m.message }));
+        setMessages(msgs);
+        isFirstMsgRef.current = msgs.length === 0;
+      }
+    } catch {}
+    finally { setHistoryLoading(false); }
+  }, []);
+
+  async function handleNewChat() {
+    if (!selectedDoc) return;
+    const session = await createSession(selectedDoc.id);
+    if (!session) { addToast("Could not create chat", "error"); return; }
+    setSessions((prev) => [session, ...prev]);
+    setActiveSession(session);
+    setMessages([]);
+    setLimitError(null);
+    setSuggestions([]);
+    isFirstMsgRef.current = true;
+    setTimeout(() => inputRef.current?.focus(), 80);
+  }
+
+  async function handleSwitchSession(session) {
+    if (activeSession?.id === session.id) return;
+    setActiveSession(session);
+    setMessages([]);
+    setSuggestions([]);
+    await loadSessionMessages(session);
+    setTimeout(() => inputRef.current?.focus(), 80);
+  }
+
+  async function handleDeleteSession(session) {
+    if (!confirm(`Delete chat "${session.title}"?`)) return;
+    await fetch(`/api/chats?id=${session.id}`, { method: "DELETE", credentials: "include" });
+    const remaining = sessions.filter((s) => s.id !== session.id);
+    setSessions(remaining);
+    if (activeSession?.id === session.id) {
+      if (remaining.length > 0) {
+        setActiveSession(remaining[0]);
+        await loadSessionMessages(remaining[0]);
+      } else {
+        await handleNewChat();
+      }
+    }
+  }
+
+  async function handleRenameSession(session) {
+    const newTitle = window.prompt("Rename chat:", session.title);
+    if (!newTitle?.trim() || newTitle.trim() === session.title) return;
+    try {
+      const res = await fetch("/api/chats", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: session.id, title: newTitle.trim() }),
+        credentials: "include",
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setSessions((prev) => prev.map((s) => s.id === updated.id ? updated : s));
+        if (activeSession?.id === updated.id) setActiveSession(updated);
+      }
+    } catch {}
+  }
+
+  /* ── Smart suggestions ───────────────────────────────────────────────────── */
+
+  const fetchSuggestions = useCallback(async (userText, aiText) => {
+    setSuggestionsLoading(true);
+    setSuggestions([]);
+    try {
+      const res = await fetch("/api/suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recentMessages: [
+            { role: "user",      content: userText },
+            { role: "assistant", content: aiText   },
+          ],
+        }),
+        credentials: "include",
+      });
+      if (!res.ok) return;
+      const { suggestions: s } = await res.json();
+      setSuggestions(s || []);
+    } catch {}
+    finally { setSuggestionsLoading(false); }
+  }, []);
+
+  /* ── Update memory silently after each AI response ───────────────────────── */
+  const updateMemory = useCallback((userText, aiText) => {
+    fetch("/api/memory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [
+          { role: "user",      content: userText },
+          { role: "assistant", content: aiText   },
+        ],
+        documentTitle: selectedDoc?.file_name,
+      }),
+      credentials: "include",
+    }).catch(() => {});
+  }, [selectedDoc?.file_name]);
 
 
 
@@ -799,12 +1004,19 @@ export default function DashboardPage() {
         view={view}
         usage={usage}
         uploading={uploading}
+        sessions={sessions}
+        sessionsLoading={sessionsLoading}
+        activeSession={activeSession}
         onViewChange={(v) => { setView(v); setSidebarOpen(false); }}
         onSignOut={handleSignOut}
         onSelectDoc={selectDoc}
         onDelete={handleDelete}
         onUploadClick={() => fileInputRef.current?.click()}
         onUpgradeClick={() => setUpgradePopup("pdf")}
+        onNewChat={handleNewChat}
+        onSelectSession={handleSwitchSession}
+        onDeleteSession={handleDeleteSession}
+        onRenameSession={handleRenameSession}
       />
 
       {/* ── MAIN WRAPPER ── */}
@@ -1049,6 +1261,15 @@ export default function DashboardPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Smart suggestions — appear after AI finishes responding */}
+              {selectedDoc && !qLimitHit && (
+                <SmartSuggestions
+                  suggestions={suggestions}
+                  loading={suggestionsLoading}
+                  onSelect={(text) => { setSuggestions([]); setInput(text); setTimeout(() => inputRef.current?.focus(), 50); }}
+                />
+              )}
 
               {/* Question usage progress bar */}
               {plan !== "pro" && selectedDoc && !qLimitHit && (
