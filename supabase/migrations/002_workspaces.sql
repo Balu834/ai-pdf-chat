@@ -2,8 +2,11 @@
 -- Migration 002: Workspaces, Invites, Share upgrades
 -- Run this in your Supabase SQL editor
 -- ─────────────────────────────────────────────────────────────────────────────
+-- NOTE: All three tables are created FIRST, then RLS policies are applied.
+-- This avoids forward-reference errors (workspaces policy references workspace_members).
 
--- 1. Workspaces ────────────────────────────────────────────────────────────────
+-- 1. Create tables ─────────────────────────────────────────────────────────────
+
 CREATE TABLE IF NOT EXISTS workspaces (
   id         UUID    DEFAULT gen_random_uuid() PRIMARY KEY,
   name       TEXT    NOT NULL,
@@ -14,22 +17,6 @@ CREATE TABLE IF NOT EXISTS workspaces (
 
 CREATE INDEX IF NOT EXISTS idx_workspaces_owner ON workspaces(owner_id);
 
-ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Workspace members can read" ON workspaces;
-CREATE POLICY "Workspace members can read" ON workspaces FOR SELECT
-  USING (
-    auth.uid() = owner_id OR
-    EXISTS (
-      SELECT 1 FROM workspace_members wm
-      WHERE wm.workspace_id = id AND wm.user_id = auth.uid()
-    )
-  );
-DROP POLICY IF EXISTS "Workspace owners can manage" ON workspaces;
-CREATE POLICY "Workspace owners can manage" ON workspaces FOR ALL
-  USING (auth.uid() = owner_id)
-  WITH CHECK (auth.uid() = owner_id);
-
--- 2. Workspace members ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS workspace_members (
   id           UUID    DEFAULT gen_random_uuid() PRIMARY KEY,
   workspace_id UUID    REFERENCES workspaces(id) ON DELETE CASCADE NOT NULL,
@@ -42,27 +29,6 @@ CREATE TABLE IF NOT EXISTS workspace_members (
 CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_workspace_members_ws   ON workspace_members(workspace_id);
 
-ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Members can read their workspace members" ON workspace_members;
-CREATE POLICY "Members can read their workspace members" ON workspace_members FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM workspace_members wm2
-      WHERE wm2.workspace_id = workspace_id AND wm2.user_id = auth.uid()
-    )
-  );
-DROP POLICY IF EXISTS "Admins can manage members" ON workspace_members;
-CREATE POLICY "Admins can manage members" ON workspace_members FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM workspace_members wm2
-      WHERE wm2.workspace_id = workspace_id
-        AND wm2.user_id = auth.uid()
-        AND wm2.role IN ('owner', 'admin')
-    )
-  );
-
--- 3. Workspace invites ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS workspace_invites (
   id           UUID    DEFAULT gen_random_uuid() PRIMARY KEY,
   workspace_id UUID    REFERENCES workspaces(id) ON DELETE CASCADE NOT NULL,
@@ -78,16 +44,65 @@ CREATE TABLE IF NOT EXISTS workspace_invites (
 CREATE INDEX IF NOT EXISTS idx_workspace_invites_token ON workspace_invites(token);
 CREATE INDEX IF NOT EXISTS idx_workspace_invites_ws    ON workspace_invites(workspace_id);
 
+-- 2. Enable RLS on all three tables ────────────────────────────────────────────
+
+ALTER TABLE workspaces        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_invites ENABLE ROW LEVEL SECURITY;
+
+-- 3. RLS policies — workspaces ─────────────────────────────────────────────────
+-- (workspace_members now exists so the EXISTS subquery is valid)
+
+DROP POLICY IF EXISTS "Workspace members can read" ON workspaces;
+CREATE POLICY "Workspace members can read" ON workspaces FOR SELECT
+  USING (
+    auth.uid() = owner_id OR
+    EXISTS (
+      SELECT 1 FROM workspace_members wm
+      WHERE wm.workspace_id = id AND wm.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Workspace owners can manage" ON workspaces;
+CREATE POLICY "Workspace owners can manage" ON workspaces FOR ALL
+  USING (auth.uid() = owner_id)
+  WITH CHECK (auth.uid() = owner_id);
+
+-- 4. RLS policies — workspace_members ─────────────────────────────────────────
+
+DROP POLICY IF EXISTS "Members can read their workspace members" ON workspace_members;
+CREATE POLICY "Members can read their workspace members" ON workspace_members FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM workspace_members wm2
+      WHERE wm2.workspace_id = workspace_members.workspace_id
+        AND wm2.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Admins can manage members" ON workspace_members;
+CREATE POLICY "Admins can manage members" ON workspace_members FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM workspace_members wm2
+      WHERE wm2.workspace_id = workspace_members.workspace_id
+        AND wm2.user_id = auth.uid()
+        AND wm2.role IN ('owner', 'admin')
+    )
+  );
+
+-- 5. RLS policies — workspace_invites ─────────────────────────────────────────
+
 DROP POLICY IF EXISTS "Anyone can read valid invites by token" ON workspace_invites;
 CREATE POLICY "Anyone can read valid invites by token" ON workspace_invites FOR SELECT
   USING (accepted_at IS NULL AND expires_at > NOW());
+
 DROP POLICY IF EXISTS "Admins manage invites" ON workspace_invites;
 CREATE POLICY "Admins manage invites" ON workspace_invites FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM workspace_members wm
-      WHERE wm.workspace_id = workspace_id
+      WHERE wm.workspace_id = workspace_invites.workspace_id
         AND wm.user_id = auth.uid()
         AND wm.role IN ('owner', 'admin')
     )
