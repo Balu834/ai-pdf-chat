@@ -1,7 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseAnon = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 const PREVIEW_LIMIT = 8; // messages shown before the gate
 
@@ -237,10 +243,11 @@ function CTASection() {
 /* ─── MAIN PAGE ───────────────────────────────────────────────────────────── */
 export default function SharePage() {
   const { id } = useParams();
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
+  const [data, setData]       = useState(null);
+  const [error, setError]     = useState(null);
   const [loading, setLoading] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
+  const channelRef = useRef(null);
 
   useEffect(() => {
     if (!id) return;
@@ -253,6 +260,32 @@ export default function SharePage() {
       .catch(() => setError("Failed to load share link."))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Realtime: append new messages as they arrive
+  useEffect(() => {
+    if (!data?.share?.id) return;
+
+    const channel = supabaseAnon
+      .channel(`share-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          const msg = payload.new;
+          // Only show messages that match this share's document/session
+          setData((prev) => {
+            if (!prev) return prev;
+            const alreadyExists = prev.messages.some((m) => m.created_at === msg.created_at && m.role === msg.role);
+            if (alreadyExists) return prev;
+            return { ...prev, messages: [...prev.messages, { role: msg.role, message: msg.message, created_at: msg.created_at }] };
+          });
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+    return () => { supabaseAnon.removeChannel(channel); };
+  }, [data?.share?.id, id]);
 
   function copyLink() {
     navigator.clipboard.writeText(window.location.href).catch(() => {});
@@ -373,6 +406,7 @@ export default function SharePage() {
               </h1>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", margin: 0 }}>
                 {messages.length} message{messages.length !== 1 ? "s" : ""} · Powered by Intellixy AI
+                {share.viewCount > 1 && <span> · {share.viewCount} views</span>}
               </p>
             </div>
 

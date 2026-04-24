@@ -26,6 +26,8 @@ import { C, SMART_ACTIONS } from "@/components/dashboard/tokens";
 import { MenuIcon, ShareIcon, InsightIcon, CompareIcon, TrashIcon, SendIcon, MicIcon, ShieldIcon, CloseIcon, CheckIcon } from "@/components/dashboard/icons";
 import OnboardingOverlay from "@/components/dashboard/OnboardingOverlay";
 import ToastContainer from "@/components/ui/Toast";
+import ShareModal from "@/components/dashboard/ShareModal";
+import TeamView from "@/components/dashboard/TeamView";
 
 /* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
 const STATUS_STEPS = [
@@ -159,6 +161,7 @@ export default function DashboardPage() {
   const [shareUrl, setShareUrl] = useState(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const [micError, setMicError] = useState(null);
   const [replyTo,  setReplyTo]  = useState(null);
@@ -267,7 +270,7 @@ export default function DashboardPage() {
     });
   }, []);
 
-  /* ── Post-payment upgrade toast ── */
+  /* ── Post-payment upgrade toast + ?view= routing ── */
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -275,6 +278,11 @@ export default function DashboardPage() {
       setShowUpgradedToast(true);
       window.history.replaceState({}, "", "/dashboard");
       setTimeout(() => setShowUpgradedToast(false), 6000);
+    }
+    const viewParam = params.get("view");
+    if (viewParam && ["team", "billing", "settings", "pdfs"].includes(viewParam)) {
+      setView(viewParam);
+      window.history.replaceState({}, "", "/dashboard");
     }
   }, []);
 
@@ -1052,11 +1060,8 @@ export default function DashboardPage() {
                       <TrashIcon /><span className="btn-text"> Clear</span>
                     </HeaderBtn>
                   )}
-                  <HeaderBtn onClick={handleShareChat} disabled={shareLoading} active={!!shareUrl} color={shareUrl ? "green" : "default"}>
-                    {shareLoading
-                      ? <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /><span className="btn-text"> Sharing…</span></>
-                      : <><ShareIcon /><span className="btn-text"> Share</span></>
-                    }
+                  <HeaderBtn onClick={() => setShowShareModal(true)} active={showShareModal} color="default">
+                    <ShareIcon /><span className="btn-text"> Share</span>
                   </HeaderBtn>
                   <HeaderBtn onClick={() => { setShowInsights(!showInsights); setShowCompare(false); }} active={showInsights} color="purple">
                     <InsightIcon /><span className="btn-text"> Insights</span>
@@ -1114,6 +1119,11 @@ export default function DashboardPage() {
           )}
           {view === "settings" && (
             <SettingsView user={user} onSignOut={handleSignOut} />
+          )}
+          {view === "team" && (
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              <TeamView user={user} />
+            </div>
           )}
 
           {/* Chat column */}
@@ -1559,43 +1569,13 @@ export default function DashboardPage() {
 
       {/* Share modal */}
       <AnimatePresence>
-        {shareUrl && (
-          <motion.div key="share-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setShareUrl(null)}
-            style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(16px)" }}
-          >
-            <motion.div initial={{ opacity: 0, scale: 0.86, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ type: "spring", damping: 22, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{ width: "100%", maxWidth: 460, background: "rgba(13,12,34,0.96)", border: "1px solid rgba(124,58,237,0.28)", borderRadius: 24, padding: 28, backdropFilter: "blur(24px)", boxShadow: "0 40px 120px rgba(0,0,0,0.95)", position: "relative" }}
-            >
-              <button onClick={() => setShareUrl(null)} style={{ position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, padding: "4px 9px", cursor: "pointer", color: C.textMuted, fontSize: 12 }}>✕</button>
-              <div style={{ textAlign: "center", marginBottom: 20 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(34,197,94,0.1))", border: "1px solid rgba(124,58,237,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-                  <ShareIcon />
-                </div>
-                <p style={{ fontSize: 17, fontWeight: 800, color: C.textPrimary, margin: "0 0 4px" }}>Your share link is ready!</p>
-                <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>Anyone with this link can view this chat — read only</p>
-              </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14 }}>
-                <div style={{ flex: 1, padding: "10px 13px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 9, fontSize: 12, color: C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shareUrl}</div>
-                <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={copyShareUrl}
-                  style={{ padding: "10px 16px", background: shareCopied ? "rgba(34,197,94,0.16)" : "linear-gradient(135deg,#7c3aed,#4f46e5)", border: shareCopied ? "1px solid rgba(34,197,94,0.3)" : "none", borderRadius: 9, fontSize: 12, fontWeight: 700, color: shareCopied ? C.green : "white", cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
-                  {shareCopied ? "✓ Copied!" : "Copy link"}
-                </motion.button>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <motion.button whileHover={{ opacity: 0.8 }} onClick={() => { const t = encodeURIComponent(`Check out this AI PDF chat: ${shareUrl}`); window.open(`https://wa.me/?text=${t}`, "_blank"); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 12px", background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.2)", borderRadius: 9, fontSize: 12, fontWeight: 600, color: C.green, cursor: "pointer" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  WhatsApp
-                </motion.button>
-                <motion.button whileHover={{ opacity: 0.8 }} onClick={() => { const t = encodeURIComponent("Check out this AI PDF chat on Intellixy 🤖📄"); const u = encodeURIComponent(shareUrl); window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`, "_blank"); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 12px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 9, fontSize: 12, fontWeight: 600, color: C.textSecondary, cursor: "pointer" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                  Share on X
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
+        {showShareModal && selectedDoc && (
+          <ShareModal
+            key="share-modal"
+            doc={selectedDoc}
+            session={activeSession}
+            onClose={() => setShowShareModal(false)}
+          />
         )}
       </AnimatePresence>
 

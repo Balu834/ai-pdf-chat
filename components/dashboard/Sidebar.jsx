@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { C, timeAgo } from "./tokens";
 import {
   PlusIcon, LogoutIcon, TrashIcon, CrownIcon, PdfIcon,
-  HomeIcon, FilesIcon, ChatNavIcon, BillingNavIcon, SettingsNavIcon,
+  HomeIcon, FilesIcon, ChatNavIcon, BillingNavIcon, SettingsNavIcon, TeamNavIcon,
 } from "./icons";
 import { SidebarSkeleton } from "./Shimmer";
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", Icon: HomeIcon },
   { id: "pdfs",      label: "My PDFs",   Icon: FilesIcon },
   { id: "chat",      label: "Chat",       Icon: ChatNavIcon },
+  { id: "team",      label: "Team",       Icon: TeamNavIcon },
   { id: "billing",   label: "Billing",    Icon: BillingNavIcon },
   { id: "settings",  label: "Settings",   Icon: SettingsNavIcon },
 ];

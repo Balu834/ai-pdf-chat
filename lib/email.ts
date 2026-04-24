@@ -299,6 +299,35 @@ export async function sendLimitReachedEmail(
   });
 }
 
+// ─── Workspace invite ─────────────────────────────────────────────────────────
+
+export async function sendWorkspaceInviteEmail(
+  to:            string,
+  workspaceName: string,
+  inviteUrl:     string
+): Promise<void> {
+  await sendEmail({
+    to,
+    subject: `You've been invited to join ${workspaceName} on Intellixy`,
+    html: emailWrap(`
+      <h1 style="font-size:21px;font-weight:800;margin:0 0 12px;">You're invited! 🎉</h1>
+      <p style="color:#a0a0b8;line-height:1.7;margin:0 0 20px;">
+        Someone invited you to collaborate in <strong style="color:#f0f0f8;">${workspaceName}</strong> on Intellixy — the AI PDF chat platform.
+      </p>
+      <div style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);border-radius:12px;padding:16px 20px;margin-bottom:24px;">
+        <p style="margin:0;font-size:13px;color:#c4b5fd;font-weight:600;">What you can do in the workspace:</p>
+        <ul style="margin:8px 0 0;padding:0 0 0 18px;color:#a0a0b8;font-size:13px;line-height:1.9;">
+          <li>Chat with shared PDF documents</li>
+          <li>Collaborate with teammates in real time</li>
+          <li>Share AI insights across your team</li>
+        </ul>
+      </div>
+      ${emailCTA(inviteUrl, "Accept invitation →")}
+      <p style="margin-top:16px;font-size:12px;color:#3d3d55;">This invite link expires in 7 days. If you didn't expect this, you can ignore this email.</p>
+    `),
+  });
+}
+
 // ─── 48h follow-up for engaged free users ────────────────────────────────────
 
 export async function sendFollowUpEmail(
