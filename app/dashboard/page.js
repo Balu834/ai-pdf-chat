@@ -231,7 +231,15 @@ export default function DashboardPage() {
 
   /* ── Standalone mic: quick voice input → fills text field ── */
   const mic = useMic({
-    onTranscript: (text) => setInput(text),
+    lang: "en-IN",
+    onTranscript: (text, isFinal) => {
+      setInput(text);
+      // Auto-send when speech recognition finalises — only if a doc is open and AI isn't busy
+      if (isFinal && text.trim() && selectedDoc && !aiStreaming) {
+        mic.stop();
+        handleSend(null, text);
+      }
+    },
     onError: (msg) => setMicError(msg),
   });
 
@@ -1417,6 +1425,12 @@ export default function DashboardPage() {
                     >
                       <span style={{ fontSize: 13, flexShrink: 0 }}>🎙️</span>
                       <span style={{ fontSize: 12, color: "#fca5a5", lineHeight: 1.5, flex: 1 }}>{micError}</span>
+                      <button
+                        onClick={() => { setMicError(null); mic.start(); }}
+                        style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 6, padding: "3px 8px", cursor: "pointer", color: "#c4b5fd", fontSize: 11, fontWeight: 700, flexShrink: 0, whiteSpace: "nowrap" }}
+                      >
+                        🔄 Retry
+                      </button>
                       <button onClick={() => setMicError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#f87171", fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
                     </motion.div>
                   )}

@@ -98,32 +98,39 @@ export default function Pricing() {
             </div>
           </motion.div>
 
-          {/* PRO+ */}
-          <motion.div variants={FADE_UP} whileHover={{ y:-3, borderColor:"rgba(245,158,11,0.35)" }}
+          {/* PREMIUM */}
+          <motion.div variants={FADE_UP} whileHover={{ y:-3, borderColor:"rgba(245,158,11,0.45)" }}
             className="rounded-[24px] p-7 flex flex-col"
-            style={{ background:"linear-gradient(135deg,rgba(245,158,11,0.07),transparent)", border:"1px solid rgba(245,158,11,0.22)", transition:"all 0.25s" }}>
+            style={{ background:"linear-gradient(135deg,rgba(245,158,11,0.08),rgba(217,119,6,0.04))", border:"1px solid rgba(245,158,11,0.28)", transition:"all 0.25s" }}>
             <div className="inline-block text-[10px] font-extrabold text-white px-3 py-1 rounded-full mb-3"
-              style={{ background:"linear-gradient(135deg,#b45309,#f59e0b)" }}>
-              ⭐ Coming Soon
+              style={{ background:"linear-gradient(135deg,#92400e,#f59e0b)", boxShadow:"0 3px 10px rgba(245,158,11,0.35)" }}>
+              ⭐ Premium
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color:T.amber }}>PRO+</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color:T.amber }}>Premium</p>
             <div className="flex items-end gap-2 mb-1">
-              <span className="font-black tracking-tight leading-none" style={{ fontSize:46, letterSpacing:"-2px" }}>₹499</span>
-              <span className="text-[13px] pb-2" style={{ color:T.faint }}>/ mo</span>
+              <span className="font-black tracking-tight leading-none" style={{ fontSize:46, letterSpacing:"-2px", color:"#fbbf24" }}>₹999</span>
+              <span className="text-[13px] pb-2" style={{ color:T.faint }}>/ year</span>
             </div>
             <p className="text-[12px] mb-6" style={{ color:T.faint }}>For teams &amp; power users</p>
             <ul className="flex flex-col gap-2.5 list-none p-0 m-0 mb-6 flex-1">
-              {["Everything in Pro","Up to 5 team seats","Bulk PDF processing","API access","Custom AI instructions","Dedicated support"].map(f => (
-                <li key={f} className="flex items-center gap-2.5 text-[13px]" style={{ color:"rgba(255,255,255,0.65)" }}>
+              {[
+                "Everything in Pro",
+                "Team workspaces (5 seats)",
+                "Voice AI chat",
+                "Bulk PDF processing",
+                "Custom AI instructions",
+                "Priority support",
+              ].map(f => (
+                <li key={f} className="flex items-center gap-2.5 text-[13px]" style={{ color:"rgba(255,255,255,0.75)" }}>
                   <Check color={T.amber} /> {f}
                 </li>
               ))}
             </ul>
-            <button disabled className="block w-full text-center font-bold text-[14px] py-3 rounded-[14px]"
-              style={{ background:"rgba(245,158,11,0.1)", border:"1px solid rgba(245,158,11,0.25)", color:T.amber, cursor:"not-allowed", opacity:0.72 }}>
-              Join Waitlist →
-            </button>
-            <p className="text-[11px] text-center mt-2.5" style={{ color:T.faint }}>Early access — Q3 2026</p>
+            <a href="/login?plan=premium" className="block w-full text-center font-bold text-[14px] py-3 rounded-[14px] text-white"
+              style={{ background:"linear-gradient(135deg,#92400e,#f59e0b)", textDecoration:"none", boxShadow:"0 6px 20px rgba(245,158,11,0.35)" }}>
+              Get Premium — ₹999 →
+            </a>
+            <p className="text-[11px] text-center mt-2.5" style={{ color:T.faint }}>🔒 Secured by Razorpay · 7-day refund</p>
           </motion.div>
         </motion.div>
 

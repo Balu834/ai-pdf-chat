@@ -24,7 +24,11 @@ export async function POST(request) {
       discount_paise,
       final_amount_paise,
       user_id: bodyUserId,
+      plan: bodyPlan,
     } = body;
+
+    // Only "pro" and "premium" are valid paid plans
+    const resolvedPlan = bodyPlan === "premium" ? "premium" : "pro";
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json({ error: "Missing payment details" }, { status: 400 });
@@ -100,14 +104,14 @@ export async function POST(request) {
     const proExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     const chargedPaise = final_amount_paise ?? original_amount_paise ?? 29900;
 
-    // 5. Upgrade user to Pro — use admin client to bypass RLS reliably.
+    // 5. Upgrade user plan — use admin client to bypass RLS reliably.
     //    One-time orders have no subscription_id or next_billing_date (single payment).
     const { error: upsertError } = await adminDb
       .from("user_plans")
       .upsert(
         {
           user_id:                  userId,
-          plan:                     "pro",
+          plan:                     resolvedPlan,
           is_trial:                 false,
           subscription_status:      "active",
           pro_expires_at:           proExpiresAt,
@@ -121,10 +125,10 @@ export async function POST(request) {
 
     if (upsertError) {
       console.error("[verify-payment] user_plans upsert failed for", userId, "—", upsertError.message);
-      return NextResponse.json({ error: "Failed to activate Pro plan" }, { status: 500 });
+      return NextResponse.json({ error: `Failed to activate ${resolvedPlan} plan` }, { status: 500 });
     }
 
-    console.log(`[verify-payment] ✅ User ${userId} upgraded to Pro — expires ${proExpiresAt}`);
+    console.log(`[verify-payment] ✅ User ${userId} upgraded to ${resolvedPlan} — expires ${proExpiresAt}`);
 
     // Send confirmation email (non-blocking)
     if (userEmail) {

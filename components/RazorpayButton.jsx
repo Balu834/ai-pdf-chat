@@ -20,15 +20,17 @@ function loadRazorpayScript() {
  *
  * props:
  *   user      — Supabase user object (for prefill)
+ *   plan      — "pro" (default) | "premium"
  *   couponData — validated coupon object from /api/coupons/validate
  *                If present → one-time discounted order (no auto-renew)
- *                If absent  → monthly subscription (auto-renew)
+ *                If absent + plan="pro"      → monthly subscription (auto-renew)
+ *                If absent + plan="premium"  → one-time ₹999 order
  *   style     — button style override
  *   children  — button label
  *   onError   — (message: string) => void  called instead of alert() on any error
  *   onSuccess — () => void  called on successful payment (default: redirect to /success)
  */
-export default function RazorpayButton({ user, couponData, style, children, onError, onSuccess }) {
+export default function RazorpayButton({ user, plan = "pro", couponData, style, children, onError, onSuccess }) {
   const [loading, setLoading] = useState(false);
 
   function handleError(message) {
@@ -109,6 +111,61 @@ export default function RazorpayButton({ user, couponData, style, children, onEr
 
         const rzp = new window.Razorpay(options);
         rzp.on("payment.failed", () => { Events.paymentFailed(); handleError(`Payment failed: ${r.error.description}`); });
+        rzp.open();
+
+      } else if (plan === "premium") {
+        // ── Premium path: one-time ₹999 order ───────────────────────────────
+        const res = await fetch("/api/razorpay/create-premium-order", { method: "POST", credentials: "include" });
+        let orderBody = {};
+        try { orderBody = await res.json(); } catch { orderBody = {}; }
+        if (!res.ok) {
+          handleError(orderBody.error || "Could not create Premium order.");
+          return;
+        }
+
+        const options = {
+          key:         process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount:      orderBody.amount,
+          currency:    orderBody.currency,
+          name:        "Intellixy",
+          description: "Premium Plan — ₹999 (one-time)",
+          order_id:    orderBody.id,
+          prefill: {
+            name:  user?.user_metadata?.full_name || user?.email?.split("@")[0] || "",
+            email: user?.email || "",
+          },
+          theme: { color: "#f59e0b" },
+          async handler(response) {
+            try {
+              const verify = await fetch("/api/razorpay/verify-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id:   response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature:  response.razorpay_signature,
+                  plan:                "premium",
+                  user_id:             user?.id,
+                }),
+                credentials: "include",
+              });
+              if (!verify.ok) {
+                handleError(`Payment received but verification failed. Contact support with ID: ${response.razorpay_payment_id}`);
+                return;
+              }
+              Events.paymentSuccess(response.razorpay_payment_id, 99900);
+              setLoading(false);
+              if (onSuccess) onSuccess();
+              else window.location.href = "/success";
+            } catch {
+              handleError("Verification error. Please contact support.");
+            }
+          },
+          modal: { ondismiss() { setLoading(false); } },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on("payment.failed", (r) => { Events.paymentFailed(); handleError(`Payment failed: ${r.error.description}`); });
         rzp.open();
 
       } else {

@@ -78,12 +78,14 @@ function useOfferCountdown() {
 /* ─── UPGRADE POPUP ──────────────────────────────────────────────────────── */
 export function UpgradePopup({ reason, onClose, user, usage }) {
   const isPdf = reason === "pdf";
+  const [selectedPlan,  setSelectedPlan]  = useState("pro");  // "pro" | "premium"
   const [couponInput,   setCouponInput]   = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponData,    setCouponData]    = useState(null);
   const [couponError,   setCouponError]   = useState(null);
   const [showCoupon,    setShowCoupon]    = useState(false);
   const [paymentError,  setPaymentError]  = useState(null);
+  const isPremium = selectedPlan === "premium";
 
   const proof        = useSocialProof();
   const upgradeCount = useUpgradeCount();
@@ -170,27 +172,52 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             <span style={{ color: C.accentLight, fontWeight: 600 }}>Your document still has more insights waiting…</span>
           </p>
 
+          {/* Plan toggle */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 14, background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: 4 }}>
+            {[
+              { id: "pro",     label: "Pro · ₹299/mo",  color: "#a78bfa" },
+              { id: "premium", label: "Premium · ₹999",  color: "#fbbf24" },
+            ].map(({ id, label, color }) => (
+              <button
+                key={id}
+                onClick={() => { setSelectedPlan(id); setCouponData(null); setCouponInput(""); setCouponError(null); }}
+                style={{ flex: 1, padding: "8px 4px", borderRadius: 9, border: selectedPlan === id ? `1px solid ${color}40` : "1px solid transparent", background: selectedPlan === id ? `${color}18` : "transparent", color: selectedPlan === id ? color : C.textMuted, fontWeight: 700, fontSize: 12, cursor: "pointer", transition: "all 0.15s" }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           {/* Pricing card */}
-          <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.14),rgba(6,182,212,0.1))", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 18, padding: "16px 16px 14px", marginBottom: 12, textAlign: "left" }}>
+          <div style={{ background: isPremium ? "linear-gradient(135deg,rgba(245,158,11,0.12),rgba(217,119,6,0.06))" : "linear-gradient(135deg,rgba(124,58,237,0.14),rgba(6,182,212,0.1))", border: isPremium ? "1px solid rgba(245,158,11,0.35)" : "1px solid rgba(124,58,237,0.3)", borderRadius: 18, padding: "16px 16px 14px", marginBottom: 12, textAlign: "left" }}>
             {/* Header row */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 13 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <CrownIcon />
-                <span style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: "0.06em" }}>INTELLIXY PRO</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: isPremium ? "#fbbf24" : C.gold, letterSpacing: "0.06em" }}>
+                  {isPremium ? "INTELLIXY PREMIUM" : "INTELLIXY PRO"}
+                </span>
               </div>
-              <span style={{ fontSize: 9, fontWeight: 800, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.28)", padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>
-                🔥 LIMITED OFFER
+              <span style={{ fontSize: 9, fontWeight: 800, color: isPremium ? "#fbbf24" : "#4ade80", background: isPremium ? "rgba(251,191,36,0.1)" : "rgba(74,222,128,0.1)", border: isPremium ? "1px solid rgba(251,191,36,0.28)" : "1px solid rgba(74,222,128,0.28)", padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>
+                {isPremium ? "⭐ BEST FOR TEAMS" : "🔥 LIMITED OFFER"}
               </span>
             </div>
 
-            {/* Features — exact copy from spec */}
+            {/* Features */}
             <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
-              {[
+              {(isPremium ? [
+                { icon: "✅", text: "Everything in Pro" },
+                { icon: "👥", text: "Team workspaces (5 seats)" },
+                { icon: "🎙️", text: "Voice AI chat" },
+                { icon: "📦", text: "Bulk PDF processing" },
+                { icon: "🎛️", text: "Custom AI instructions" },
+                { icon: "⚡", text: "Priority support" },
+              ] : [
                 { icon: "✅", text: "Unlimited PDF chats" },
                 { icon: "⚡", text: "Faster AI responses" },
                 { icon: "📊", text: "Deep insights (risks, key points, summaries)" },
                 { icon: "🔍", text: "Smarter answers with context" },
-              ].map(({ icon, text }) => (
+              ]).map(({ icon, text }) => (
                 <div key={text} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12.5, color: C.textSecondary }}>
                   <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
                   <span>{text}</span>
@@ -201,9 +228,14 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             {/* Price */}
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 12 }}>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 4 }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: C.textPrimary, lineHeight: 1, letterSpacing: "-1.5px" }}>₹299</span>
-                <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 3 }}>/month</span>
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", padding: "3px 8px", borderRadius: 6, marginLeft: 2, paddingBottom: 3 }}>BEST VALUE</span>
+                <span style={{ fontSize: 36, fontWeight: 900, color: isPremium ? "#fbbf24" : C.textPrimary, lineHeight: 1, letterSpacing: "-1.5px" }}>
+                  {isPremium ? "₹999" : (couponData ? `₹${couponData.final_amount_paise / 100}` : "₹299")}
+                </span>
+                <span style={{ fontSize: 12, color: C.textMuted, paddingBottom: 3 }}>
+                  {isPremium ? "/year" : "/month"}
+                </span>
+                {!isPremium && <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", padding: "3px 8px", borderRadius: 6, marginLeft: 2, paddingBottom: 3 }}>BEST VALUE</span>}
+                {isPremium  && <span style={{ fontSize: 10, fontWeight: 800, color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", padding: "3px 8px", borderRadius: 6, marginLeft: 2, paddingBottom: 3 }}>= ₹83/mo</span>}
               </div>
               {/* Countdown */}
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -223,12 +255,12 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             </div>
           </div>
 
-          {/* Coupon toggle */}
-          {!showCoupon ? (
+          {/* Coupon toggle — Pro only */}
+          {!isPremium && !showCoupon ? (
             <button onClick={() => setShowCoupon(true)} style={{ background: "none", border: "none", fontSize: 11, color: C.textMuted, cursor: "pointer", marginBottom: 10, textDecoration: "underline" }}>
               Have a coupon code?
             </button>
-          ) : (
+          ) : !isPremium ? (
             <div style={{ marginBottom: 10 }}>
               <div style={{ display: "flex", gap: 6 }}>
                 <input
@@ -249,7 +281,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
           )}
 
           {/* Discounted price row */}
-          {couponData && (
+          {!isPremium && couponData && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 10, padding: "10px", background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: 10 }}>
               <span style={{ fontSize: 13, color: C.textMuted, textDecoration: "line-through" }}>₹{couponData.original_amount_paise / 100}</span>
               <span style={{ fontSize: 22, fontWeight: 900, color: "#4ade80" }}>₹{couponData.final_amount_paise / 100}</span>
@@ -267,14 +299,17 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
           {/* CTA */}
           <RazorpayButton
             user={user}
-            couponData={couponData}
+            plan={selectedPlan}
+            couponData={isPremium ? null : couponData}
             onError={(msg) => setPaymentError(msg)}
             onSuccess={() => { window.location.href = "/success"; }}
-            style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 10px 40px rgba(124,58,237,0.6)", marginBottom: 14, transition: "opacity 0.2s", letterSpacing: "-0.2px" }}
+            style={{ width: "100%", padding: "15px", background: isPremium ? "linear-gradient(135deg,#92400e,#f59e0b)" : "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: isPremium ? "0 10px 40px rgba(245,158,11,0.5)" : "0 10px 40px rgba(124,58,237,0.6)", marginBottom: 14, transition: "opacity 0.2s", letterSpacing: "-0.2px" }}
           >
-            {couponData
-              ? `Pay ₹${couponData.final_amount_paise / 100} — Upgrade Now →`
-              : "👉 Upgrade to PRO — ₹299/mo →"}
+            {isPremium
+              ? "⭐ Get Premium — ₹999/year →"
+              : couponData
+                ? `Pay ₹${couponData.final_amount_paise / 100} — Upgrade Now →`
+                : "👉 Upgrade to PRO — ₹299/mo →"}
           </RazorpayButton>
 
           {/* Trust strip */}
