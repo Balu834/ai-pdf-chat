@@ -30,6 +30,8 @@ import ShareModal from "@/components/dashboard/ShareModal";
 import TeamView from "@/components/dashboard/TeamView";
 import BuyCreditsModal from "@/components/dashboard/BuyCreditsModal";
 import InviteModal from "@/components/dashboard/InviteModal";
+import AgentsView from "@/components/dashboard/AgentsView";
+import WorkflowsView from "@/components/dashboard/WorkflowsView";
 
 /* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
 const STATUS_STEPS = [
@@ -1088,7 +1090,7 @@ export default function DashboardPage() {
             )
           ) : (
             <span style={{ fontSize: 14, fontWeight: 700, color: C.textPrimary, flex: 1 }}>
-              {view === "dashboard" ? "Dashboard" : view === "pdfs" ? "My PDFs" : view === "billing" ? "Billing & Plan" : "Settings"}
+              {view === "dashboard" ? "Dashboard" : view === "pdfs" ? "My PDFs" : view === "billing" ? "Billing & Plan" : view === "agents" ? "AI Agents" : view === "workflows" ? "Workflows" : view === "team" ? "Team" : "Settings"}
             </span>
           )}
 
@@ -1166,6 +1168,16 @@ export default function DashboardPage() {
           {view === "team" && (
             <div style={{ flex: 1, overflowY: "auto" }}>
               <TeamView user={user} />
+            </div>
+          )}
+          {view === "agents" && (
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              <AgentsView documents={docs} />
+            </div>
+          )}
+          {view === "workflows" && (
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              <WorkflowsView documents={docs} />
             </div>
           )}
 

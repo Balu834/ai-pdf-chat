@@ -169,3 +169,19 @@ export const TeamNavIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
   </svg>
 );
+
+export const BotIcon = () => (
+  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <rect strokeLinecap="round" strokeLinejoin="round" x="3" y="11" width="18" height="10" rx="2"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11V7"/>
+    <circle cx="12" cy="5" r="2"/>
+    <line strokeLinecap="round" x1="8" y1="15" x2="8" y2="17"/>
+    <line strokeLinecap="round" x1="16" y1="15" x2="16" y2="17"/>
+  </svg>
+);
+
+export const ZapIcon = () => (
+  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <polygon strokeLinecap="round" strokeLinejoin="round" points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
