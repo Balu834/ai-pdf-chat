@@ -28,6 +28,7 @@ import OnboardingOverlay from "@/components/dashboard/OnboardingOverlay";
 import ToastContainer from "@/components/ui/Toast";
 import ShareModal from "@/components/dashboard/ShareModal";
 import TeamView from "@/components/dashboard/TeamView";
+import BuyCreditsModal from "@/components/dashboard/BuyCreditsModal";
 
 /* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
 const STATUS_STEPS = [
@@ -161,7 +162,8 @@ export default function DashboardPage() {
   const [shareUrl, setShareUrl] = useState(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareModal, setShowShareModal]         = useState(false);
+  const [showBuyCredits, setShowBuyCredits]         = useState(false);
 
   const [micError, setMicError] = useState(null);
   const [replyTo,  setReplyTo]  = useState(null);
@@ -387,6 +389,7 @@ export default function DashboardPage() {
         questions:    data.questions?.used ?? 0,
         maxPdfs:      data.pdfs?.max       ?? 3,
         maxQuestions: data.questions?.max  ?? 5,
+        credits:      data.credits         ?? null,
         loading: false,
       });
     } catch {
@@ -660,7 +663,7 @@ export default function DashboardPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "", streaming: false, locked: true } : m)); setUpgradePopup("question"); }
+        if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "", streaming: false, locked: true } : m)); setShowBuyCredits(true); }
         else { setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: data.error || "Request failed.", streaming: false } : m)); }
         return;
       }
@@ -1102,6 +1105,7 @@ export default function DashboardPage() {
               onUpload={() => fileInputRef.current?.click()}
               onSelectDoc={selectDoc}
               onUpgradeClick={() => setUpgradePopup("pdf")}
+              onBuyCredits={() => setShowBuyCredits(true)}
               user={user}
               onViewChange={setView}
             />
@@ -1592,6 +1596,17 @@ export default function DashboardPage() {
           />
         )}
       </AnimatePresence>
+
+      {showBuyCredits && (
+        <BuyCreditsModal
+          user={user}
+          onClose={() => setShowBuyCredits(false)}
+          onSuccess={(balance, added) => {
+            addToast(`⚡ ${added} credits added! New balance: ${balance}`, "success");
+            fetchUsage();
+          }}
+        />
+      )}
 
       {/* Copy toast */}
       <AnimatePresence>

@@ -24,6 +24,8 @@ export async function GET() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
     // Run all queries in parallel
     const [
       usersResult,
@@ -35,6 +37,7 @@ export async function GET() {
       recentPaymentsResult,
       recentUsersResult,
       dailyRevenueResult,
+      aiUsageResult,
     ] = await Promise.all([
       // Total user count
       adminDb.auth.admin.listUsers({ perPage: 1 }),
@@ -75,7 +78,7 @@ export async function GET() {
         .select("amount")
         .eq("status", "captured"),
 
-      // 20 most recent payments with user email
+      // 20 most recent payments
       adminDb
         .from("payments")
         .select("id, user_id, payment_id, amount, original_amount, discount_amount, coupon_code, status, created_at")
@@ -95,8 +98,14 @@ export async function GET() {
         .from("payments")
         .select("amount, created_at")
         .eq("status", "captured")
-        .gte("created_at", new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .gte("created_at", thirtyDaysAgo)
         .order("created_at", { ascending: true }),
+
+      // AI usage: tokens + cost for last 30 days
+      adminDb
+        .from("usage_logs")
+        .select("total_tokens, cost_usd, credits_used")
+        .gte("created_at", thirtyDaysAgo),
     ]);
 
     // Process MRR
@@ -113,6 +122,16 @@ export async function GET() {
     }
     const dailyRevenue = Object.entries(dailyBuckets).map(([date, amount]) => ({ date, amount }));
 
+    // Aggregate AI usage (last 30 days)
+    const aiRows = aiUsageResult.data || [];
+    const aiTotalTokens  = aiRows.reduce((s, r) => s + (r.total_tokens ?? 0), 0);
+    const aiCostUsd      = aiRows.reduce((s, r) => s + Number(r.cost_usd ?? 0), 0);
+    const aiCreditsSpent = aiRows.reduce((s, r) => s + (r.credits_used ?? 0), 0);
+    const aiQuestions    = aiRows.length;
+    // Rough profit = revenue - AI cost (convert paise → USD at ~83 INR/USD)
+    const totalRevenueUsd = totalRevenue / 100 / 83;
+    const estimatedProfit = totalRevenueUsd - aiCostUsd;
+
     return NextResponse.json({
       total_users:         usersResult.data?.total ?? 0,
       active_subs:         activeSubsResult.count ?? 0,
@@ -123,6 +142,13 @@ export async function GET() {
       recent_payments:     recentPaymentsResult.data || [],
       recent_users:        recentUsersResult.data || [],
       daily_revenue:       dailyRevenue,
+      ai_usage_30d: {
+        questions:     aiQuestions,
+        total_tokens:  aiTotalTokens,
+        cost_usd:      Math.round(aiCostUsd * 10000) / 10000,
+        credits_spent: aiCreditsSpent,
+      },
+      estimated_profit_usd: Math.round(estimatedProfit * 100) / 100,
     });
   } catch (err) {
     console.error("[admin/stats]", err);

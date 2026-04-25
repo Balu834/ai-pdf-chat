@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
 import { checkPdfLimit, checkQuestionLimit, FREE_PLAN } from "@/lib/limits";
 import { getUserPlan, isProActive } from "@/lib/user-plan";
+import { getCredits } from "@/lib/credits";
 
 export async function GET() {
   try {
@@ -12,11 +13,12 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [pdfs, questions, planData, proActive] = await Promise.all([
+    const [pdfs, questions, planData, proActive, credits] = await Promise.all([
       checkPdfLimit(supabase, user.id),
       checkQuestionLimit(supabase, user.id),
       getUserPlan(user.id),
       isProActive(user.id),
+      getCredits(user.id),
     ]);
 
     return NextResponse.json({
@@ -34,6 +36,11 @@ export async function GET() {
         used: proActive ? 0 : questions.count,
         max: proActive ? null : FREE_PLAN.maxQuestions,
         remaining: proActive ? null : questions.remaining,
+      },
+      credits: {
+        balance:         credits.balance,
+        lifetime_earned: credits.lifetime_earned,
+        lifetime_spent:  credits.lifetime_spent,
       },
     });
   } catch (err) {

@@ -116,12 +116,13 @@ export function EmptyChatState({ doc, onSetInput, inputRef }) {
 }
 
 /* ─── DASHBOARD HOME VIEW ────────────────────────────────────────────────── */
-export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, user, onViewChange }) {
+export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, onBuyCredits, user, onViewChange }) {
   const isPro = plan === "pro";
   const questionsUsed = usage?.questions ?? 0;
   const questionsMax  = isPro ? "∞" : (usage?.maxQuestions ?? 5);
   const pdfsUsed      = docs.length;
   const pdfsMax       = isPro ? "∞" : (usage?.maxPdfs ?? 3);
+  const creditsBalance = usage?.credits?.balance ?? 0;
   const daysLeft      = isTrial && trialEnd ? Math.max(0, Math.ceil((new Date(trialEnd) - Date.now()) / 86400000)) : null;
   const recentDocs    = [...docs].slice(0, 5);
 
@@ -158,17 +159,20 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
       )}
 
       {/* Stats grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 28 }} className="stats-grid">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 28 }} className="stats-grid">
         {[
-          { label: "Total PDFs", value: pdfsUsed, sub: isPro ? "Unlimited plan" : `${pdfsMax} max on free`, icon: "📄", color: C.accentLight, glow: "rgba(124,58,237,0.12)" },
-          { label: "Questions Used", value: questionsUsed, sub: isPro ? "Unlimited questions" : `${questionsMax} lifetime`, icon: "💬", color: "#06b6d4", glow: "rgba(6,182,212,0.1)" },
-          { label: "Plan", value: isPro ? "Pro" : "Free", sub: isPro ? (proExpiresAt ? `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}` : "Active") : "Upgrade for unlimited", icon: isPro ? "👑" : "🔓", color: isPro ? C.gold : C.textMuted, glow: isPro ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.03)" },
+          { label: "Total PDFs", value: pdfsUsed, sub: isPro ? "Unlimited plan" : `${pdfsMax} max on free`, icon: "📄", color: C.accentLight, glow: "rgba(124,58,237,0.12)", onClick: null },
+          { label: "Questions Used", value: questionsUsed, sub: isPro ? "Unlimited questions" : `${questionsMax} lifetime`, icon: "💬", color: "#06b6d4", glow: "rgba(6,182,212,0.1)", onClick: null },
+          { label: "AI Credits", value: creditsBalance, sub: creditsBalance === 0 ? "Buy credits to continue" : creditsBalance <= 5 ? "Running low — top up" : "1 credit = 1 question", icon: "⚡", color: creditsBalance === 0 ? "#f87171" : creditsBalance <= 5 ? "#f59e0b" : "#4ade80", glow: creditsBalance === 0 ? "rgba(239,68,68,0.08)" : "rgba(74,222,128,0.07)", onClick: onBuyCredits },
+          { label: "Plan", value: isPro ? "Pro" : "Free", sub: isPro ? (proExpiresAt ? `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}` : "Active") : "Upgrade for unlimited", icon: isPro ? "👑" : "🔓", color: isPro ? C.gold : C.textMuted, glow: isPro ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.03)", onClick: isPro ? null : onUpgradeClick },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07, duration: 0.35 }}
-            style={{ background: `linear-gradient(135deg,${stat.glow},rgba(255,255,255,0.02))`, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "18px 18px", backdropFilter: "blur(12px)" }}
+            onClick={stat.onClick || undefined}
+            whileHover={stat.onClick ? { scale: 1.02, borderColor: "rgba(124,58,237,0.3)" } : undefined}
+            style={{ background: `linear-gradient(135deg,${stat.glow},rgba(255,255,255,0.02))`, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "18px 18px", backdropFilter: "blur(12px)", cursor: stat.onClick ? "pointer" : "default", transition: "all 0.15s" }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <span style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</span>

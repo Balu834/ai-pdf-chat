@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
+import { deductCredit, logUsage } from "@/lib/credits";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -144,6 +145,7 @@ Always structure your response using these emoji section headers. Include only t
 
 async function streamOpenAI(context, message, {
   supabase, userId, documentId, sessionId, previousMessages = [], memory = null,
+  creditDeducted = false,
 } = {}) {
   const lower = message.toLowerCase();
   const intent = classifyIntent(message);
@@ -156,6 +158,7 @@ async function streamOpenAI(context, message, {
   const stream = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     stream: true,
+    stream_options: { include_usage: true },
     temperature: 0.2,
     max_tokens: 1024,
     messages: [
@@ -169,12 +172,19 @@ async function streamOpenAI(context, message, {
   const readable = new ReadableStream({
     async start(controller) {
       let fullResponse = "";
+      let promptTokens = 0;
+      let completionTokens = 0;
       try {
         for await (const chunk of stream) {
           const token = chunk.choices[0]?.delta?.content;
           if (token) {
             fullResponse += token;
             controller.enqueue(encoder.encode(sseChunk(token)));
+          }
+          // Final chunk carries usage when stream_options.include_usage = true
+          if (chunk.usage) {
+            promptTokens     = chunk.usage.prompt_tokens     ?? 0;
+            completionTokens = chunk.usage.completion_tokens ?? 0;
           }
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
@@ -203,6 +213,16 @@ async function streamOpenAI(context, message, {
             console.warn("[CHAT] Message persist failed (non-fatal):", e.message);
           }
         }
+        // Log token usage for cost tracking (non-blocking, best-effort)
+        if (userId && (promptTokens || completionTokens)) {
+          logUsage(userId, {
+            documentId,
+            sessionId,
+            promptTokens,
+            completionTokens,
+            creditsUsed: creditDeducted ? 1 : 0,
+          }).catch(() => {});
+        }
       }
     },
   });
@@ -222,15 +242,21 @@ export async function POST(req) {
 
     // ── Question limit ────────────────────────────────────────────
     const { exceeded, count } = await checkQuestionLimit(supabase, user.id);
+    // creditDeducted = true only when a free user spent a credit to bypass the limit
+    let creditDeducted = false;
     if (exceeded) {
-      return NextResponse.json(
-        {
-          error: `Question limit reached (${FREE_PLAN.maxQuestions} lifetime). Upgrade to Pro for unlimited access.`,
-          limitExceeded: true,
-          usage: { questions: count, maxQuestions: FREE_PLAN.maxQuestions },
-        },
-        { status: 403 }
-      );
+      // Free users can spend a credit instead of hitting the hard wall
+      creditDeducted = await deductCredit(user.id);
+      if (!creditDeducted) {
+        return NextResponse.json(
+          {
+            error: `Question limit reached (${FREE_PLAN.maxQuestions} lifetime). Upgrade to Pro or buy credits to continue.`,
+            limitExceeded: true,
+            usage: { questions: count, maxQuestions: FREE_PLAN.maxQuestions },
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const { message, fileUrl, sessionId } = await req.json();
@@ -323,7 +349,7 @@ export async function POST(req) {
     if (ragContext) {
       if (isExtractionRequest(message)) return extractStructured(ragContext, message);
       return streamOpenAI(ragContext, message, {
-        supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory,
+        supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory, creditDeducted,
       });
     }
 
@@ -394,7 +420,7 @@ export async function POST(req) {
 
     if (isExtractionRequest(message)) return extractStructured(pdfText, message);
     return streamOpenAI(pdfText, message, {
-      supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory,
+      supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory, creditDeducted,
     });
 
   } catch (err) {
