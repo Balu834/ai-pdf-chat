@@ -29,6 +29,7 @@ import ToastContainer from "@/components/ui/Toast";
 import ShareModal from "@/components/dashboard/ShareModal";
 import TeamView from "@/components/dashboard/TeamView";
 import BuyCreditsModal from "@/components/dashboard/BuyCreditsModal";
+import InviteModal from "@/components/dashboard/InviteModal";
 
 /* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
 const STATUS_STEPS = [
@@ -164,6 +165,7 @@ export default function DashboardPage() {
   const [shareCopied, setShareCopied] = useState(false);
   const [showShareModal, setShowShareModal]         = useState(false);
   const [showBuyCredits, setShowBuyCredits]         = useState(false);
+  const [showInviteModal, setShowInviteModal]       = useState(false);
 
   const [micError, setMicError] = useState(null);
   const [replyTo,  setReplyTo]  = useState(null);
@@ -272,11 +274,38 @@ export default function DashboardPage() {
     hasDoc:       !!selectedDoc,
   });
 
-  /* ── Auth guard ── */
+  /* ── Auth guard + referral claim ── */
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { window.location.href = "/login"; }
-      else { setUser(user); setLoading(false); fetchDocs(user.id); fetchPlan(user.id); fetchUsage(); trackFirstVisit(); }
+      if (!user) { window.location.href = "/login"; return; }
+      setUser(user);
+      setLoading(false);
+      fetchDocs(user.id);
+      fetchPlan(user.id);
+      fetchUsage();
+      trackFirstVisit();
+
+      // Claim pending referral code stored by the login page (one-time, then cleared)
+      try {
+        const pendingRef = sessionStorage.getItem("pendingRefCode");
+        if (pendingRef) {
+          sessionStorage.removeItem("pendingRefCode");
+          fetch("/api/referral/claim", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ref_code: pendingRef }),
+            credentials: "include",
+          })
+            .then((r) => r.json())
+            .then((result) => {
+              if (result?.ok) {
+                addToast(`🎁 Welcome bonus! +${result.referred_credits} credits added to your account.`, "success", 6000);
+                fetchUsage();
+              }
+            })
+            .catch(() => {});
+        }
+      } catch {}
     });
   }, []);
 
@@ -1036,6 +1065,7 @@ export default function DashboardPage() {
         onSelectSession={handleSwitchSession}
         onDeleteSession={handleDeleteSession}
         onRenameSession={handleRenameSession}
+        onInvite={() => setShowInviteModal(true)}
       />
 
       {/* ── MAIN WRAPPER ── */}
@@ -1106,6 +1136,7 @@ export default function DashboardPage() {
               onSelectDoc={selectDoc}
               onUpgradeClick={() => setUpgradePopup("pdf")}
               onBuyCredits={() => setShowBuyCredits(true)}
+              onInvite={() => setShowInviteModal(true)}
               user={user}
               onViewChange={setView}
             />
@@ -1606,6 +1637,10 @@ export default function DashboardPage() {
             fetchUsage();
           }}
         />
+      )}
+
+      {showInviteModal && (
+        <InviteModal onClose={() => setShowInviteModal(false)} />
       )}
 
       {/* Copy toast */}

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { C, timeAgo } from "./tokens";
 import {
   PlusIcon, LogoutIcon, TrashIcon, CrownIcon, PdfIcon,
-  HomeIcon, FilesIcon, ChatNavIcon, BillingNavIcon, SettingsNavIcon, TeamNavIcon,
+  HomeIcon, FilesIcon, ChatNavIcon, BillingNavIcon, SettingsNavIcon, TeamNavIcon, GiftIcon,
 } from "./icons";
 import { SidebarSkeleton } from "./Shimmer";
 
@@ -38,7 +38,7 @@ export default function Sidebar({
   user, plan, docs, docsLoading, selectedDoc, view, usage, uploading,
   sessions, sessionsLoading, activeSession,
   onViewChange, onSignOut, onSelectDoc, onDelete, onUploadClick, onUpgradeClick,
-  onNewChat, onSelectSession, onDeleteSession, onRenameSession,
+  onNewChat, onSelectSession, onDeleteSession, onRenameSession, onInvite,
 }) {
   const userEmail    = user?.email || "";
   const userInitial  = userEmail.charAt(0).toUpperCase();
@@ -290,6 +290,22 @@ export default function Sidebar({
           })}
         </div>
       )}
+
+      {/* Invite & Earn */}
+      <div style={{ padding: "0 8px 6px", flexShrink: 0 }}>
+        <motion.button
+          whileHover={{ scale: 1.02, borderColor: "rgba(124,58,237,0.45)" }} whileTap={{ scale: 0.97 }}
+          onClick={onInvite}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 9, cursor: "pointer", transition: "all 0.15s" }}
+        >
+          <GiftIcon />
+          <div style={{ flex: 1, textAlign: "left" }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd", margin: 0 }}>Invite & Earn</p>
+            <p style={{ fontSize: 10, color: C.textMuted, margin: 0 }}>+50 credits per friend</p>
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", padding: "2px 7px", borderRadius: 99 }}>FREE</span>
+        </motion.button>
+      </div>
 
       {/* Footer */}
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "8px 10px", flexShrink: 0 }}>

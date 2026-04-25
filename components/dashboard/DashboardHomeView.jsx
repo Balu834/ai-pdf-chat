@@ -116,7 +116,7 @@ export function EmptyChatState({ doc, onSetInput, inputRef }) {
 }
 
 /* ─── DASHBOARD HOME VIEW ────────────────────────────────────────────────── */
-export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, onBuyCredits, user, onViewChange }) {
+export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, onBuyCredits, onInvite, user, onViewChange }) {
   const isPro = plan === "pro";
   const questionsUsed = usage?.questions ?? 0;
   const questionsMax  = isPro ? "∞" : (usage?.maxQuestions ?? 5);
@@ -183,6 +183,27 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
           </motion.div>
         ))}
       </div>
+
+      {/* Referral banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
+        onClick={onInvite}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, padding: "13px 18px", borderRadius: 14, marginBottom: 22, background: "linear-gradient(135deg,rgba(124,58,237,0.08),rgba(79,70,229,0.05))", border: "1px solid rgba(124,58,237,0.18)", cursor: "pointer", transition: "all 0.15s" }}
+        whileHover={{ borderColor: "rgba(124,58,237,0.4)", scale: 1.005 }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 22 }}>🎁</span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd", margin: "0 0 2px" }}>Invite friends — Earn 50 credits each</p>
+            <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>
+              {usage?.referral_invites
+                ? `You've earned ${usage.referral_rewards ?? 0} credits from ${usage.referral_invites} referral${usage.referral_invites !== 1 ? "s" : ""}`
+                : "Share your link — they get 20 credits too"}
+            </p>
+          </div>
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#a78bfa", flexShrink: 0 }}>Invite now →</span>
+      </motion.div>
 
       {/* Quick actions */}
       <div style={{ marginBottom: 28 }}>

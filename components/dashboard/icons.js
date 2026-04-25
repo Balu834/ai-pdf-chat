@@ -1,4 +1,14 @@
 /* ─── ICON COMPONENTS ────────────────────────────────────────────────────── */
+export const GiftIcon = () => (
+  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <polyline strokeLinecap="round" strokeLinejoin="round" points="20 12 20 22 4 22 4 12"/>
+    <rect strokeLinecap="round" strokeLinejoin="round" x="2" y="7" width="20" height="5"/>
+    <line strokeLinecap="round" x1="12" y1="22" x2="12" y2="7"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+  </svg>
+);
+
 export const PdfIcon = () => (
   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8" style={{ flexShrink: 0 }}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>

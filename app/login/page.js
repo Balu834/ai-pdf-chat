@@ -14,13 +14,23 @@ export default function LoginPage() {
   const [mode, setMode] = useState("login"); // "login" | "signup" | "forgot"
   const [status, setStatus] = useState(null); // { type: "error"|"success", msg: string }
 
-  // Read error param from URL (useEffect avoids hydration mismatch)
+  // Read error and referral params from URL (useEffect avoids hydration mismatch)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const err = params.get("error");
+    const err    = params.get("error");
+    const ref    = params.get("ref");
+
     if (err) {
       window.history.replaceState({}, document.title, "/login");
       setStatus({ type: "error", msg: decodeURIComponent(err) });
+    }
+
+    // Persist referral code in sessionStorage so the post-signup dashboard can claim it.
+    // Only store if this looks like a valid code (alphanumeric, 4–12 chars) to avoid XSS via URL.
+    if (ref && /^[A-Z0-9]{4,12}$/i.test(ref)) {
+      try { sessionStorage.setItem("pendingRefCode", ref.toUpperCase()); } catch {}
+      // Also pre-fill signup mode when arriving via referral link
+      setMode("signup");
     }
   }, []);
 
@@ -101,9 +111,12 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const isLogin = mode === "login";
+  const isLogin  = mode === "login";
   const isSignup = mode === "signup";
   const isForgot = mode === "forgot";
+
+  // Show referral bonus banner if user arrived via referral link
+  const hasPendingRef = typeof window !== "undefined" && !!sessionStorage.getItem?.("pendingRefCode");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0b0f1a]">
@@ -117,6 +130,14 @@ export default function LoginPage() {
            isSignup ? "Sign up to get started with Intellixy" :
            "We'll send a reset link to your email"}
         </p>
+
+        {/* Referral bonus banner — shown when arriving via an invite link */}
+        {isSignup && hasPendingRef && (
+          <div className="mb-4 px-4 py-3 rounded-lg text-sm bg-purple-900/30 border border-purple-700/50 text-purple-300 flex items-center gap-2">
+            <span>🎁</span>
+            <span><strong className="text-white">+20 free credits</strong> waiting for you — create your account to claim!</span>
+          </div>
+        )}
 
         {/* Status message */}
         {status && (
