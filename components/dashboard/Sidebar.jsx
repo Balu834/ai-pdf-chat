@@ -6,19 +6,21 @@ import { C, timeAgo } from "./tokens";
 import {
   PlusIcon, LogoutIcon, TrashIcon, CrownIcon, PdfIcon,
   HomeIcon, FilesIcon, ChatNavIcon, BillingNavIcon, SettingsNavIcon, TeamNavIcon, GiftIcon,
-  BotIcon, ZapIcon,
+  BotIcon, ZapIcon, ShopIcon, CreatorIcon,
 } from "./icons";
 import { SidebarSkeleton } from "./Shimmer";
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", Icon: HomeIcon },
-  { id: "pdfs",      label: "My PDFs",   Icon: FilesIcon },
-  { id: "chat",      label: "Chat",       Icon: ChatNavIcon },
-  { id: "agents",    label: "AI Agents",  Icon: BotIcon },
-  { id: "workflows", label: "Workflows",  Icon: ZapIcon },
-  { id: "team",      label: "Team",       Icon: TeamNavIcon },
-  { id: "billing",   label: "Billing",    Icon: BillingNavIcon },
-  { id: "settings",  label: "Settings",   Icon: SettingsNavIcon },
+  { id: "dashboard",   label: "Dashboard",   Icon: HomeIcon },
+  { id: "pdfs",        label: "My PDFs",     Icon: FilesIcon },
+  { id: "chat",        label: "Chat",        Icon: ChatNavIcon },
+  { id: "agents",      label: "AI Agents",   Icon: BotIcon },
+  { id: "workflows",   label: "Workflows",   Icon: ZapIcon },
+  { id: "marketplace", label: "Marketplace", Icon: ShopIcon },
+  { id: "creator",     label: "Creator",     Icon: CreatorIcon },
+  { id: "team",        label: "Team",        Icon: TeamNavIcon },
+  { id: "billing",     label: "Billing",     Icon: BillingNavIcon },
+  { id: "settings",    label: "Settings",    Icon: SettingsNavIcon },
 ];
 
 /* ─── Pencil icon ──────────────────────────────────────────────────────────── */

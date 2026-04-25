@@ -32,6 +32,8 @@ import BuyCreditsModal from "@/components/dashboard/BuyCreditsModal";
 import InviteModal from "@/components/dashboard/InviteModal";
 import AgentsView from "@/components/dashboard/AgentsView";
 import WorkflowsView from "@/components/dashboard/WorkflowsView";
+import MarketplaceView from "@/components/dashboard/MarketplaceView";
+import CreatorView from "@/components/dashboard/CreatorView";
 
 /* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
 const STATUS_STEPS = [
@@ -1090,7 +1092,7 @@ export default function DashboardPage() {
             )
           ) : (
             <span style={{ fontSize: 14, fontWeight: 700, color: C.textPrimary, flex: 1 }}>
-              {view === "dashboard" ? "Dashboard" : view === "pdfs" ? "My PDFs" : view === "billing" ? "Billing & Plan" : view === "agents" ? "AI Agents" : view === "workflows" ? "Workflows" : view === "team" ? "Team" : "Settings"}
+              {{ dashboard: "Dashboard", pdfs: "My PDFs", billing: "Billing & Plan", agents: "AI Agents", workflows: "Workflows", marketplace: "Marketplace", creator: "Creator Studio", team: "Team", settings: "Settings" }[view] ?? "Dashboard"}
             </span>
           )}
 
@@ -1178,6 +1180,16 @@ export default function DashboardPage() {
           {view === "workflows" && (
             <div style={{ flex: 1, overflowY: "auto" }}>
               <WorkflowsView documents={docs} />
+            </div>
+          )}
+          {view === "marketplace" && (
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              <MarketplaceView onToast={(msg) => addToast(msg)} />
+            </div>
+          )}
+          {view === "creator" && (
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              <CreatorView onToast={(msg) => addToast(msg)} />
             </div>
           )}
 
