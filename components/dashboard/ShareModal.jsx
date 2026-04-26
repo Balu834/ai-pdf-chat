@@ -136,13 +136,18 @@ export default function ShareModal({ doc, session, onClose }) {
   }
 
   function shareWhatsApp() {
-    const text = encodeURIComponent(`Check out this AI PDF chat: ${shareData.url}`);
+    const docName = doc?.file_name?.replace(/\.pdf$/i, "") || "this document";
+    const text = encodeURIComponent(
+      `I asked AI a question about "${docName}" and got an instant answer 🤖📄\n\nSee the full chat here: ${shareData.url}\n\n(Try it free — upload any PDF and start chatting)`
+    );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   }
 
   function shareTwitter() {
-    const text = encodeURIComponent("Check out this AI-powered PDF chat on Intellixy 🤖📄");
-    const url  = encodeURIComponent(shareData.url);
+    const text = encodeURIComponent(
+      `Just used AI to instantly answer questions from a PDF — no more scrolling 📄✨\n\nTry it free:`
+    );
+    const url = encodeURIComponent(shareData.url);
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank");
   }
 

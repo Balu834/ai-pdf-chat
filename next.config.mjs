@@ -7,7 +7,7 @@ const nextConfig = {
         headers: [
           {
             key: "Permissions-Policy",
-            value: "payment=*, camera=(), microphone=(), geolocation=()",
+            value: "payment=*, camera=(), microphone=*, geolocation=()",
           },
           {
             key: "Content-Security-Policy",
