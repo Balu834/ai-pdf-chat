@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import { logUsage } from "@/lib/appstore";
 
 const admin = () =>
   createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -115,6 +116,7 @@ export async function POST(req) {
           );
         }
         await sb.rpc("increment_install_count", { p_type: "template", p_id: template_id });
+        logUsage(sb, user.id, "template", template_id, "install");
       }
     }
   }

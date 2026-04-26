@@ -88,5 +88,8 @@ export async function GET(req) {
     processed.push({ id: job.id, type: job.type, status });
   }
 
+  // Refresh trending counts on every cron tick (non-blocking)
+  supabase.rpc("refresh_trending_counts").then(() => {});
+
   return NextResponse.json({ processed, count: processed.length });
 }

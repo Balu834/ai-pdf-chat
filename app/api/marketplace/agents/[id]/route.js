@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import { logUsage } from "@/lib/appstore";
 
 const admin = () =>
   createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -97,8 +98,9 @@ export async function POST(req, { params }) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Increment install counter (non-blocking)
+  // Increment install counter + log usage (non-blocking)
   sb.rpc("increment_install_count", { p_type: "agent", p_id: params.id }).then(() => {});
+  logUsage(sb, user.id, "agent", params.id, "install");
 
   return NextResponse.json({ installed: true, agent_id: newAgent.id });
 }
