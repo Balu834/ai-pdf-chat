@@ -32,7 +32,7 @@
     },
     {
       "path": "/api/cron/process-jobs",
-      "schedule": "0 * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
