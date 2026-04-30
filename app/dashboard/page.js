@@ -647,6 +647,9 @@ export default function DashboardPage() {
     if (isFirst) isFirstMsgRef.current = false;
     const userMsg = { role: "user", content: text, id: Date.now() };
     const aiMsgId = userMsg.id + 1;
+    // Always scroll to the new message when user sends — even if they scrolled up
+    isNearBottomRef.current = true;
+    setShowScrollBtn(false);
     setAiStreaming(true);
     setMessages((prev) => [...prev, userMsg, { role: "assistant", content: "", id: aiMsgId, streaming: true }]);
     try {
@@ -947,11 +950,17 @@ export default function DashboardPage() {
   }, []);
 
   /* ── Auto-scroll when messages update ── */
-  // useLayoutEffect fires before paint — no visible scroll jump
   useLayoutEffect(() => {
     if (!isNearBottomRef.current) return;
     const isStreaming = !!messages[messages.length - 1]?.streaming;
-    scrollToBottom(!isStreaming); // instant during streaming, smooth on completion
+    if (isStreaming) {
+      // During streaming: instant scroll each token
+      scrollToBottom(false);
+    } else {
+      // After streaming ends: one rAF so Framer Motion finishes expanding the bubble
+      const raf = requestAnimationFrame(() => scrollToBottom(true));
+      return () => cancelAnimationFrame(raf);
+    }
   }, [messages, scrollToBottom]);
 
   /* ── Scroll to bottom on doc switch ── */
