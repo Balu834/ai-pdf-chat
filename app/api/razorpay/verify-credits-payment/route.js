@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { createClient } from "@/lib/supabase-server-client";
 import { createClient as createAdmin } from "@supabase/supabase-js";
 import { addCredits } from "@/lib/credits";
-import { CREDIT_PACKS } from "@/app/api/razorpay/buy-credits/route";
+import { CREDIT_PACKS } from "@/lib/credit-packs";
 
 const adminDb = createAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL,

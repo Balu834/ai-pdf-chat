@@ -106,7 +106,7 @@ function StepConfig({ step, onChange }) {
   if (step.type === "send_email") return (
     <div>
       <div style={s.formGroup}>
-        <label style={s.label}>To (use {{`{{field}}`}} for dynamic values)</label>
+        <label style={s.label}>To (use {"{{field}}"} for dynamic values)</label>
         <input style={s.input} value={cfg.to ?? ""} onChange={(e) => set("to", e.target.value)} placeholder="recipient@example.com" />
       </div>
       <div style={s.formGroup}>
@@ -127,7 +127,7 @@ function StepConfig({ step, onChange }) {
         <input style={s.input} value={cfg.url ?? ""} onChange={(e) => set("url", e.target.value)} placeholder="https://hooks.zapier.com/..." />
       </div>
       <div>
-        <label style={s.label}>Payload JSON (use {{`{{field}}`}} for dynamic values)</label>
+        <label style={s.label}>Payload JSON (use {"{{field}}"} for dynamic values)</label>
         <textarea
           style={s.textarea}
           rows={4}

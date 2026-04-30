@@ -7,12 +7,7 @@ const rzp = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Credit packs: { paise, credits, label }
-export const CREDIT_PACKS = [
-  { id: "starter",  paise: 9900,  credits: 100,  label: "Starter Pack"  },
-  { id: "popular",  paise: 29900, credits: 350,  label: "Popular Pack"  },
-  { id: "power",    paise: 99900, credits: 1500, label: "Power Pack"    },
-];
+import { CREDIT_PACKS } from "@/lib/credit-packs";
 
 export async function POST(req) {
   try {
