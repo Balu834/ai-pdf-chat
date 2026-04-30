@@ -37,10 +37,15 @@ export const SMART_ACTIONS = [
 /* ─── HELPERS ────────────────────────────────────────────────────────────── */
 export function timeAgo(ts) {
   if (!ts) return "";
-  const diff = (Date.now() - new Date(ts)) / 1000;
+  // Supabase may return "2024-01-15 05:00:00" (space, no timezone) which browsers
+  // parse as LOCAL time, causing a timezone-offset error (e.g. "5h ago" in IST).
+  // Normalize: replace space separator → T, then force UTC if no offset present.
+  const iso = String(ts).replace(" ", "T");
+  const utc = /Z|[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+  const diff = (Date.now() - new Date(utc)) / 1000;
   if (diff < 60) return "Just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 172800) return "Yesterday";
-  return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return new Date(utc).toLocaleDateString("en-IN", { month: "short", day: "numeric" });
 }
