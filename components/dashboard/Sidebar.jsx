@@ -62,7 +62,9 @@ export default function Sidebar({
 
       {/* Logo */}
       <div style={{ height: 58, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(124,58,237,0.5)", flexShrink: 0 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          // stronger glow + a subtle outer ring so the logo pops
+          boxShadow: "0 0 0 1px rgba(124,58,237,0.35), 0 4px 20px rgba(124,58,237,0.55), 0 0 40px rgba(124,58,237,0.18)" }}>
           <span style={{ fontSize: 14, fontWeight: 900, color: "white" }}>I</span>
         </div>
         <span style={{ fontSize: 16, fontWeight: 800, color: C.textPrimary, letterSpacing: "-0.3px" }}>Intellixy</span>
@@ -78,10 +80,25 @@ export default function Sidebar({
         {NAV_ITEMS.map(({ id, label, Icon }) => {
           const isActive = view === id;
           return (
-            <motion.button key={id} whileTap={{ scale: 0.97 }} onClick={() => onViewChange(id)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", marginBottom: 2, borderRadius: 9, fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? C.accentLight : C.textMuted, background: isActive ? "rgba(124,58,237,0.12)" : "transparent", border: isActive ? "1px solid rgba(124,58,237,0.22)" : "1px solid transparent", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
-              onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = C.textSecondary; } }}
-              onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.textMuted; } }}
+            <motion.button
+              key={id}
+              whileTap={{ scale: 0.97 }}
+              // Only animate hover when NOT active — active state is always rendered
+              whileHover={isActive ? {} : { background: "rgba(255,255,255,0.05)", color: C.textSecondary }}
+              onClick={() => onViewChange(id)}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", gap: 10,
+                padding: "9px 10px", marginBottom: 2, borderRadius: 9,
+                fontSize: 13, fontWeight: isActive ? 700 : 500,
+                color: isActive ? C.accentLight : C.textMuted,
+                background: isActive ? "rgba(124,58,237,0.14)" : "transparent",
+                border: isActive ? "1px solid rgba(124,58,237,0.26)" : "1px solid transparent",
+                cursor: "pointer", textAlign: "left", transition: "color 0.15s, background 0.15s, border-color 0.15s",
+                // Left accent bar via inset box-shadow — cleanest way without extra DOM nodes
+                boxShadow: isActive
+                  ? "inset 3px 0 0 0 #7c3aed, 0 0 0 1px rgba(124,58,237,0.12)"
+                  : "none",
+              }}
             >
               <span style={{ flexShrink: 0 }}><Icon /></span>
               {label}
@@ -128,8 +145,12 @@ export default function Sidebar({
             const isSel = selectedDoc?.id === doc.id;
             return (
               <motion.div key={doc.id} layout onClick={() => onSelectDoc(doc)}
-                style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", borderRadius: 9, cursor: "pointer", marginBottom: 2, background: isSel ? "rgba(124,58,237,0.14)" : "transparent", border: isSel ? "1px solid rgba(124,58,237,0.24)" : "1px solid transparent", transition: "all 0.15s" }}
-                whileHover={{ backgroundColor: isSel ? undefined : "rgba(255,255,255,0.04)" }}
+                style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", borderRadius: 9, cursor: "pointer", marginBottom: 2,
+                  background: isSel ? "rgba(124,58,237,0.14)" : "transparent",
+                  border: isSel ? "1px solid rgba(124,58,237,0.26)" : "1px solid transparent",
+                  boxShadow: isSel ? "inset 3px 0 0 0 rgba(124,58,237,0.7)" : "none",
+                  transition: "all 0.15s" }}
+                whileHover={isSel ? {} : { background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
               >
                 <span style={{ color: isSel ? C.accentLight : C.textMuted, marginTop: 1, flexShrink: 0 }}><PdfIcon /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>

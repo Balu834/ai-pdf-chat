@@ -66,16 +66,17 @@ export function WelcomeScreen({ onUpload, usage, plan }) {
         style={{ marginTop: 48, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, maxWidth: 520, width: "100%" }}
       >
         {[
-          { icon: "💬", title: "Smart Q&A", desc: "Ask anything, get precise answers" },
-          { icon: "⚡", title: "Instant insights", desc: "AI summarizes key points" },
-          { icon: "🔒", title: "100% Private", desc: "Your data is never sold" },
+          { icon: "💬", title: "Smart Q&A",       desc: "Ask anything, get precise answers", glow: "rgba(124,58,237,0.12)", border: "rgba(124,58,237,0.2)" },
+          { icon: "⚡", title: "Instant insights", desc: "AI summarizes key points",          glow: "rgba(6,182,212,0.1)",   border: "rgba(6,182,212,0.2)"   },
+          { icon: "🔒", title: "100% Private",     desc: "Your data is never sold",           glow: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.18)" },
         ].map((f, i) => (
           <motion.div
             key={f.title}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.28 + i * 0.07 }}
-            style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 16, padding: "16px 14px", textAlign: "left", backdropFilter: "blur(8px)" }}
+            whileHover={{ y: -3, borderColor: f.border, boxShadow: `0 8px 24px ${f.glow}` }}
+            style={{ background: `linear-gradient(135deg, ${f.glow}, rgba(255,255,255,0.02))`, border: `1px solid rgba(255,255,255,0.09)`, borderRadius: 16, padding: "16px 14px", textAlign: "left", backdropFilter: "blur(8px)", transition: "border-color 0.2s" }}
           >
             <div style={{ fontSize: 22, marginBottom: 9 }}>{f.icon}</div>
             <p style={{ fontSize: 12, fontWeight: 700, color: C.textPrimary, margin: "0 0 4px" }}>{f.title}</p>
@@ -131,7 +132,18 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
       <div style={{ marginBottom: 28 }}>
         <p style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Overview</p>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: C.textPrimary, margin: 0, letterSpacing: "-0.5px" }}>
-          Welcome back{user?.email ? `, ${user.email.split("@")[0]}` : ""} 👋
+          Welcome back
+          {user?.email && (
+            <span style={{
+              background:           "linear-gradient(135deg,#c4b5fd,#a78bfa,#06b6d4)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor:  "transparent",
+              backgroundClip:       "text",
+              marginLeft:           6,
+            }}>
+              {user.email.split("@")[0]}
+            </span>
+          )} 👋
         </h1>
       </div>
 
@@ -161,18 +173,30 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
       {/* Stats grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 28 }} className="stats-grid">
         {[
-          { label: "Total PDFs", value: pdfsUsed, sub: isPro ? "Unlimited plan" : `${pdfsMax} max on free`, icon: "📄", color: C.accentLight, glow: "rgba(124,58,237,0.12)", onClick: null },
-          { label: "Questions Used", value: questionsUsed, sub: isPro ? "Unlimited questions" : `${questionsMax} lifetime`, icon: "💬", color: "#06b6d4", glow: "rgba(6,182,212,0.1)", onClick: null },
-          { label: "AI Credits", value: creditsBalance, sub: creditsBalance === 0 ? "Buy credits to continue" : creditsBalance <= 5 ? "Running low — top up" : "1 credit = 1 question", icon: "⚡", color: creditsBalance === 0 ? "#f87171" : creditsBalance <= 5 ? "#f59e0b" : "#4ade80", glow: creditsBalance === 0 ? "rgba(239,68,68,0.08)" : "rgba(74,222,128,0.07)", onClick: onBuyCredits },
-          { label: "Plan", value: isPro ? "Pro" : "Free", sub: isPro ? (proExpiresAt ? `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}` : "Active") : "Upgrade for unlimited", icon: isPro ? "👑" : "🔓", color: isPro ? C.gold : C.textMuted, glow: isPro ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.03)", onClick: isPro ? null : onUpgradeClick },
+          { label: "Total PDFs",     value: pdfsUsed,       sub: isPro ? "Unlimited plan"        : `${pdfsMax} max on free`,      icon: "📄", color: C.accentLight, glow: "rgba(124,58,237,0.18)", hoverShadow: "0 0 0 1px rgba(124,58,237,0.28), 0 8px 32px rgba(124,58,237,0.18)", onClick: null },
+          { label: "Questions Used", value: questionsUsed,  sub: isPro ? "Unlimited questions"   : `${questionsMax} lifetime`,     icon: "💬", color: "#06b6d4",     glow: "rgba(6,182,212,0.15)",  hoverShadow: "0 0 0 1px rgba(6,182,212,0.28), 0 8px 32px rgba(6,182,212,0.16)",    onClick: null },
+          { label: "AI Credits",     value: creditsBalance, sub: creditsBalance === 0 ? "Buy credits to continue" : creditsBalance <= 5 ? "Running low — top up" : "1 credit = 1 question", icon: "⚡", color: creditsBalance === 0 ? "#f87171" : creditsBalance <= 5 ? "#f59e0b" : "#4ade80", glow: creditsBalance === 0 ? "rgba(239,68,68,0.14)" : "rgba(74,222,128,0.12)", hoverShadow: creditsBalance === 0 ? "0 0 0 1px rgba(239,68,68,0.3), 0 8px 32px rgba(239,68,68,0.15)" : "0 0 0 1px rgba(74,222,128,0.28), 0 8px 32px rgba(74,222,128,0.14)", onClick: onBuyCredits },
+          { label: "Plan",           value: isPro ? "Pro" : "Free", sub: isPro ? (proExpiresAt ? `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}` : "Active") : "Upgrade for unlimited", icon: isPro ? "👑" : "🔓", color: isPro ? C.gold : C.textMuted, glow: isPro ? "rgba(245,158,11,0.14)" : "rgba(255,255,255,0.04)", hoverShadow: isPro ? "0 0 0 1px rgba(245,158,11,0.3), 0 8px 32px rgba(245,158,11,0.14)" : "0 0 0 1px rgba(124,58,237,0.28), 0 8px 32px rgba(124,58,237,0.14)", onClick: isPro ? null : onUpgradeClick },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07, duration: 0.35 }}
             onClick={stat.onClick || undefined}
-            whileHover={stat.onClick ? { scale: 1.02, borderColor: "rgba(124,58,237,0.3)" } : undefined}
-            style={{ background: `linear-gradient(135deg,${stat.glow},rgba(255,255,255,0.02))`, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "18px 18px", backdropFilter: "blur(12px)", cursor: stat.onClick ? "pointer" : "default", transition: "all 0.15s" }}
+            whileHover={{
+              scale:      1.02,
+              boxShadow:  stat.hoverShadow,
+              transition: { duration: 0.2 },
+            }}
+            style={{
+              background:     `linear-gradient(135deg, ${stat.glow}, rgba(255,255,255,0.02))`,
+              border:         "1px solid rgba(255,255,255,0.08)",
+              borderRadius:   16,
+              padding:        "18px 18px",
+              backdropFilter: "blur(12px)",
+              cursor:         stat.onClick ? "pointer" : "default",
+              transition:     "border-color 0.2s",
+            }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <span style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</span>
@@ -209,8 +233,11 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
       <div style={{ marginBottom: 28 }}>
         <p style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Quick Actions</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onUpload}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: "linear-gradient(135deg,rgba(124,58,237,0.6),rgba(79,70,229,0.5))", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 12, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer", backdropFilter: "blur(8px)" }}>
+          <motion.button
+            whileHover={{ scale: 1.02, boxShadow: "0 8px 28px rgba(124,58,237,0.45)", y: -1 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onUpload}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: "linear-gradient(135deg,#7c3aed,#5b21b6)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: 12, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer", boxShadow: "0 4px 16px rgba(124,58,237,0.28)" }}>
             <PlusIcon /> Upload New PDF
           </motion.button>
           {docs.length > 0 && (
@@ -253,10 +280,16 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
                 initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => { onSelectDoc(doc); onViewChange("chat"); }}
-                whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, cursor: "pointer", transition: "all 0.15s" }}
+                whileHover={{
+                  background:    "rgba(124,58,237,0.07)",
+                  borderColor:   "rgba(124,58,237,0.22)",
+                  boxShadow:     "0 0 0 1px rgba(124,58,237,0.12)",
+                  x:             2,
+                  transition:    { duration: 0.18 },
+                }}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, cursor: "pointer" }}
               >
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,rgba(124,58,237,0.2),rgba(79,70,229,0.15))", border: "1px solid rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,rgba(124,58,237,0.22),rgba(79,70,229,0.16))", border: "1px solid rgba(124,58,237,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(124,58,237,0.15)" }}>
                   <PdfIcon />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
