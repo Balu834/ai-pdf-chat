@@ -10,7 +10,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "frame-src 'self' https://*.razorpay.com https://api.razorpay.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; connect-src 'self' https://api.razorpay.com https://*.razorpay.com wss://*.supabase.co https://*.supabase.co;"
+          "value": "frame-src 'self' https://*.razorpay.com https://api.razorpay.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://www.googletagmanager.com https://vercel.live; connect-src 'self' https://api.razorpay.com https://*.razorpay.com wss://*.supabase.co https://*.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://vercel.live wss://ws-us3.pusher.com;"
         }
       ]
     },

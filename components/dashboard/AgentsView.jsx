@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { TOOL_LABELS } from "@/lib/tools";
+import { TOOL_LABELS } from "@/lib/tool-labels";
 
 const TOOL_OPTIONS = Object.entries(TOOL_LABELS).map(([key, val]) => ({ key, ...val }));
 
