@@ -17,10 +17,10 @@ export default function FinalCTA() {
           <motion.div animate={{ y:[0,-9,0] }} transition={{ duration:3.5, repeat:Infinity, ease:"easeInOut" }}
             className="text-[52px] mb-5">🚀</motion.div>
           <h2 className="font-black tracking-tight mb-4 text-[clamp(26px,5vw,52px)] leading-[1.1]">
-            Start chatting with your PDFs today
+            Your PDFs have the answers.<br />You just need to ask.
           </h2>
           <p className="text-[17px] mb-3 mx-auto leading-[1.72]" style={{ color:T.muted, maxWidth:480 }}>
-            Free plan available. Upgrade to Pro anytime. No credit card required to start.
+            Upload any PDF. Ask your first question. Get the answer in seconds — free, no credit card, no setup.
           </p>
           <p className="text-[13px] mb-10" style={{ color:T.faint }}>
             Join 1,000+ professionals already saving hours every week.
@@ -30,7 +30,7 @@ export default function FinalCTA() {
             whileTap={{ scale:0.97 }}
             className="inline-flex items-center gap-2 font-extrabold text-white text-[16px] rounded-full"
             style={{ background:"linear-gradient(135deg,#7c3aed,#06b6d4)", padding:"17px 44px", textDecoration:"none", boxShadow:"0 10px 42px rgba(124,58,237,0.52)", letterSpacing:"-0.2px" }}>
-            Try Free Now <ArrowRight size={17} />
+            Start Free <ArrowRight size={17} />
           </motion.a>
           <div className="flex flex-wrap justify-center gap-5 mt-6 text-[12px]" style={{ color:T.faint }}>
             {["No credit card","7-day money-back guarantee","Your data stays private"].map(t=>(

@@ -6,9 +6,9 @@ import { Pill, ArrowRight } from "@/components/ui/atoms";
 
 export default function HowItWorks() {
   const steps = [
-    { n:"01", icon:"📤", color:"#a78bfa", title:"Upload your PDF",      desc:"Drop any PDF — contracts, invoices, research papers, reports. Any size, any topic." },
-    { n:"02", icon:"💬", color:"#67e8f9", title:"Ask in plain English",  desc:"Type any question naturally. No commands. No syntax. Just ask like you'd ask a colleague." },
-    { n:"03", icon:"⚡", color:"#86efac", title:"Get instant answers",   desc:"Precise, sourced answers in under 2 seconds — pulled directly from your document." },
+    { n:"01", icon:"📤", color:"#a78bfa", title:"Upload your PDF",      desc:"Drop any PDF — textbooks, contracts, research papers, reports. Any size, any topic. Done in seconds." },
+    { n:"02", icon:"💬", color:"#67e8f9", title:"Ask any question",      desc:"Type anything in plain English — 'summarize this', 'what are the key points?', 'explain simply'. No commands." },
+    { n:"03", icon:"⚡", color:"#86efac", title:"Get instant answers",   desc:"Precise, cited answers in under 2 seconds — pulled directly from your PDF. No guessing, no hallucinations." },
   ];
   return (
     <section id="how-it-works" className="px-5 sm:px-8 py-24 sm:py-32"
@@ -18,9 +18,9 @@ export default function HowItWorks() {
           className="text-center mb-16">
           <Pill>How it works</Pill>
           <h2 className="font-black tracking-tight mt-4 mb-3 text-[clamp(26px,5vw,50px)] leading-[1.1]">
-            Live in 30 seconds. No setup.
+            How it works — 3 simple steps
           </h2>
-          <p className="text-[16px]" style={{ color:T.muted }}>No learning curve. No config. Just upload and ask.</p>
+          <p className="text-[16px]" style={{ color:T.muted }}>No learning curve. No setup. Upload → Ask → Done.</p>
         </motion.div>
 
         <motion.div initial="hidden" whileInView="show" viewport={VP} variants={STAGGER(0.14)}

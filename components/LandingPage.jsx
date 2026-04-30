@@ -5,12 +5,14 @@ import { T } from "@/components/ui/tokens";
 import { Events, initScrollDepthTracking } from "@/lib/analytics";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
-import StatsBar from "@/components/landing/StatsBar";
-import Features from "@/components/landing/Features";
 import HowItWorks from "@/components/landing/HowItWorks";
+import Demo from "@/components/landing/Demo";
+import UseCases from "@/components/landing/UseCases";
+import ValueSection from "@/components/landing/ValueSection";
+import Features from "@/components/landing/Features";
 import Testimonials from "@/components/landing/Testimonials";
 import Pricing from "@/components/landing/Pricing";
-import Demo from "@/components/landing/Demo";
+import StatsBar from "@/components/landing/StatsBar";
 import FAQ from "@/components/landing/FAQ";
 import FinalCTA from "@/components/landing/FinalCTA";
 import AppInstall from "@/components/landing/AppInstall";
@@ -32,15 +34,17 @@ export default function LandingPage() {
     }}>
       <Navbar />
       <Hero />
-      <StatsBar />
-      <Features />
       <HowItWorks />
+      <Demo />
+      <UseCases />
+      <ValueSection />
+      <Features />
       <Testimonials />
       <Pricing />
-      <Demo />
+      <StatsBar />
       <FAQ />
-      <AppInstall />
       <FinalCTA />
+      <AppInstall />
       <Footer />
       <ConversionBoosts />
     </div>

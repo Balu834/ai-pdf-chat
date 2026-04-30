@@ -15,9 +15,9 @@ export default function Pricing() {
           className="text-center mb-16">
           <Pill>Pricing</Pill>
           <h2 className="font-black tracking-tight mt-4 mb-3 text-[clamp(26px,5vw,50px)] leading-[1.1]">
-            Start free. Upgrade when ready.
+            Free to start. ₹299/mo to go unlimited.
           </h2>
-          <p className="text-[16px]" style={{ color:T.muted }}>Free plan included. Upgrade to Pro for unlimited access.</p>
+          <p className="text-[16px]" style={{ color:T.muted }}>Start free — no credit card. Upgrade when you need more.</p>
         </motion.div>
 
         <motion.div initial="hidden" whileInView="show" viewport={VP} variants={STAGGER(0.1)}
@@ -32,7 +32,7 @@ export default function Pricing() {
               <span className="font-black tracking-tight leading-none" style={{ fontSize:46, letterSpacing:"-2px" }}>₹0</span>
               <span className="text-[13px] pb-2" style={{ color:T.faint }}>forever</span>
             </div>
-            <p className="text-[12px] mb-6" style={{ color:T.faint }}>Try before you commit</p>
+            <p className="text-[12px] mb-6" style={{ color:T.faint }}>No credit card. Start in 30 seconds.</p>
             <ul className="flex flex-col gap-2.5 list-none p-0 m-0 mb-5 flex-1">
               {["5 PDF uploads","10 questions","AI Q&A chat","Auto summaries","Chat history"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-[13px]" style={{ color:"rgba(255,255,255,0.65)" }}>

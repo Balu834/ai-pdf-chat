@@ -38,20 +38,20 @@ export default function Hero() {
 
       <div className="relative w-full max-w-[900px] mx-auto px-5 sm:px-8 pt-20 pb-10">
 
-        {/* Badge */}
+        {/* Proof badge */}
         <motion.div variants={FADE_UP} initial="hidden" animate="show"
-          className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-7 text-[11px] font-bold uppercase tracking-[0.08em]"
+          className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-7 text-[11px] font-bold"
           style={{ background:"rgba(124,58,237,0.1)", border:"1px solid rgba(124,58,237,0.28)", color:"#c4b5fd" }}>
           <motion.span animate={{ opacity:[1,0.25,1] }} transition={{ duration:1.8, repeat:Infinity }}
             className="inline-block rounded-full flex-shrink-0"
             style={{ width:7, height:7, background:"#a78bfa" }} />
-          Free plan available — No credit card needed
+          ⚡ 100-page PDF → answers in under 5 seconds
         </motion.div>
 
         {/* Headline */}
         <motion.h1 variants={FADE_UP} initial="hidden" animate="show" transition={{ delay:0.1 }}
           className="font-black tracking-tight mb-5 text-[clamp(40px,8vw,90px)] leading-[1.02]">
-          Chat with any
+          Stop reading PDFs.
           <br />
           <span style={{
             background:"linear-gradient(135deg,#e0c3fc 0%,#7c3aed 40%,#06b6d4 80%,#a5f3fc 100%)",
@@ -59,7 +59,7 @@ export default function Hero() {
             WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text",
             animation:"gradMove 5s ease infinite",
           }}>
-            PDF instantly
+            Start asking them.
           </span>
         </motion.h1>
 
@@ -67,8 +67,8 @@ export default function Hero() {
         <motion.p variants={FADE_UP} initial="hidden" animate="show" transition={{ delay:0.2 }}
           className="mx-auto mb-8 text-[clamp(15px,2.5vw,20px)] leading-[1.72] font-normal"
           style={{ color:T.muted, maxWidth:520 }}>
-          Upload your document and get answers, summaries, and insights
-          in seconds using AI — from contracts to research papers.
+          Upload any PDF — textbook, contract, report, research paper.
+          Ask any question. Get the exact answer in seconds.
         </motion.p>
 
         {/* CTAs — device-aware */}
@@ -108,7 +108,7 @@ export default function Hero() {
         {/* Micro-trust */}
         <motion.div variants={FADE_UP} initial="hidden" animate="show" transition={{ delay:0.4 }}
           className="flex flex-wrap items-center justify-center gap-5 mb-16 text-[12px]" style={{ color:T.faint }}>
-          {["No credit card required","Free plan forever","Cancel anytime"].map(t => (
+          {["No credit card required","Free plan forever","Demo — no signup needed"].map(t => (
             <span key={t} className="flex items-center gap-1.5"><Check size={12} /> {t}</span>
           ))}
         </motion.div>

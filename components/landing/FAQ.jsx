@@ -10,7 +10,7 @@ const ITEMS = [
   { q:"Is there really a free plan?",                  a:"Yes. The free plan gives you 5 PDF uploads and 10 questions — no credit card required. Most users hit the limit in their first session and upgrade the same day." },
   { q:"How is my data kept private?",                  a:"Files are processed in an isolated environment for your session only. We never store your files after processing, never share them, and never train AI models on your content." },
   { q:"Can I cancel my Pro subscription anytime?",    a:"Yes. Cancel with one click from your dashboard. You keep Pro access until the end of your billing period — no pro-rated charges, no cancellation fees." },
-  { q:"What happens after the 7-day free trial?",     a:"After your trial ends, you're automatically downgraded to the free plan. No charges unless you choose to upgrade. You keep all your chat history." },
+  { q:"Is there a money-back guarantee?",              a:"Yes. Pro plans come with a 7-day money-back guarantee — no questions asked. If Intellixy isn't right for you, email us within 7 days of upgrading and we'll refund in full." },
 ];
 
 export default function FAQ() {
