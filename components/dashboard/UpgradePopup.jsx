@@ -278,7 +278,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
               {couponData  && <p style={{ fontSize: 11, color: "#4ade80", margin: "6px 0 0" }}>✓ <strong>{couponData.code}</strong> — {couponData.savings_display}</p>}
               {couponError && <p style={{ fontSize: 11, color: "#f87171", margin: "6px 0 0" }}>{couponError}</p>}
             </div>
-          )}
+          ) : null}
 
           {/* Discounted price row */}
           {!isPremium && couponData && (
@@ -316,7 +316,7 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
             {[
               { icon: "🔒", text: "Secure via Razorpay" },
-              { icon: "✦",  text: "7-day free trial"   },
+              { icon: "🛡️", text: "7-day money-back"    },
               { icon: "↩",  text: "Cancel anytime"     },
             ].map(({ icon, text }) => (
               <div key={text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10.5, color: "rgba(240,240,248,0.28)", fontWeight: 500 }}>
@@ -449,7 +449,7 @@ export function LockedMessage({ onUpgrade }) {
           </div>
         </div>
         <div style={{ display: "flex", gap: 10, paddingLeft: 2 }}>
-          {["✓ Cancel anytime", "✓ 7-day free trial"].map((t) => (
+          {["✓ Cancel anytime", "✓ 7-day money-back"].map((t) => (
             <span key={t} style={{ fontSize: 10, color: "rgba(240,240,248,0.22)", fontWeight: 500 }}>{t}</span>
           ))}
         </div>
