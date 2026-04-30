@@ -527,13 +527,13 @@ export default function DashboardPage() {
       await fetchUsage();
       addToast(`"${file.name}" uploaded successfully!`, "success");
 
-      /* ── First-upload onboarding: auto-select + auto-summarize ── */
-      if (isFirstDoc && newDocs.length > 0) {
+      /* ── Auto-select + auto-summarize every upload ── */
+      if (newDocs.length > 0) {
         const newDoc = newDocs[0];
-        setSelectedDoc(newDoc); setMessages([]); setLimitError(null);
+        setSelectedDoc(newDoc); setMessages([]); setLimitError(null); setActiveSession(null);
         setSidebarOpen(false); setShowCompare(false); setShareUrl(null); setShowInsights(false);
         setView("chat");
-        setOnboardingStep(2);
+        if (isFirstDoc) setOnboardingStep(2);
         const summaryText = "Give me a structured summary of this document covering the main topics, key details, and any important notes.";
         setTimeout(async () => {
           const userMsgId = Date.now();
@@ -1233,7 +1233,7 @@ export default function DashboardPage() {
                 ) : historyLoading ? (
                   <div style={{ maxWidth: 740, margin: "0 auto", paddingTop: 16 }}><MessageSkeleton /></div>
                 ) : messages.length === 0 ? (
-                  <EmptyChatState doc={selectedDoc} onSetInput={setInput} inputRef={inputRef} />
+                  <EmptyChatState doc={selectedDoc} onSend={(q) => handleSend(null, q)} />
                 ) : (
                   <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22, paddingBottom: 12 }}>
                     {messages.map((msg) => (

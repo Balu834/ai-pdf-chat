@@ -88,7 +88,7 @@ export function WelcomeScreen({ onUpload, usage, plan }) {
 }
 
 /* ─── EMPTY CHAT STATE ───────────────────────────────────────────────────── */
-export function EmptyChatState({ doc, onSetInput, inputRef }) {
+export function EmptyChatState({ doc, onSend }) {
   const prompts = ["What is this document about?", "List the main topics", "Any important dates or numbers?", "Summarize in 3 sentences"];
   return (
     <motion.div
@@ -100,12 +100,12 @@ export function EmptyChatState({ doc, onSetInput, inputRef }) {
       </div>
       <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: "0 0 8px", letterSpacing: "-0.2px" }}>{doc.file_name}</h3>
       <p style={{ fontSize: 13, color: C.textMuted, margin: "0 0 24px", maxWidth: 360, lineHeight: 1.65 }}>
-        Ready to answer questions about this document. Try a prompt or use a smart action above.
+        Ready to answer questions about this document. Click a prompt to get started instantly.
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 520 }}>
         {prompts.map((q) => (
           <motion.button key={q} whileHover={{ scale: 1.03, borderColor: "rgba(124,58,237,0.35)" }} whileTap={{ scale: 0.97 }}
-            onClick={() => { onSetInput(q); inputRef.current?.focus(); }}
+            onClick={() => onSend(q)}
             style={{ padding: "8px 14px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 9, fontSize: 12, color: C.textSecondary, cursor: "pointer", backdropFilter: "blur(8px)", transition: "all 0.15s" }}>
             {q}
           </motion.button>
