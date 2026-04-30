@@ -151,25 +151,25 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             {isPdf ? `${used}/${max} PDFs used` : `${used}/${max} questions used`}
           </div>
 
-          {/* Warning icon */}
-          <div style={{ width: 58, height: 58, borderRadius: 18, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.28)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", fontSize: 26 }}>
-            ⚠️
+          {/* Icon */}
+          <div style={{ width: 58, height: 58, borderRadius: 18, background: "linear-gradient(135deg,rgba(124,58,237,0.2),rgba(6,182,212,0.12))", border: "1px solid rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 26 }}>
+            🔓
           </div>
 
           {/* Headline */}
-          <h2 style={{ fontSize: 21, fontWeight: 900, color: C.textPrimary, margin: "0 0 6px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>
-            You've reached your free limit
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: C.textPrimary, margin: "0 0 6px", letterSpacing: "-0.6px", lineHeight: 1.18 }}>
+            {isPdf ? "Your PDF still has answers." : "Your document has more to say."}
           </h2>
 
-          {/* Subline with the hook */}
-          <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 6px", lineHeight: 1.65 }}>
+          {/* Subline */}
+          <p style={{ fontSize: 13, color: C.textSecondary, margin: "0 0 4px", lineHeight: 1.65 }}>
             {isPdf
-              ? `You've uploaded ${used}/${max} free PDFs.`
-              : `You've asked ${used}/${max} questions today.`}
+              ? `You've used ${used}/${max} free PDFs — you're just getting started.`
+              : `You've asked ${used}/${max} free questions — the best insights are ahead.`}
           </p>
-          <p style={{ fontSize: 13, color: "rgba(240,240,248,0.5)", margin: "0 0 22px", lineHeight: 1.65 }}>
-            But here's the thing 👇<br />
-            <span style={{ color: C.accentLight, fontWeight: 600 }}>Your document still has more insights waiting…</span>
+          <p style={{ fontSize: 13, color: "rgba(240,240,248,0.48)", margin: "0 0 20px", lineHeight: 1.65 }}>
+            Unlock unlimited access and keep going —&nbsp;
+            <span style={{ color: C.accentLight, fontWeight: 600 }}>no limits, no waiting.</span>
           </p>
 
           {/* Plan toggle */}
@@ -206,19 +206,19 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             {/* Features */}
             <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
               {(isPremium ? [
-                { icon: "✅", text: "Everything in Pro" },
-                { icon: "👥", text: "Team workspaces (5 seats)" },
-                { icon: "🎙️", text: "Voice AI chat" },
-                { icon: "📦", text: "Bulk PDF processing" },
-                { icon: "🎛️", text: "Custom AI instructions" },
-                { icon: "⚡", text: "Priority support" },
+                { icon: "✅", text: "Everything in Pro", highlight: false },
+                { icon: "👥", text: "Team workspaces (5 seats)", highlight: false },
+                { icon: "🎙️", text: "Voice AI chat", highlight: false },
+                { icon: "📦", text: "Bulk PDF processing", highlight: false },
+                { icon: "🎛️", text: "Custom AI instructions", highlight: false },
+                { icon: "⚡", text: "Priority support", highlight: false },
               ] : [
-                { icon: "✅", text: "Unlimited PDF chats" },
-                { icon: "⚡", text: "Faster AI responses" },
-                { icon: "📊", text: "Deep insights (risks, key points, summaries)" },
-                { icon: "🔍", text: "Smarter answers with context" },
-              ]).map(({ icon, text }) => (
-                <div key={text} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12.5, color: C.textSecondary }}>
+                { icon: "♾️",  text: "Unlimited PDFs — chat as much as you want", highlight: true },
+                { icon: "⚡",  text: "2× faster AI — answers in under 2 seconds", highlight: false },
+                { icon: "📊",  text: "Deep insights — risks, key points, summaries", highlight: false },
+                { icon: "🔍",  text: "Context-aware answers across your whole doc", highlight: false },
+              ]).map(({ icon, text, highlight }) => (
+                <div key={text} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12.5, color: highlight ? C.textPrimary : "rgba(240,240,248,0.78)", fontWeight: highlight ? 700 : 400 }}>
                   <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
                   <span>{text}</span>
                 </div>
@@ -306,20 +306,21 @@ export function UpgradePopup({ reason, onClose, user, usage }) {
             style={{ width: "100%", padding: "15px", background: isPremium ? "linear-gradient(135deg,#92400e,#f59e0b)" : "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "white", fontSize: 15, fontWeight: 800, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: isPremium ? "0 10px 40px rgba(245,158,11,0.5)" : "0 10px 40px rgba(124,58,237,0.6)", marginBottom: 14, transition: "opacity 0.2s", letterSpacing: "-0.2px" }}
           >
             {isPremium
-              ? "⭐ Get Premium — ₹999/year →"
+              ? "⭐ Unlock Premium — ₹999/year →"
               : couponData
-                ? `Pay ₹${couponData.final_amount_paise / 100} — Upgrade Now →`
-                : "👉 Upgrade to PRO — ₹299/mo →"}
+                ? `🎉 Pay ₹${couponData.final_amount_paise / 100} — Unlock Unlimited Access →`
+                : "🔓 Unlock Unlimited PDFs — ₹299/mo →"}
           </RazorpayButton>
 
           {/* Trust strip */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
             {[
-              { icon: "🔒", text: "Secure via Razorpay" },
-              { icon: "🛡️", text: "7-day money-back"    },
-              { icon: "↩",  text: "Cancel anytime"     },
+              { icon: "🔒", text: "Secure via Razorpay"  },
+              { icon: "⚡", text: "Instant activation"   },
+              { icon: "🛡️", text: "7-day money-back"     },
+              { icon: "↩",  text: "Cancel anytime"       },
             ].map(({ icon, text }) => (
-              <div key={text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10.5, color: "rgba(240,240,248,0.28)", fontWeight: 500 }}>
+              <div key={text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10.5, color: "rgba(240,240,248,0.32)", fontWeight: 500 }}>
                 <span style={{ fontSize: 10 }}>{icon}</span>{text}
               </div>
             ))}
