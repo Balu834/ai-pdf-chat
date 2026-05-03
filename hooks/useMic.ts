@@ -5,19 +5,23 @@ import { useState, useRef, useCallback, useEffect } from "react";
 export type MicState = "idle" | "requesting" | "listening" | "error";
 
 interface UseMicOptions {
-  lang?: string;
-  onTranscript: (text: string, isFinal: boolean) => void;
-  onError?: (message: string) => void;
+  lang?:           string;
+  /** Called once when the recognition engine actually starts (after permission granted). */
+  onStart?:        () => void;
+  onTranscript:    (text: string, isFinal: boolean) => void;
+  onError?:        (message: string) => void;
+  /** Auto-stop after this many ms of total recording. Default 60 000 (60 s). */
+  maxDurationMs?:  number;
+  /** Auto-stop after this many ms of silence (no new transcript events). Default 3 000 (3 s). */
+  silenceMs?:      number;
 }
 
 const MIC_ERRORS: Record<string, string> = {
-  // DOMException names thrown by getUserMedia
   NotAllowedError:       "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
   PermissionDeniedError: "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
   NotFoundError:         "No microphone detected. Plug in a mic and try again.",
   NotReadableError:      "Mic is in use by another app. Close it and try again.",
   OverconstrainedError:  "Mic constraints not supported by your device.",
-  // SpeechRecognition error codes
   "not-allowed":         "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
   "service-not-allowed": "🎤 Mic blocked. Click the 🔒 icon in your address bar → Allow microphone → Refresh.",
   "not-found":           "No microphone detected. Plug in a mic and try again.",
@@ -29,24 +33,40 @@ function getMicError(err: unknown): string {
   if (err instanceof DOMException) return MIC_ERRORS[err.name] ?? `Mic error: ${err.message}`;
   if (err && typeof err === "object" && "error" in err) {
     const code = (err as { error: string }).error;
-    if (code === "aborted" || code === "no-speech") return ""; // silent — not user-visible errors
+    if (code === "aborted" || code === "no-speech") return "";
     return MIC_ERRORS[code] ?? `Mic error: ${code}`;
   }
   return "Could not access microphone. Please check your device settings.";
 }
 
-export function useMic({ lang = "en-US", onTranscript, onError }: UseMicOptions) {
+export function useMic({
+  lang            = "en-US",
+  onStart,
+  onTranscript,
+  onError,
+  maxDurationMs   = 60_000,
+  silenceMs       = 3_000,
+}: UseMicOptions) {
   const [micState, setMicState] = useState<MicState>("idle");
 
-  const streamRef   = useRef<MediaStream | null>(null);
-  const recRef      = useRef<any>(null);
-  const startingRef = useRef(false); // prevents overlapping start() calls
+  const streamRef       = useRef<MediaStream | null>(null);
+  const recRef          = useRef<any>(null);
+  const startingRef     = useRef(false);
+  const durationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const silenceTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Store callbacks in refs so the start() closure never goes stale
+  // Always-fresh callback refs — callers never need to restart the hook when callbacks change
+  const onStartRef      = useRef(onStart);
   const onTranscriptRef = useRef(onTranscript);
   const onErrorRef      = useRef(onError);
+  useEffect(() => { onStartRef.current      = onStart;      });
   useEffect(() => { onTranscriptRef.current = onTranscript; });
-  useEffect(() => { onErrorRef.current      = onError; });
+  useEffect(() => { onErrorRef.current      = onError;      });
+
+  const clearTimers = useCallback(() => {
+    if (durationTimerRef.current) { clearTimeout(durationTimerRef.current); durationTimerRef.current = null; }
+    if (silenceTimerRef.current)  { clearTimeout(silenceTimerRef.current);  silenceTimerRef.current  = null; }
+  }, []);
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -55,24 +75,29 @@ export function useMic({ lang = "en-US", onTranscript, onError }: UseMicOptions)
 
   const stop = useCallback(() => {
     startingRef.current = false;
+    clearTimers();
     if (recRef.current) {
-      // Null all handlers before abort() so onend/onerror don't fire after stop
-      recRef.current.onstart = null;
+      recRef.current.onstart  = null;
       recRef.current.onresult = null;
-      recRef.current.onerror = null;
-      recRef.current.onend   = null;
+      recRef.current.onerror  = null;
+      recRef.current.onend    = null;
       try { recRef.current.abort(); } catch {}
       recRef.current = null;
     }
     stopStream();
     setMicState("idle");
-  }, [stopStream]);
+  }, [clearTimers, stopStream]);
+
+  // Reset the silence watchdog; called on every transcript event
+  const kickSilenceTimer = useCallback(() => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    silenceTimerRef.current = setTimeout(() => stop(), silenceMs);
+  }, [silenceMs, stop]);
 
   const start = useCallback(async () => {
-    if (startingRef.current || recRef.current) return; // already starting or running
+    if (startingRef.current || recRef.current) return;
     startingRef.current = true;
 
-    // HTTPS guard
     if (
       typeof window !== "undefined" &&
       window.location.protocol !== "https:" &&
@@ -97,10 +122,6 @@ export function useMic({ lang = "en-US", onTranscript, onError }: UseMicOptions)
 
     setMicState("requesting");
 
-    // getUserMedia serves two purposes here:
-    // 1. Triggers the browser permission prompt before SpeechRecognition touches the mic
-    // 2. Keeps the mic hardware warm so SpeechRecognition.start() doesn't hit
-    //    NotAllowedError during the brief window between mic release and re-acquire
     try {
       streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
@@ -112,18 +133,27 @@ export function useMic({ lang = "en-US", onTranscript, onError }: UseMicOptions)
       return;
     }
 
-    const rec = new SR();
-    rec.lang           = lang;
-    rec.interimResults = true;
-    rec.continuous     = false;
-    recRef.current     = rec;
+    const rec           = new SR();
+    rec.lang            = lang;
+    rec.interimResults  = true;
+    rec.continuous      = false;
+    recRef.current      = rec;
 
     rec.onstart = () => {
       startingRef.current = false;
       setMicState("listening");
+      onStartRef.current?.();
+
+      // Hard 60-second session cap
+      durationTimerRef.current = setTimeout(() => stop(), maxDurationMs);
+      // Initial silence watchdog — fires if nothing is spoken at all
+      kickSilenceTimer();
     };
 
     rec.onresult = (e: any) => {
+      // Reset silence watchdog each time speech is detected
+      kickSilenceTimer();
+
       let text     = "";
       let hasFinal = false;
       for (const result of Array.from(e.results) as any[]) {
@@ -136,31 +166,45 @@ export function useMic({ lang = "en-US", onTranscript, onError }: UseMicOptions)
     rec.onerror = (e: any) => {
       const msg = getMicError(e);
       if (msg) onErrorRef.current?.(msg);
-      // Don't call stop() here — onend always fires after onerror and will clean up
+      // onend always fires after onerror — cleanup happens there
     };
 
     rec.onend = () => {
-      stopStream(); // release physical mic (turns off browser mic indicator)
+      clearTimers();
+      stopStream();
       recRef.current      = null;
       startingRef.current = false;
       setMicState("idle");
     };
 
     rec.start();
-  }, [lang, stopStream]); // callbacks via refs — not in deps, always current
+  }, [lang, maxDurationMs, kickSilenceTimer, stop, stopStream]);
 
   const toggle = useCallback(() => {
     if (startingRef.current || recRef.current) stop();
     else start();
   }, [start, stop]);
 
-  // Cleanup on unmount
   useEffect(() => () => { stop(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // useState(false) ensures server and client both start with false,
+  // preventing React hydration mismatch (#418/#419). The real value is
+  // set after mount via useEffect so the browser DOM is available.
+  const [isSupported, setIsSupported] = useState(false);
+  useEffect(() => {
+    setIsSupported(
+      !!(
+        (window as any).SpeechRecognition ??
+        (window as any).webkitSpeechRecognition
+      )
+    );
+  }, []);
 
   return {
     micState,
-    isListening:   micState === "listening",
-    isRequesting:  micState === "requesting",
+    isListening:  micState === "listening",
+    isRequesting: micState === "requesting",
+    isSupported,
     start,
     stop,
     toggle,

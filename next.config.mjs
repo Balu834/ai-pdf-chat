@@ -37,7 +37,8 @@ const nextConfig = {
               // Fonts
               "font-src 'self' data:",
 
-              // Fetch/XHR
+              // Fetch/XHR — includes OAuth provider endpoints for any
+              // client-side token/profile calls, and OpenAI for streaming
               "connect-src 'self'" +
                 " https://api.razorpay.com https://*.razorpay.com" +
                 " wss://*.supabase.co https://*.supabase.co" +
@@ -45,7 +46,11 @@ const nextConfig = {
                 " https://analytics.google.com" +
                 " https://www.googletagmanager.com" +
                 " https://region1.google-analytics.com" +
-                " https://vercel.live wss://vercel.live",
+                " https://vercel.live wss://vercel.live" +
+                " https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com" +
+                " https://slack.com https://api.slack.com" +
+                " https://api.notion.com" +
+                " https://api.openai.com",
 
               // Images
               "img-src 'self' data: blob: https:",

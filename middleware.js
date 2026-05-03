@@ -4,6 +4,13 @@ import { createServerClient } from "@supabase/ssr";
 export async function middleware(request) {
   const { pathname, searchParams } = request.nextUrl;
 
+  // ── OAuth provider callbacks arrive without a Supabase session.
+  //    Skip session refresh entirely for these routes — the route handlers
+  //    authenticate via the signed state token, not the session cookie.
+  if (pathname.startsWith("/api/oauth/")) {
+    return NextResponse.next();
+  }
+
   // ── Safety net: Supabase sometimes redirects ?code= to / when Site URL is
   //    misconfigured. Catch it at the edge before any client JS runs.
   if (pathname === "/" && searchParams.has("code")) {

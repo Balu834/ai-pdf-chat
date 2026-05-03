@@ -13,14 +13,22 @@ import MyPDFsView from "@/components/dashboard/MyPDFsView";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import ComparePanel from "@/components/dashboard/ComparePanel";
 import ChatMessage from "@/components/dashboard/ChatMessage";
-import VoiceConvBar from "@/components/dashboard/VoiceConvBar";
 import SmartSuggestions from "@/components/dashboard/SmartSuggestions";
 import { useVoiceConversation } from "@/hooks/useVoiceConversation";
+import { useMic } from "@/hooks/useMic";
+import { useTTS } from "@/hooks/useTTS";
+import { useStreamingTTS } from "@/hooks/useStreamingTTS";
+import { useAudioTTS } from "@/hooks/useAudioTTS";
+import { useRealtimeVoice } from "@/hooks/useRealtimeVoice";
+import VoiceOrb from "@/components/dashboard/VoiceOrb";
+import RealtimeVoiceAssistant from "@/components/dashboard/RealtimeVoiceAssistant";
 import { Events, trackFirstVisit } from "@/lib/analytics";
-import { UpgradePopup, UpgradeBanner } from "@/components/dashboard/UpgradePopup";
+import { UpgradeBanner } from "@/components/dashboard/UpgradePopup";
+import { PremiumBillingModal } from "@/components/dashboard/PremiumBillingModal";
+import TermsAcceptanceModal from "@/components/dashboard/TermsAcceptanceModal";
 import { MessageSkeleton } from "@/components/dashboard/Shimmer";
 import { C, SMART_ACTIONS } from "@/components/dashboard/tokens";
-import { MenuIcon, ShareIcon, InsightIcon, CompareIcon, TrashIcon, SendIcon, MicIcon, ShieldIcon, CloseIcon, CheckIcon } from "@/components/dashboard/icons";
+import { MenuIcon, ShareIcon, InsightIcon, CompareIcon, TrashIcon, SendIcon, MicIcon, ShieldIcon, CloseIcon, CheckIcon, SpeakerIcon } from "@/components/dashboard/icons";
 import OnboardingOverlay from "@/components/dashboard/OnboardingOverlay";
 import ToastContainer from "@/components/ui/Toast";
 import ShareModal from "@/components/dashboard/ShareModal";
@@ -28,9 +36,35 @@ import TeamView from "@/components/dashboard/TeamView";
 import BuyCreditsModal from "@/components/dashboard/BuyCreditsModal";
 import InviteModal from "@/components/dashboard/InviteModal";
 import AgentsView from "@/components/dashboard/AgentsView";
+import AgentChat from "@/components/dashboard/AgentChat";
+import AgentPlatformView from "@/components/dashboard/AgentPlatformView";
 import WorkflowsView from "@/components/dashboard/WorkflowsView";
 import MarketplaceView from "@/components/dashboard/MarketplaceView";
 import CreatorView from "@/components/dashboard/CreatorView";
+
+/* ─── VOICE COMMANDS ────────────────────────────────────────────────────── */
+const VOICE_COMMANDS = [
+  { patterns: ["summarize this", "give me a summary", "what is this about", "overview", "summarize the document"],
+    action: "Give me a structured summary of this document covering all main topics, key details, and important notes." },
+  { patterns: ["key points", "main points", "highlights", "important points", "key highlights", "what are the highlights"],
+    action: "What are the key points and highlights in this document?" },
+  { patterns: ["explain simply", "explain like", "eli5", "simple explanation", "simplify this", "layman"],
+    action: "Explain this document in simple, easy-to-understand terms." },
+  { patterns: ["risks", "warnings", "concerns", "issues", "what are the problems", "dangers"],
+    action: "What are the risks, warnings, or concerns mentioned in this document?" },
+  { patterns: ["extract data", "get the data", "extract fields", "pull out", "list all fields"],
+    action: "Extract all key data fields and values from this document." },
+  { patterns: ["how many pages", "page count", "length of", "how long is"],
+    action: "How long is this document and what are its main sections?" },
+];
+
+function detectVoiceCommand(text) {
+  const lower = text.toLowerCase().trim();
+  for (const cmd of VOICE_COMMANDS) {
+    if (cmd.patterns.some((p) => lower.includes(p))) return cmd.action;
+  }
+  return null;
+}
 
 /* ─── STREAMING STATUS BAR ───────────────────────────────────────────────── */
 const STATUS_STEPS = [
@@ -170,6 +204,9 @@ export default function DashboardPage() {
 
   const [replyTo,  setReplyTo]  = useState(null);
 
+  /* ── Terms acceptance — null = checking, object = loaded ── */
+  const [termsStatus, setTermsStatus] = useState(null);
+
   /* ── Chat sessions ── */
   const [sessions,         setSessions]         = useState([]);
   const [sessionsLoading,  setSessionsLoading]  = useState(false);
@@ -231,13 +268,51 @@ export default function DashboardPage() {
   const isNearBottomRef    = useRef(true);   // true until user scrolls up
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   /* ── Voice note recorder ── */
+  /* ── Language + voice transcript ── */
+  const [langCode,        setLangCode]        = useState("en-US");
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+
   /* ── Voice conversation ── */
   const lastAiMessage = messages.filter((m) => m.role === "assistant" && !m.streaming).at(-1)?.content ?? "";
   const voiceConv = useVoiceConversation({
-    onTranscript: (text) => handleSend(null, text),
+    onTranscript: (text) => { setVoiceTranscript(text); handleSend(null, text); },
     isThinking:   aiStreaming,
     lastAiMessage,
     hasDoc:       !!selectedDoc,
+    lang:         langCode,
+  });
+
+  /* ── Voice output (auto-TTS for AI responses) ── */
+  const [voiceOutput, setVoiceOutput] = useState(false);
+  const pageTTS    = useTTS();
+  const streamTTS  = useStreamingTTS();
+  const audioTTS   = useAudioTTS({ voice: "nova" });
+
+  /* ── Real-time voice assistant ── */
+  const rtv = useRealtimeVoice({ docFileUrl: selectedDoc?.file_url ?? null, lang: langCode });
+
+  /* ── HD per-message speak state ── */
+  const [hqPlayingMsgId, setHqPlayingMsgId] = useState(null);
+  useEffect(() => {
+    if (audioTTS.state === "idle") setHqPlayingMsgId(null);
+  }, [audioTTS.state]);
+
+  /* ── Chat mic (voice-to-text in input box) ── */
+  const micBaseRef = useRef("");
+  const chatMic = useMic({
+    lang: langCode,
+    onStart: () => {
+      micBaseRef.current = inputRef.current?.value ?? "";
+    },
+    onTranscript: (text, isFinal) => {
+      const base = micBaseRef.current;
+      const joined = base.trimEnd().length > 0 ? `${base.trimEnd()} ${text}` : text;
+      setInput(joined);
+      if (isFinal) setTimeout(() => inputRef.current?.focus(), 50);
+    },
+    onError: (msg) => addToast(msg, "error"),
+    maxDurationMs: 60_000,
+    silenceMs: 3_000,
   });
 
   /* ── Auth guard + referral claim ── */
@@ -249,6 +324,7 @@ export default function DashboardPage() {
       fetchDocs(user.id);
       fetchPlan(user.id);
       fetchUsage();
+      fetchTermsStatus();
       trackFirstVisit();
 
       // Claim pending referral code stored by the login page (one-time, then cleared)
@@ -389,6 +465,17 @@ export default function DashboardPage() {
       });
     } catch {
       setUsage((p) => ({ ...p, loading: false }));
+    }
+  }
+
+  async function fetchTermsStatus() {
+    try {
+      const res = await fetch("/api/user/terms", { credentials: "include" });
+      if (!res.ok) { setTermsStatus({ all_accepted: true }); return; } // fail open on infra error
+      const data = await res.json();
+      setTermsStatus(data);
+    } catch {
+      setTermsStatus({ all_accepted: true }); // fail open — never block app on network failure
     }
   }
 
@@ -545,22 +632,35 @@ export default function DashboardPage() {
           ]);
           try {
             const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: summaryText, fileUrl: newDoc.file_url }), credentials: "include" });
-            if (!res.ok) { const d = await res.json(); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: d.error || "Summary failed.", streaming: false } : m)); return; }
-            const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = ""; let full = "";
-            while (true) {
+            if (!res.ok) {
+              let errMsg = "Summary failed. Please type a question.";
+              try { const d = await res.json(); errMsg = d.error || errMsg; } catch {}
+              setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: errMsg, streaming: false, isError: true } : m));
+              return;
+            }
+            const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = ""; let full = ""; let streamDone = false;
+            while (!streamDone) {
               const { done, value } = await reader.read();
               if (done) break;
               buf += decoder.decode(value, { stream: true });
               const lines = buf.split("\n"); buf = lines.pop();
               for (const line of lines) {
                 if (!line.startsWith("data: ")) continue;
-                const raw = line.slice(6); if (raw.trim() === "[DONE]" || raw.trim() === "[ERROR]") break;
-                full += raw.replace(/\\n/g, "\n");
+                const raw = line.slice(6);
+                if (raw.trim() === "[DONE]" || raw.trim() === "[ERROR]") { streamDone = true; break; }
+                const token = raw.replace(/\\n/g, "\n");
+                full += token;
                 setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: full } : m));
               }
             }
             setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
-          } catch { setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "Unable to summarize. Please type a question.", streaming: false } : m)); }
+            if (full && voiceOutput) audioTTS.speak(full, String(aiMsgId));
+          } catch (err) {
+            const errMsg = err instanceof TypeError && err.message.includes("fetch")
+              ? "⚠️ Network error. Check your connection and try again."
+              : "Unable to summarize. Please type a question.";
+            setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: errMsg, streaming: false, isError: true } : m));
+          }
           finally { setAiStreaming(false); fetchUsage(); }
         }, 500);
       }
@@ -682,11 +782,13 @@ export default function DashboardPage() {
           const raw = line.slice(6);
           const sentinel = raw.trim();
           if (sentinel === "[DONE]" || sentinel === "[ERROR]") break;
-          full += raw.replace(/\\n/g, "\n");
+          const token = raw.replace(/\\n/g, "\n");
+          full += token;
           setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: full } : m));
         }
       }
       setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, streaming: false } : m));
+      if (full && voiceOutput) audioTTS.speak(full, String(aiMsgId));
       Events.aiResponseGenerated();
 
       // Fire post-response side-effects in background (non-blocking)
@@ -741,6 +843,11 @@ export default function DashboardPage() {
   }
 
   function handleSmartAction(prompt) { if (!selectedDoc || aiStreaming) return; handleSend(null, prompt); }
+
+  function handleHqSpeak(msgId, content) {
+    setHqPlayingMsgId(msgId);
+    audioTTS.toggle(content, String(msgId));
+  }
 
   /* ── Session helpers ─────────────────────────────────────────────────────── */
 
@@ -1095,6 +1202,26 @@ export default function DashboardPage() {
                   <span className="btn-text"> {voiceConv.active ? "Voice On" : "Voice"}</span>
                 </HeaderBtn>
               )}
+              {selectedDoc && (
+                <HeaderBtn
+                  onClick={() => rtv.active ? rtv.stop() : (rtv._openLaunch?.() ?? rtv.start())}
+                  active={rtv.active}
+                  color={rtv.active ? "green" : "default"}
+                >
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="22"/>
+                  </svg>
+                  <span className="btn-text"> {rtv.active ? "Live On" : "Live AI"}</span>
+                </HeaderBtn>
+              )}
+              {selectedDoc && pageTTS.supported && (
+                <HeaderBtn onClick={() => { setVoiceOutput((v) => !v); if (voiceOutput) { pageTTS.stop(); streamTTS.stop(); audioTTS.stop(); } }} active={voiceOutput} color={voiceOutput ? "purple" : "default"}>
+                  <SpeakerIcon active={voiceOutput} />
+                  <span className="btn-text"> {voiceOutput ? "Audio On" : "Audio"}</span>
+                </HeaderBtn>
+              )}
             </div>
           )}
         </header>
@@ -1144,9 +1271,10 @@ export default function DashboardPage() {
             </div>
           )}
           {view === "agents" && (
-            <div style={{ flex: 1, overflowY: "auto" }}>
-              <AgentsView documents={docs} />
-            </div>
+            <AgentPlatformView
+              fileUrl={selectedDoc?.file_url ?? null}
+              lang={langCode}
+            />
           )}
           {view === "workflows" && (
             <div style={{ flex: 1, overflowY: "auto" }}>
@@ -1190,19 +1318,26 @@ export default function DashboardPage() {
               )}
             </AnimatePresence>
 
-            {/* Voice conversation status bar */}
+            {/* Voice orb overlay */}
             <AnimatePresence>
               {voiceConv.active && (
-                <VoiceConvBar
-                  key="voice-bar"
+                <VoiceOrb
+                  key="voice-orb"
                   convState={voiceConv.convState}
-                  onStop={voiceConv.toggle}
+                  onStop={() => { voiceConv.toggle(); setVoiceTranscript(""); }}
                   onInterrupt={voiceConv.interrupt}
+                  onOrbTap={voiceConv.interrupt}
                   error={voiceConv.error}
                   onClearError={voiceConv.clearError}
+                  transcript={voiceTranscript}
+                  langCode={langCode}
+                  onLangChange={(l) => { setLangCode(l); }}
                 />
               )}
             </AnimatePresence>
+
+            {/* Real-time voice assistant overlay */}
+            <RealtimeVoiceAssistant rtv={rtv} />
 
             {/* Trial banner */}
             {isTrial && trialEnd && (() => {
@@ -1239,6 +1374,9 @@ export default function DashboardPage() {
                     {messages.map((msg) => (
                       <ChatMessage key={msg.id} msg={msg} onCopy={copyText} onShare={shareAnswer} userInitial={userInitial} onUpgrade={() => setUpgradePopup("question")}
                         onReply={(m) => { setReplyTo(m); inputRef.current?.focus(); }}
+                        onHqSpeak={(content) => handleHqSpeak(msg.id, content)}
+                        isHqActive={hqPlayingMsgId === msg.id}
+                        hqState={hqPlayingMsgId === msg.id ? audioTTS.state : "idle"}
                       />
                     ))}
                     <div ref={messagesEndRef} />
@@ -1371,6 +1509,49 @@ export default function DashboardPage() {
                       style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit", opacity: placeholderFade ? 1 : 0, transition: "opacity 0.25s" }}
                       onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
                     />
+                    {/* Mic button — voice-to-text (hidden when unsupported) */}
+                    {chatMic.isSupported && (
+                      <motion.button
+                        type="button"
+                        onClick={chatMic.toggle}
+                        disabled={aiStreaming}
+                        aria-label={chatMic.isListening ? "Stop voice input" : "Start voice input"}
+                        title="Click to dictate"
+                        whileHover={!aiStreaming ? { scale: 1.08, background: chatMic.isListening ? "rgba(239,68,68,0.22)" : "rgba(124,58,237,0.22)" } : {}}
+                        whileTap={!aiStreaming ? { scale: 0.92 } : {}}
+                        style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          border: chatMic.isListening
+                            ? "1px solid rgba(239,68,68,0.5)"
+                            : chatMic.isRequesting
+                              ? "1px solid rgba(124,58,237,0.4)"
+                              : "1px solid rgba(255,255,255,0.18)",
+                          cursor: aiStreaming ? "not-allowed" : "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          flexShrink: 0, transition: "background 0.2s, box-shadow 0.2s, color 0.2s, border-color 0.2s",
+                          background: chatMic.isListening
+                            ? "rgba(239,68,68,0.18)"
+                            : chatMic.isRequesting
+                              ? "rgba(124,58,237,0.18)"
+                              : "rgba(255,255,255,0.1)",
+                          boxShadow: chatMic.isListening
+                            ? "0 0 0 3px rgba(239,68,68,0.18), 0 0 18px rgba(239,68,68,0.28)"
+                            : "none",
+                          color: chatMic.isListening
+                            ? "#f87171"
+                            : chatMic.isRequesting
+                              ? "#a78bfa"
+                              : "rgba(240,240,248,0.75)",
+                          opacity: aiStreaming ? 0.4 : 1,
+                        }}
+                      >
+                        {chatMic.isRequesting
+                          ? <div style={{ width: 14, height: 14, border: "2px solid rgba(167,139,250,0.4)", borderTopColor: "#a78bfa", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                          : <MicIcon />
+                        }
+                      </motion.button>
+                    )}
+
                     <motion.button type="submit" disabled={!input.trim() || aiStreaming}
                       whileHover={input.trim() && !aiStreaming ? { scale: 1.08 } : {}}
                       whileTap={input.trim() && !aiStreaming ? { scale: 0.92 } : {}}
@@ -1381,6 +1562,12 @@ export default function DashboardPage() {
                       }
                     </motion.button>
                   </div>
+                  {chatMic.isListening && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 16px 0", fontSize: 10.5, color: "#f87171" }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f87171", display: "inline-block", animation: "mic-pulse 1s ease-in-out infinite" }} />
+                      <span>Listening… speak now</span>
+                    </div>
+                  )}
                 </form>
               )}
 
@@ -1521,9 +1708,17 @@ export default function DashboardPage() {
       {/* Toast notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
+      {/* Terms acceptance gate — blocks app until all policies accepted */}
+      {termsStatus && !termsStatus.all_accepted && (
+        <TermsAcceptanceModal
+          initialStatus={termsStatus}
+          onAccepted={() => setTermsStatus((s) => ({ ...s, all_accepted: true }))}
+        />
+      )}
+
       {/* Upgrade popup */}
       <AnimatePresence>
-        {upgradePopup && <UpgradePopup key="upgrade" reason={upgradePopup} onClose={() => setUpgradePopup(null)} user={user} usage={usage} />}
+        {upgradePopup && <PremiumBillingModal key="upgrade" reason={upgradePopup} onClose={() => setUpgradePopup(null)} user={user} usage={usage} />}
       </AnimatePresence>
 
       {/* Share modal */}
@@ -1587,9 +1782,10 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       <style>{`
-        @keyframes spin     { to { transform: rotate(360deg); } }
-        @keyframes shimmer  { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        @keyframes pulseDot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
+        @keyframes spin      { to { transform: rotate(360deg); } }
+        @keyframes shimmer   { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes pulseDot  { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
+        @keyframes mic-pulse { 0%,100% { opacity:.4; transform:scale(.8); } 50% { opacity:1; transform:scale(1.15); } }
 
         @media (min-width: 769px) {
           .sidebar    { position: relative !important; transform: none !important; z-index: auto !important; }
