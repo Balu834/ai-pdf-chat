@@ -723,7 +723,7 @@ export default function Home() {
               >{l}</a>
             ))}
           </div>
-          <p style={{ fontSize: "0.8rem", color: "rgba(240,240,248,0.25)", margin: 0 }}>
+          <p style={{ fontSize: "0.8rem", color: "rgba(240,240,248,0.25)", margin: 0 }} suppressHydrationWarning>
             © {new Date().getFullYear()} Intellixy. All rights reserved.
           </p>
         </div>

@@ -187,6 +187,55 @@ function SpeakBtn({ state, onSpeak, onPause, onResume, onStop }) {
   );
 }
 
+/* ─── HD SPEAK BUTTON (OpenAI TTS) ──────────────────────────────────────── */
+function HQSpeakBtn({ isActive, state, onClick }) {
+  const loading = isActive && state === "loading";
+  const playing = isActive && state === "playing";
+  const paused  = isActive && state === "paused";
+  return (
+    <motion.button
+      whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.92 }}
+      onClick={onClick}
+      title={playing ? "Pause HD audio" : paused ? "Resume HD audio" : "Listen with HD voice (OpenAI)"}
+      style={{
+        display: "flex", alignItems: "center", gap: 4,
+        fontSize: 11, fontWeight: 600,
+        color:      playing ? "#34d399" : paused ? "#60a5fa" : loading ? "#a78bfa" : C.textMuted,
+        background: playing ? "rgba(52,211,153,0.1)" : paused ? "rgba(96,165,250,0.08)" : loading ? "rgba(167,139,250,0.1)" : "rgba(255,255,255,0.04)",
+        border: `1px solid ${playing ? "rgba(52,211,153,0.32)" : paused ? "rgba(96,165,250,0.22)" : loading ? "rgba(167,139,250,0.25)" : "rgba(255,255,255,0.07)"}`,
+        borderRadius: 7, padding: "4px 9px", cursor: "pointer", transition: "all 0.15s",
+      }}
+    >
+      {loading ? (
+        <><div style={{ width: 10, height: 10, border: "2px solid rgba(167,139,250,0.35)", borderTopColor: "#a78bfa", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> HD…</>
+      ) : playing ? (
+        <>
+          <span style={{ display: "flex", alignItems: "flex-end", gap: "2px", height: 11 }}>
+            {[0,1,2].map((i) => (
+              <motion.span key={i}
+                animate={{ scaleY: [0.35, 1, 0.35] }}
+                transition={{ duration: 0.55, repeat: Infinity, delay: i * 0.13, ease: "easeInOut" }}
+                style={{ display: "block", width: 2, height: "100%", background: "#34d399", borderRadius: 2, transformOrigin: "bottom" }}
+              />
+            ))}
+          </span>
+          Pause
+        </>
+      ) : paused ? (
+        <><svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Resume</>
+      ) : (
+        <>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path strokeLinecap="round" d="M15.54 8.46a5 5 0 010 7.07"/><path strokeLinecap="round" d="M19.07 4.93a10 10 0 010 14.14"/>
+          </svg>
+          HD
+        </>
+      )}
+    </motion.button>
+  );
+}
+
 /* ─── ACTION / THUMB BUTTONS ─────────────────────────────────────────────── */
 function ActionBtn({ onClick, active, activeColor, children }) {
   return (
@@ -327,7 +376,7 @@ function SwipeableMessage({ onReply, onCopySwipe, children }) {
 }
 
 /* ─── MAIN CHAT MESSAGE ──────────────────────────────────────────────────── */
-export default function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgrade, onReply }) {
+export default function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgrade, onReply, onHqSpeak, isHqActive = false, hqState = "idle" }) {
   const isUser     = msg.role === "user";
   const isThinking = msg.streaming && !msg.content;
   const isAudio    = msg.type === "audio";
@@ -546,7 +595,7 @@ export default function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgra
             {/* ── Action bar (hover-reveal, complete AI text messages only) ── */}
             {!isUser && !msg.streaming && msg.content && !isAudio && (
               <AnimatePresence>
-                {(hovered || ttsState !== "idle") && (
+                {(hovered || ttsState !== "idle" || isHqActive) && (
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1,  y: 0  }}
@@ -562,6 +611,9 @@ export default function ChatMessage({ msg, onCopy, onShare, userInitial, onUpgra
                     </ActionBtn>
                     <ActionBtn onClick={() => onShare(msg.content)}><ShareIcon /> Share</ActionBtn>
                     {ttsSupported && <SpeakBtn state={ttsState} onSpeak={() => speak(msg.content)} onPause={pause} onResume={resume} onStop={stop} />}
+                    {onHqSpeak && (
+                      <HQSpeakBtn isActive={isHqActive} state={hqState} onClick={() => onHqSpeak(msg.content)} />
+                    )}
                     <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.07)", margin: "0 2px" }} />
                     <ThumbBtn active={feedback === "up"}   color="green" onClick={() => setFeedback(feedback === "up"   ? null : "up")}>👍</ThumbBtn>
                     <ThumbBtn active={feedback === "down"} color="red"   onClick={() => setFeedback(feedback === "down" ? null : "down")}>👎</ThumbBtn>

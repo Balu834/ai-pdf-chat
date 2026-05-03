@@ -1,6 +1,6 @@
 const CACHE_NAME = "intellixy-v2";
 
-const PRECACHE_URLS = ["/", "/dashboard", "/manifest.json"];
+const PRECACHE_URLS = ["/", "/manifest.json"];
 
 // ── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener("install", (event) => {
@@ -65,7 +65,10 @@ self.addEventListener("fetch", (event) => {
         caches.open(CACHE_NAME).then((c) => c.put(request, clone));
         return res;
       })
-      .catch(() => caches.match(request))
+      .catch(async () => {
+        const cached = await caches.match(request);
+        return cached ?? new Response("Offline", { status: 503, statusText: "Service Unavailable" });
+      })
   );
 });
 

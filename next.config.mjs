@@ -12,8 +12,14 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value: [
-              // Framing: self + Razorpay + YouTube demo
-              "frame-src 'self' https://*.razorpay.com https://api.razorpay.com https://www.youtube.com https://youtube.com",
+              // Service workers
+              "worker-src 'self'",
+
+              // Media (TTS audio, blob: URLs)
+              "media-src 'self' blob:",
+
+              // Framing: self + Razorpay + YouTube demo + Vercel feedback modal
+              "frame-src 'self' https://*.razorpay.com https://api.razorpay.com https://www.youtube.com https://youtube.com https://vercel.live",
 
               // Scripts: explicit script-src-elem required — browsers don't
               // always fall back to script-src for <script src="..."> elements
@@ -22,14 +28,14 @@ const nextConfig = {
                 " https://www.googletagmanager.com" +
                 " https://www.google-analytics.com" +
                 " https://ssl.google-analytics.com" +
-                " https://vercel.live",
+                " https://vercel.live https://*.vercel-scripts.com",
 
               "script-src-elem 'self' 'unsafe-inline'" +
                 " https://checkout.razorpay.com" +
                 " https://www.googletagmanager.com" +
                 " https://www.google-analytics.com" +
                 " https://ssl.google-analytics.com" +
-                " https://vercel.live",
+                " https://vercel.live https://*.vercel-scripts.com",
 
               // Styles
               "style-src 'self' 'unsafe-inline'",
@@ -39,14 +45,14 @@ const nextConfig = {
 
               // Fetch/XHR — includes OAuth provider endpoints for any
               // client-side token/profile calls, and OpenAI for streaming
-              "connect-src 'self'" +
+              "connect-src 'self' blob:" +
                 " https://api.razorpay.com https://*.razorpay.com" +
                 " wss://*.supabase.co https://*.supabase.co" +
                 " https://www.google-analytics.com" +
                 " https://analytics.google.com" +
                 " https://www.googletagmanager.com" +
                 " https://region1.google-analytics.com" +
-                " https://vercel.live wss://vercel.live" +
+                " https://vercel.live wss://vercel.live https://*.vercel-scripts.com" +
                 " https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com" +
                 " https://slack.com https://api.slack.com" +
                 " https://api.notion.com" +

@@ -14,6 +14,8 @@ interface Options {
   lastAiMessage: string;
   /** Only start speaking/listening when a doc is selected. */
   hasDoc: boolean;
+  /** BCP-47 language code for speech recognition, e.g. "en-US", "hi-IN". */
+  lang?: string;
 }
 
 const MIC_ERRORS: Record<string, string> = {
@@ -24,7 +26,7 @@ const MIC_ERRORS: Record<string, string> = {
   "network":             "Network error while starting mic. Check your connection.",
 };
 
-export function useVoiceConversation({ onTranscript, isThinking, lastAiMessage, hasDoc }: Options) {
+export function useVoiceConversation({ onTranscript, isThinking, lastAiMessage, hasDoc, lang = "en-US" }: Options) {
   const [active,    setActive]    = useState(false);
   const [convState, setConvState] = useState<ConvState>("idle");
   const [error,     setError]     = useState<string | null>(null);
@@ -58,7 +60,7 @@ export function useVoiceConversation({ onTranscript, isThinking, lastAiMessage, 
     setConvState("listening");
 
     const rec: SpeechRecognitionAlt = new SRCtor();
-    rec.lang           = "en-US";
+    rec.lang           = lang;
     rec.interimResults = false;
     rec.continuous     = false;
     recRef.current     = rec as any;

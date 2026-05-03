@@ -167,7 +167,10 @@ function WorkspaceDetail({ workspace, currentUserId, onBack }) {
     setTimeout(() => setInvCopied((p) => ({ ...p, [token]: false })), 2200);
   }
 
-  const appUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const [appUrl, setAppUrl] = useState(
+    process.env.NEXT_PUBLIC_APP_URL || ""
+  );
+  useEffect(() => { setAppUrl(window.location.origin); }, []);
 
   return (
     <div>

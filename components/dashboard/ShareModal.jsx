@@ -51,9 +51,10 @@ export default function ShareModal({ doc, session, onClose }) {
   const [copied, setCopied]         = useState(false);
   const [error, setError]           = useState(null);
 
-  const appUrl = typeof window !== "undefined"
-    ? `${window.location.origin}`
-    : (process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app");
+  const [appUrl, setAppUrl] = useState(
+    process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app"
+  );
+  useEffect(() => { setAppUrl(window.location.origin); }, []);
 
   // Load existing share on mount
   useEffect(() => {
