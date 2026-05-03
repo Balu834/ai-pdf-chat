@@ -4,12 +4,11 @@
  *   featured, trending, top_rated, new_releases, recommendations
  */
 import { NextResponse } from "next/server";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase-server-client";
 import { admin, getUserContext, annotateItems } from "@/lib/appstore";
 
 async function getUser() {
-  const sb = createServerComponentClient({ cookies });
+  const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   return user;
 }

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient as createSessionClient } from "@/lib/supabase-server-client";
 
 const razorpay = new Razorpay({
   key_id:     process.env.RAZORPAY_KEY_ID,
@@ -15,7 +14,7 @@ const admin = () =>
   });
 
 async function getUser() {
-  const sb = createServerComponentClient({ cookies });
+  const sb = await createSessionClient();
   const { data: { user } } = await sb.auth.getUser();
   return user;
 }
