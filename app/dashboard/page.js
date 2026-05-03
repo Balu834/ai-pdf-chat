@@ -1197,12 +1197,6 @@ export default function DashboardPage() {
                 </HeaderBtn>
               )}
               {selectedDoc && (
-                <HeaderBtn onClick={voiceConv.toggle} active={voiceConv.active} color={voiceConv.active ? "purple" : "default"}>
-                  <MicIcon active={voiceConv.active} />
-                  <span className="btn-text"> {voiceConv.active ? "Voice On" : "Voice"}</span>
-                </HeaderBtn>
-              )}
-              {selectedDoc && (
                 <HeaderBtn
                   onClick={() => rtv.active ? rtv.stop() : (rtv._openLaunch?.() ?? rtv.start())}
                   active={rtv.active}
@@ -1509,58 +1503,66 @@ export default function DashboardPage() {
                       style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit", opacity: placeholderFade ? 1 : 0, transition: "opacity 0.25s" }}
                       onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
                     />
-                    {/* Mic button — voice-to-text (hidden when unsupported) */}
-                    {chatMic.isSupported && (
-                      <motion.button
-                        type="button"
-                        onClick={chatMic.toggle}
-                        disabled={aiStreaming}
-                        aria-label={chatMic.isListening ? "Stop voice input" : "Start voice input"}
-                        title="Click to dictate"
-                        whileHover={!aiStreaming ? { scale: 1.08, background: chatMic.isListening ? "rgba(239,68,68,0.22)" : "rgba(124,58,237,0.22)" } : {}}
-                        whileTap={!aiStreaming ? { scale: 0.92 } : {}}
-                        style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          border: chatMic.isListening
-                            ? "1px solid rgba(239,68,68,0.5)"
-                            : chatMic.isRequesting
-                              ? "1px solid rgba(124,58,237,0.4)"
-                              : "1px solid rgba(255,255,255,0.18)",
-                          cursor: aiStreaming ? "not-allowed" : "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          flexShrink: 0, transition: "background 0.2s, box-shadow 0.2s, color 0.2s, border-color 0.2s",
-                          background: chatMic.isListening
-                            ? "rgba(239,68,68,0.18)"
-                            : chatMic.isRequesting
-                              ? "rgba(124,58,237,0.18)"
-                              : "rgba(255,255,255,0.1)",
-                          boxShadow: chatMic.isListening
-                            ? "0 0 0 3px rgba(239,68,68,0.18), 0 0 18px rgba(239,68,68,0.28)"
-                            : "none",
-                          color: chatMic.isListening
-                            ? "#f87171"
-                            : chatMic.isRequesting
-                              ? "#a78bfa"
-                              : "rgba(240,240,248,0.75)",
-                          opacity: aiStreaming ? 0.4 : 1,
-                        }}
-                      >
-                        {chatMic.isRequesting
-                          ? <div style={{ width: 14, height: 14, border: "2px solid rgba(167,139,250,0.4)", borderTopColor: "#a78bfa", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-                          : <MicIcon />
-                        }
-                      </motion.button>
-                    )}
-
-                    <motion.button type="submit" disabled={!input.trim() || aiStreaming}
-                      whileHover={input.trim() && !aiStreaming ? { scale: 1.08 } : {}}
-                      whileTap={input.trim() && !aiStreaming ? { scale: 0.92 } : {}}
-                      style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", cursor: !input.trim() || aiStreaming ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: !input.trim() || aiStreaming ? 0.38 : 1, transition: "opacity 0.2s", color: "white", boxShadow: input.trim() && !aiStreaming ? "0 4px 16px rgba(124,58,237,0.55)" : "none" }}>
-                      {aiStreaming
-                        ? <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-                        : <SendIcon />
+                    {/* WhatsApp-style: mic when empty, send when typing */}
+                    <AnimatePresence mode="wait" initial={false}>
+                      {chatMic.isSupported && !input.trim() && !aiStreaming
+                        ? (
+                          <motion.button
+                            key="mic"
+                            type="button"
+                            onClick={chatMic.toggle}
+                            aria-label={chatMic.isListening ? "Stop voice input" : "Start voice input"}
+                            title="Click to dictate"
+                            initial={{ scale: 0.7, opacity: 0 }}
+                            animate={{ scale: 1,   opacity: 1 }}
+                            exit={{    scale: 0.7, opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            whileHover={{ scale: 1.1, background: chatMic.isListening ? "rgba(239,68,68,0.22)" : "rgba(124,58,237,0.22)" }}
+                            whileTap={{ scale: 0.88 }}
+                            style={{
+                              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                              border: chatMic.isListening ? "1px solid rgba(239,68,68,0.5)" : chatMic.isRequesting ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.18)",
+                              background: chatMic.isListening ? "rgba(239,68,68,0.18)" : chatMic.isRequesting ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.1)",
+                              boxShadow: chatMic.isListening ? "0 0 0 3px rgba(239,68,68,0.18), 0 0 18px rgba(239,68,68,0.28)" : "none",
+                              color: chatMic.isListening ? "#f87171" : chatMic.isRequesting ? "#a78bfa" : "rgba(240,240,248,0.75)",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              cursor: "pointer", transition: "background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s",
+                            }}
+                          >
+                            {chatMic.isRequesting
+                              ? <div style={{ width: 14, height: 14, border: "2px solid rgba(167,139,250,0.4)", borderTopColor: "#a78bfa", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                              : <MicIcon />
+                            }
+                          </motion.button>
+                        ) : (
+                          <motion.button
+                            key="send"
+                            type="submit"
+                            disabled={!input.trim() || aiStreaming}
+                            initial={{ scale: 0.7, opacity: 0 }}
+                            animate={{ scale: 1,   opacity: 1 }}
+                            exit={{    scale: 0.7, opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            whileHover={input.trim() && !aiStreaming ? { scale: 1.1 } : {}}
+                            whileTap={input.trim() && !aiStreaming ? { scale: 0.88 } : {}}
+                            style={{
+                              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                              background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none",
+                              cursor: !input.trim() || aiStreaming ? "not-allowed" : "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              opacity: !input.trim() || aiStreaming ? 0.38 : 1,
+                              color: "white", transition: "opacity 0.2s",
+                              boxShadow: input.trim() && !aiStreaming ? "0 4px 16px rgba(124,58,237,0.55)" : "none",
+                            }}
+                          >
+                            {aiStreaming
+                              ? <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                              : <SendIcon />
+                            }
+                          </motion.button>
+                        )
                       }
-                    </motion.button>
+                    </AnimatePresence>
                   </div>
                   {chatMic.isListening && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 16px 0", fontSize: 10.5, color: "#f87171" }}>
