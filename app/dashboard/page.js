@@ -1597,7 +1597,7 @@ export default function DashboardPage() {
                         />
                         {/* WhatsApp-style: mic = record when empty; send = submit when typing */}
                         <AnimatePresence mode="wait" initial={false}>
-                          {voiceRec.isSupported && !input.trim() && !aiStreaming ? (
+                          {!input.trim() && !aiStreaming ? (
                             <motion.button
                               key="mic"
                               type="button"

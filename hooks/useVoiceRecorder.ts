@@ -56,6 +56,12 @@ export function useVoiceRecorder({
   const start = useCallback(async () => {
     if (recorderState !== "idle") return;
 
+    // Support check at call time — no render guard needed
+    if (typeof window === "undefined" || typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      onErrorRef.current?.("Voice recording is not supported in this browser. Try Chrome or Edge.");
+      return;
+    }
+
     if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
       onErrorRef.current?.("🔒 Recording requires a secure (HTTPS) connection.");
       return;
