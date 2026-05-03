@@ -16,6 +16,7 @@ import ChatMessage from "@/components/dashboard/ChatMessage";
 import SmartSuggestions from "@/components/dashboard/SmartSuggestions";
 import { useVoiceConversation } from "@/hooks/useVoiceConversation";
 import { useMic } from "@/hooks/useMic";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useTTS } from "@/hooks/useTTS";
 import { useStreamingTTS } from "@/hooks/useStreamingTTS";
 import { useAudioTTS } from "@/hooks/useAudioTTS";
@@ -57,6 +58,11 @@ const VOICE_COMMANDS = [
   { patterns: ["how many pages", "page count", "length of", "how long is"],
     action: "How long is this document and what are its main sections?" },
 ];
+
+function formatRecordDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
 
 function detectVoiceCommand(text) {
   const lower = text.toLowerCase().trim();
@@ -314,6 +320,9 @@ export default function DashboardPage() {
     maxDurationMs: 60_000,
     silenceMs: 3_000,
   });
+
+  /* ── Voice recorder (MediaRecorder → Whisper) ── */
+  const voiceRec = useVoiceRecorder({ onError: (msg) => addToast(msg, "error") });
 
   /* ── Auth guard + referral claim ── */
   useEffect(() => {
@@ -840,6 +849,26 @@ export default function DashboardPage() {
     setApiError(null);
     await handleSend(null, apiError.retryText);
     setRetryLoading(false);
+  }
+
+  async function handleVoiceSend() {
+    const blob = await voiceRec.stop();
+    if (!blob) return;
+    const form = new FormData();
+    form.append("audio", blob, "recording.webm");
+    try {
+      const res  = await fetch("/api/transcribe", { method: "POST", body: form, credentials: "include" });
+      const data = await res.json();
+      if (data.text?.trim()) {
+        handleSend(null, data.text.trim());
+      } else {
+        addToast(data.error ?? "Could not transcribe audio", "error");
+      }
+    } catch {
+      addToast("Transcription failed. Check your connection.", "error");
+    } finally {
+      voiceRec.doneProcessing();
+    }
   }
 
   function handleSmartAction(prompt) { if (!selectedDoc || aiStreaming) return; handleSend(null, prompt); }
@@ -1493,83 +1522,136 @@ export default function DashboardPage() {
                     )}
                   </AnimatePresence>
 
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: 8, background: C.glass, border: "1px solid rgba(255,255,255,0.09)", borderRadius: 18, padding: "11px 13px", backdropFilter: "blur(12px)", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.45)"; e.currentTarget.style.boxShadow = "0 4px 32px rgba(124,58,237,0.12)"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.35)"; }}
-                  >
-                    <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
-                      placeholder={PLACEHOLDERS[placeholderIdx]}
-                      disabled={aiStreaming} rows={1} suppressHydrationWarning
-                      style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit", opacity: placeholderFade ? 1 : 0, transition: "opacity 0.25s" }}
-                      onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
-                    />
-                    {/* WhatsApp-style: mic when empty, send when typing */}
-                    <AnimatePresence mode="wait" initial={false}>
-                      {chatMic.isSupported && !input.trim() && !aiStreaming
-                        ? (
-                          <motion.button
-                            key="mic"
-                            type="button"
-                            onClick={chatMic.toggle}
-                            aria-label={chatMic.isListening ? "Stop voice input" : "Start voice input"}
-                            title="Click to dictate"
-                            initial={{ scale: 0.7, opacity: 0 }}
-                            animate={{ scale: 1,   opacity: 1 }}
-                            exit={{    scale: 0.7, opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                            whileHover={{ scale: 1.1, background: chatMic.isListening ? "rgba(239,68,68,0.22)" : "rgba(124,58,237,0.22)" }}
-                            whileTap={{ scale: 0.88 }}
-                            style={{
-                              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                              border: chatMic.isListening ? "1px solid rgba(239,68,68,0.5)" : chatMic.isRequesting ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.18)",
-                              background: chatMic.isListening ? "rgba(239,68,68,0.18)" : chatMic.isRequesting ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.1)",
-                              boxShadow: chatMic.isListening ? "0 0 0 3px rgba(239,68,68,0.18), 0 0 18px rgba(239,68,68,0.28)" : "none",
-                              color: chatMic.isListening ? "#f87171" : chatMic.isRequesting ? "#a78bfa" : "rgba(240,240,248,0.75)",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              cursor: "pointer", transition: "background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s",
-                            }}
-                          >
-                            {chatMic.isRequesting
-                              ? <div style={{ width: 14, height: 14, border: "2px solid rgba(167,139,250,0.4)", borderTopColor: "#a78bfa", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-                              : <MicIcon />
-                            }
-                          </motion.button>
+                  <AnimatePresence mode="wait" initial={false}>
+                    {voiceRec.isRecording || voiceRec.isProcessing ? (
+
+                      /* ── Recording bar ─────────────────────────────────── */
+                      <motion.div
+                        key="rec-bar"
+                        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
+                        transition={{ duration: 0.18 }}
+                        style={{ display: "flex", alignItems: "center", gap: 10, background: C.glass, border: "1px solid rgba(239,68,68,0.28)", borderRadius: 18, padding: "10px 13px", backdropFilter: "blur(12px)", boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}
+                      >
+                        {/* Cancel / discard */}
+                        <motion.button type="button" onClick={voiceRec.cancel} aria-label="Cancel recording" title="Discard"
+                          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
+                          style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "1px solid rgba(239,68,68,0.32)", background: "rgba(239,68,68,0.1)", color: "#f87171", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                        >
+                          <TrashIcon />
+                        </motion.button>
+
+                        {/* Waveform bars + timer */}
+                        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f87171", flexShrink: 0,
+                            animation: voiceRec.isRecording ? "mic-pulse 1s ease-in-out infinite" : "none",
+                            opacity: voiceRec.isRecording ? 1 : 0.5 }} />
+                          <div style={{ display: "flex", alignItems: "center", gap: 2.5, flex: 1 }}>
+                            {[12,7,14,5,16,9,13,6,15,8,11,5,14,7,10].map((h, i) => (
+                              <div key={i} style={{
+                                width: 3, borderRadius: 2, background: "#f87171", minHeight: 3,
+                                height: voiceRec.isRecording ? h : 3,
+                                transition: `height 0.18s ${i * 35}ms ease`,
+                                animation: voiceRec.isRecording
+                                  ? `wave-bar-${["a","b","c","d"][i % 4]} ${0.45 + (i % 3) * 0.12}s ease-in-out infinite alternate`
+                                  : "none",
+                                animationDelay: `${i * 55}ms`,
+                              }} />
+                            ))}
+                          </div>
+                          <span style={{ fontSize: 13, fontVariantNumeric: "tabular-nums", color: "rgba(240,240,248,0.72)", flexShrink: 0, minWidth: 32 }}>
+                            {voiceRec.isProcessing ? "…" : formatRecordDuration(voiceRec.durationMs)}
+                          </span>
+                        </div>
+
+                        {/* Send / transcribing spinner */}
+                        {voiceRec.isProcessing ? (
+                          <div style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <div style={{ width: 18, height: 18, border: "2px solid rgba(124,58,237,0.35)", borderTopColor: "#a78bfa", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                          </div>
                         ) : (
-                          <motion.button
-                            key="send"
-                            type="submit"
-                            disabled={!input.trim() || aiStreaming}
-                            initial={{ scale: 0.7, opacity: 0 }}
-                            animate={{ scale: 1,   opacity: 1 }}
-                            exit={{    scale: 0.7, opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                            whileHover={input.trim() && !aiStreaming ? { scale: 1.1 } : {}}
-                            whileTap={input.trim() && !aiStreaming ? { scale: 0.88 } : {}}
-                            style={{
-                              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                              background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none",
-                              cursor: !input.trim() || aiStreaming ? "not-allowed" : "pointer",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              opacity: !input.trim() || aiStreaming ? 0.38 : 1,
-                              color: "white", transition: "opacity 0.2s",
-                              boxShadow: input.trim() && !aiStreaming ? "0 4px 16px rgba(124,58,237,0.55)" : "none",
-                            }}
+                          <motion.button type="button" onClick={handleVoiceSend} aria-label="Send recording" title="Send"
+                            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
+                            style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", color: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 16px rgba(124,58,237,0.55)" }}
                           >
-                            {aiStreaming
-                              ? <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-                              : <SendIcon />
-                            }
+                            <SendIcon />
                           </motion.button>
-                        )
-                      }
-                    </AnimatePresence>
-                  </div>
-                  {chatMic.isListening && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 16px 0", fontSize: 10.5, color: "#f87171" }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f87171", display: "inline-block", animation: "mic-pulse 1s ease-in-out infinite" }} />
-                      <span>Listening… speak now</span>
-                    </div>
-                  )}
+                        )}
+                      </motion.div>
+
+                    ) : (
+
+                      /* ── Normal text input ─────────────────────────────── */
+                      <motion.div
+                        key="text-input"
+                        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
+                        transition={{ duration: 0.18 }}
+                        style={{ display: "flex", alignItems: "flex-end", gap: 8, background: C.glass, border: "1px solid rgba(255,255,255,0.09)", borderRadius: 18, padding: "11px 13px", backdropFilter: "blur(12px)", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.45)"; e.currentTarget.style.boxShadow = "0 4px 32px rgba(124,58,237,0.12)"; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.35)"; }}
+                      >
+                        <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
+                          placeholder={PLACEHOLDERS[placeholderIdx]}
+                          disabled={aiStreaming} rows={1} suppressHydrationWarning
+                          style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: C.textPrimary, resize: "none", lineHeight: 1.6, maxHeight: 120, minHeight: 22, fontFamily: "inherit", opacity: placeholderFade ? 1 : 0, transition: "opacity 0.25s" }}
+                          onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
+                        />
+                        {/* WhatsApp-style: mic = record when empty; send = submit when typing */}
+                        <AnimatePresence mode="wait" initial={false}>
+                          {voiceRec.isSupported && !input.trim() && !aiStreaming ? (
+                            <motion.button
+                              key="mic"
+                              type="button"
+                              onClick={voiceRec.start}
+                              aria-label="Start voice recording"
+                              title="Click to record"
+                              initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }}
+                              transition={{ duration: 0.15 }}
+                              whileHover={{ scale: 1.1, background: "rgba(124,58,237,0.22)" }}
+                              whileTap={{ scale: 0.88 }}
+                              style={{
+                                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                                border: voiceRec.isRequesting ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.18)",
+                                background: voiceRec.isRequesting ? "rgba(124,58,237,0.18)" : "rgba(255,255,255,0.1)",
+                                color: voiceRec.isRequesting ? "#a78bfa" : "rgba(240,240,248,0.75)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                cursor: "pointer", transition: "background 0.2s, border-color 0.2s, color 0.2s",
+                              }}
+                            >
+                              {voiceRec.isRequesting
+                                ? <div style={{ width: 14, height: 14, border: "2px solid rgba(167,139,250,0.4)", borderTopColor: "#a78bfa", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                                : <MicIcon />
+                              }
+                            </motion.button>
+                          ) : (
+                            <motion.button
+                              key="send"
+                              type="submit"
+                              disabled={!input.trim() || aiStreaming}
+                              initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }}
+                              transition={{ duration: 0.15 }}
+                              whileHover={input.trim() && !aiStreaming ? { scale: 1.1 } : {}}
+                              whileTap={input.trim() && !aiStreaming ? { scale: 0.88 } : {}}
+                              style={{
+                                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                                background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none",
+                                cursor: !input.trim() || aiStreaming ? "not-allowed" : "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                opacity: !input.trim() || aiStreaming ? 0.38 : 1,
+                                color: "white", transition: "opacity 0.2s",
+                                boxShadow: input.trim() && !aiStreaming ? "0 4px 16px rgba(124,58,237,0.55)" : "none",
+                              }}
+                            >
+                              {aiStreaming
+                                ? <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                                : <SendIcon />
+                              }
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+
+                    )}
+                  </AnimatePresence>
                 </form>
               )}
 
@@ -1787,7 +1869,11 @@ export default function DashboardPage() {
         @keyframes spin      { to { transform: rotate(360deg); } }
         @keyframes shimmer   { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         @keyframes pulseDot  { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
-        @keyframes mic-pulse { 0%,100% { opacity:.4; transform:scale(.8); } 50% { opacity:1; transform:scale(1.15); } }
+        @keyframes mic-pulse  { 0%,100% { opacity:.4; transform:scale(.8); } 50% { opacity:1; transform:scale(1.15); } }
+        @keyframes wave-bar-a { 0% { height:3px; } 100% { height:14px; } }
+        @keyframes wave-bar-b { 0% { height:3px; } 100% { height:8px;  } }
+        @keyframes wave-bar-c { 0% { height:3px; } 100% { height:12px; } }
+        @keyframes wave-bar-d { 0% { height:3px; } 100% { height:6px;  } }
 
         @media (min-width: 769px) {
           .sidebar    { position: relative !important; transform: none !important; z-index: auto !important; }
