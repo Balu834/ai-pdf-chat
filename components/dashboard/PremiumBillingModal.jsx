@@ -60,7 +60,7 @@ function useCountdown() {
   const KEY = "pbm_offer_deadline";
   const [secs, setSecs] = useState(0);
   useEffect(() => {
-    let deadline: number;
+    let deadline;
     try {
       const stored = localStorage.getItem(KEY);
       deadline = stored ? parseInt(stored, 10) : Date.now() + 23 * 3600_000;
@@ -320,10 +320,10 @@ function RightPanel({ reason, user, usage, onClose, isMobile }) {
         border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14,
         padding: 4, marginBottom: 18, gap: 4,
       }}>
-        {([
+        {[
           { id: "pro",     label: "Pro",     price: "₹299/mo", color: "#a78bfa" },
           { id: "premium", label: "Premium", price: "₹999/yr", color: "#fbbf24" },
-        ] as const).map(({ id, label, price, color }) => (
+        ].map(({ id, label, price, color }) => (
           <button
             key={id}
             onClick={() => { setPlan(id); setCouponData(null); setCouponInput(""); setCouponError(null); setPayError(null); }}
