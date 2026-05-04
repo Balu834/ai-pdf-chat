@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
-import { createClient as adminClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-client";
 import { addLog } from "@/lib/platform-jobs";
-
-const admin = adminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } },
-);
 
 // POST /api/jobs/[id]/confirm  { approved: true|false }
 export async function POST(req, { params }) {
@@ -29,12 +23,12 @@ export async function POST(req, { params }) {
   }
 
   if (approved) {
-    await admin.from("platform_jobs")
+    await getAdminClient().from("platform_jobs")
       .update({ status: "confirmed", scheduled_for: new Date().toISOString() })
       .eq("id", params.id);
     await addLog(params.id, "info", "User approved — job queued for execution");
   } else {
-    await admin.from("platform_jobs")
+    await getAdminClient().from("platform_jobs")
       .update({ status: "cancelled", completed_at: new Date().toISOString() })
       .eq("id", params.id);
     await addLog(params.id, "info", "User rejected — job cancelled");

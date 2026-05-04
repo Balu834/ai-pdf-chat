@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-client";
 import { parseState } from "@/lib/oauth-state";
-
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } },
-);
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -34,7 +28,7 @@ export async function GET(req) {
   const tok = await tokenRes.json();
   if (!tok.ok) return NextResponse.redirect(`${dashUrl}&oauth_error=${encodeURIComponent(tok.error)}`);
 
-  await admin.from("integrations").upsert({
+  await getAdminClient().from("integrations").upsert({
     user_id:       userId,
     provider:      "slack",
     access_token:  tok.access_token,

@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { createClient } from "@supabase/supabase-js";
 import { getUserIdByRazorpaySubscription } from "@/lib/user-plan";
-
-// Service-role client — bypasses RLS, required for webhook (no user session)
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 /**
  * POST /api/razorpay/webhook
@@ -137,7 +130,7 @@ export async function POST(request) {
 
     // Record in payments ledger (non-fatal)
     try {
-      await admin.from("payments").upsert(
+      await getAdminClient().from("payments").upsert(
         {
           user_id:         userId,
           payment_id:      paymentId,
@@ -200,7 +193,7 @@ export async function POST(request) {
 
       // Upsert first to ensure the row exists and razorpay_subscription_id is stored
       // (handles the race where this fires before verify-subscription)
-      await admin.from("user_plans").upsert(
+      await getAdminClient().from("user_plans").upsert(
         {
           user_id:                   userId,
           plan:                      "pro",
@@ -216,7 +209,7 @@ export async function POST(request) {
       );
 
       // Also try the RPC for proper extension logic (no-op if already done above)
-      const { error } = await admin.rpc("extend_pro_subscription", {
+      const { error } = await getAdminClient().rpc("extend_pro_subscription", {
         p_user_id:      userId,
         p_next_billing: nextBillingDate,
       });

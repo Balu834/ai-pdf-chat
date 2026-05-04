@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-server-client";
 import { requireWorkspaceMember, addWorkspaceMember } from "@/lib/workspace";
-
-const admin = createServiceClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 /* GET → list workspace members with email */
 export async function GET(req, { params }) {
@@ -28,7 +22,7 @@ export async function GET(req, { params }) {
 
     // Enrich with emails from auth.users via admin API
     const userIds = members.map((m) => m.user_id);
-    const { data: { users: authUsers } } = await admin.auth.admin.listUsers({
+    const { data: { users: authUsers } } = await getAdminClient().auth.admin.listUsers({
       perPage: 200,
     });
     const emailMap = Object.fromEntries(

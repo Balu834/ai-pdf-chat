@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-server-client";
 import { requireWorkspaceMember, addWorkspaceMember } from "@/lib/workspace";
 import { sendWorkspaceInviteEmail } from "@/lib/email";
-
-const admin = createServiceClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 /* GET → list pending invites for workspace (admin/owner) */
 export async function GET(req, { params }) {

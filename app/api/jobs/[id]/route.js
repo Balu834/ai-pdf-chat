@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
 import { getJobWithLogs } from "@/lib/platform-jobs";
-import { createClient as adminClient } from "@supabase/supabase-js";
-
-const admin = adminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } },
-);
+import { getAdminClient } from "@/lib/admin-client";
 
 // GET /api/jobs/[id] — job detail with logs
 export async function GET(req, { params }) {
@@ -27,12 +21,12 @@ export async function DELETE(req, { params }) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: job } = await admin.from("platform_jobs").select("user_id, status").eq("id", params.id).single();
+  const { data: job } = await getAdminClient().from("platform_jobs").select("user_id, status").eq("id", params.id).single();
   if (!job || job.user_id !== user.id) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (!["pending", "awaiting_confirmation"].includes(job.status)) {
     return NextResponse.json({ error: "Only pending jobs can be cancelled" }, { status: 400 });
   }
 
-  await admin.from("platform_jobs").update({ status: "cancelled", completed_at: new Date().toISOString() }).eq("id", params.id);
+  await getAdminClient().from("platform_jobs").update({ status: "cancelled", completed_at: new Date().toISOString() }).eq("id", params.id);
   return NextResponse.json({ ok: true });
 }

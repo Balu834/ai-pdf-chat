@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-server-client";
 import { addWorkspaceMember, getWorkspaceMember } from "@/lib/workspace";
-
-const admin = createServiceClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 /* GET → fetch invite metadata (public — no auth needed) */
 export async function GET(req, { params }) {
@@ -44,7 +38,7 @@ export async function GET(req, { params }) {
 
     let inviterEmail = null;
     if (inviterRow?.invited_by) {
-      const { data: { user: inviter } } = await admin.auth.admin.getUserById(inviterRow.invited_by);
+      const { data: { user: inviter } } = await getAdminClient().auth.admin.getUserById(inviterRow.invited_by);
       inviterEmail = inviter?.email || null;
     }
 

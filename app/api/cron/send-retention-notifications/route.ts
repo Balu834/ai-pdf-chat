@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { sendPushToUser, RETENTION_NOTIFICATIONS } from "@/lib/push";
 import {
   sendOnboardingReminderEmail,
@@ -28,10 +27,6 @@ import { sendIfNotOnCooldown } from "@/lib/cooldown";
  *   { "path": "/api/cron/send-retention-notifications", "schedule": "30 4 * * *" }
  */
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 const FREE_PDF_LIMIT = 3;
 const FREE_Q_LIMIT   = 5;
@@ -65,7 +60,7 @@ export async function GET(request: Request) {
   }
 
   // Look up emails in batch
-  const { data: authUsers } = await admin.auth.admin.listUsers();
+  const { data: authUsers } = await getAdminClient().auth.admin.listUsers();
   const emailMap = new Map(
     (authUsers?.users ?? []).map((u) => [u.id, { email: u.email, name: u.user_metadata?.full_name }])
   );

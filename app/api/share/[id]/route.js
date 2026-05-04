@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-client";
 
 // Public anon client — no auth needed, RLS handles access
 const anon = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
-
-const admin = createServiceClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export async function GET(request, { params }) {
@@ -30,7 +25,7 @@ export async function GET(request, { params }) {
     }
 
     // Increment view_count best-effort
-    admin.from("shared_chats").update({ view_count: (share.view_count || 0) + 1 }).eq("id", id).then(() => {});
+    getAdminClient().from("shared_chats").update({ view_count: (share.view_count || 0) + 1 }).eq("id", id).then(() => {});
 
     // Fetch messages — session-scoped if chat_session_id is set
     let msgQuery = anon.from("messages").select("role, message, created_at").order("created_at", { ascending: true }).limit(200);
