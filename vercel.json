@@ -1,22 +1,4 @@
 {
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        {
-          "key": "Permissions-Policy",
-          "value": "payment=*, camera=(), microphone=(), geolocation=()"
-        }
-      ]
-    },
-    {
-      "source": "/((?!api).*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
-      ]
-    }
-  ],
   "crons": [
     {
       "path": "/api/cron/check-subscriptions",
