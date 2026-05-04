@@ -1,12 +1,7 @@
 import webpush, { PushSubscription, SendResult } from "web-push";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-client";
 
 export const dynamic = "force-dynamic";
-
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 let vapidInitialized = false;
 function ensureVapid() {
@@ -38,7 +33,7 @@ export async function sendPush(
   } catch (err: any) {
     // 410 Gone = subscription expired/revoked — safe to delete from DB
     if (err.statusCode === 410) {
-      await admin
+      await getAdminClient()
         .from("push_subscriptions")
         .delete()
         .eq("endpoint", sub.endpoint);
@@ -55,7 +50,7 @@ export async function sendPushToUser(
   userId: string,
   payload: PushPayload
 ): Promise<void> {
-  const { data: subs, error } = await admin
+  const { data: subs, error } = await getAdminClient()
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
     .eq("user_id", userId);
@@ -63,7 +58,7 @@ export async function sendPushToUser(
   if (error || !subs?.length) return;
 
   await Promise.allSettled(
-    subs.map((row) =>
+    subs.map((row: { endpoint: string; p256dh: string; auth: string }) =>
       sendPush(
         { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
         payload

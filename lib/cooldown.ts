@@ -8,12 +8,7 @@
  * no in-memory state, works across serverless invocations.
  */
 
-import { createClient } from "@supabase/supabase-js";
-
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getAdminClient } from "@/lib/admin-client";
 
 export type Channel   = "email" | "whatsapp" | "push";
 export type EventType =
@@ -51,7 +46,7 @@ export async function isOnCooldown(
 
   // 0 = send every time (payment_success) except "welcome" which uses sent-ever logic
   if (eventType === "welcome") {
-    const { count } = await admin
+    const { count } = await getAdminClient()
       .from("notification_log")
       .select("id", { count: "exact", head: true })
       .eq("user_id",    userId)
@@ -63,7 +58,7 @@ export async function isOnCooldown(
   if (hours === 0) return false;
 
   const since = new Date(Date.now() - hours * 3600 * 1000).toISOString();
-  const { count } = await admin
+  const { count } = await getAdminClient()
     .from("notification_log")
     .select("id", { count: "exact", head: true })
     .eq("user_id",    userId)
@@ -81,7 +76,7 @@ export async function recordSent(
   eventType: EventType,
   meta?:     Record<string, unknown>
 ): Promise<void> {
-  const { error } = await admin.from("notification_log").insert({
+  const { error } = await getAdminClient().from("notification_log").insert({
     user_id:    userId,
     channel,
     event_type: eventType,
