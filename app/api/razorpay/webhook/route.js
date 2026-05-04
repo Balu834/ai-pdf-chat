@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import crypto from "crypto";
 import { getUserIdByRazorpaySubscription } from "@/lib/user-plan";
 

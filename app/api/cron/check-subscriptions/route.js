@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 
 /**
  * GET /api/cron/check-subscriptions

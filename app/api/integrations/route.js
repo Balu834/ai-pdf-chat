@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import { createClient as serverClient } from "@/lib/supabase-server-client";
 
 // GET /api/integrations — list connected providers for the current user

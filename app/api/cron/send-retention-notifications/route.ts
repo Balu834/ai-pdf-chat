@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import { sendPushToUser, RETENTION_NOTIFICATIONS } from "@/lib/push";
 import {
   sendOnboardingReminderEmail,

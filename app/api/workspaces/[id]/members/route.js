@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import { createClient } from "@/lib/supabase-server-client";
 import { requireWorkspaceMember, addWorkspaceMember } from "@/lib/workspace";
 
