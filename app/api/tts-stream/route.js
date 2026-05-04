@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const MAX_CHARS    = 400;    // short phrases only — long text belongs in /api/tts
 const VALID_VOICES = new Set(["alloy", "echo", "fable", "onyx", "nova", "shimmer"]);
@@ -47,7 +46,7 @@ export async function POST(req) {
     if (!cleaned) return NextResponse.json({ error: "No speakable text" }, { status: 400 });
 
     // tts-1 is 3-4× faster to generate than tts-1-hd — always use it for real-time
-    const ttsResponse = await openai.audio.speech.create({
+    const ttsResponse = await getOpenAI().audio.speech.create({
       model:           "tts-1",
       voice,
       input:           cleaned,

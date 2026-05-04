@@ -6,11 +6,10 @@
  * (good enough for Vercel edge — resets on cold start, no Redis needed).
  */
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 
 export const runtime = "edge";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ── Sample document context (Q4 financial report) ─────────────────────────────
 const SAMPLE_CONTEXT = `
@@ -94,7 +93,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "Invalid question" }, { status: 400 });
   }
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model:      "gpt-4o-mini",
     stream:     true,
     max_tokens: 280,

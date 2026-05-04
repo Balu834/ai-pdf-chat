@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import { createClient } from "@/lib/supabase-server-client";
+import { getOpenAI } from "@/lib/openai-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// PDF parsing + OpenAI can exceed the default 10s limit on Vercel Hobby.
+export const maxDuration = 60;
 
 export async function GET(req) {
   try {
@@ -62,7 +63,7 @@ export async function POST(req) {
     // Build context: try RAG chunks first
     let context = null;
     try {
-      const embeddingRes = await openai.embeddings.create({
+      const embeddingRes = await getOpenAI().embeddings.create({
         model: "text-embedding-3-small",
         input: "document overview summary key points important information",
       });
@@ -98,7 +99,7 @@ export async function POST(req) {
     }
 
     // Generate insights with OpenAI
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
       max_tokens: 700,

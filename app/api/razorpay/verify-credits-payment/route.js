@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import crypto from "crypto";
 import { createClient } from "@/lib/supabase-server-client";
-import { createClient as createAdmin } from "@supabase/supabase-js";
 import { addCredits } from "@/lib/credits";
 import { CREDIT_PACKS } from "@/lib/credit-packs";
 
-const adminDb = createAdmin(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 export async function POST(request) {
   try {
@@ -44,7 +40,7 @@ export async function POST(request) {
     let userId = user?.id ?? null;
 
     if (!userId && bodyUserId) {
-      const { data: adminUser } = await adminDb.auth.admin.getUserById(bodyUserId);
+      const { data: adminUser } = await getAdminClient().auth.getAdminClient().getUserById(bodyUserId);
       userId = adminUser?.user?.id ?? null;
     }
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -65,7 +61,7 @@ export async function POST(request) {
     await addCredits(userId, pack.credits, "purchase", `${pack.label} — ${pack.credits} credits`);
 
     // Record payment
-    await adminDb.from("payments").upsert(
+    await getAdminClient().from("payments").upsert(
       {
         user_id:    userId,
         payment_id: razorpay_payment_id,

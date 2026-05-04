@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
 import { deductCredit } from "@/lib/credits";
 import { createJob } from "@/lib/platform-jobs";
 import { TOOL_DEFINITIONS, SENSITIVE_TOOLS, executeTool } from "./tools";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const MAX_TOOL_ROUNDS = 6;
 const MAX_TOKENS_TOOL  = 800;
@@ -114,7 +113,7 @@ export async function POST(req) {
             rounds++;
             emit({ t: "think" });
 
-            const decision = await openai.chat.completions.create({
+            const decision = await getOpenAI().chat.completions.create({
               model:       "gpt-4o-mini",
               messages:    msgs,
               tools:       TOOL_DEFINITIONS,
@@ -196,7 +195,7 @@ export async function POST(req) {
             msgs.push({ role: "user", content: "Please provide your final answer now." });
           }
 
-          const finalStream = await openai.chat.completions.create({
+          const finalStream = await getOpenAI().chat.completions.create({
             model: "gpt-4o-mini", messages: msgs, stream: true, temperature: 0.4, max_tokens: MAX_TOKENS_REPLY,
           });
 

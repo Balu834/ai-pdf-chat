@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const TOP_K = 6;
 const MAX_PER_DOC = 4000;
 
@@ -66,7 +65,7 @@ export async function POST(req) {
 
     try {
       const q = question?.trim() || "key topics main points important data summary differences";
-      const embRes = await openai.embeddings.create({ model: "text-embedding-3-small", input: q });
+      const embRes = await getOpenAI().embeddings.create({ model: "text-embedding-3-small", input: q });
       const queryEmbedding = embRes.data[0].embedding;
 
       const [res1, res2] = await Promise.all([
@@ -98,7 +97,7 @@ export async function POST(req) {
       `---\n\n` +
       `TASK: ${question?.trim() || "Compare these documents. Highlight key similarities and differences."}`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
       max_tokens: 1400,

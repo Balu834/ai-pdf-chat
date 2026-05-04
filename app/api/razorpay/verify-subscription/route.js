@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import crypto from "crypto";
 import { createClient } from "@/lib/supabase-server-client";
-import { createClient as createAdmin } from "@supabase/supabase-js";
 import { sendPaymentSuccessEmail } from "@/lib/email";
 
 // Service-role client — bypasses RLS, used for all writes here
-const adminDb = createAdmin(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 export async function POST(request) {
   try {
@@ -59,7 +55,7 @@ export async function POST(request) {
         `Falling back to body user_id: ${bodyUserId}`
       );
       // Look up the user to get their email (needed for confirmation email)
-      const { data: adminUser } = await adminDb.auth.admin.getUserById(bodyUserId);
+      const { data: adminUser } = await getAdminClient().auth.getAdminClient().getUserById(bodyUserId);
       userId    = adminUser?.user?.id    ?? null;
       userEmail = adminUser?.user?.email ?? null;
     }
@@ -129,7 +125,7 @@ export async function POST(request) {
 
     // 6. Record payment in ledger (non-blocking)
     try {
-      await adminDb.from("payments").upsert(
+      await getAdminClient().from("payments").upsert(
         {
           user_id:         userId,
           payment_id:      razorpay_payment_id,

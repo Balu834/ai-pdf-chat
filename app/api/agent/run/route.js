@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // How many chunks to sample per document when insights aren't cached
 const CHUNKS_PER_DOC = 4;
@@ -108,7 +107,7 @@ export async function POST(req) {
     const docNames = validContexts.map((d) => d.name);
 
     // ── Call GPT for cross-document synthesis ─────────────────────────
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
       max_tokens: 1200,

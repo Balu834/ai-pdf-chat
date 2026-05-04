@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // OpenAI TTS caps at 4096 chars; we strip markdown before counting
 const MAX_CHARS = 4000;
@@ -49,7 +48,7 @@ export async function POST(req) {
 
     console.log(`[TTS] user=${user.id} voice=${voice} model=${model} chars=${cleaned.length}`);
 
-    const response = await openai.audio.speech.create({
+    const response = await getOpenAI().audio.speech.create({
       model,
       voice,
       input: cleaned,

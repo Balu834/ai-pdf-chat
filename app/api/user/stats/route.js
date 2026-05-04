@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import { createClient } from "@/lib/supabase-server-client";
 import { isProActive } from "@/lib/user-plan";
-import { createClient as createAdmin } from "@supabase/supabase-js";
 
 const MAX_FREE_PDFS = 5;
 
-const admin = createAdmin(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 export async function GET() {
   try {

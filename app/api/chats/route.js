@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 /* GET  ?documentId=xxx  → list sessions for a document (ordered newest-first)
    GET  ?id=xxx          → single session */
@@ -91,7 +90,7 @@ export async function PATCH(req) {
 
     if (!finalTitle && firstMessage) {
       try {
-        const completion = await openai.chat.completions.create({
+        const completion = await getOpenAI().chat.completions.create({
           model: "gpt-4o-mini",
           temperature: 0,
           max_tokens: 12,

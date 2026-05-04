@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
 import { deductCredit } from "@/lib/credits";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const TOP_K   = 3;
 const MAX_CTX = 4000;
@@ -73,7 +72,7 @@ async function fetchDocContext(supabase, fileUrl, query) {
 
     if (!doc?.id) return null;
 
-    const embRes = await openai.embeddings.create({
+    const embRes = await getOpenAI().embeddings.create({
       model: "text-embedding-3-small",
       input:  query,
     });
@@ -161,7 +160,7 @@ export async function POST(req) {
     // Document / assistant modes may need slightly longer responses
     const maxTokens = (agentMode === "document" || agentMode === "assistant") ? 280 : 220;
 
-    const stream = await openai.chat.completions.create({
+    const stream = await getOpenAI().chat.completions.create({
       model:       "gpt-4o-mini",
       stream:       true,
       temperature:  agentMode === "creative" ? 0.8 : 0.5,

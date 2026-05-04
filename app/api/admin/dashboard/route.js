@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import { createClient } from "@/lib/supabase-server-client";
-import { createClient as createAdmin } from "@supabase/supabase-js";
 
-const db = createAdmin(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } },
-);
 
 // ── In-memory cache (per range) ───────────────────────────────────────────────
 const CACHE     = new Map();
@@ -115,69 +110,69 @@ export async function GET(req) {
       creditsRes,
     ] = await Promise.all([
       // ── USERS ──────────────────────────────────────────────────────────────
-      db.auth.admin.listUsers({ perPage: 1 }),
+      getAdminClient().auth.getAdminClient().listUsers({ perPage: 1 }),
 
-      db.from("user_plans").select("user_id", { count: "exact", head: true })
+      getAdminClient().from("user_plans").select("user_id", { count: "exact", head: true })
         .gte("created_at", dayStart),
-      db.from("user_plans").select("user_id", { count: "exact", head: true })
+      getAdminClient().from("user_plans").select("user_id", { count: "exact", head: true })
         .gte("created_at", weekStart),
-      db.from("user_plans").select("user_id", { count: "exact", head: true })
+      getAdminClient().from("user_plans").select("user_id", { count: "exact", head: true })
         .gte("created_at", monthStart),
 
       // plan breakdown (free / pro / premium)
-      db.from("user_plans").select("plan, subscription_status, is_trial"),
+      getAdminClient().from("user_plans").select("plan, subscription_status, is_trial"),
 
       // churned this month
-      db.from("user_plans").select("user_id", { count: "exact", head: true })
+      getAdminClient().from("user_plans").select("user_id", { count: "exact", head: true })
         .eq("subscription_status", "cancelled")
         .gte("updated_at", monthStart),
 
       // signup trend for chart (created_at only, last 30d)
-      db.from("user_plans").select("created_at").gte("created_at", thirtyDaysAgo),
+      getAdminClient().from("user_plans").select("created_at").gte("created_at", thirtyDaysAgo),
 
       // ── ACTIVE USERS (via usage_logs activity) ─────────────────────────────
-      db.from("usage_logs").select("user_id").gte("created_at", dayStart).limit(5000),
-      db.from("usage_logs").select("user_id").gte("created_at", weekStart).limit(20000),
-      db.from("usage_logs").select("user_id").gte("created_at", monthStart).limit(50000),
+      getAdminClient().from("usage_logs").select("user_id").gte("created_at", dayStart).limit(5000),
+      getAdminClient().from("usage_logs").select("user_id").gte("created_at", weekStart).limit(20000),
+      getAdminClient().from("usage_logs").select("user_id").gte("created_at", monthStart).limit(50000),
 
       // ── REVENUE ────────────────────────────────────────────────────────────
-      db.from("payments").select("amount").eq("status", "captured").gte("created_at", dayStart),
-      db.from("payments").select("amount").eq("status", "captured").gte("created_at", weekStart),
-      db.from("payments").select("amount").eq("status", "captured").gte("created_at", monthStart),
-      db.from("payments").select("amount").eq("status", "captured")
+      getAdminClient().from("payments").select("amount").eq("status", "captured").gte("created_at", dayStart),
+      getAdminClient().from("payments").select("amount").eq("status", "captured").gte("created_at", weekStart),
+      getAdminClient().from("payments").select("amount").eq("status", "captured").gte("created_at", monthStart),
+      getAdminClient().from("payments").select("amount").eq("status", "captured")
         .gte("created_at", lastMonthStart).lt("created_at", monthStart),
-      db.from("payments").select("amount").eq("status", "captured"),
-      db.from("payments").select("amount, created_at").eq("status", "captured")
+      getAdminClient().from("payments").select("amount").eq("status", "captured"),
+      getAdminClient().from("payments").select("amount, created_at").eq("status", "captured")
         .gte("created_at", thirtyDaysAgo).order("created_at"),
       rangeStart
-        ? db.from("payments").select("amount").eq("status", "captured").gte("created_at", rangeStart)
-        : db.from("payments").select("amount").eq("status", "captured"),
+        ? getAdminClient().from("payments").select("amount").eq("status", "captured").gte("created_at", rangeStart)
+        : getAdminClient().from("payments").select("amount").eq("status", "captured"),
 
       // ── USAGE ──────────────────────────────────────────────────────────────
-      db.from("documents").select("id", { count: "exact", head: true }),
-      db.from("messages").select("id", { count: "exact", head: true }),
+      getAdminClient().from("documents").select("id", { count: "exact", head: true }),
+      getAdminClient().from("messages").select("id", { count: "exact", head: true }),
 
-      db.from("usage_logs").select("total_tokens, cost_usd, credits_used")
+      getAdminClient().from("usage_logs").select("total_tokens, cost_usd, credits_used")
         .gte("created_at", thirtyDaysAgo),
 
       // ── COUPONS ────────────────────────────────────────────────────────────
-      db.from("coupon_uses").select("id", { count: "exact", head: true }),
-      db.from("coupon_uses").select("coupon_id, coupons(code, discount_type, discount_value)").limit(500),
+      getAdminClient().from("coupon_uses").select("id", { count: "exact", head: true }),
+      getAdminClient().from("coupon_uses").select("coupon_id, coupons(code, discount_type, discount_value)").limit(500),
 
       // ── RECENT ACTIVITY TABLES ─────────────────────────────────────────────
-      db.from("payments")
+      getAdminClient().from("payments")
         .select("id, amount, original_amount, discount_amount, coupon_code, created_at")
         .eq("status", "captured")
         .order("created_at", { ascending: false })
         .limit(15),
 
-      db.from("user_plans")
+      getAdminClient().from("user_plans")
         .select("user_id, plan, subscription_status, is_trial, pro_expires_at, updated_at")
         .order("updated_at", { ascending: false })
         .limit(15),
 
       // Credit usage
-      db.from("credit_transactions").select("amount").limit(10000),
+      getAdminClient().from("credit_transactions").select("amount").limit(10000),
     ]);
 
     // ── Process: Users ────────────────────────────────────────────────────────

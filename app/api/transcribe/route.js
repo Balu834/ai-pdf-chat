@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req) {
   try {
@@ -18,7 +17,7 @@ export async function POST(req) {
     const ext = audio.type?.includes("mp4") ? "mp4" : "webm";
     const file = new File([audio], `recording.${ext}`, { type: audio.type });
 
-    const transcription = await openai.audio.transcriptions.create({
+    const transcription = await getOpenAI().audio.transcriptions.create({
       file,
       model: "whisper-1",
     });

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@supabase/supabase-js";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Service-role client — bypasses RLS so we can read all users' data
 function adminClient() {
@@ -58,7 +57,7 @@ async function buildUserContext(supabase, userId) {
 }
 
 async function runGptAnalysis(context, docCount) {
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.2,
     max_tokens: 600,

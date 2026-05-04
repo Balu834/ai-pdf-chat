@@ -1,33 +1,20 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
+import { getOpenAI } from "@/lib/openai-client";
+import { getAdminClient } from "@/lib/admin-client";
 import { checkUploadLimit, LIMITS, recordPdfUpload } from "@/lib/subscription";
 import { uploadLimiter } from "@/lib/rate-limit";
-import { createClient as createAdmin } from "@supabase/supabase-js";
 
-// ─── Vercel serverless timeout ────────────────────────────────────────────────
-// Hobby plan: 10 s.  Pro plan: 60 s.  Enterprise: 300 s.
-// Set this to match your Vercel plan so the function completes cleanly instead
-// of being killed mid-stream.  Increase to 300 on Enterprise if needed.
 export const maxDuration = 60;
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const MAX_TEXT_CHARS   = 120_000;  // ~40 pages — truncate beyond this
-const CHUNK_SIZE       = 800;
-const CHUNK_OVERLAP    = 100;
-const EMBED_BATCH_SIZE = 100;      // OpenAI max per request
-const EMBED_CONCURRENCY = 2;       // parallel embedding requests
-const PDF_FETCH_TIMEOUT = 15_000;  // ms — abort if Supabase CDN is slow
-const PDF_PARSE_TIMEOUT = 25_000;  // ms — abort if pdf-parse hangs
-
-// ─── Admin Supabase client (bypasses RLS) ────────────────────────────────────
-
-const adminDb = createAdmin(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const MAX_TEXT_CHARS    = 120_000;
+const CHUNK_SIZE        = 800;
+const CHUNK_OVERLAP     = 100;
+const EMBED_BATCH_SIZE  = 100;
+const EMBED_CONCURRENCY = 2;
+const PDF_FETCH_TIMEOUT = 15_000;
+const PDF_PARSE_TIMEOUT = 25_000;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -74,9 +61,9 @@ function chunkText(text) {
  * Embed one batch of chunks (≤ EMBED_BATCH_SIZE).
  * Retries once on 429/rate-limit with a 2 s back-off.
  */
-async function embedBatch(openai, chunks, attempt = 0) {
+async function embedBatch(chunks, attempt = 0) {
   try {
-    const res = await openai.embeddings.create({
+    const res = await getOpenAI().embeddings.create({
       model: "text-embedding-3-small",
       input: chunks,
     });
@@ -86,31 +73,23 @@ async function embedBatch(openai, chunks, attempt = 0) {
     if (isRateLimit && attempt === 0) {
       console.warn("[PROCESS-UPLOAD] OpenAI rate limit — retrying in 2 s");
       await new Promise((r) => setTimeout(r, 2000));
-      return embedBatch(openai, chunks, 1);
+      return embedBatch(chunks, 1);
     }
     throw err;
   }
 }
 
-/**
- * Run embedding batches with limited concurrency so we don't flood the
- * OpenAI rate-limit ceiling with 5+ simultaneous requests.
- */
-async function embedAllChunks(openai, chunks) {
+async function embedAllChunks(chunks) {
   const batches = [];
   for (let i = 0; i < chunks.length; i += EMBED_BATCH_SIZE) {
     batches.push(chunks.slice(i, i + EMBED_BATCH_SIZE));
   }
-
   const allEmbeddings = [];
-
-  // Process EMBED_CONCURRENCY batches at a time
   for (let i = 0; i < batches.length; i += EMBED_CONCURRENCY) {
     const window = batches.slice(i, i + EMBED_CONCURRENCY);
-    const results = await Promise.all(window.map((b) => embedBatch(openai, b)));
+    const results = await Promise.all(window.map((b) => embedBatch(b)));
     for (const r of results) allEmbeddings.push(...r);
   }
-
   return allEmbeddings;
 }
 
@@ -219,7 +198,7 @@ export async function POST(req) {
   // stale, wrong, or skipped due to an infrastructure error.
   let docId;
   try {
-    const { data, error: dbError } = await adminDb.rpc(
+    const { data, error: dbError } = await getAdminClient().rpc(
       "insert_document_if_under_limit",
       {
         p_user_id:   user.id,
@@ -343,10 +322,9 @@ export async function POST(req) {
       }
 
       // Step F: embed (concurrent batches, single retry on rate-limit)
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       let allEmbeddings;
       try {
-        allEmbeddings = await embedAllChunks(openai, chunks);
+        allEmbeddings = await embedAllChunks(chunks);
       } catch (embedErr) {
         console.warn("[PROCESS-UPLOAD] Embedding failed:", embedErr.message);
         await safeRecordUpload(user.id);

@@ -5,9 +5,8 @@ import { sendEmail } from "@/lib/integrations/gmail";
 import { createCalendarEvent } from "@/lib/integrations/google-calendar";
 import { sendSlackMessage } from "@/lib/integrations/slack";
 import { createNotionPage } from "@/lib/integrations/notion";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // POST /api/jobs/worker — process pending platform_jobs
 // Called by cron (Authorization: Bearer <CRON_SECRET>) or authenticated user
@@ -123,7 +122,7 @@ function resolveTemplates(args, stepResults) {
 }
 
 async function doAISummarize({ text, maxTokens = 400 }) {
-  const res = await openai.chat.completions.create({
+  const res = await getOpenAI().chat.completions.create({
     model: "gpt-4o-mini", temperature: 0.2, max_tokens: maxTokens,
     messages: [
       { role: "system", content: "Summarize the following in plain prose, no markdown." },

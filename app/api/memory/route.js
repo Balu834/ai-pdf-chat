@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 /* GET → return the current user's memory */
 export async function GET() {
@@ -48,7 +47,7 @@ export async function POST(req) {
       .map((m) => `${m.role === "assistant" ? "AI" : "User"}: ${m.content?.slice(0, 400)}`)
       .join("\n");
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0,
       max_tokens: 160,

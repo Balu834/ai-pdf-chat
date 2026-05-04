@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-client";
 import { createClient } from "@/lib/supabase-server-client";
-import { createClient as createAdmin } from "@supabase/supabase-js";
 
-const adminDb = createAdmin(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 function isAdmin(email) {
   const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase());
@@ -40,7 +36,7 @@ export async function GET() {
       aiUsageResult,
     ] = await Promise.all([
       // Total user count
-      adminDb.auth.admin.listUsers({ perPage: 1 }),
+      getAdminClient().auth.getAdminClient().listUsers({ perPage: 1 }),
 
       // Active Pro (non-trial) subscriptions
       adminDb
