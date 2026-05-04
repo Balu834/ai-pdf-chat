@@ -49,7 +49,7 @@ export async function POST() {
     await razorpay.subscriptions.cancel(subscriptionId, true);
 
     // Optimistically update DB — webhook will also fire and confirm this
-    await admin
+    await getAdminClient()
       .from("user_plans")
       .update({
         subscription_status: "cancelled",

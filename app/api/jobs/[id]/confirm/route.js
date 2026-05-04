@@ -17,7 +17,7 @@ export async function POST(req, { params }) {
 
   const { approved } = await req.json().catch(() => ({}));
 
-  const { data: job } = await admin
+  const { data: job } = await getAdminClient()
     .from("platform_jobs")
     .select("user_id, status, name")
     .eq("id", params.id)

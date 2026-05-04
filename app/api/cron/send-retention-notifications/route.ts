@@ -55,7 +55,7 @@ export async function GET(request: Request) {
   };
 
   // ── Fetch all users with their plan row ──────────────────────────────────
-  const { data: allUsers } = await admin
+  const { data: allUsers } = await getAdminClient()
     .from("user_plans")
     .select("user_id, plan, phone, email_opt_out")
     .eq("email_opt_out", false);  // respect opt-out
@@ -80,12 +80,12 @@ export async function GET(request: Request) {
 
     try {
       // ── 1. Onboarding: signed up > 1h ago, 0 documents uploaded ──────────
-      const { count: docCount } = await admin
+      const { count: docCount } = await getAdminClient()
         .from("documents")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user_id);
 
-      const { data: planRow } = await admin
+      const { data: planRow } = await getAdminClient()
         .from("user_plans")
         .select("updated_at")
         .eq("user_id", user_id)
@@ -109,14 +109,14 @@ export async function GET(request: Request) {
       }
 
       // ── 2. Activation: has docs but 0 questions ───────────────────────────
-      const { data: statsRow } = await admin
+      const { data: statsRow } = await getAdminClient()
         .from("user_stats")
         .select("total_questions")
         .eq("user_id", user_id)
         .maybeSingle();
 
       if ((docCount ?? 0) > 0 && (statsRow?.total_questions ?? 0) === 0) {
-        const { data: firstDoc } = await admin
+        const { data: firstDoc } = await getAdminClient()
           .from("documents")
           .select("file_name")
           .eq("user_id", user_id)
@@ -142,7 +142,7 @@ export async function GET(request: Request) {
       }
 
       // ── 3. Inactive 24h: has docs, had activity, but not in 24h ──────────
-      const { data: latestSub } = await admin
+      const { data: latestSub } = await getAdminClient()
         .from("push_subscriptions")
         .select("last_used_at")
         .eq("user_id", user_id)

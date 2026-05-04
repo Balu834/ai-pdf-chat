@@ -60,7 +60,7 @@ export async function POST(request) {
 
   // 3. Idempotency guard — skip already-processed events
   if (eventId) {
-    const { data: existing } = await admin
+    const { data: existing } = await getAdminClient()
       .from("webhook_events")
       .select("event_id")
       .eq("event_id", eventId)
@@ -73,7 +73,7 @@ export async function POST(request) {
 
     // Mark as processed (best-effort; duplicate insert is fine — unique constraint blocks it)
     try {
-      await admin
+      await getAdminClient()
         .from("webhook_events")
         .insert({ event_id: eventId, event_type: event });
     } catch {
@@ -103,7 +103,7 @@ export async function POST(request) {
     }
 
     // Idempotency: skip if payment already in ledger
-    const { data: existingPay } = await admin
+    const { data: existingPay } = await getAdminClient()
       .from("payments")
       .select("payment_id")
       .eq("payment_id", paymentId)
@@ -116,7 +116,7 @@ export async function POST(request) {
 
     const proExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const { error: planErr } = await admin
+    const { error: planErr } = await getAdminClient()
       .from("user_plans")
       .upsert(
         {
@@ -227,12 +227,12 @@ export async function POST(request) {
       }
 
       // Clear any grace period that was set from a prior failure
-      await admin
+      await getAdminClient()
         .from("user_plans")
         .update({ grace_until: null, updated_at: new Date().toISOString() })
         .eq("user_id", userId);
 
-      const { data } = await admin
+      const { data } = await getAdminClient()
         .from("user_plans")
         .select("pro_expires_at, next_billing_date")
         .eq("user_id", userId)
@@ -245,7 +245,7 @@ export async function POST(request) {
     }
 
     case "subscription.activated": {
-      await admin
+      await getAdminClient()
         .from("user_plans")
         .update({ subscription_status: "active", updated_at: new Date().toISOString() })
         .eq("user_id", userId);
@@ -254,7 +254,7 @@ export async function POST(request) {
     }
 
     case "subscription.cancelled": {
-      await admin
+      await getAdminClient()
         .from("user_plans")
         .update({
           subscription_status: "cancelled",
@@ -270,7 +270,7 @@ export async function POST(request) {
       // Razorpay retried payment multiple times and gave up.
       // Grant a 3-day grace period before the cron downgrades the user.
       const graceUntil = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
-      await admin
+      await getAdminClient()
         .from("user_plans")
         .update({
           subscription_status: "halted",
@@ -284,7 +284,7 @@ export async function POST(request) {
     }
 
     case "subscription.completed": {
-      await admin
+      await getAdminClient()
         .from("user_plans")
         .update({
           plan:                "free",

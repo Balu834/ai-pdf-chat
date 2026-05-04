@@ -29,7 +29,7 @@ export async function POST(request) {
     const upperCode = coupon_code.trim().toUpperCase();
 
     // Re-validate coupon server-side (never trust the frontend validation)
-    const { data: coupon } = await adminDb
+    const { data: coupon } = await getAdminClient()
       .from("coupons")
       .select("id, discount_type, discount_value, expiry_date, usage_limit, used_count, active")
       .eq("code", upperCode)
@@ -45,7 +45,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Coupon usage limit reached" }, { status: 400 });
     }
 
-    const { data: alreadyUsed } = await adminDb
+    const { data: alreadyUsed } = await getAdminClient()
       .from("coupon_uses")
       .select("id")
       .eq("coupon_id", coupon.id)

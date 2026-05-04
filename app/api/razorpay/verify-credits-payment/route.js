@@ -46,7 +46,7 @@ export async function POST(request) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     // Idempotency
-    const { data: existing } = await adminDb
+    const { data: existing } = await getAdminClient()
       .from("payments")
       .select("payment_id")
       .eq("payment_id", razorpay_payment_id)

@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     // Upsert — same endpoint may re-subscribe after SW update
-    const { error } = await admin
+    const { error } = await getAdminClient()
       .from("push_subscriptions")
       .upsert(
         {
@@ -48,7 +48,7 @@ export async function DELETE(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { endpoint } = await request.json();
-    await admin
+    await getAdminClient()
       .from("push_subscriptions")
       .delete()
       .eq("user_id", user.id)

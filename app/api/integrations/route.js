@@ -14,7 +14,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data } = await admin
+  const { data } = await getAdminClient()
     .from("integrations")
     .select("id, provider, account_email, account_name, scopes, created_at, updated_at")
     .eq("user_id", user.id)

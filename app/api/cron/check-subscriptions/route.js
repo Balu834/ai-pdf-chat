@@ -52,7 +52,7 @@ export async function GET(request) {
   // ──────────────────────────────────────────────────────────────────────────
   // 1. Expire trials that ended without upgrading
   // ──────────────────────────────────────────────────────────────────────────
-  const { data: expiredTrialUsers, error: trialFetchErr } = await admin
+  const { data: expiredTrialUsers, error: trialFetchErr } = await getAdminClient()
     .from("user_plans")
     .select("user_id")
     .eq("is_trial", true)
@@ -64,7 +64,7 @@ export async function GET(request) {
     stats.errors.push(`trial_fetch: ${trialFetchErr.message}`);
   } else if (expiredTrialUsers?.length > 0) {
     const ids = expiredTrialUsers.map((u) => u.user_id);
-    const { error: trialUpdateErr } = await admin
+    const { error: trialUpdateErr } = await getAdminClient()
       .from("user_plans")
       .update({
         plan:                "free",
@@ -90,7 +90,7 @@ export async function GET(request) {
   //    Include halted/past_due users (not just "active") so nothing slips
   //    through if status was set to halted before pro_expires_at elapsed.
   // ──────────────────────────────────────────────────────────────────────────
-  const { data: candidateUsers, error: subFetchErr } = await admin
+  const { data: candidateUsers, error: subFetchErr } = await getAdminClient()
     .from("user_plans")
     .select("user_id, pro_expires_at, grace_until, subscription_status")
     .eq("plan", "pro")
@@ -120,7 +120,7 @@ export async function GET(request) {
     }
 
     if (toDowngrade.length > 0) {
-      const { error: downgradeErr } = await admin
+      const { error: downgradeErr } = await getAdminClient()
         .from("user_plans")
         .update({
           plan:                "free",

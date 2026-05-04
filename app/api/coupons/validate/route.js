@@ -27,7 +27,7 @@ export async function POST(request) {
     const upperCode = code.trim().toUpperCase();
 
     // 1. Fetch coupon (service role bypasses RLS)
-    const { data: coupon, error: fetchError } = await admin
+    const { data: coupon, error: fetchError } = await getAdminClient()
       .from("coupons")
       .select("id, code, discount_type, discount_value, expiry_date, usage_limit, used_count, active")
       .eq("code", upperCode)
@@ -52,7 +52,7 @@ export async function POST(request) {
     }
 
     // 4. Check if this user already used this coupon
-    const { data: alreadyUsed } = await admin
+    const { data: alreadyUsed } = await getAdminClient()
       .from("coupon_uses")
       .select("id")
       .eq("coupon_id", coupon.id)

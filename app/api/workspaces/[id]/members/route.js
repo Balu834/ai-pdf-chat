@@ -18,7 +18,7 @@ export async function GET(req, { params }) {
     const { id } = await params;
     await requireWorkspaceMember(id, user.id);
 
-    const { data: members, error } = await admin
+    const { data: members, error } = await getAdminClient()
       .from("workspace_members")
       .select("id, user_id, role, joined_at")
       .eq("workspace_id", id)
@@ -59,7 +59,7 @@ export async function PATCH(req, { params }) {
     }
 
     // Prevent changing owner's role
-    const { data: target } = await admin
+    const { data: target } = await getAdminClient()
       .from("workspace_members")
       .select("role")
       .eq("id", memberId)
@@ -72,7 +72,7 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "Only owners can promote to admin" }, { status: 403 });
     }
 
-    const { data, error } = await admin
+    const { data, error } = await getAdminClient()
       .from("workspace_members")
       .update({ role })
       .eq("id", memberId)
@@ -100,7 +100,7 @@ export async function DELETE(req, { params }) {
     if (!memberId) return NextResponse.json({ error: "memberId required" }, { status: 400 });
 
     // Fetch the target member to check if it's self-removal
-    const { data: target } = await admin
+    const { data: target } = await getAdminClient()
       .from("workspace_members")
       .select("user_id, role")
       .eq("id", memberId)
@@ -116,7 +116,7 @@ export async function DELETE(req, { params }) {
       await requireWorkspaceMember(id, user.id, "admin");
     }
 
-    const { error } = await admin
+    const { error } = await getAdminClient()
       .from("workspace_members")
       .delete()
       .eq("id", memberId)

@@ -41,7 +41,7 @@ export async function GET(request) {
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
-      const { data, error } = await admin
+      const { data, error } = await getAdminClient()
         .from("user_plans")
         .select("plan, subscription_status, pro_expires_at, grace_until")
         .eq("user_id", userId)

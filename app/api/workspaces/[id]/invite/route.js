@@ -19,7 +19,7 @@ export async function GET(req, { params }) {
     const { id } = await params;
     await requireWorkspaceMember(id, user.id, "admin");
 
-    const { data, error } = await admin
+    const { data, error } = await getAdminClient()
       .from("workspace_invites")
       .select("id, email, role, token, created_at, expires_at, accepted_at")
       .eq("workspace_id", id)
@@ -48,13 +48,13 @@ export async function POST(req, { params }) {
     }
 
     // Fetch workspace name for the email
-    const { data: workspace } = await admin
+    const { data: workspace } = await getAdminClient()
       .from("workspaces")
       .select("name")
       .eq("id", id)
       .single();
 
-    const { data: invite, error } = await admin
+    const { data: invite, error } = await getAdminClient()
       .from("workspace_invites")
       .insert({ workspace_id: id, email: email || null, role, invited_by: user.id })
       .select()
@@ -90,7 +90,7 @@ export async function DELETE(req, { params }) {
     const inviteId = searchParams.get("inviteId");
     if (!inviteId) return NextResponse.json({ error: "inviteId required" }, { status: 400 });
 
-    const { error } = await admin
+    const { error } = await getAdminClient()
       .from("workspace_invites")
       .delete()
       .eq("id", inviteId)

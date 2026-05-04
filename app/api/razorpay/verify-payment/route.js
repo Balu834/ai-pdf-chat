@@ -81,7 +81,7 @@ export async function POST(request) {
     console.log(`[verify-payment] Resolved user: ${userId}`);
 
     // 4. Idempotency: skip if this payment_id was already processed
-    const { data: existingPayment } = await adminDb
+    const { data: existingPayment } = await getAdminClient()
       .from("payments")
       .select("payment_id")
       .eq("payment_id", razorpay_payment_id)
@@ -89,7 +89,7 @@ export async function POST(request) {
 
     if (existingPayment) {
       console.log(`[verify-payment] Duplicate payment_id ${razorpay_payment_id} — already processed`);
-      const { data: planRow } = await adminDb
+      const { data: planRow } = await getAdminClient()
         .from("user_plans")
         .select("pro_expires_at")
         .eq("user_id", userId)
@@ -102,7 +102,7 @@ export async function POST(request) {
 
     // 5. Upgrade user plan — use admin client to bypass RLS reliably.
     //    One-time orders have no subscription_id or next_billing_date (single payment).
-    const { error: upsertError } = await adminDb
+    const { error: upsertError } = await getAdminClient()
       .from("user_plans")
       .upsert(
         {
@@ -155,7 +155,7 @@ export async function POST(request) {
     // 7. Mark coupon as used (non-blocking)
     if (coupon_id) {
       try {
-        await adminDb
+        await getAdminClient()
           .from("coupon_uses")
           .upsert(
             { coupon_id, user_id: userId },

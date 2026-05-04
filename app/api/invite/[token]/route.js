@@ -13,7 +13,7 @@ export async function GET(req, { params }) {
   try {
     const { token } = await params;
 
-    const { data: invite, error } = await admin
+    const { data: invite, error } = await getAdminClient()
       .from("workspace_invites")
       .select("id, role, email, workspace_id, expires_at, accepted_at")
       .eq("token", token)
@@ -29,14 +29,14 @@ export async function GET(req, { params }) {
       return NextResponse.json({ error: "Invite expired" }, { status: 410 });
     }
 
-    const { data: workspace } = await admin
+    const { data: workspace } = await getAdminClient()
       .from("workspaces")
       .select("name")
       .eq("id", invite.workspace_id)
       .single();
 
     // Fetch inviter email
-    const { data: inviterRow } = await admin
+    const { data: inviterRow } = await getAdminClient()
       .from("workspace_invites")
       .select("invited_by")
       .eq("token", token)
@@ -68,7 +68,7 @@ export async function POST(req, { params }) {
 
     const { token } = await params;
 
-    const { data: invite, error } = await admin
+    const { data: invite, error } = await getAdminClient()
       .from("workspace_invites")
       .select("id, workspace_id, role, email, expires_at, accepted_at")
       .eq("token", token)
@@ -93,7 +93,7 @@ export async function POST(req, { params }) {
     await addWorkspaceMember(invite.workspace_id, user.id, invite.role);
 
     // Mark invite accepted
-    await admin
+    await getAdminClient()
       .from("workspace_invites")
       .update({ accepted_at: new Date().toISOString() })
       .eq("id", invite.id);
