@@ -15,10 +15,11 @@ const PROOF_NAMES = [
 ];
 
 function useSocialProof() {
-  const [idx, setIdx]       = useState(() => Math.floor(Math.random() * PROOF_NAMES.length));
+  const [idx, setIdx]       = useState(0);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    setIdx(Math.floor(Math.random() * PROOF_NAMES.length));
     // Show first proof after 3s, then every 8s
     const show = () => {
       setIdx((i) => (i + 1) % PROOF_NAMES.length);
@@ -36,8 +37,9 @@ function useSocialProof() {
 /* ─── UPGRADE COUNTER (live feel) ───────────────────────────────────────── */
 // Simulate "X upgraded today" — anchors perceived value
 function useUpgradeCount() {
-  const [count, setCount] = useState(() => Math.floor(Math.random() * 12) + 18);
+  const [count, setCount] = useState(18);
   useEffect(() => {
+    setCount(Math.floor(Math.random() * 12) + 18);
     const id = setInterval(() => {
       if (Math.random() > 0.7) setCount((c) => c + 1);
     }, 45_000);

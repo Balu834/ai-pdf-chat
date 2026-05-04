@@ -32,9 +32,10 @@ function useSocialProof() {
     "Sneha from Pune", "Karan from Hyderabad", "Divya from Chennai",
     "Arjun from Jaipur", "Meera from Ahmedabad", "Rohan from Surat",
   ];
-  const [idx, setIdx]         = useState(() => Math.floor(Math.random() * NAMES.length));
+  const [idx, setIdx]         = useState(0);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
+    setIdx(Math.floor(Math.random() * NAMES.length));
     const show = () => {
       setIdx((i) => (i + 1) % NAMES.length);
       setVisible(true);
@@ -48,8 +49,9 @@ function useSocialProof() {
 }
 
 function useUpgradeCount() {
-  const [count, setCount] = useState(() => Math.floor(Math.random() * 14) + 22);
+  const [count, setCount] = useState(22);
   useEffect(() => {
+    setCount(Math.floor(Math.random() * 14) + 22);
     const id = setInterval(() => { if (Math.random() > 0.72) setCount((c) => c + 1); }, 42_000);
     return () => clearInterval(id);
   }, []);
