@@ -1,4 +1,4 @@
-const CACHE_NAME = "intellixy-v3";
+const CACHE_NAME = "intellixy-v4";
 
 // Only pre-cache truly static resources that never change URL.
 const PRECACHE_URLS = ["/manifest.json"];
@@ -61,21 +61,26 @@ self.addEventListener("fetch", (event) => {
   // Pass through: non-GET, API calls, auth, external services.
   if (shouldSkip(request, url)) return;
 
-  // ── Static assets (cache-first, no expiry needed — URLs are content-hashed) ─
+  // ── Static assets (cache-first, content-hashed URLs — safe to cache forever) ─
   if (isStaticAsset(url)) {
     event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((res) => {
-            // Only cache successful responses.
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request)
+          .then((res) => {
             if (res.ok) {
               const clone = res.clone();
               caches.open(CACHE_NAME).then((c) => c.put(request, clone));
             }
             return res;
           })
-      )
+          .catch(() =>
+            // Offline and not cached — return an empty 503 so the SW doesn't
+            // crash. The browser will show a broken image/missing asset rather
+            // than a hard service-worker error.
+            new Response("", { status: 503, statusText: "Offline" })
+          );
+      })
     );
     return;
   }
@@ -109,10 +114,22 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // ── Everything else (non-navigation non-static GETs) — network with cache
-  //    fallback but DO NOT update the cache on success to avoid stale entries.
+  // ── Everything else (non-navigation non-static GETs) — network-only.
+  //    Fallback to cache if the network fails, and to a 503 Response if the
+  //    cache has nothing — so event.respondWith() always receives a Response,
+  //    never undefined (which throws "Failed to convert value to 'Response'").
   event.respondWith(
-    fetch(request).catch(() => caches.match(request))
+    fetch(request).catch(async () => {
+      const cached = await caches.match(request);
+      return (
+        cached ??
+        new Response(JSON.stringify({ error: "Offline" }), {
+          status: 503,
+          statusText: "Service Unavailable",
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    })
   );
 });
 
