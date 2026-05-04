@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdmin } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-server-client";
+import { getAdminClient } from "@/lib/admin-client";
 
 // ── Columns that map to individual term flags ───────────────────────────────
 const TERM_KEYS = [
@@ -9,12 +9,6 @@ const TERM_KEYS = [
   "ai_processing_consent",
   "content_policy",
 ];
-
-const admin = createAdmin(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } }
-);
 
 /* ─── GET /api/user/terms ────────────────────────────────────────────────────
    Returns the current acceptance state for the authenticated user.
@@ -28,7 +22,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await admin
+    const { data, error } = await getAdminClient()
       .from("user_terms")
       .select("terms_of_service, privacy_policy, ai_processing_consent, content_policy, all_accepted_at")
       .eq("user_id", user.id)
@@ -89,7 +83,7 @@ export async function POST(req) {
     }
 
     // Read existing row to compute whether all flags will be set after this update
-    const { data: existing, error: readErr } = await admin
+    const { data: existing, error: readErr } = await getAdminClient()
       .from("user_terms")
       .select(TERM_KEYS.join(", "))
       .eq("user_id", user.id)
@@ -106,7 +100,7 @@ export async function POST(req) {
       updates.all_accepted_at = new Date().toISOString();
     }
 
-    const { error: upsertErr } = await admin
+    const { error: upsertErr } = await getAdminClient()
       .from("user_terms")
       .upsert(
         { user_id: user.id, ...updates },

@@ -18,8 +18,8 @@ const nextConfig = {
               // Media (TTS audio, blob: URLs)
               "media-src 'self' blob:",
 
-              // Framing: self + Razorpay + YouTube demo + Vercel feedback modal
-              "frame-src 'self' https://*.razorpay.com https://api.razorpay.com https://www.youtube.com https://youtube.com https://vercel.live",
+              // Framing: self + Razorpay + YouTube + Vercel live/toolbar
+              "frame-src 'self' https://*.razorpay.com https://api.razorpay.com https://www.youtube.com https://youtube.com https://vercel.live https://*.vercel.live",
 
               // Scripts: explicit script-src-elem required — browsers don't
               // always fall back to script-src for <script src="..."> elements
