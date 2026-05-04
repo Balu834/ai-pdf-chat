@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/admin-client";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-server-client";
 
+function getAdmin() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -14,15 +21,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid subscription object" }, { status: 400 });
     }
 
-    // Upsert — same endpoint may re-subscribe after SW update
-    const { error } = await getAdminClient()
+    const { error } = await getAdmin()
       .from("push_subscriptions")
       .upsert(
         {
-          user_id:     user.id,
+          user_id:      user.id,
           endpoint,
-          p256dh:      keys.p256dh,
-          auth:        keys.auth,
+          p256dh:       keys.p256dh,
+          auth:         keys.auth,
           last_used_at: new Date().toISOString(),
         },
         { onConflict: "endpoint" }
@@ -33,7 +39,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to save subscription" }, { status: 500 });
     }
 
-    console.log(`[push/subscribe] ✅ User ${user.id} subscribed on ${endpoint.slice(-20)}`);
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error("[push/subscribe] Unhandled:", err.message);
@@ -48,7 +53,7 @@ export async function DELETE(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { endpoint } = await request.json();
-    await getAdminClient()
+    await getAdmin()
       .from("push_subscriptions")
       .delete()
       .eq("user_id", user.id)
