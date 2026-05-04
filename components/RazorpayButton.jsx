@@ -110,7 +110,7 @@ export default function RazorpayButton({ user, plan = "pro", couponData, style, 
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on("payment.failed", () => { Events.paymentFailed(); handleError(`Payment failed: ${r.error.description}`); });
+        rzp.on("payment.failed", (r) => { Events.paymentFailed(); handleError(`Payment failed: ${r.error.description}`); });
         rzp.open();
 
       } else if (plan === "premium") {

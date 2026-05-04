@@ -62,7 +62,7 @@ export async function POST(request) {
         `[verify-payment] Session auth failed (${authError?.message ?? "no session"}). ` +
         `Falling back to body user_id: ${bodyUserId}`
       );
-      const { data: adminUser } = await getAdminClient().auth.getAdminClient().getUserById(bodyUserId);
+      const { data: adminUser } = await getAdminClient().auth.admin.getUserById(bodyUserId);
       userId    = adminUser?.user?.id    ?? null;
       userEmail = adminUser?.user?.email ?? null;
     }

@@ -55,7 +55,7 @@ export async function POST(request) {
         `Falling back to body user_id: ${bodyUserId}`
       );
       // Look up the user to get their email (needed for confirmation email)
-      const { data: adminUser } = await getAdminClient().auth.getAdminClient().getUserById(bodyUserId);
+      const { data: adminUser } = await getAdminClient().auth.admin.getUserById(bodyUserId);
       userId    = adminUser?.user?.id    ?? null;
       userEmail = adminUser?.user?.email ?? null;
     }
