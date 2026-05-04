@@ -2,13 +2,23 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
 import { getAdminClient } from "@/lib/admin-client";
 
-// ── Columns that map to individual term flags ───────────────────────────────
 const TERM_KEYS = [
   "terms_of_service",
   "privacy_policy",
   "ai_processing_consent",
   "content_policy",
 ];
+
+// All responses from this route must not be cached — stale auth/terms
+// data served from a CDN or browser cache causes misleading UI state.
+const NO_STORE = { headers: { "Cache-Control": "no-store" } };
+
+const FALLBACK = NextResponse.json(
+  { terms_of_service: false, privacy_policy: false,
+    ai_processing_consent: false, content_policy: false,
+    all_accepted: false, all_accepted_at: null },
+  NO_STORE
+);
 
 /* ─── GET /api/user/terms ────────────────────────────────────────────────────
    Returns the current acceptance state for the authenticated user.
@@ -19,7 +29,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401, ...NO_STORE });
     }
 
     const { data, error } = await getAdminClient()
@@ -30,27 +40,19 @@ export async function GET() {
 
     if (error) {
       console.error("[terms/GET] DB error:", error.message);
-      return NextResponse.json({ error: "Failed to fetch terms status" }, { status: 500 });
+      return FALLBACK;
     }
 
-    // No row yet — return all-false defaults without inserting
-    if (!data) {
-      return NextResponse.json({
-        terms_of_service:      false,
-        privacy_policy:        false,
-        ai_processing_consent: false,
-        content_policy:        false,
-        all_accepted:          false,
-        all_accepted_at:       null,
-      });
-    }
+    if (!data) return FALLBACK;
 
-    const allAccepted = TERM_KEYS.every((k) => data[k] === true);
-    return NextResponse.json({ ...data, all_accepted: allAccepted });
+    return NextResponse.json(
+      { ...data, all_accepted: TERM_KEYS.every((k) => data[k] === true) },
+      NO_STORE
+    );
 
   } catch (err) {
     console.error("[terms/GET] Unexpected:", err?.message ?? err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return FALLBACK;
   }
 }
 
@@ -65,24 +67,21 @@ export async function POST(req) {
     const supabase = await createClient();
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401, ...NO_STORE });
     }
 
     let body;
     try { body = await req.json(); }
-    catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+    catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400, ...NO_STORE }); }
 
-    // Build update payload — only permit known keys being set to true
     const updates = {};
     for (const key of TERM_KEYS) {
       if (body[key] === true) updates[key] = true;
     }
-
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400, ...NO_STORE });
     }
 
-    // Read existing row to compute whether all flags will be set after this update
     const { data: existing, error: readErr } = await getAdminClient()
       .from("user_terms")
       .select(TERM_KEYS.join(", "))
@@ -91,7 +90,7 @@ export async function POST(req) {
 
     if (readErr) {
       console.error("[terms/POST] Read error:", readErr.message);
-      return NextResponse.json({ error: "Failed to read existing terms" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to read existing terms" }, { status: 500, ...NO_STORE });
     }
 
     const merged = { ...(existing ?? {}), ...updates };
@@ -109,14 +108,14 @@ export async function POST(req) {
 
     if (upsertErr) {
       console.error("[terms/POST] Upsert error:", upsertErr.message);
-      return NextResponse.json({ error: "Failed to save acceptance" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to save acceptance" }, { status: 500, ...NO_STORE });
     }
 
     console.log(`[terms] user=${user.id} updated=${JSON.stringify(updates)} all=${allNowAccepted}`);
-    return NextResponse.json({ ok: true, all_accepted: allNowAccepted });
+    return NextResponse.json({ ok: true, all_accepted: allNowAccepted }, NO_STORE);
 
   } catch (err) {
     console.error("[terms/POST] Unexpected:", err?.message ?? err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500, ...NO_STORE });
   }
 }
