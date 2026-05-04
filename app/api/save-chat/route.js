@@ -1,40 +1,22 @@
 import { NextResponse } from "next/server";
-import supabase from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server-client";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { question, answer } = body;
-
-    console.log("Saving:", question, answer); // ✅ DEBUG
-
-    if (!question || !answer) {
-      return NextResponse.json(
-        { error: "Missing data" },
-        { status: 400 }
-      );
-    }
+    const { question, answer } = await req.json();
+    if (!question || !answer) return NextResponse.json({ error: "Missing data" }, { status: 400 });
 
     const { data, error } = await supabase
       .from("chats")
-      .insert([{ question, answer }]);
+      .insert([{ question, answer, user_id: user.id }]);
 
-    if (error) {
-      console.error("SUPABASE ERROR:", error);
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true, data });
-
   } catch (err) {
-    console.error("SAVE CHAT ERROR:", err);
-    return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

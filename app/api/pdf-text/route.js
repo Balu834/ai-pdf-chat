@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
-import supabase from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server-client";
 
 export async function GET(req) {
-  const { searchParams } = new URL(req.url);
-  const documentId = searchParams.get("documentId");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data } = await supabase
-    .from("chunks")
-    .select("content")
-    .eq("document_id", documentId);
+    const { searchParams } = new URL(req.url);
+    const documentId = searchParams.get("documentId");
+    if (!documentId) return NextResponse.json({ error: "Missing documentId" }, { status: 400 });
 
-  const text = data.map((c) => c.content).join("\n");
+    const { data, error } = await supabase
+      .from("chunks")
+      .select("content")
+      .eq("document_id", documentId);
 
-  return NextResponse.json({ text });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const text = (data ?? []).map((c) => c.content).join("\n");
+    return NextResponse.json({ text });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
