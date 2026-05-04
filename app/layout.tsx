@@ -95,8 +95,11 @@ export default function RootLayout({
         {children}
         <Analytics />
         <Suspense fallback={null}><RouteAnalytics /></Suspense>
-        <VercelAnalytics />
-        <SpeedInsights />
+        {/* Only mount Vercel observability on real Vercel deployments.
+            In local dev / non-Vercel hosts these call /api/v6/deployments/
+            which 404s repeatedly and pollutes the console. */}
+        {process.env.VERCEL === "1" && <VercelAnalytics />}
+        {process.env.VERCEL === "1" && <SpeedInsights />}
         <ServiceWorkerRegistration />
         <InstallPopup />
       </body>

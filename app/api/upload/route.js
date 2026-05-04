@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
+import { getAdminClient } from "@/lib/admin-client";
+import { getOpenAI } from "@/lib/openai-client";
 import { checkUploadLimit, LIMITS } from "@/lib/subscription";
 import { uploadLimiter } from "@/lib/rate-limit";
-import { createClient as createAdmin } from "@supabase/supabase-js";
-
-const adminDb = createAdmin(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
@@ -131,7 +126,7 @@ export async function POST(req) {
 
     // ── DB record (atomic limit check + insert to prevent race conditions) ──
     const pdfLimit = limitCheck.isPro ? 2147483647 : LIMITS.free.pdfs;
-    const { data: docId, error: dbError } = await adminDb.rpc(
+    const { data: docId, error: dbError } = await getAdminClient().rpc(
       "insert_document_if_under_limit",
       {
         p_user_id:   user.id,
@@ -158,7 +153,7 @@ export async function POST(req) {
     // ── Embeddings (blocking — Vercel kills background tasks after response) ──
     if (process.env.OPENAI_API_KEY) {
       try {
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const openai = getOpenAI();
         const buffer = Buffer.from(await file.arrayBuffer());
         const pdfData = await pdf(buffer);
         const rawText = pdfData.text.replace(/\s+/g, " ").trim();

@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
+import { getOpenAI } from "@/lib/openai-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
 import { deductCredit, logUsage } from "@/lib/credits";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const TOP_K = 5;
 const MAX_CONTEXT = 3000;
@@ -26,7 +24,7 @@ function isExtractionRequest(message) {
 }
 
 async function extractStructured(context, message) {
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0,
     response_format: { type: "json_object" },
@@ -155,7 +153,7 @@ async function streamOpenAI(context, message, {
   const needsConversion = lower.includes("in number") || lower.includes("convert") || lower.includes("amount");
   const userContent = message + (needsConversion ? "\n\nNote: Convert any written amounts to numeric form." : "");
 
-  const stream = await openai.chat.completions.create({
+  const stream = await getOpenAI().chat.completions.create({
     model: "gpt-4o-mini",
     stream: true,
     stream_options: { include_usage: true },
@@ -293,7 +291,7 @@ export async function POST(req) {
 
       if (doc?.id) {
         ragDocId = doc.id;
-        const embeddingRes = await openai.embeddings.create({
+        const embeddingRes = await getOpenAI().embeddings.create({
           model: "text-embedding-3-small",
           input: message,
         });

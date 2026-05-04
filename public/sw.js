@@ -1,6 +1,7 @@
-const CACHE_NAME = "intellixy-v2";
+const CACHE_NAME = "intellixy-v3";
 
-const PRECACHE_URLS = ["/", "/manifest.json"];
+// Only pre-cache truly static resources that never change URL.
+const PRECACHE_URLS = ["/manifest.json"];
 
 // ── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener("install", (event) => {
@@ -12,7 +13,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// ── Activate: delete stale caches ────────────────────────────────────────────
+// ── Activate: delete all stale caches ───────────────────────────────────────
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -24,33 +25,54 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function isStaticAsset(url) {
+  // /_next/static/ URLs include content hashes — safe to cache indefinitely.
+  // Font and image files are also immutable once deployed.
+  return (
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/fonts/") ||
+    url.pathname.match(/\.(png|jpg|jpeg|svg|ico|woff2?)$/)
+  );
+}
+
+function isNavigationRequest(request) {
+  return request.mode === "navigate";
+}
+
+function shouldSkip(request, url) {
+  return (
+    request.method !== "GET" ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/auth/") ||
+    url.hostname.includes("supabase.co") ||
+    url.hostname.includes("razorpay.com") ||
+    url.hostname.includes("vercel.com") ||
+    url.hostname.includes("vercel-insights.com")
+  );
+}
+
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  if (
-    request.method !== "GET" ||
-    url.pathname.startsWith("/api/") ||
-    url.hostname.includes("supabase.co") ||
-    url.hostname.includes("razorpay.com") ||
-    url.pathname.startsWith("/auth/")
-  ) {
-    return;
-  }
+  // Pass through: non-GET, API calls, auth, external services.
+  if (shouldSkip(request, url)) return;
 
-  if (
-    url.pathname.startsWith("/_next/static/") ||
-    url.pathname.startsWith("/fonts/") ||
-    url.pathname.match(/\.(png|jpg|jpeg|svg|ico|woff2?)$/)
-  ) {
+  // ── Static assets (cache-first, no expiry needed — URLs are content-hashed) ─
+  if (isStaticAsset(url)) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
           cached ||
           fetch(request).then((res) => {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+            // Only cache successful responses.
+            if (res.ok) {
+              const clone = res.clone();
+              caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+            }
             return res;
           })
       )
@@ -58,17 +80,39 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(
-    fetch(request)
-      .then((res) => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then((c) => c.put(request, clone));
-        return res;
-      })
-      .catch(async () => {
+  // ── Navigation (HTML pages) — ALWAYS network-first, NEVER cache the response.
+  //
+  //    WHY: Next.js inlines `<link rel="preload">` tags whose hrefs point to
+  //    the current build's chunk hashes. If the service worker caches this HTML
+  //    and serves it after a new deploy, the browser preloads chunks from the
+  //    OLD build that no longer exist — causing hundreds of "preloaded but not
+  //    used" warnings and broken navigations.
+  //
+  //    Offline fallback: return the last cached page the user visited so the
+  //    app still opens without a connection.
+  if (isNavigationRequest(request)) {
+    event.respondWith(
+      fetch(request).catch(async () => {
         const cached = await caches.match(request);
-        return cached ?? new Response("Offline", { status: 503, statusText: "Service Unavailable" });
+        if (cached) return cached;
+        // Last-resort offline shell — serve the cached homepage.
+        return (
+          (await caches.match("/")) ??
+          new Response("You are offline.", {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "text/plain" },
+          })
+        );
       })
+    );
+    return;
+  }
+
+  // ── Everything else (non-navigation non-static GETs) — network with cache
+  //    fallback but DO NOT update the cache on success to avoid stale entries.
+  event.respondWith(
+    fetch(request).catch(() => caches.match(request))
   );
 });
 
@@ -91,7 +135,6 @@ self.addEventListener("push", (event) => {
       tag:     payload.tag || "intellixy",
       data:    { url: payload.url || "/dashboard" },
       actions: [{ action: "open", title: "Open app" }],
-      // Vibrate pattern for Android
       vibrate: [100, 50, 100],
     })
   );
@@ -108,14 +151,12 @@ self.addEventListener("notificationclick", (event) => {
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clients) => {
-        // Focus existing tab if already open
         const existing = clients.find((c) => c.url.startsWith(self.location.origin));
         if (existing) {
           existing.focus();
           existing.navigate(fullUrl);
           return;
         }
-        // Otherwise open a new window
         self.clients.openWindow(fullUrl);
       })
   );
