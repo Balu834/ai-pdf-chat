@@ -62,8 +62,9 @@ export async function GET(request: Request) {
 
   // Look up emails in batch
   const { data: authUsers } = await getAdminClient().auth.admin.listUsers();
-  const emailMap = new Map(
-    (authUsers?.users ?? []).map((u) => [u.id, { email: u.email, name: u.user_metadata?.full_name }])
+  const rawUsers = (authUsers?.users ?? []) as Array<{ id: string; email?: string; user_metadata?: Record<string, unknown> }>;
+  const emailMap = new Map<string, { email?: string; name?: string }>(
+    rawUsers.map((u) => [u.id, { email: u.email, name: u.user_metadata?.full_name as string | undefined }])
   );
 
   for (const row of allUsers) {
