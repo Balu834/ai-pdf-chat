@@ -19,6 +19,7 @@ async function getUser() {
 const PLATFORM_FEE_PCT = 0.20; // 20% platform fee
 
 export async function POST(req) {
+  try {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -32,7 +33,7 @@ export async function POST(req) {
     .select("id, name, description, price_paise, creator_id")
     .eq("id", template_id)
     .eq("is_published", true)
-    .single();
+    .maybeSingle();
 
   if (!template) return NextResponse.json({ error: "Template not found" }, { status: 404 });
   if (template.price_paise === 0) return NextResponse.json({ error: "Template is free — install directly" }, { status: 400 });
@@ -85,4 +86,8 @@ export async function POST(req) {
     },
     key_id: process.env.RAZORPAY_KEY_ID,
   });
+  } catch (err) {
+    console.error("[buy-template POST]", err.message);
+    return NextResponse.json({ error: err.message || "Could not create order" }, { status: 500 });
+  }
 }

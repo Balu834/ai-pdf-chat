@@ -11,6 +11,7 @@ async function getUser() {
 }
 
 export async function POST(req) {
+  try {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -60,7 +61,7 @@ export async function POST(req) {
     .from("marketplace_templates")
     .select("creator_id, name")
     .eq("id", template_id)
-    .single();
+    .maybeSingle();
 
   if (tpl?.creator_id && purchase.creator_paise > 0) {
     await sb.rpc("add_creator_earnings", {
@@ -75,7 +76,7 @@ export async function POST(req) {
     .from("marketplace_templates")
     .select("*")
     .eq("id", template_id)
-    .single();
+    .maybeSingle();
 
   if (template) {
     const { data: existing } = await sb
@@ -94,7 +95,7 @@ export async function POST(req) {
         description:                    template.description,
         trigger:                        "manual",
         source_marketplace_template_id: template_id,
-      }).select("id").single();
+      }).select("id").maybeSingle();
 
       if (wf) {
         workflow_id = wf.id;
@@ -116,4 +117,8 @@ export async function POST(req) {
   }
 
   return NextResponse.json({ success: true, workflow_id });
+  } catch (err) {
+    console.error("[verify-template-payment POST]", err.message);
+    return NextResponse.json({ error: "Payment verification failed" }, { status: 500 });
+  }
 }

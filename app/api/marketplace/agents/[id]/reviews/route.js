@@ -9,52 +9,62 @@ async function getUser() {
 }
 
 export async function GET(req, { params }) {
-  const user = await getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const user = await getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data, error } = await getAdminClient()
-    .from("marketplace_reviews")
-    .select("id, user_id, rating, review, created_at")
-    .eq("target_type", "agent")
-    .eq("target_id", params.id)
-    .order("created_at", { ascending: false })
-    .limit(50);
+    const { data, error } = await getAdminClient()
+      .from("marketplace_reviews")
+      .select("id, user_id, rating, review, created_at")
+      .eq("target_type", "agent")
+      .eq("target_id", params.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ reviews: data ?? [] });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ reviews: data ?? [] });
+  } catch (err) {
+    console.error("[agents/[id]/reviews/route.js GET]", err?.message ?? err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(req, { params }) {
-  const user = await getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const user = await getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { rating, review } = await req.json();
-  if (!rating || rating < 1 || rating > 5)
-    return NextResponse.json({ error: "rating must be 1–5" }, { status: 400 });
+    const { rating, review } = await req.json();
+    if (!rating || rating < 1 || rating > 5)
+      return NextResponse.json({ error: "rating must be 1–5" }, { status: 400 });
 
-  // Must have installed the agent to review it
-  const { data: installed } = await getAdminClient()
-    .from("agents")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("source_marketplace_agent_id", params.id)
-    .maybeSingle();
+    // Must have installed the agent to review it
+    const { data: installed } = await getAdminClient()
+      .from("agents")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("source_marketplace_agent_id", params.id)
+      .maybeSingle();
 
-  if (!installed) return NextResponse.json({ error: "Install the agent before reviewing" }, { status: 403 });
+    if (!installed) return NextResponse.json({ error: "Install the agent before reviewing" }, { status: 403 });
 
-  const { data, error } = await getAdminClient()
-    .from("marketplace_reviews")
-    .upsert({
-      user_id: user.id,
-      target_type: "agent",
-      target_id: params.id,
-      rating,
-      review: review?.trim() ?? null,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "user_id,target_type,target_id" })
-    .select()
-    .single();
+    const { data, error } = await getAdminClient()
+      .from("marketplace_reviews")
+      .upsert({
+        user_id: user.id,
+        target_type: "agent",
+        target_id: params.id,
+        rating,
+        review: review?.trim() ?? null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id,target_type,target_id" })
+      .select()
+      .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ review: data });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ review: data });
+  } catch (err) {
+    console.error("[agents/[id]/reviews/route.js POST]", err?.message ?? err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
