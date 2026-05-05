@@ -34,7 +34,6 @@ import OnboardingOverlay from "@/components/dashboard/OnboardingOverlay";
 import ToastContainer from "@/components/ui/Toast";
 import ShareModal from "@/components/dashboard/ShareModal";
 import TeamView from "@/components/dashboard/TeamView";
-import BuyCreditsModal from "@/components/dashboard/BuyCreditsModal";
 import InviteModal from "@/components/dashboard/InviteModal";
 import AgentsView from "@/components/dashboard/AgentsView";
 import AgentChat from "@/components/dashboard/AgentChat";
@@ -205,7 +204,6 @@ export default function DashboardPage() {
   const [shareLoading, setShareLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [showShareModal, setShowShareModal]         = useState(false);
-  const [showBuyCredits, setShowBuyCredits]         = useState(false);
   const [showInviteModal, setShowInviteModal]       = useState(false);
 
   const [replyTo,  setReplyTo]  = useState(null);
@@ -770,7 +768,7 @@ export default function DashboardPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "", streaming: false, locked: true } : m)); setShowBuyCredits(true); }
+        if (data.limitExceeded) { setLimitError(data.error); setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: "", streaming: false, locked: true } : m)); setUpgradePopup("question"); }
         else { setMessages((p) => p.map((m) => m.id === aiMsgId ? { ...m, content: data.error || "Request failed.", streaming: false } : m)); }
         return;
       }
@@ -1260,7 +1258,6 @@ export default function DashboardPage() {
               onUpload={() => fileInputRef.current?.click()}
               onSelectDoc={selectDoc}
               onUpgradeClick={() => setUpgradePopup("pdf")}
-              onBuyCredits={() => setShowBuyCredits(true)}
               onInvite={() => setShowInviteModal(true)}
               user={user}
               onViewChange={setView}
@@ -1817,16 +1814,6 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {showBuyCredits && (
-        <BuyCreditsModal
-          user={user}
-          onClose={() => setShowBuyCredits(false)}
-          onSuccess={(balance, added) => {
-            addToast(`⚡ ${added} credits added! New balance: ${balance}`, "success");
-            fetchUsage();
-          }}
-        />
-      )}
 
       {showInviteModal && (
         <InviteModal onClose={() => setShowInviteModal(false)} />

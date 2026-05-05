@@ -3,7 +3,7 @@ import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
 import { getOpenAI } from "@/lib/openai-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
-import { deductCredit, logUsage } from "@/lib/credits";
+import { logUsage } from "@/lib/credits";
 
 const TOP_K = 5;
 const MAX_CONTEXT = 3000;
@@ -143,7 +143,6 @@ Always structure your response using these emoji section headers. Include only t
 
 async function streamOpenAI(context, message, {
   supabase, userId, documentId, sessionId, previousMessages = [], memory = null,
-  creditDeducted = false,
 } = {}) {
   const lower = message.toLowerCase();
   const intent = classifyIntent(message);
@@ -218,7 +217,7 @@ async function streamOpenAI(context, message, {
             sessionId,
             promptTokens,
             completionTokens,
-            creditsUsed: creditDeducted ? 1 : 0,
+            creditsUsed: 0,
           }).catch(() => {});
         }
       }
@@ -240,21 +239,15 @@ export async function POST(req) {
 
     // ── Question limit ────────────────────────────────────────────
     const { exceeded, count } = await checkQuestionLimit(supabase, user.id);
-    // creditDeducted = true only when a free user spent a credit to bypass the limit
-    let creditDeducted = false;
     if (exceeded) {
-      // Free users can spend a credit instead of hitting the hard wall
-      creditDeducted = await deductCredit(user.id);
-      if (!creditDeducted) {
-        return NextResponse.json(
-          {
-            error: `Question limit reached (${FREE_PLAN.maxQuestions} lifetime). Upgrade to Pro or buy credits to continue.`,
-            limitExceeded: true,
-            usage: { questions: count, maxQuestions: FREE_PLAN.maxQuestions },
-          },
-          { status: 403 }
-        );
-      }
+      return NextResponse.json(
+        {
+          error: `Question limit reached (${FREE_PLAN.maxQuestions} lifetime). Upgrade to Pro to continue.`,
+          limitExceeded: true,
+          usage: { questions: count, maxQuestions: FREE_PLAN.maxQuestions },
+        },
+        { status: 403 }
+      );
     }
 
     const { message, fileUrl, sessionId } = await req.json();
@@ -347,7 +340,7 @@ export async function POST(req) {
     if (ragContext) {
       if (isExtractionRequest(message)) return extractStructured(ragContext, message);
       return streamOpenAI(ragContext, message, {
-        supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory, creditDeducted,
+        supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory,
       });
     }
 
@@ -418,7 +411,7 @@ export async function POST(req) {
 
     if (isExtractionRequest(message)) return extractStructured(pdfText, message);
     return streamOpenAI(pdfText, message, {
-      supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory, creditDeducted,
+      supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory,
     });
 
   } catch (err) {

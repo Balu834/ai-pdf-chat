@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
-import { deductCredit } from "@/lib/credits";
 
 
 const TOP_K   = 3;
@@ -122,25 +121,21 @@ export async function POST(req) {
       return NextResponse.json({ error: "message is required" }, { status: 400 });
     }
 
-    // ── Rate / credit check ───────────────────────────────────────────────────
+    // ── Rate check ───────────────────────────────────────────────────────────
     const { exceeded, count } = await checkQuestionLimit(supabase, user.id);
-    let creditDeducted = false;
     if (exceeded) {
-      creditDeducted = await deductCredit(user.id);
-      if (!creditDeducted) {
-        const encoder = new TextEncoder();
-        return new Response(
-          new ReadableStream({
-            start(controller) {
-              const msg = `You have reached your question limit of ${FREE_PLAN.maxQuestions}. Please upgrade to continue.`;
-              controller.enqueue(encoder.encode(sseChunk(msg)));
-              controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-              controller.close();
-            },
-          }),
-          { headers: SSE_HEADERS }
-        );
-      }
+      const encoder = new TextEncoder();
+      return new Response(
+        new ReadableStream({
+          start(controller) {
+            const msg = `You have reached your question limit of ${FREE_PLAN.maxQuestions}. Please upgrade to continue.`;
+            controller.enqueue(encoder.encode(sseChunk(msg)));
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+          },
+        }),
+        { headers: SSE_HEADERS }
+      );
     }
 
     // ── Document context via RAG ──────────────────────────────────────────────

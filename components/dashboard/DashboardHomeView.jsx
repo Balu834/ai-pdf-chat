@@ -117,13 +117,13 @@ export function EmptyChatState({ doc, onSend }) {
 }
 
 /* ─── DASHBOARD HOME VIEW ────────────────────────────────────────────────── */
-export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, onBuyCredits, onInvite, user, onViewChange }) {
+export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, onInvite, user, onViewChange }) {
   const isPro = plan === "pro";
   const questionsUsed = usage?.questions ?? 0;
   const questionsMax  = isPro ? "∞" : (usage?.maxQuestions ?? 5);
   const pdfsUsed      = docs.length;
   const pdfsMax       = isPro ? "∞" : (usage?.maxPdfs ?? 3);
-  const creditsBalance = usage?.credits?.balance ?? 0;
+  const questionsLeft = isPro ? "∞" : Math.max(0, (usage?.maxQuestions ?? 5) - questionsUsed);
   const daysLeft      = isTrial && trialEnd ? Math.max(0, Math.ceil((new Date(trialEnd) - Date.now()) / 86400000)) : null;
   const recentDocs    = [...docs].slice(0, 5);
 
@@ -175,7 +175,7 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
         {[
           { label: "Total PDFs",     value: pdfsUsed,       sub: isPro ? "Unlimited plan"        : `${pdfsMax} max on free`,      icon: "📄", color: C.accentLight, glow: "rgba(124,58,237,0.18)", hoverShadow: "0 0 0 1px rgba(124,58,237,0.28), 0 8px 32px rgba(124,58,237,0.18)", onClick: null },
           { label: "Questions Used", value: questionsUsed,  sub: isPro ? "Unlimited questions"   : `${questionsMax} lifetime`,     icon: "💬", color: "#06b6d4",     glow: "rgba(6,182,212,0.15)",  hoverShadow: "0 0 0 1px rgba(6,182,212,0.28), 0 8px 32px rgba(6,182,212,0.16)",    onClick: null },
-          { label: "AI Credits",     value: creditsBalance, sub: creditsBalance === 0 ? "Buy credits to continue" : creditsBalance <= 5 ? "Running low — top up" : "1 credit = 1 question", icon: "⚡", color: creditsBalance === 0 ? "#f87171" : creditsBalance <= 5 ? "#f59e0b" : "#4ade80", glow: creditsBalance === 0 ? "rgba(239,68,68,0.14)" : "rgba(74,222,128,0.12)", hoverShadow: creditsBalance === 0 ? "0 0 0 1px rgba(239,68,68,0.3), 0 8px 32px rgba(239,68,68,0.15)" : "0 0 0 1px rgba(74,222,128,0.28), 0 8px 32px rgba(74,222,128,0.14)", onClick: onBuyCredits },
+          { label: "Questions Left",  value: questionsLeft,  sub: isPro ? "Unlimited on Pro"         : `${questionsMax} lifetime`,     icon: "⚡", color: "#a78bfa",     glow: "rgba(167,139,250,0.15)", hoverShadow: "0 0 0 1px rgba(167,139,250,0.28), 0 8px 32px rgba(167,139,250,0.16)", onClick: isPro ? null : onUpgradeClick },
           { label: "Plan",           value: isPro ? "Pro" : "Free", sub: isPro ? (proExpiresAt ? `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}` : "Active") : "Upgrade for unlimited", icon: isPro ? "👑" : "🔓", color: isPro ? C.gold : C.textMuted, glow: isPro ? "rgba(245,158,11,0.14)" : "rgba(255,255,255,0.04)", hoverShadow: isPro ? "0 0 0 1px rgba(245,158,11,0.3), 0 8px 32px rgba(245,158,11,0.14)" : "0 0 0 1px rgba(124,58,237,0.28), 0 8px 32px rgba(124,58,237,0.14)", onClick: isPro ? null : onUpgradeClick },
         ].map((stat, i) => (
           <motion.div
@@ -218,11 +218,11 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 22 }}>🎁</span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd", margin: "0 0 2px" }}>Invite friends — Earn 50 credits each</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd", margin: "0 0 2px" }}>Invite friends — Earn rewards for every referral</p>
             <p style={{ fontSize: 11, color: C.textMuted, margin: 0 }}>
               {usage?.referral_invites
-                ? `You've earned ${usage.referral_rewards ?? 0} credits from ${usage.referral_invites} referral${usage.referral_invites !== 1 ? "s" : ""}`
-                : "Share your link — they get 20 credits too"}
+                ? `${usage.referral_invites} friend${usage.referral_invites !== 1 ? "s" : ""} joined via your link`
+                : "Share your referral link and earn rewards"}
             </p>
           </div>
         </div>

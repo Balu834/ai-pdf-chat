@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getOpenAI } from "@/lib/openai-client";
 import { createClient } from "@/lib/supabase-server-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
-import { deductCredit } from "@/lib/credits";
 import { createJob } from "@/lib/platform-jobs";
 import { TOOL_DEFINITIONS, SENSITIVE_TOOLS, executeTool } from "./tools";
 
@@ -73,21 +72,18 @@ export async function POST(req) {
     // ── Rate limit ────────────────────────────────────────────────────────────
     const { exceeded } = await checkQuestionLimit(supabase, user.id);
     if (exceeded) {
-      const credited = await deductCredit(user.id);
-      if (!credited) {
-        const enc = new TextEncoder();
-        return new Response(
-          new ReadableStream({
-            start(ctrl) {
-              const msg = `You have reached your limit of ${FREE_PLAN.maxQuestions} questions. Please upgrade to continue.`;
-              ctrl.enqueue(enc.encode(`data: ${JSON.stringify({ t: "tok", c: msg })}\n\n`));
-              ctrl.enqueue(enc.encode("data: [DONE]\n\n"));
-              ctrl.close();
-            },
-          }),
-          { headers: SSE },
-        );
-      }
+      const enc = new TextEncoder();
+      return new Response(
+        new ReadableStream({
+          start(ctrl) {
+            const msg = `You have reached your limit of ${FREE_PLAN.maxQuestions} questions. Please upgrade to continue.`;
+            ctrl.enqueue(enc.encode(`data: ${JSON.stringify({ t: "tok", c: msg })}\n\n`));
+            ctrl.enqueue(enc.encode("data: [DONE]\n\n"));
+            ctrl.close();
+          },
+        }),
+        { headers: SSE },
+      );
     }
 
     await recordQuestion(supabase, user.id);
