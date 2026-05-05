@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { createClient } from "@/lib/supabase-server-client";
-
-const rzp = new Razorpay({
-  key_id:     process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
 import { CREDIT_PACKS } from "@/lib/credit-packs";
+
+function getRzp() {
+  return new Razorpay({
+    key_id:     process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+}
 
 export async function POST(req) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req) {
     const pack = CREDIT_PACKS.find((p) => p.id === pack_id);
     if (!pack) return NextResponse.json({ error: "Invalid pack" }, { status: 400 });
 
-    const order = await rzp.orders.create({
+    const order = await getRzp().orders.create({
       amount:   pack.paise,
       currency: "INR",
       notes:    { user_id: user.id, email: user.email, pack_id: pack.id, credits: pack.credits },

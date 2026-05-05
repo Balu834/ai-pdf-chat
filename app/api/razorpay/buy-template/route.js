@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
-import { createClient } from "@supabase/supabase-js";
 import { createClient as createSessionClient } from "@/lib/supabase-server-client";
+import { getAdminClient } from "@/lib/admin-client";
 
-const razorpay = new Razorpay({
-  key_id:     process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
-const admin = () =>
-  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
+function getRazorpay() {
+  return new Razorpay({
+    key_id:     process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
   });
+}
 
 async function getUser() {
   const sb = await createSessionClient();
@@ -28,7 +25,7 @@ export async function POST(req) {
   const { template_id } = await req.json();
   if (!template_id) return NextResponse.json({ error: "template_id is required" }, { status: 400 });
 
-  const sb = admin();
+  const sb = getAdminClient();
 
   const { data: template } = await sb
     .from("marketplace_templates")
@@ -54,7 +51,7 @@ export async function POST(req) {
   const platformFee = Math.round(template.price_paise * PLATFORM_FEE_PCT);
   const creatorAmt  = template.price_paise - platformFee;
 
-  const order = await razorpay.orders.create({
+  const order = await getRazorpay().orders.create({
     amount:   template.price_paise,
     currency: "INR",
     receipt:  `tpl_${template_id.slice(0, 8)}_${Date.now()}`,
