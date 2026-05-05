@@ -120,12 +120,13 @@ export async function PATCH(req) {
       .eq("id", id)
       .eq("user_id", user.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("[chats PATCH]", error.message);
       return NextResponse.json({ error: "Update failed" }, { status: 500 });
     }
+    if (!data) return NextResponse.json({ error: "Session not found" }, { status: 404 });
     return NextResponse.json(data);
   } catch (err) {
     console.error("[chats PATCH]", err.message);

@@ -173,11 +173,10 @@ async function execListJobs({ status }, { userId }) {
 
 // ── 11. schedule_reminder ────────────────────────────────────────────────────
 async function execScheduleReminder({ title, remindAt, description }, { userId }) {
-  const { createClient } = await import("@supabase/supabase-js");
-  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  const { data } = await db.from("reminders").insert({
+  const { getAdminClient } = await import("@/lib/admin-client");
+  await getAdminClient().from("reminders").insert({
     user_id: userId, title, description: description ?? "", remind_at: new Date(remindAt).toISOString(),
-  }).select().single();
+  });
   return `Reminder "${title}" scheduled for ${new Date(remindAt).toLocaleString()}.`;
 }
 
