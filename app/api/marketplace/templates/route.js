@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createClient as createSessionClient } from "@/lib/supabase-server-client";
-
-const admin = () =>
-  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
+import { getAdminClient } from "@/lib/admin-client";
 
 async function getUserId() {
   const sb = await createSessionClient();
@@ -23,7 +18,7 @@ export async function GET(req) {
   const price    = searchParams.get("price")    ?? "all";   // all | free | paid
   const sort     = searchParams.get("sort")      ?? "popular";
 
-  const sb = admin();
+  const sb = getAdminClient();
   let q = sb
     .from("marketplace_templates")
     .select(`

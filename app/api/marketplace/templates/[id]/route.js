@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createClient as createSessionClient } from "@/lib/supabase-server-client";
+import { getAdminClient } from "@/lib/admin-client";
 import { logUsage } from "@/lib/appstore";
-
-const admin = () =>
-  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
 
 async function getUser() {
   const sb = await createSessionClient();
@@ -19,7 +14,7 @@ export async function GET(req, { params }) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const sb = admin();
+  const sb = getAdminClient();
 
   const { data: template, error } = await sb
     .from("marketplace_templates")
@@ -72,7 +67,7 @@ export async function POST(req, { params }) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const sb = admin();
+  const sb = getAdminClient();
 
   const { data: template } = await sb
     .from("marketplace_templates")

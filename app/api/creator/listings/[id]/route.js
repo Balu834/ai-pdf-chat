@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createClient as createSessionClient } from "@/lib/supabase-server-client";
-
-const admin = () =>
-  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
+import { getAdminClient } from "@/lib/admin-client";
 
 async function getUser() {
   const sb = await createSessionClient();
@@ -18,7 +13,7 @@ export async function PUT(req, { params }) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const sb = admin();
+  const sb = getAdminClient();
   const body = await req.json();
   const { type } = body; // "agent" | "template"
 
@@ -55,7 +50,7 @@ export async function DELETE(req, { params }) {
   const type = searchParams.get("type"); // "agent" | "template"
   const table = type === "agent" ? "marketplace_agents" : "marketplace_templates";
 
-  const { error } = await admin()
+  const { error } = await getAdminClient()
     .from(table)
     .delete()
     .eq("id", params.id)

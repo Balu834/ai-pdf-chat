@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createClient as createSessionClient } from "@/lib/supabase-server-client";
-
-const admin = () =>
-  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
+import { getAdminClient } from "@/lib/admin-client";
 
 async function getUserId() {
   const sb = await createSessionClient();
@@ -22,7 +17,7 @@ export async function GET(req) {
   const category = searchParams.get("category") ?? "all";
   const sort     = searchParams.get("sort")      ?? "popular";
 
-  let q = admin()
+  let q = getAdminClient()
     .from("marketplace_agents")
     .select(`
       id, name, description, category, role, instructions, tools,
@@ -42,7 +37,7 @@ export async function GET(req) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Flag which ones the user already has installed
-  const { data: installed } = await admin()
+  const { data: installed } = await getAdminClient()
     .from("agents")
     .select("source_marketplace_agent_id")
     .eq("user_id", userId)

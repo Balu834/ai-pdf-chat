@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { createClient } from "@supabase/supabase-js";
 import { createClient as createSessionClient } from "@/lib/supabase-server-client";
+import { getAdminClient } from "@/lib/admin-client";
 import { logUsage } from "@/lib/appstore";
-
-const admin = () =>
-  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
 
 async function getUser() {
   const sb = await createSessionClient();
@@ -32,7 +27,7 @@ export async function POST(req) {
   if (expected !== razorpay_signature)
     return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
 
-  const sb = admin();
+  const sb = getAdminClient();
 
   // Idempotency — prevent double-processing
   const { data: existingPmt } = await sb

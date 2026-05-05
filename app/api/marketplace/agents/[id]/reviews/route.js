@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createClient as createSessionClient } from "@/lib/supabase-server-client";
-
-const admin = () =>
-  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
+import { getAdminClient } from "@/lib/admin-client";
 
 async function getUser() {
   const sb = await createSessionClient();
@@ -17,7 +12,7 @@ export async function GET(req, { params }) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data, error } = await admin()
+  const { data, error } = await getAdminClient()
     .from("marketplace_reviews")
     .select("id, user_id, rating, review, created_at")
     .eq("target_type", "agent")
@@ -38,7 +33,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ error: "rating must be 1–5" }, { status: 400 });
 
   // Must have installed the agent to review it
-  const { data: installed } = await admin()
+  const { data: installed } = await getAdminClient()
     .from("agents")
     .select("id")
     .eq("user_id", user.id)
@@ -47,7 +42,7 @@ export async function POST(req, { params }) {
 
   if (!installed) return NextResponse.json({ error: "Install the agent before reviewing" }, { status: 403 });
 
-  const { data, error } = await admin()
+  const { data, error } = await getAdminClient()
     .from("marketplace_reviews")
     .upsert({
       user_id: user.id,
