@@ -23,14 +23,12 @@ import { useAudioTTS } from "@/hooks/useAudioTTS";
 import { useRealtimeVoice } from "@/hooks/useRealtimeVoice";
 import VoiceOrb from "@/components/dashboard/VoiceOrb";
 import RealtimeVoiceAssistant from "@/components/dashboard/RealtimeVoiceAssistant";
-import { Events, trackFirstVisit } from "@/lib/analytics";
+import { Events } from "@/lib/analytics";
 import { UpgradeBanner } from "@/components/dashboard/UpgradePopup";
 import { PremiumBillingModal } from "@/components/dashboard/PremiumBillingModal";
-import TermsAcceptanceModal from "@/components/dashboard/TermsAcceptanceModal";
 import { MessageSkeleton } from "@/components/dashboard/Shimmer";
 import { C, SMART_ACTIONS } from "@/components/dashboard/tokens";
 import { MenuIcon, ShareIcon, InsightIcon, CompareIcon, TrashIcon, SendIcon, MicIcon, ShieldIcon, CloseIcon, CheckIcon, SpeakerIcon } from "@/components/dashboard/icons";
-import OnboardingOverlay from "@/components/dashboard/OnboardingOverlay";
 import ToastContainer from "@/components/ui/Toast";
 import ShareModal from "@/components/dashboard/ShareModal";
 import TeamView from "@/components/dashboard/TeamView";
@@ -210,9 +208,6 @@ export default function DashboardPage() {
 
   const [replyTo,  setReplyTo]  = useState(null);
 
-  /* ── Terms acceptance — null = checking, object = loaded ── */
-  const [termsStatus, setTermsStatus] = useState(null);
-
   /* ── Chat sessions ── */
   const [sessions,         setSessions]         = useState([]);
   const [sessionsLoading,  setSessionsLoading]  = useState(false);
@@ -225,8 +220,6 @@ export default function DashboardPage() {
   /* ── Tracks whether current session has had its first message (for auto-title) ── */
   const isFirstMsgRef = useRef(false);
 
-  /* ── Onboarding ── */
-  const [onboardingStep, setOnboardingStep] = useState(undefined);
   const [apiError, setApiError] = useState(null);   // { msg, retryText }
   const [retryLoading, setRetryLoading] = useState(false);
 
@@ -333,8 +326,6 @@ export default function DashboardPage() {
       fetchDocs(user.id);
       fetchPlan(user.id);
       fetchUsage();
-      fetchTermsStatus();
-      trackFirstVisit();
 
       // Claim pending referral code stored by the login page (one-time, then cleared)
       try {
@@ -474,17 +465,6 @@ export default function DashboardPage() {
       });
     } catch {
       setUsage((p) => ({ ...p, loading: false }));
-    }
-  }
-
-  async function fetchTermsStatus() {
-    try {
-      const res = await fetch("/api/user/terms", { credentials: "include" });
-      if (!res.ok) { setTermsStatus({ all_accepted: true }); return; } // fail open on infra error
-      const data = await res.json();
-      setTermsStatus(data);
-    } catch {
-      setTermsStatus({ all_accepted: true }); // fail open — never block app on network failure
     }
   }
 
@@ -641,7 +621,6 @@ export default function DashboardPage() {
         setSelectedDoc(newDoc); setMessages([]); setLimitError(null); setActiveSession(null);
         setSidebarOpen(false); setShowCompare(false); setShareUrl(null); setShowInsights(false);
         setView("chat");
-        if (isFirstDoc) setOnboardingStep(2);
         const summaryText = "Give me a structured summary of this document covering the main topics, key details, and any important notes.";
         setTimeout(async () => {
           const userMsgId = Date.now();
@@ -1752,19 +1731,6 @@ export default function DashboardPage() {
       {/* Hidden file input */}
       <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} style={{ display: "none" }} />
 
-      {/* Onboarding overlay — shown to new users */}
-      <OnboardingOverlay
-        step={onboardingStep}
-        onUpload={() => fileInputRef.current?.click()}
-        onDismiss={() => setOnboardingStep(undefined)}
-        onPromptClick={(prompt) => {
-          if (selectedDoc) {
-            setView("chat");
-            handleSend(null, prompt);
-          }
-        }}
-      />
-
       {/* ── Upload progress card ────────────────────────────────────────────── */}
       {/* Fixed bottom-left, separate from top-right toasts so they never overlap */}
       <AnimatePresence>
@@ -1882,14 +1848,6 @@ export default function DashboardPage() {
         onUpgrade={() => setUpgradePopup("pdf")}
         onSignOut={handleSignOut}
       />
-
-      {/* Terms acceptance gate — blocks app until all policies accepted */}
-      {termsStatus && !termsStatus.all_accepted && (
-        <TermsAcceptanceModal
-          initialStatus={termsStatus}
-          onAccepted={() => setTermsStatus((s) => ({ ...s, all_accepted: true }))}
-        />
-      )}
 
       {/* Upgrade popup */}
       <AnimatePresence>
