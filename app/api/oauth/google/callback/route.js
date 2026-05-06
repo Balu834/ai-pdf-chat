@@ -11,49 +11,67 @@ export async function GET(req) {
   const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const dashUrl = `${appUrl}/dashboard?view=agents`;
 
-  if (error) return NextResponse.redirect(`${dashUrl}&oauth_error=${encodeURIComponent(error)}`);
-  if (!code || !state) return NextResponse.redirect(`${dashUrl}&oauth_error=missing_params`);
+  try {
+    if (error) return NextResponse.redirect(`${dashUrl}&oauth_error=${encodeURIComponent(error)}`);
+    if (!code || !state) return NextResponse.redirect(`${dashUrl}&oauth_error=missing_params`);
 
-  const userId = parseState(state);
-  if (!userId) return NextResponse.redirect(`${dashUrl}&oauth_error=invalid_state`);
+    const userId = parseState(state);
+    if (!userId) return NextResponse.redirect(`${dashUrl}&oauth_error=invalid_state`);
 
-  const redirect = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/google/callback`;
+    const redirect = `${appUrl}/api/oauth/google/callback`;
 
-  // Exchange code for tokens
-  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      code,
-      client_id:     process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri:  redirect,
-      grant_type:    "authorization_code",
-    }),
-  });
-  const tok = await tokenRes.json();
-  if (!tokenRes.ok) return NextResponse.redirect(`${dashUrl}&oauth_error=${encodeURIComponent(tok.error)}`);
+    // Exchange code for tokens
+    let tokenRes;
+    try {
+      tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          code,
+          client_id:     process.env.GOOGLE_CLIENT_ID    ?? "",
+          client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+          redirect_uri:  redirect,
+          grant_type:    "authorization_code",
+        }),
+      });
+    } catch {
+      return NextResponse.redirect(`${dashUrl}&oauth_error=network_error`);
+    }
 
-  // Fetch user profile
-  const profileRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-    headers: { Authorization: `Bearer ${tok.access_token}` },
-  });
-  const profile = await profileRes.json();
+    const tok = await tokenRes.json().catch(() => ({}));
+    if (!tokenRes.ok) {
+      return NextResponse.redirect(`${dashUrl}&oauth_error=${encodeURIComponent(tok.error ?? "token_failed")}`);
+    }
 
-  const expiresAt = new Date(Date.now() + (tok.expires_in ?? 3600) * 1000).toISOString();
+    // Fetch user profile
+    let profile = {};
+    try {
+      const profileRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: `Bearer ${tok.access_token}` },
+      });
+      if (profileRes.ok) profile = await profileRes.json();
+    } catch {
+      // Profile fetch is best-effort — continue without it
+    }
 
-  await getAdminClient().from("integrations").upsert({
-    user_id:         userId,
-    provider:        "google",
-    access_token:    tok.access_token,
-    refresh_token:   tok.refresh_token ?? null,
-    token_expires_at: expiresAt,
-    scopes:          tok.scope,
-    account_email:   profile.email,
-    account_name:    profile.name,
-    provider_uid:    profile.id,
-    updated_at:      new Date().toISOString(),
-  }, { onConflict: "user_id,provider" });
+    const expiresAt = new Date(Date.now() + (tok.expires_in ?? 3600) * 1000).toISOString();
 
-  return NextResponse.redirect(`${dashUrl}&oauth_success=google`);
+    await getAdminClient().from("integrations").upsert({
+      user_id:          userId,
+      provider:         "google",
+      access_token:     tok.access_token,
+      refresh_token:    tok.refresh_token ?? null,
+      token_expires_at: expiresAt,
+      scopes:           tok.scope,
+      account_email:    profile.email    ?? null,
+      account_name:     profile.name     ?? null,
+      provider_uid:     profile.id       ?? null,
+      updated_at:       new Date().toISOString(),
+    }, { onConflict: "user_id,provider" });
+
+    return NextResponse.redirect(`${dashUrl}&oauth_success=google`);
+  } catch (err) {
+    console.error("[oauth/google/callback]", err?.message ?? err);
+    return NextResponse.redirect(`${dashUrl}&oauth_error=${encodeURIComponent(err?.message ?? "unknown_error")}`);
+  }
 }

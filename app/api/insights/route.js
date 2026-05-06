@@ -19,10 +19,9 @@ export async function GET(req) {
       .from("insights")
       .select("summary, key_points, suggested_questions")
       .eq("document_id", documentId)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      // Table doesn't exist or no row — both fine, return null
       return NextResponse.json(null);
     }
 
@@ -49,7 +48,7 @@ export async function POST(req) {
       .select("id")
       .eq("id", documentId)
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     // Return cached insights if they exist
@@ -57,7 +56,7 @@ export async function POST(req) {
       .from("insights")
       .select("summary, key_points, suggested_questions")
       .eq("document_id", documentId)
-      .single();
+      .maybeSingle();
     if (existing?.summary) return NextResponse.json(existing);
 
     // Build context: try RAG chunks first

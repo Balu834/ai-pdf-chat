@@ -4,7 +4,8 @@
  */
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
-import { admin, logUsage } from "@/lib/appstore";
+import { getAdminClient } from "@/lib/admin-client";
+import { logUsage } from "@/lib/appstore";
 
 async function getUser() {
   const sb = await createClient();
@@ -13,35 +14,37 @@ async function getUser() {
 }
 
 export async function POST(req, { params }) {
-  const user = await getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const user = await getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { type, id } = params;
-  if (!["agent", "template"].includes(type))
-    return NextResponse.json({ error: "type must be agent or template" }, { status: 400 });
+    const { type, id } = params;
+    if (!["agent", "template"].includes(type))
+      return NextResponse.json({ error: "type must be agent or template" }, { status: 400 });
 
-  const sb = admin();
+    const sb = getAdminClient();
 
-  // Check current state
-  const { data: existing } = await sb
-    .from("app_favorites")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("target_type", type)
-    .eq("target_id", id)
-    .maybeSingle();
+    const { data: existing } = await sb
+      .from("app_favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("target_type", type)
+      .eq("target_id", id)
+      .maybeSingle();
 
-  if (existing) {
-    // Un-favorite
-    await sb.from("app_favorites").delete().eq("id", existing.id);
-    logUsage(sb, user.id, type, id, "unfavorite");
-    return NextResponse.json({ favorited: false });
-  } else {
-    // Favorite
-    await sb.from("app_favorites").insert({
-      user_id: user.id, target_type: type, target_id: id,
-    });
-    logUsage(sb, user.id, type, id, "favorite");
-    return NextResponse.json({ favorited: true });
+    if (existing) {
+      await sb.from("app_favorites").delete().eq("id", existing.id);
+      logUsage(sb, user.id, type, id, "unfavorite");
+      return NextResponse.json({ favorited: false });
+    } else {
+      await sb.from("app_favorites").insert({
+        user_id: user.id, target_type: type, target_id: id,
+      });
+      logUsage(sb, user.id, type, id, "favorite");
+      return NextResponse.json({ favorited: true });
+    }
+  } catch (err) {
+    console.error("[appstore/favorite POST]", err?.message ?? err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -11,28 +11,33 @@ import { getOpenAI } from "@/lib/openai-client";
 // POST /api/jobs/worker — process pending platform_jobs
 // Called by cron (Authorization: Bearer <CRON_SECRET>) or authenticated user
 export async function POST(req) {
-  const authHeader = req.headers.get("authorization") ?? "";
-  const cronOk     = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  try {
+    const authHeader = req.headers.get("authorization") ?? "";
+    const cronOk     = authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
-  if (!cronOk) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const jobs    = await getPendingJobs(5);
-  const results = [];
-
-  for (const job of jobs) {
-    try {
-      await processJob(job);
-      results.push({ id: job.id, name: job.name, status: "processed" });
-    } catch (err) {
-      results.push({ id: job.id, name: job.name, status: "error", error: err.message });
+    if (!cronOk) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-  }
 
-  return NextResponse.json({ processed: results.length, results });
+    const jobs    = await getPendingJobs(5);
+    const results = [];
+
+    for (const job of jobs) {
+      try {
+        await processJob(job);
+        results.push({ id: job.id, name: job.name, status: "processed" });
+      } catch (err) {
+        results.push({ id: job.id, name: job.name, status: "error", error: err.message });
+      }
+    }
+
+    return NextResponse.json({ processed: results.length, results });
+  } catch (err) {
+    console.error("[jobs/worker POST]", err?.message ?? err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 // GET — for cron compatibility (same logic)

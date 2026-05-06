@@ -1,750 +1,891 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { motion, useInView, AnimatePresence } from "framer-motion"
 import {
   MessageSquare, Zap, Shield, FileText, Brain, TrendingUp,
-  Check, ArrowRight, Star, ChevronRight, Upload, Sparkles, X
+  Check, ArrowRight, Star, Upload, Sparkles, ChevronDown,
+  Users, Clock, Lock, Menu, X, Play, Globe,
 } from "lucide-react"
 
-/* ─── CONSTANTS ────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════ BRAND */
+const BRAND = {
+  primary:  "#6366F1",
+  violet:   "#8B5CF6",
+  blue:     "#3B82F6",
+  grad:     "linear-gradient(135deg,#6366F1 0%,#8B5CF6 50%,#3B82F6 100%)",
+  text:     "#0F172A",
+  body:     "#334155",
+  muted:    "#64748B",
+  border:   "#E2E8F0",
+  surface:  "#F8FAFC",
+  white:    "#FFFFFF",
+}
+
+/* ═══════════════════════════════════════════════ DATA */
 const FEATURES = [
-  {
-    icon: MessageSquare,
-    color: "#7c3aed",
-    glow: "rgba(124,58,237,0.25)",
-    title: "Chat with any PDF",
-    desc: "Ask questions in plain English and get precise answers pulled directly from your document — no more ctrl+F.",
-  },
-  {
-    icon: Zap,
-    color: "#06b6d4",
-    glow: "rgba(6,182,212,0.25)",
-    title: "Instant Summaries",
-    desc: "Get a structured overview of any document in seconds. Perfect for reports, contracts, and research papers.",
-  },
-  {
-    icon: Brain,
-    color: "#a78bfa",
-    glow: "rgba(167,139,250,0.25)",
-    title: "Key Insights & Risks",
-    desc: "Surface critical clauses, red flags, and important data points you'd normally miss after hours of reading.",
-  },
-  {
-    icon: TrendingUp,
-    color: "#34d399",
-    glow: "rgba(52,211,153,0.25)",
-    title: "Highlight Important Data",
-    desc: "Amounts, dates, names, and key terms are automatically bolded and extracted for quick review.",
-  },
-  {
-    icon: FileText,
-    color: "#f59e0b",
-    glow: "rgba(245,158,11,0.25)",
-    title: "Multi-document Ready",
-    desc: "Upload invoices, bills, resumes, contracts, reports — Intellixy handles every document type intelligently.",
-  },
-  {
-    icon: Shield,
-    color: "#ef4444",
-    glow: "rgba(239,68,68,0.25)",
-    title: "Secure & Private",
-    desc: "Your files are encrypted in transit and at rest. We never train on your documents. Your data is yours.",
-  },
+  { icon: MessageSquare, label: "Instant AI Answers",
+    desc: "Ask anything in plain English. Get precise answers pulled from your exact document in under 2 seconds.",
+    color: "#6366F1", bg: "#EEF2FF", badge: "Core" },
+  { icon: Zap, label: "Smart Summaries",
+    desc: "Structured bullet-point overviews of any document. Perfect for reports, contracts and research papers.",
+    color: "#8B5CF6", bg: "#F5F3FF", badge: "Popular" },
+  { icon: Brain, label: "Risk & Insight Engine",
+    desc: "Surface critical clauses, red flags and hidden data points you'd miss after hours of reading.",
+    color: "#3B82F6", bg: "#EFF6FF", badge: "Pro" },
+  { icon: TrendingUp, label: "Data Extraction",
+    desc: "Dates, amounts, names, and key terms auto-extracted and structured for instant review.",
+    color: "#059669", bg: "#ECFDF5", badge: "AI" },
+  { icon: FileText, label: "Every Document Type",
+    desc: "Invoices, contracts, research papers, medical bills, resumes — every PDF handled intelligently.",
+    color: "#D97706", bg: "#FFFBEB", badge: "Flexible" },
+  { icon: Shield, label: "Secure & Private",
+    desc: "End-to-end encryption, zero AI training on your data. Your documents stay yours — always.",
+    color: "#DC2626", bg: "#FFF5F5", badge: "Trust" },
+]
+
+const STEPS = [
+  { n: "01", icon: Upload, color: "#6366F1", title: "Upload your PDF",
+    desc: "Drag & drop or browse to upload. Any PDF up to 50MB processed in seconds." },
+  { n: "02", icon: MessageSquare, color: "#8B5CF6", title: "Ask in plain English",
+    desc: "Type naturally. No special syntax — just ask exactly what you want to know." },
+  { n: "03", icon: Sparkles, color: "#3B82F6", title: "Get instant answers",
+    desc: "AI pulls precise answers directly from your document with source context." },
 ]
 
 const TESTIMONIALS = [
-  {
-    name: "Priya Sharma",
-    role: "CA, Mumbai",
-    avatar: "PS",
-    color: "#7c3aed",
-    text: "I process 20+ invoices a day. Intellixy cut my time in half. I just ask 'what's the GST amount?' and it answers instantly.",
-    stars: 5,
+  { name: "Priya Sharma", role: "Chartered Accountant", company: "Mumbai", av: "PS", color: "#6366F1", stars: 5,
+    quote: "I process 20+ invoices daily. Intellixy cut my review time in half. I just ask 'what's the GST amount?' and get the answer in seconds." },
+  { name: "Rahul Verma", role: "Law Student", company: "NLU Delhi", av: "RV", color: "#8B5CF6", stars: 5,
+    quote: "Reading 100-page case files used to take hours. Now I ask questions and get the key points in 30 seconds. Absolute game changer for law school." },
+  { name: "Ananya Iyer", role: "Product Manager", company: "Razorpay", av: "AI", color: "#059669", stars: 5,
+    quote: "We use it for competitor research reports. The summary + key risks feature is exactly what our team needed to move faster on decisions." },
+]
+
+const PLANS = [
+  { name: "Free", mo: 0, yr: 0, cta: "Start Free",
+    desc: "Perfect for individuals trying Intellixy",
+    features: ["3 PDF uploads", "20 questions / month", "AI answers & summaries", "Chat history (7 days)", "Email support"],
+    missing: ["Unlimited PDFs", "Voice input", "Advanced insights"],
   },
-  {
-    name: "Rahul Verma",
-    role: "Law Student, Delhi",
-    avatar: "RV",
-    color: "#06b6d4",
-    text: "Reading 100-page case files used to take hours. Now I ask questions and get the key points in 30 seconds. Game changer.",
-    stars: 5,
+  { name: "Pro", mo: 299, yr: 249, cta: "Get Pro", highlight: true, badge: "Most Popular",
+    desc: "For professionals who rely on documents daily",
+    features: ["Unlimited PDFs", "Unlimited questions", "Advanced AI insights", "Risk & data extraction", "Voice input", "Persistent chat history", "Compare documents", "Priority support"],
+    missing: [],
   },
-  {
-    name: "Ananya Iyer",
-    role: "Product Manager, Bengaluru",
-    avatar: "AI",
-    color: "#34d399",
-    text: "We use it for competitor research reports. The summary + key risks feature is exactly what our team needed.",
-    stars: 5,
+  { name: "Team", mo: 999, yr: 799, cta: "Contact Sales",
+    desc: "For teams and growing organizations",
+    features: ["Everything in Pro", "5 team seats", "Shared document library", "Admin controls", "Team chat history", "Dedicated support", "SSO (coming soon)"],
+    missing: [],
   },
 ]
 
-const STATS = [
-  { value: "1,200+", label: "Active Users" },
-  { value: "50K+", label: "PDFs Processed" },
-  { value: "500K+", label: "Questions Answered" },
-  { value: "< 2s", label: "Avg Response Time" },
+const FAQS = [
+  { q: "Is Intellixy really free to start?",
+    a: "Yes. The free plan gives you 3 PDFs and 20 questions per month — no credit card required. You get full AI capability so you can evaluate before upgrading." },
+  { q: "How accurate are the AI answers?",
+    a: "Very accurate. Intellixy uses retrieval-augmented generation (RAG) — answers are pulled directly from your document, not from general AI knowledge. Sources are cited." },
+  { q: "What document types are supported?",
+    a: "Any text-based PDF: invoices, contracts, legal documents, research papers, medical reports, financial statements and resumes. Scanned image PDFs may have limited accuracy." },
+  { q: "Is my data secure?",
+    a: "Absolutely. Files are encrypted in transit and at rest. We never use your documents to train any AI model. You can delete your data at any time." },
+  { q: "Can I use multiple documents?",
+    a: "Free users upload up to 3 PDFs. Pro users get unlimited uploads with instant switching between documents and full chat history per document." },
+  { q: "What's included in Pro?",
+    a: "Unlimited PDFs and questions, advanced risk & insight analysis, saved chat history, voice input, document comparison, and priority support — ₹299/month." },
 ]
 
-const DEMO_MESSAGES = [
-  {
-    role: "user",
-    content: "What medications were included in the bill and what is the total amount?",
-  },
-  {
-    role: "assistant",
-    content: `📄 **Summary:**
-• Bill includes 3 medications prescribed on 15 Jan 2025
-• Total amount payable is **₹3,240** after insurance
-• Issued by Apollo Pharmacy, Hyderabad
+/* ═══════════════════════════════════════════════ UTIL */
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number]
+const fade   = (delay = 0, y = 24) => ({ initial: { opacity: 0, y }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: 0.55, ease: EASE } })
+const fadeVP = (delay = 0, y = 24) => ({ initial: { opacity: 0, y }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { delay, duration: 0.55, ease: EASE } })
 
-💡 **Key Details:**
-• Medication 1: **Azithromycin 500mg** — ₹480
-• Medication 2: **Paracetamol 650mg** — ₹120
-• Medication 3: **Vitamin D3 60K** — ₹890
-• Subtotal: **₹1,490** | Tax (18% GST): **₹268**
-• Insurance deduction: **−₹1,200**
-• **Total Payable: ₹3,240**
-
-❓ **You might also ask:**
-• Is this covered under my health insurance policy?
-• What is the expiry date of these medications?`,
-  },
-]
-
-/* ─── ANIMATED COUNTER ─────────────────────────────────────────────────────── */
-function AnimatedStat({ value, label }: { value: string; label: string }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+function Grad({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5 }}
-      className="text-center"
-    >
-      <div style={{ fontSize: "2.5rem", fontWeight: 800, background: "linear-gradient(135deg,#c4b5fd,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-        {value}
-      </div>
-      <div style={{ fontSize: "0.875rem", color: "rgba(240,240,248,0.5)", marginTop: 4, fontWeight: 500 }}>{label}</div>
-    </motion.div>
+    <span style={{ background: BRAND.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", ...style }}>
+      {children}
+    </span>
   )
 }
 
-/* ─── FEATURE CARD ─────────────────────────────────────────────────────────── */
-function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: number }) {
-  const [hovered, setHovered] = useState(false)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
-  const Icon = feature.icon
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 32 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay: index * 0.08, duration: 0.5 }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
-        border: `1px solid ${hovered ? feature.color + "55" : "rgba(255,255,255,0.07)"}`,
-        borderRadius: 20,
-        padding: "28px 24px",
-        transition: "all 0.3s ease",
-        boxShadow: hovered ? `0 8px 40px ${feature.glow}` : "none",
-        cursor: "default",
-      }}
-    >
-      <div style={{ width: 48, height: 48, borderRadius: 14, background: feature.color + "22", border: `1px solid ${feature.color}44`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, transition: "transform 0.3s", transform: hovered ? "scale(1.1)" : "scale(1)" }}>
-        <Icon size={22} color={feature.color} />
-      </div>
-      <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#f0f0f8", marginBottom: 8 }}>{feature.title}</h3>
-      <p style={{ fontSize: "0.875rem", color: "rgba(240,240,248,0.55)", lineHeight: 1.65 }}>{feature.desc}</p>
-    </motion.div>
-  )
-}
-
-/* ─── DEMO CHAT ────────────────────────────────────────────────────────────── */
-function DemoChat() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-100px" })
-  const [visibleMsg, setVisibleMsg] = useState(0)
+/* ═══════════════════════════════════════════════ NAVBAR */
+function Navbar({ onNav }: { onNav: (id: string) => void }) {
+  const [scrolled, setScrolled] = useState(false)
+  const [menu, setMenu] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    if (!inView) return
-    const t1 = setTimeout(() => setVisibleMsg(1), 400)
-    const t2 = setTimeout(() => setVisibleMsg(2), 1400)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [inView])
+    const fn = () => setScrolled(window.scrollY > 16)
+    window.addEventListener("scroll", fn, { passive: true })
+    return () => window.removeEventListener("scroll", fn)
+  }, [])
 
   return (
-    <div ref={ref} style={{ maxWidth: 780, margin: "0 auto", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 24, overflow: "hidden", boxShadow: "0 40px 120px rgba(124,58,237,0.18)" }}>
-      {/* Window chrome */}
-      <div style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ display: "flex", gap: 7 }}>
-          {["#ef4444","#f59e0b","#22c55e"].map(c => <div key={c} style={{ width: 12, height: 12, borderRadius: "50%", background: c, opacity: 0.8 }} />)}
+    <>
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
+        height: 64,
+        background: scrolled ? "rgba(255,255,255,0.92)" : "transparent",
+        backdropFilter: scrolled ? "blur(24px)" : "none",
+        borderBottom: scrolled ? `1px solid ${BRAND.border}` : "1px solid transparent",
+        transition: "all 0.25s ease",
+      }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 28px", height: "100%", display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Logo */}
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0, marginRight: "auto" }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: BRAND.grad, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(99,102,241,0.4)" }}>
+              <Sparkles size={15} color="#fff" />
+            </div>
+            <span style={{ fontSize: 17, fontWeight: 800, color: BRAND.text, letterSpacing: "-0.03em" }}>Intellixy</span>
+          </Link>
+
+          {/* Nav links */}
+          <div className="nav-desktop" style={{ display: "flex", gap: 2 }}>
+            {["Features","Pricing","Testimonials","FAQ"].map(l => (
+              <button key={l} onClick={() => onNav(l.toLowerCase())}
+                style={{ background: "none", border: "none", padding: "7px 14px", fontSize: 14, fontWeight: 500, color: BRAND.body, cursor: "pointer", borderRadius: 8, transition: "all 0.15s" }}
+                onMouseEnter={e => { (e.currentTarget.style.color = BRAND.primary); (e.currentTarget.style.background = "#EEF2FF"); }}
+                onMouseLeave={e => { (e.currentTarget.style.color = BRAND.body); (e.currentTarget.style.background = "none"); }}>
+                {l}
+              </button>
+            ))}
+          </div>
+
+          {/* CTAs */}
+          <div className="nav-desktop" style={{ display: "flex", gap: 10, alignItems: "center", marginLeft: "auto" }}>
+            <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: BRAND.body, textDecoration: "none", padding: "7px 14px", borderRadius: 8, transition: "color 0.15s" }}
+              onMouseEnter={e => ((e.currentTarget as HTMLAnchorElement).style.color = BRAND.primary)}
+              onMouseLeave={e => ((e.currentTarget as HTMLAnchorElement).style.color = BRAND.body)}>
+              Log In
+            </Link>
+            <Link href="/login" style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 20px", background: BRAND.grad, borderRadius: 10, fontSize: 14, fontWeight: 700, color: "#fff", textDecoration: "none", boxShadow: "0 4px 16px rgba(99,102,241,0.35)", transition: "box-shadow 0.2s, transform 0.15s" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 28px rgba(99,102,241,0.5)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 16px rgba(99,102,241,0.35)"; (e.currentTarget as HTMLAnchorElement).style.transform = "none"; }}>
+              Start Free <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          <button className="nav-mobile-btn" onClick={() => setMenu(true)}
+            style={{ display: "none", background: "none", border: "none", cursor: "pointer", color: BRAND.text, padding: 6, marginLeft: "auto" }}>
+            <Menu size={22} />
+          </button>
         </div>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-          <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "4px 14px", fontSize: "0.75rem", color: "rgba(240,240,248,0.4)", display: "flex", alignItems: "center", gap: 6 }}>
-            <FileText size={12} />
-            Medical_Bill_Jan2025.pdf
+      </nav>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {menu && (
+          <motion.div key="overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setMenu(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(15,23,42,0.5)", backdropFilter: "blur(8px)" }}>
+            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 300, background: "#fff", padding: 24, display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+                <span style={{ fontSize: 17, fontWeight: 800, color: BRAND.text }}>Intellixy</span>
+                <button onClick={() => setMenu(false)} style={{ background: "none", border: "none", cursor: "pointer", color: BRAND.muted }}><X size={20} /></button>
+              </div>
+              {["Features","Pricing","Testimonials","FAQ"].map(l => (
+                <button key={l} onClick={() => { setMenu(false); onNav(l.toLowerCase()); }}
+                  style={{ background: "none", border: "none", textAlign: "left", padding: "14px 0", fontSize: 16, fontWeight: 600, color: BRAND.body, cursor: "pointer", borderBottom: `1px solid ${BRAND.border}` }}>
+                  {l}
+                </button>
+              ))}
+              <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
+                <Link href="/login" onClick={() => setMenu(false)} style={{ textAlign: "center", display: "block", padding: 13, border: `1.5px solid ${BRAND.border}`, borderRadius: 12, fontWeight: 600, color: BRAND.body, textDecoration: "none" }}>Log In</Link>
+                <Link href="/login" onClick={() => setMenu(false)} style={{ textAlign: "center", display: "block", padding: 13, background: BRAND.grad, borderRadius: 12, fontWeight: 700, color: "#fff", textDecoration: "none" }}>Start Free →</Link>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
+/* ═══════════════════════════════════════════════ PRODUCT MOCKUP */
+function ProductMockup() {
+  const sideItems = [
+    { icon: "⊞", label: "Dashboard" },
+    { icon: "📄", label: "My PDFs", active: false },
+    { icon: "💬", label: "Chat", active: true },
+    { icon: "📊", label: "Insights" },
+    { icon: "⚙️", label: "Settings" },
+  ]
+
+  return (
+    <div style={{ position: "relative" }}>
+      {/* Main window */}
+      <motion.div
+        {...fade(0.4)}
+        style={{
+          background: "#0D0D1F",
+          borderRadius: 20,
+          overflow: "hidden",
+          boxShadow: "0 48px 120px rgba(99,102,241,0.22), 0 24px 64px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        {/* Window chrome */}
+        <div style={{ background: "rgba(255,255,255,0.04)", padding: "11px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            {["#FF5F57","#FEBC2E","#28C840"].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c }} />)}
+          </div>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <div style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "4px 16px", fontSize: 11.5, color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 5 }}>
+              <Lock size={9} /> app.intellixy.ai
+            </div>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          {["Summarize","Key Points","Risks"].map(l => (
-            <div key={l} style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", color: "#a78bfa" }}>{l}</div>
+
+        {/* App layout */}
+        <div style={{ display: "flex", height: 390 }}>
+          {/* Sidebar */}
+          <div style={{ width: 170, background: "#080819", borderRight: "1px solid rgba(255,255,255,0.05)", padding: "14px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "3px 8px", marginBottom: 14 }}>
+              <div style={{ width: 24, height: 24, borderRadius: 7, background: BRAND.grad, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Sparkles size={11} color="#fff" />
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>Intellixy</span>
+            </div>
+
+            {/* New chat button */}
+            <div style={{ margin: "0 0 10px", padding: "7px 10px", background: "linear-gradient(135deg,rgba(99,102,241,0.25),rgba(139,92,246,0.18))", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#a5b4fc", display: "flex", alignItems: "center", gap: 5, cursor: "pointer" }}>
+              <span>+</span> New Chat
+            </div>
+
+            {sideItems.map(item => (
+              <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 10px", borderRadius: 8, background: item.active ? "rgba(99,102,241,0.15)" : "transparent", border: item.active ? "1px solid rgba(99,102,241,0.25)" : "1px solid transparent", cursor: "pointer" }}>
+                <span style={{ fontSize: 12 }}>{item.icon}</span>
+                <span style={{ fontSize: 11.5, fontWeight: item.active ? 700 : 500, color: item.active ? "#a5b4fc" : "rgba(255,255,255,0.4)" }}>{item.label}</span>
+              </div>
+            ))}
+
+            <div style={{ marginTop: "auto", padding: "12px 10px", background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: 9 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>Usage</div>
+              <div style={{ height: 4, borderRadius: 99, background: "rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: 4 }}>
+                <div style={{ width: "40%", height: "100%", background: BRAND.grad, borderRadius: 99 }} />
+              </div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>2 / 3 PDFs · Free</div>
+            </div>
+          </div>
+
+          {/* Main chat area */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            {/* Doc header */}
+            <div style={{ padding: "12px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.02)" }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(99,102,241,0.18)", border: "1px solid rgba(99,102,241,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <FileText size={13} color="#a5b4fc" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.88)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Q3_Financial_Report_2024.pdf</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>42 pages · Uploaded just now</div>
+              </div>
+              <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
+                {["Summarize","Key Risks","Extract Data"].map(l => (
+                  <div key={l} style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.22)", borderRadius: 99, padding: "3px 9px", fontSize: 9.5, fontWeight: 700, color: "#a5b4fc" }}>{l}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div style={{ flex: 1, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 14, overflowY: "hidden" }}>
+
+              {/* User message */}
+              <motion.div {...fade(0.7)} style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ maxWidth: "72%", background: BRAND.grad, borderRadius: "16px 16px 4px 16px", padding: "10px 14px", fontSize: 12, color: "#fff", lineHeight: 1.55, fontWeight: 500 }}>
+                  What was the total revenue in Q3 and how does it compare to Q2?
+                </div>
+              </motion.div>
+
+              {/* AI message */}
+              <motion.div {...fade(1.1)} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, background: BRAND.grad, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, boxShadow: "0 4px 12px rgba(99,102,241,0.5)" }}>
+                  <Sparkles size={12} color="#fff" />
+                </div>
+                <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: "4px 16px 16px 16px", padding: "12px 14px", fontSize: 11.5, color: "rgba(255,255,255,0.85)", lineHeight: 1.75, flex: 1 }}>
+                  <div style={{ fontWeight: 700, color: "#a5b4fc", fontSize: 10.5, marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.06em" }}>✦ AI Answer</div>
+                  <div><strong style={{ color: "#fff" }}>Q3 Revenue: ₹24.5 Crore</strong> — up <strong style={{ color: "#4ade80" }}>24% YoY</strong></div>
+                  <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 3 }}>
+                    <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)" }}>• Q3 2024: <strong style={{ color: "rgba(255,255,255,0.8)" }}>₹24.5Cr</strong></div>
+                    <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)" }}>• Q2 2024: <strong style={{ color: "rgba(255,255,255,0.8)" }}>₹19.7Cr</strong></div>
+                    <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)" }}>• QoQ growth: <strong style={{ color: "#4ade80" }}>+24.4%</strong></div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Second user msg */}
+              <motion.div {...fade(1.5)} style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ maxWidth: "65%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "16px 16px 4px 16px", padding: "9px 13px", fontSize: 11.5, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+                  Are there any risks mentioned?
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Input */}
+            <div style={{ padding: "11px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 11, padding: "9px 14px", fontSize: 11.5, color: "rgba(255,255,255,0.25)" }}>
+                Ask anything about this document…
+              </div>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: BRAND.grad, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(99,102,241,0.5)" }}>
+                <ArrowRight size={14} color="#fff" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Floating cards ── */}
+      <motion.div {...fade(0.9)}
+        style={{ position: "absolute", top: -18, right: -24, background: "#fff", borderRadius: 14, padding: "10px 16px", boxShadow: "0 12px 40px rgba(99,102,241,0.18), 0 2px 8px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", gap: 10, zIndex: 10, border: `1px solid ${BRAND.border}` }}>
+        <div style={{ width: 30, height: 30, borderRadius: 9, background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Check size={15} color="#16A34A" strokeWidth={2.5} />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: BRAND.text }}>PDF Processed</div>
+          <div style={{ fontSize: 10.5, color: BRAND.muted }}>Ready to chat</div>
+        </div>
+      </motion.div>
+
+      <motion.div {...fade(1.1)}
+        style={{ position: "absolute", bottom: -20, left: -28, background: "#fff", borderRadius: 14, padding: "12px 16px", boxShadow: "0 12px 40px rgba(99,102,241,0.15), 0 2px 8px rgba(0,0,0,0.07)", zIndex: 10, border: `1px solid ${BRAND.border}`, minWidth: 160 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E" }} />
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: BRAND.text }}>AI Response</span>
+          <span style={{ fontSize: 10.5, color: BRAND.muted, marginLeft: "auto" }}>1.2s</span>
+        </div>
+        <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 22 }}>
+          {[10,16,8,20,14,18,10,16,12,20].map((h, i) => (
+            <div key={i} style={{ width: 5, borderRadius: 3, background: BRAND.grad, height: h, opacity: 0.6 + i * 0.04 }} />
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Messages */}
-      <div style={{ padding: "24px 24px 20px", minHeight: 340, display: "flex", flexDirection: "column", gap: 18 }}>
-        <AnimatePresence>
-          {visibleMsg >= 1 && (
-            <motion.div key="user" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", justifyContent: "flex-end" }}>
-              <div style={{ maxWidth: "72%", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", borderRadius: "18px 18px 4px 18px", padding: "12px 16px", fontSize: "0.875rem", color: "white", lineHeight: 1.5 }}>
-                {DEMO_MESSAGES[0].content}
-              </div>
-            </motion.div>
-          )}
-          {visibleMsg >= 2 && (
-            <motion.div key="ai" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Sparkles size={15} color="white" />
-                </div>
-                <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "4px 18px 18px 18px", padding: "14px 16px", fontSize: "0.8rem", color: "rgba(240,240,248,0.88)", lineHeight: 1.75, whiteSpace: "pre-line" }}>
-                  {DEMO_MESSAGES[1].content}
-                </div>
-              </div>
-            </motion.div>
-          )}
-          {visibleMsg < 1 && (
-            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: "flex", flexDirection: "column", gap: 12, paddingTop: 8 }}>
-              {[80,60,90].map((w,i) => (
-                <div key={i} style={{ height: 12, borderRadius: 6, background: "rgba(255,255,255,0.06)", width: `${w}%`, animation: "shimmer 1.5s infinite", backgroundImage: "linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.05) 50%,transparent 100%)", backgroundSize: "200% 100%" }} />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Input bar */}
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 10, background: "rgba(7,7,26,0.6)" }}>
-        <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: "10px 14px", fontSize: "0.8rem", color: "rgba(240,240,248,0.3)" }}>
-          Ask anything about your document…
-        </div>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <ArrowRight size={16} color="white" />
-        </div>
-      </div>
+      <motion.div {...fade(1.3)}
+        style={{ position: "absolute", top: 80, right: -32, background: "#fff", borderRadius: 14, padding: "10px 14px", boxShadow: "0 8px 32px rgba(99,102,241,0.12)", border: `1px solid ${BRAND.border}`, zIndex: 10 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: BRAND.muted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Questions Asked</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: BRAND.text, letterSpacing: "-0.04em" }}>1.2K</div>
+        <div style={{ fontSize: 10, color: "#16A34A", fontWeight: 600 }}>↑ 18% today</div>
+      </motion.div>
     </div>
   )
 }
 
-/* ─── MAIN PAGE ────────────────────────────────────────────────────────────── */
-export default function Home() {
-  const router = useRouter()
-  const [navScrolled, setNavScrolled] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setNavScrolled(window.scrollY > 30)
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  const goToDashboard = () => router.push("/dashboard")
-
+/* ═══════════════════════════════════════════════ FEATURE CARD */
+function FeatureCard({ f, i }: { f: typeof FEATURES[0]; i: number }) {
+  const [hov, setHov] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true })
+  const Icon = f.icon
   return (
-    <main style={{ minHeight: "100vh", background: "#07071a", color: "#f0f0f8", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", overflowX: "hidden" }}>
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: i * 0.06, duration: 0.5, ease: [0.22,1,0.36,1] }}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        background: hov ? f.bg : "#fff",
+        border: `1.5px solid ${hov ? f.color + "40" : BRAND.border}`,
+        borderRadius: 20, padding: "28px 26px",
+        boxShadow: hov ? `0 20px 56px ${f.color}14` : "0 2px 16px rgba(0,0,0,0.04)",
+        transition: "all 0.22s ease", cursor: "default",
+      }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
+        <motion.div animate={{ scale: hov ? 1.08 : 1 }} transition={{ duration: 0.2 }}
+          style={{ width: 50, height: 50, borderRadius: 14, background: f.bg, border: `1.5px solid ${f.color}30`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: hov ? `0 6px 20px ${f.color}25` : "none", transition: "box-shadow 0.2s" }}>
+          <Icon size={22} color={f.color} />
+        </motion.div>
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: f.color, background: f.bg, border: `1px solid ${f.color}30`, padding: "3px 10px", borderRadius: 99, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          {f.badge}
+        </span>
+      </div>
+      <h3 style={{ fontSize: 16, fontWeight: 700, color: BRAND.text, marginBottom: 9, letterSpacing: "-0.02em" }}>{f.label}</h3>
+      <p style={{ fontSize: 14, color: BRAND.body, lineHeight: 1.72, margin: 0 }}>{f.desc}</p>
+    </motion.div>
+  )
+}
 
-      {/* ── BACKGROUND ORBS ────────────────────────────────────────────────── */}
-      <div aria-hidden style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "-20%", left: "-10%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.18) 0%,transparent 70%)", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", top: "10%", right: "-15%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle,rgba(6,182,212,0.12) 0%,transparent 70%)", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", bottom: "20%", left: "30%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(167,139,250,0.1) 0%,transparent 70%)", filter: "blur(60px)" }} />
+/* ═══════════════════════════════════════════════ STEP CARD */
+function StepCard({ s, i }: { s: typeof STEPS[0]; i: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true })
+  const Icon = s.icon
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: i * 0.14, duration: 0.55, ease: [0.22,1,0.36,1] }}
+      style={{ textAlign: "center", padding: "0 12px" }}>
+      <div style={{ position: "relative", display: "inline-block", marginBottom: 20 }}>
+        <div style={{ width: 76, height: 76, borderRadius: 22, background: "#fff", border: `2px solid ${BRAND.border}`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 8px 28px ${s.color}14`, margin: "0 auto" }}>
+          <Icon size={30} color={s.color} />
+        </div>
+        <div style={{ position: "absolute", top: -10, right: -10, width: 26, height: 26, borderRadius: "50%", background: `linear-gradient(135deg,${s.color},${BRAND.blue})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", boxShadow: `0 4px 12px ${s.color}50` }}>
+          {i+1}
+        </div>
+      </div>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: BRAND.text, marginBottom: 10, letterSpacing: "-0.02em" }}>{s.title}</h3>
+      <p style={{ fontSize: 14.5, color: BRAND.body, lineHeight: 1.72 }}>{s.desc}</p>
+    </motion.div>
+  )
+}
+
+/* ═══════════════════════════════════════════════ TESTIMONIAL CARD */
+function TestiCard({ t, i }: { t: typeof TESTIMONIALS[0]; i: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true })
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: i * 0.1, duration: 0.55, ease: [0.22,1,0.36,1] }}
+      whileHover={{ y: -5, boxShadow: "0 24px 64px rgba(99,102,241,0.14)" }}
+      style={{ background: "#fff", border: `1.5px solid ${BRAND.border}`, borderRadius: 24, padding: "28px 26px", transition: "box-shadow 0.22s", cursor: "default" }}>
+      <div style={{ display: "flex", gap: 2, marginBottom: 16 }}>
+        {Array.from({length: t.stars}).map((_,k) => <Star key={k} size={14} fill="#F59E0B" color="#F59E0B" />)}
+      </div>
+      <p style={{ fontSize: 15, color: BRAND.body, lineHeight: 1.78, marginBottom: 22, fontStyle: "italic" }}>"{t.quote}"</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+        <div style={{ width: 44, height: 44, borderRadius: "50%", background: `linear-gradient(135deg,${t.color},${t.color}88)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>{t.av}</div>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: BRAND.text }}>{t.name}</div>
+          <div style={{ fontSize: 12.5, color: BRAND.muted }}>{t.role} · {t.company}</div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+/* ═══════════════════════════════════════════════ PRICING CARD */
+function PlanCard({ p, billing, i }: { p: typeof PLANS[0]; billing: "mo"|"yr"; i: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true })
+  const router = useRouter()
+  const price = billing === "mo" ? p.mo : p.yr
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: i * 0.08, duration: 0.55, ease: [0.22,1,0.36,1] }}
+      style={{
+        background: p.highlight ? BRAND.grad : "#fff",
+        border: p.highlight ? "none" : `1.5px solid ${BRAND.border}`,
+        borderRadius: 24, padding: "32px 28px",
+        boxShadow: p.highlight ? "0 28px 72px rgba(99,102,241,0.38)" : "0 4px 24px rgba(0,0,0,0.05)",
+        position: "relative", overflow: "hidden",
+        transform: p.highlight ? "scale(1.04)" : "scale(1)",
+      }}>
+      {p.badge && (
+        <div style={{ position: "absolute", top: 22, right: 22, background: "rgba(255,255,255,0.22)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 99, padding: "3px 12px", fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.04em" }}>
+          {p.badge}
+        </div>
+      )}
+      <div style={{ marginBottom: 26 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: p.highlight ? "rgba(255,255,255,0.75)" : BRAND.primary, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 6 }}>{p.name}</div>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 3, marginBottom: 6 }}>
+          <span style={{ fontSize: 14, color: p.highlight ? "rgba(255,255,255,0.65)" : BRAND.muted, paddingBottom: 10 }}>₹</span>
+          <span style={{ fontSize: 52, fontWeight: 900, color: p.highlight ? "#fff" : BRAND.text, lineHeight: 1, letterSpacing: "-0.04em" }}>{price}</span>
+          {price > 0 && <span style={{ fontSize: 14, color: p.highlight ? "rgba(255,255,255,0.55)" : BRAND.muted, paddingBottom: 10 }}>/mo</span>}
+        </div>
+        {billing === "yr" && price > 0 && (
+          <div style={{ fontSize: 12.5, color: p.highlight ? "rgba(255,255,255,0.7)" : "#16A34A", fontWeight: 600 }}>
+            Save ₹{(p.mo - price) * 12} per year
+          </div>
+        )}
+        <p style={{ fontSize: 13.5, color: p.highlight ? "rgba(255,255,255,0.68)" : BRAND.muted, marginTop: 10, lineHeight: 1.5 }}>{p.desc}</p>
       </div>
 
-      {/* ── NAVBAR ─────────────────────────────────────────────────────────── */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        padding: "0 max(24px,calc((100vw - 1280px)/2))",
-        height: 64,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: navScrolled ? "rgba(7,7,26,0.92)" : "transparent",
-        backdropFilter: navScrolled ? "blur(20px)" : "none",
-        borderBottom: navScrolled ? "1px solid rgba(255,255,255,0.07)" : "none",
-        transition: "all 0.3s ease",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Sparkles size={15} color="white" />
-          </div>
-          <span style={{ fontSize: "1.125rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Intellixy</span>
-        </div>
+      <button onClick={() => router.push("/login")}
+        style={{ width: "100%", padding: 14, borderRadius: 13, fontSize: 14, fontWeight: 700, cursor: "pointer", border: "none", marginBottom: 26,
+          background: p.highlight ? "rgba(255,255,255,0.95)" : BRAND.grad,
+          color: p.highlight ? BRAND.primary : "#fff",
+          boxShadow: p.highlight ? "0 4px 18px rgba(0,0,0,0.14)" : "0 4px 18px rgba(99,102,241,0.32)",
+          transition: "transform 0.15s, box-shadow 0.15s",
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "none"; }}>
+        {p.cta}
+      </button>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="hidden-mobile">
-          {["Features","Pricing","Demo"].map(l => (
-            <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: "0.875rem", color: "rgba(240,240,248,0.6)", textDecoration: "none", transition: "color 0.2s" }}
-              onMouseEnter={e => (e.currentTarget.style.color="#f0f0f8")}
-              onMouseLeave={e => (e.currentTarget.style.color="rgba(240,240,248,0.6)")}
-            >{l}</a>
-          ))}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => router.push("/login")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.875rem", color: "rgba(240,240,248,0.6)", padding: "8px 12px", borderRadius: 8, transition: "color 0.2s" }}
-            onMouseEnter={e => (e.currentTarget.style.color="#f0f0f8")}
-            onMouseLeave={e => (e.currentTarget.style.color="rgba(240,240,248,0.6)")}
-          >Log in</button>
-          <button onClick={goToDashboard} style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", cursor: "pointer", color: "white", padding: "9px 20px", borderRadius: 10, fontSize: "0.875rem", fontWeight: 600, transition: "all 0.2s", boxShadow: "0 4px 20px rgba(124,58,237,0.4)" }}
-            onMouseEnter={e => { e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(124,58,237,0.55)" }}
-            onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 4px 20px rgba(124,58,237,0.4)" }}
-          >Start Free Trial</button>
-        </div>
-      </nav>
-
-      {/* ── HERO ───────────────────────────────────────────────────────────── */}
-      <section style={{ position: "relative", zIndex: 1, paddingTop: 160, paddingBottom: 120, textAlign: "center", padding: "160px max(24px,calc((100vw - 1280px)/2)) 120px" }}>
-
-        {/* Trust badge */}
-        <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 99, padding: "6px 16px", fontSize: "0.8rem", color: "#a78bfa", marginBottom: 32 }}>
-          <Star size={13} fill="#a78bfa" color="#a78bfa" />
-          Trusted by 1,200+ users across India
-          <Star size={13} fill="#a78bfa" color="#a78bfa" />
-        </motion.div>
-
-        {/* Headline */}
-        <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }}
-          style={{ fontSize: "clamp(2.8rem,6vw,4.75rem)", fontWeight: 900, lineHeight: 1.08, letterSpacing: "-0.04em", margin: "0 auto 24px", maxWidth: 820 }}>
-          Stop reading{" "}
-          <span style={{ background: "linear-gradient(135deg,#c4b5fd,#06b6d4,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-            PDFs.
-          </span>
-          <br />
-          Start chatting with them.
-        </motion.h1>
-
-        {/* Subheadline */}
-        <motion.p initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}
-          style={{ fontSize: "1.2rem", color: "rgba(240,240,248,0.55)", maxWidth: 560, margin: "0 auto 48px", lineHeight: 1.65 }}>
-          Upload any document and get instant summaries, answers, and insights in seconds. No more endless scrolling.
-        </motion.p>
-
-        {/* CTAs */}
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
-          style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", alignItems: "center" }}>
-          <button onClick={goToDashboard}
-            style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", cursor: "pointer", color: "white", padding: "16px 32px", borderRadius: 14, fontSize: "1rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 8px 40px rgba(124,58,237,0.5)", transition: "all 0.25s" }}
-            onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px) scale(1.02)"; e.currentTarget.style.boxShadow="0 16px 56px rgba(124,58,237,0.65)" }}
-            onMouseLeave={e => { e.currentTarget.style.transform="translateY(0) scale(1)"; e.currentTarget.style.boxShadow="0 8px 40px rgba(124,58,237,0.5)" }}
-          >
-            Start Free Trial
-            <ArrowRight size={18} />
-          </button>
-          <a href="https://youtube.com/shorts/3iaD8iVudk4?feature=share" target="_blank" rel="noopener noreferrer"
-            style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(240,240,248,0.65)", textDecoration: "none", fontSize: "0.95rem", fontWeight: 500, border: "1px solid rgba(255,255,255,0.12)", padding: "15px 28px", borderRadius: 14, transition: "all 0.2s", backdropFilter: "blur(8px)" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.25)"; e.currentTarget.style.color="#f0f0f8" }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.12)"; e.currentTarget.style.color="rgba(240,240,248,0.65)" }}
-          >
-            <span style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>▶</span>
-            Watch Demo
-          </a>
-        </motion.div>
-
-        {/* Micro copy */}
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
-          style={{ marginTop: 20, fontSize: "0.8rem", color: "rgba(240,240,248,0.3)" }}>
-          No credit card required · Setup in 10 seconds · Free plan included
-        </motion.p>
-
-        {/* Stats strip */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.5 }}
-          style={{ display: "flex", justifyContent: "center", gap: "clamp(24px,5vw,72px)", marginTop: 72, flexWrap: "wrap" }}>
-          {STATS.map(s => <AnimatedStat key={s.label} {...s} />)}
-        </motion.div>
-      </section>
-
-      {/* ── DEMO VIDEO ─────────────────────────────────────────────────────── */}
-      <section id="demo" style={{ position: "relative", zIndex: 1, padding: "100px max(24px,calc((100vw - 1280px)/2))" }}>
-
-        {/* Section header */}
-        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55 }}
-          style={{ textAlign: "center", marginBottom: 64 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 99, padding: "5px 16px", fontSize: "0.75rem", color: "#f87171", fontWeight: 700, marginBottom: 20, letterSpacing: "0.07em", textTransform: "uppercase" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#ef4444"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-            Demo Video
-          </div>
-          <h2 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 auto 18px", lineHeight: 1.12 }}>
-            See it in action 🎥
-          </h2>
-          <p style={{ fontSize: "1.1rem", color: "rgba(240,240,248,0.5)", margin: "0 auto", maxWidth: 520, lineHeight: 1.65 }}>
-            Upload a PDF → Ask questions → Get instant answers
-          </p>
-        </motion.div>
-
-        {/* Two-column layout: phone video + mock chat */}
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 56, alignItems: "center", maxWidth: 1100, margin: "0 auto" }} className="demo-grid">
-
-          {/* ── LEFT: Gradient-bordered phone video ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
-            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}
-          >
-            {/* Gradient border shell */}
-            <div style={{
-              position: "relative",
-              padding: 3,
-              borderRadius: 44,
-              background: "linear-gradient(145deg, #7c3aed, #4f46e5, #06b6d4)",
-              boxShadow: "0 0 60px rgba(124,58,237,0.45), 0 0 120px rgba(6,182,212,0.2), 0 40px 80px rgba(0,0,0,0.6)",
-            }}>
-              {/* Animated glow ring */}
-              <div style={{
-                position: "absolute", inset: -8, borderRadius: 52, zIndex: -1,
-                background: "linear-gradient(145deg, rgba(124,58,237,0.3), rgba(6,182,212,0.2))",
-                filter: "blur(20px)",
-              }} />
-
-              {/* Phone body */}
-              <div style={{
-                width: 260,
-                borderRadius: 42,
-                background: "#0a0a18",
-                overflow: "hidden",
-                paddingTop: 16,
-                paddingBottom: 16,
-              }}>
-                {/* Notch bar */}
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-                  <div style={{ width: 90, height: 24, background: "#111122", borderRadius: "0 0 16px 16px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-                    <div style={{ width: 40, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.1)" }} />
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-                  </div>
-                </div>
-
-                {/* Video area */}
-                <div style={{ margin: "0 8px", borderRadius: 24, overflow: "hidden", aspectRatio: "9/16", background: "#000", position: "relative" }}>
-                  <iframe
-                    src="https://www.youtube.com/embed/3iaD8iVudk4?rel=0&modestbranding=1&loop=1&playlist=3iaD8iVudk4&color=white"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-                    title="Intellixy — AI PDF Chat Demo"
-                  />
-                </div>
-
-                {/* Home indicator */}
-                <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
-                  <div style={{ width: 90, height: 4, background: "rgba(255,255,255,0.22)", borderRadius: 99 }} />
-                </div>
-              </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+        {p.features.map(f => (
+          <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <div style={{ width: 19, height: 19, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+              background: p.highlight ? "rgba(255,255,255,0.22)" : "#EEF2FF",
+              border: p.highlight ? "1px solid rgba(255,255,255,0.3)" : "none" }}>
+              <Check size={10} color={p.highlight ? "#fff" : BRAND.primary} strokeWidth={2.5} />
             </div>
+            <span style={{ fontSize: 13.5, color: p.highlight ? "rgba(255,255,255,0.9)" : BRAND.body, lineHeight: 1.45 }}>{f}</span>
+          </div>
+        ))}
+        {p.missing.map(f => (
+          <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", opacity: 0.38 }}>
+            <div style={{ width: 19, height: 19, borderRadius: "50%", flexShrink: 0, background: "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <X size={10} color={BRAND.muted} strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: 13.5, color: BRAND.muted, lineHeight: 1.45 }}>{f}</span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
 
-            {/* Watch full video link */}
-            <a href="https://youtube.com/shorts/3iaD8iVudk4?feature=share" target="_blank" rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: "0.82rem", fontWeight: 600, color: "rgba(240,240,248,0.4)", textDecoration: "none", padding: "8px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 99, transition: "all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.color = "rgba(240,240,248,0.85)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = "rgba(240,240,248,0.4)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-              Watch full video on YouTube
-            </a>
+/* ═══════════════════════════════════════════════ FAQ ITEM */
+function FAQItem({ q, a, i }: { q: string; a: string; i: number }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true })
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: i * 0.05, duration: 0.4 }}
+      style={{ border: `1.5px solid ${open ? "#A5B4FC" : BRAND.border}`, borderRadius: 16, overflow: "hidden", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: open ? "0 0 0 4px rgba(99,102,241,0.06)" : "none" }}>
+      <button onClick={() => setOpen(!open)}
+        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "20px 24px", background: open ? "#FAFAFE" : "#fff", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.2s" }}>
+        <span style={{ fontSize: 15.5, fontWeight: 600, color: BRAND.text, lineHeight: 1.5 }}>{q}</span>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ flexShrink: 0 }}>
+          <ChevronDown size={18} color={BRAND.primary} />
+        </motion.div>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div key="a"
+            initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4,0,0.2,1] }} style={{ overflow: "hidden" }}>
+            <p style={{ padding: "0 24px 22px", fontSize: 14.5, color: BRAND.body, lineHeight: 1.78, margin: 0, borderTop: `1px solid ${BRAND.border}`, paddingTop: 16 }}>{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
 
-            {/* Step indicators */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
+/* ═══════════════════════════════════════════════ MAIN PAGE */
+export default function Page() {
+  const [billing, setBilling] = useState<"mo"|"yr">("mo")
+  const router = useRouter()
+
+  const scrollTo = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
+  }, [])
+
+  return (
+    <div style={{ background: "#fff", minHeight: "100vh", fontFamily: "var(--font-inter, Inter, -apple-system, sans-serif)", color: BRAND.text, overflowX: "hidden" }}>
+
+      <Navbar onNav={scrollTo} />
+
+      {/* ════════════════════════════════ HERO */}
+      <section style={{ paddingTop: 100, paddingBottom: 96, position: "relative", overflow: "hidden", background: "linear-gradient(180deg, #F8F7FF 0%, #FFFFFF 100%)" }}>
+        {/* Ambient orbs */}
+        <div style={{ position: "absolute", top: -120, left: "-8%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 65%)", pointerEvents: "none", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", top: 100, right: "-5%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 65%)", pointerEvents: "none", filter: "blur(40px)" }} />
+        {/* Dot grid */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle, rgba(99,102,241,0.08) 1px, transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none", opacity: 0.6 }} />
+
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 28px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72, alignItems: "center", position: "relative", zIndex: 1 }} className="hero-grid">
+
+          {/* Left column */}
+          <div>
+            {/* Badge */}
+            <motion.div {...fade(0, 12)}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: 99, padding: "7px 16px", marginBottom: 28 }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: BRAND.primary }} />
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: BRAND.primary, letterSpacing: "0.05em" }}>AI-POWERED PDF ASSISTANT</span>
+            </motion.div>
+
+            {/* Headline */}
+            <motion.h1 {...fade(0.08)} style={{ fontSize: "clamp(2.6rem, 5.5vw, 4rem)", fontWeight: 900, lineHeight: 1.08, letterSpacing: "-0.04em", color: BRAND.text, marginBottom: 24 }}>
+              Stop Reading
+              <br />
+              <Grad>PDFs. Just Ask.</Grad>
+            </motion.h1>
+
+            {/* Sub */}
+            <motion.p {...fade(0.16)} style={{ fontSize: "1.12rem", color: BRAND.body, lineHeight: 1.76, marginBottom: 36, maxWidth: 480 }}>
+              Upload any PDF and get instant AI-powered answers, summaries and insights in seconds. No reading required. Used by 1,200+ professionals.
+            </motion.p>
+
+            {/* Feature chips */}
+            <motion.div {...fade(0.22)} style={{ display: "flex", flexWrap: "wrap", gap: 9, marginBottom: 36 }}>
               {[
-                { step: "1", label: "Upload any PDF", icon: "📄" },
-                { step: "2", label: "Ask a question",  icon: "💬" },
-                { step: "3", label: "Get instant AI answers", icon: "⚡" },
-              ].map(({ step, label, icon }) => (
-                <div key={step} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
-                  <div style={{ width: 26, height: 26, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, color: "white", flexShrink: 0 }}>{step}</div>
-                  <span style={{ fontSize: 14 }}>{icon}</span>
-                  <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "rgba(240,240,248,0.7)" }}>{label}</span>
+                { icon: Zap, t: "< 2s answers",  c: BRAND.primary },
+                { icon: Lock, t: "End-to-end encrypted", c: "#059669" },
+                { icon: Globe, t: "Any PDF type", c: BRAND.blue },
+              ].map(({ icon: Ic, t, c }) => (
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 15px", background: "#F8FAFC", border: `1.5px solid ${BRAND.border}`, borderRadius: 99, fontSize: 13, fontWeight: 600, color: BRAND.body }}>
+                  <Ic size={13} color={c} /> {t}
                 </div>
               ))}
-            </div>
-          </motion.div>
+            </motion.div>
 
-          {/* ── RIGHT: Animated mock chat ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }}
-          >
-            {/* Label */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: "inline-block", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 99, padding: "4px 14px", fontSize: "0.72rem", color: "#a78bfa", fontWeight: 700, marginBottom: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                Live Product Preview
+            {/* CTAs */}
+            <motion.div {...fade(0.28)} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 36 }}>
+              <button onClick={() => router.push("/login")}
+                style={{ display: "flex", alignItems: "center", gap: 9, padding: "15px 30px", background: BRAND.grad, borderRadius: 14, fontSize: 15, fontWeight: 700, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 8px 28px rgba(99,102,241,0.4)", transition: "transform 0.15s, box-shadow 0.15s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 14px 40px rgba(99,102,241,0.55)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "none"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 28px rgba(99,102,241,0.4)"; }}>
+                Start Free — No Card <ArrowRight size={16} />
+              </button>
+              <button onClick={() => scrollTo("features")}
+                style={{ display: "flex", alignItems: "center", gap: 8, padding: "15px 22px", background: "transparent", border: `1.5px solid ${BRAND.border}`, borderRadius: 14, fontSize: 15, fontWeight: 600, color: BRAND.body, cursor: "pointer", transition: "all 0.15s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = BRAND.primary; (e.currentTarget as HTMLButtonElement).style.color = BRAND.primary; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = BRAND.border; (e.currentTarget as HTMLButtonElement).style.color = BRAND.body; }}>
+                <Play size={14} fill="currentColor" /> See how it works
+              </button>
+            </motion.div>
+
+            {/* Social proof */}
+            <motion.div {...fade(0.34)} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ display: "flex" }}>
+                {["PS","RV","AI","MK","SP"].map((av, i) => (
+                  <div key={av} style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${[BRAND.primary,BRAND.violet,BRAND.blue,"#059669","#D97706"][i]},${[BRAND.violet,BRAND.blue,"#6366F1","#34D399","#F59E0B"][i]})`, border: "2.5px solid #fff", marginLeft: i > 0 ? -10 : 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "#fff" }}>
+                    {av}
+                  </div>
+                ))}
               </div>
-              <h3 style={{ fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 8px", lineHeight: 1.2 }}>
-                Ask anything about your document
-              </h3>
-              <p style={{ fontSize: "0.9rem", color: "rgba(240,240,248,0.45)", margin: 0, lineHeight: 1.6 }}>
-                Real AI responses — structured, precise, and instant.
-              </p>
-            </div>
-            <DemoChat />
-          </motion.div>
+              <div>
+                <div style={{ display: "flex", gap: 2, marginBottom: 2 }}>
+                  {Array.from({length:5}).map((_,k) => <Star key={k} size={12} fill="#F59E0B" color="#F59E0B" />)}
+                </div>
+                <div style={{ fontSize: 12.5, color: BRAND.muted }}>
+                  Trusted by <strong style={{ color: BRAND.text }}>1,200+</strong> professionals
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right column — mockup */}
+          <div style={{ position: "relative" }} className="hero-mockup">
+            <ProductMockup />
+          </div>
         </div>
       </section>
 
-      {/* ── PROBLEM → SOLUTION ─────────────────────────────────────────────── */}
-      <section style={{ position: "relative", zIndex: 1, padding: "100px max(24px,calc((100vw - 1280px)/2))" }}>
-        <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 32, alignItems: "center" }} className="problem-grid">
-
-          {/* Problem */}
-          <div style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 24, padding: "40px 36px" }}>
-            <div style={{ fontSize: "2rem", marginBottom: 16 }}>😩</div>
-            <div style={{ display: "inline-block", background: "rgba(239,68,68,0.12)", borderRadius: 99, padding: "3px 12px", fontSize: "0.72rem", fontWeight: 700, color: "#ef4444", marginBottom: 20, letterSpacing: "0.06em", textTransform: "uppercase" }}>The Old Way</div>
-            <h3 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: 16, lineHeight: 1.25 }}>Reading long PDFs is slow and painful</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {["Scroll through 50+ pages to find one number", "Miss critical clauses buried in legal text", "Spend hours on documents that take 30 seconds", "Copy-paste into notes just to find things again"].map(p => (
-                <div key={p} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <X size={16} color="#ef4444" style={{ marginTop: 2, flexShrink: 0 }} />
-                  <span style={{ fontSize: "0.875rem", color: "rgba(240,240,248,0.6)", lineHeight: 1.5 }}>{p}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Arrow */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 32px rgba(124,58,237,0.4)" }}>
-              <ArrowRight size={20} color="white" />
-            </div>
-          </div>
-
-          {/* Solution */}
-          <div style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 24, padding: "40px 36px" }}>
-            <div style={{ fontSize: "2rem", marginBottom: 16 }}>🚀</div>
-            <div style={{ display: "inline-block", background: "rgba(124,58,237,0.15)", borderRadius: 99, padding: "3px 12px", fontSize: "0.72rem", fontWeight: 700, color: "#a78bfa", marginBottom: 20, letterSpacing: "0.06em", textTransform: "uppercase" }}>With Intellixy</div>
-            <h3 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: 16, lineHeight: 1.25 }}>Ask questions, get instant answers</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {["Type your question, get the exact answer in 2s", "Key clauses and risks surfaced automatically", "Structured summaries in bullet-point format", "Chat history saved — always find what you asked"].map(p => (
-                <div key={p} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <Check size={16} color="#4ade80" style={{ marginTop: 2, flexShrink: 0 }} />
-                  <span style={{ fontSize: "0.875rem", color: "rgba(240,240,248,0.7)", lineHeight: 1.5 }}>{p}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── FEATURES ───────────────────────────────────────────────────────── */}
-      <section id="features" style={{ position: "relative", zIndex: 1, padding: "100px max(24px,calc((100vw - 1280px)/2))" }}>
-        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          style={{ textAlign: "center", marginBottom: 64 }}>
-          <div style={{ display: "inline-block", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 99, padding: "5px 14px", fontSize: "0.75rem", color: "#a78bfa", fontWeight: 600, marginBottom: 16, letterSpacing: "0.08em", textTransform: "uppercase" }}>Everything you need</div>
-          <h2 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 16, lineHeight: 1.15 }}>
-            Powerful features for every document
-          </h2>
-          <p style={{ fontSize: "1.05rem", color: "rgba(240,240,248,0.5)", maxWidth: 480, margin: "0 auto" }}>
-            Built for professionals who need to move fast — CAs, lawyers, students, analysts.
-          </p>
-        </motion.div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }} className="features-grid">
-          {FEATURES.map((f, i) => <FeatureCard key={f.title} feature={f} index={i} />)}
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ───────────────────────────────────────────────────── */}
-      <section style={{ position: "relative", zIndex: 1, padding: "100px max(24px,calc((100vw - 1280px)/2))" }}>
-        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          style={{ textAlign: "center", marginBottom: 64 }}>
-          <div style={{ display: "flex", justifyContent: "center", gap: 2, marginBottom: 16 }}>
-            {[1,2,3,4,5].map(i => <Star key={i} size={20} fill="#fbbf24" color="#fbbf24" />)}
-          </div>
-          <h2 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 16, lineHeight: 1.15 }}>
-            Loved by 1,200+ users
-          </h2>
-          <p style={{ fontSize: "1.05rem", color: "rgba(240,240,248,0.5)" }}>
-            Real people saving real hours every week.
-          </p>
-        </motion.div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }} className="testimonials-grid">
-          {TESTIMONIALS.map((t, i) => (
-            <motion.div key={t.name}
-              initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "28px 24px" }}>
-              <div style={{ display: "flex", gap: 2, marginBottom: 16 }}>
-                {[1,2,3,4,5].map(s => <Star key={s} size={14} fill="#fbbf24" color="#fbbf24" />)}
-              </div>
-              <p style={{ fontSize: "0.9rem", color: "rgba(240,240,248,0.72)", lineHeight: 1.7, marginBottom: 20 }}>"{t.text}"</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: "50%", background: t.color + "33", border: `2px solid ${t.color}66`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", fontWeight: 700, color: t.color }}>
-                  {t.avatar}
-                </div>
-                <div>
-                  <div style={{ fontSize: "0.875rem", fontWeight: 700 }}>{t.name}</div>
-                  <div style={{ fontSize: "0.75rem", color: "rgba(240,240,248,0.4)" }}>{t.role}</div>
-                </div>
-              </div>
+      {/* ════════════════════════════════ STATS BAR */}
+      <section style={{ borderTop: `1px solid ${BRAND.border}`, borderBottom: `1px solid ${BRAND.border}`, background: "#FAFAFE" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 28px", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 24, textAlign: "center" }} className="stats-grid">
+          {[
+            { v: "1,200+", l: "Active Users",          c: BRAND.primary },
+            { v: "50K+",   l: "PDFs Analyzed",          c: BRAND.violet },
+            { v: "500K+",  l: "Questions Answered",     c: BRAND.blue },
+            { v: "< 2s",   l: "Average Response",       c: "#059669" },
+          ].map((s,i) => (
+            <motion.div key={s.l} {...fadeVP(i * 0.07)}>
+              <div style={{ fontSize: "2.1rem", fontWeight: 900, color: BRAND.text, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 5 }}>{s.v}</div>
+              <div style={{ fontSize: 13.5, color: BRAND.muted, fontWeight: 500 }}>{s.l}</div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* ── PRICING ────────────────────────────────────────────────────────── */}
-      <section id="pricing" style={{ position: "relative", zIndex: 1, padding: "100px max(24px,calc((100vw - 1280px)/2))" }}>
-        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          style={{ textAlign: "center", marginBottom: 64 }}>
-          <div style={{ display: "inline-block", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 99, padding: "5px 14px", fontSize: "0.75rem", color: "#fbbf24", fontWeight: 600, marginBottom: 16, letterSpacing: "0.08em", textTransform: "uppercase" }}>🔥 Launch Pricing</div>
-          <h2 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 16 }}>
-            Simple, honest pricing
-          </h2>
-          <p style={{ fontSize: "1.05rem", color: "rgba(240,240,248,0.5)" }}>
-            Start free, upgrade when you're ready.
-          </p>
-        </motion.div>
+      {/* ════════════════════════════════ FEATURES */}
+      <section id="features" style={{ padding: "104px 28px", background: BRAND.surface }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
+            <motion.div {...fadeVP(0)} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: 99, padding: "6px 16px", marginBottom: 18 }}>
+              <Sparkles size={13} color={BRAND.primary} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: BRAND.primary, letterSpacing: "0.06em", textTransform: "uppercase" }}>Everything you need</span>
+            </motion.div>
+            <motion.h2 {...fadeVP(0.06)} style={{ fontSize: "clamp(1.9rem,4vw,2.75rem)", fontWeight: 900, color: BRAND.text, letterSpacing: "-0.03em", marginBottom: 14, lineHeight: 1.14 }}>
+              Powerful AI for <Grad>every document</Grad>
+            </motion.h2>
+            <motion.p {...fadeVP(0.12)} style={{ fontSize: 17, color: BRAND.body, maxWidth: 520, margin: "0 auto", lineHeight: 1.72 }}>
+              From quick answers to deep analysis — Intellixy gives you everything to understand any PDF instantly.
+            </motion.p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22 }} className="features-grid">
+            {FEATURES.map((f,i) => <FeatureCard key={f.label} f={f} i={i} />)}
+          </div>
+        </div>
+      </section>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, maxWidth: 860, margin: "0 auto" }} className="pricing-grid">
+      {/* ════════════════════════════════ HOW IT WORKS */}
+      <section id="how" style={{ padding: "104px 28px", background: "#fff" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 72 }}>
+            <motion.h2 {...fadeVP(0)} style={{ fontSize: "clamp(1.9rem,4vw,2.75rem)", fontWeight: 900, color: BRAND.text, letterSpacing: "-0.03em", marginBottom: 14, lineHeight: 1.14 }}>
+              Up and running in <Grad>30 seconds</Grad>
+            </motion.h2>
+            <motion.p {...fadeVP(0.06)} style={{ fontSize: 17, color: BRAND.body, maxWidth: 440, margin: "0 auto" }}>
+              No setup. No learning curve. Just upload and start asking.
+            </motion.p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 40, position: "relative" }} className="how-grid">
+            <div className="how-connector" style={{ position: "absolute", top: 38, left: "18%", right: "18%", height: 2, background: `linear-gradient(90deg,${BRAND.primary},${BRAND.blue})`, opacity: 0.18, borderRadius: 99 }} />
+            {STEPS.map((s,i) => <StepCard key={s.n} s={s} i={i} />)}
+          </div>
+        </div>
+      </section>
 
-          {/* FREE */}
-          <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, padding: "40px 36px" }}>
-            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(240,240,248,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</div>
-            <div style={{ fontSize: "3.5rem", fontWeight: 900, lineHeight: 1, marginBottom: 4 }}>₹0</div>
-            <div style={{ fontSize: "0.875rem", color: "rgba(240,240,248,0.4)", marginBottom: 32 }}>Forever free, no card needed</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 36 }}>
-              {["3 PDFs total","20 questions lifetime","Basic Q&A","Standard AI speed"].map(f => (
-                <div key={f} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <Check size={15} color="#4ade80" />
-                  <span style={{ fontSize: "0.9rem", color: "rgba(240,240,248,0.65)" }}>{f}</span>
-                </div>
+      {/* ════════════════════════════════ TESTIMONIALS */}
+      <section id="testimonials" style={{ padding: "104px 28px", background: BRAND.surface }}>
+        <div style={{ maxWidth: 1140, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
+            <motion.h2 {...fadeVP(0)} style={{ fontSize: "clamp(1.9rem,4vw,2.75rem)", fontWeight: 900, color: BRAND.text, letterSpacing: "-0.03em", marginBottom: 12, lineHeight: 1.14 }}>
+              Loved by <Grad>professionals</Grad>
+            </motion.h2>
+            <motion.p {...fadeVP(0.06)} style={{ fontSize: 17, color: BRAND.body }}>
+              Join 1,200+ people who save hours every week.
+            </motion.p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }} className="testi-grid">
+            {TESTIMONIALS.map((t,i) => <TestiCard key={t.name} t={t} i={i} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════ PRICING */}
+      <section id="pricing" style={{ padding: "104px 28px", background: "#fff" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <motion.h2 {...fadeVP(0)} style={{ fontSize: "clamp(1.9rem,4vw,2.75rem)", fontWeight: 900, color: BRAND.text, letterSpacing: "-0.03em", marginBottom: 12, lineHeight: 1.14 }}>
+              Simple, honest <Grad>pricing</Grad>
+            </motion.h2>
+            <motion.p {...fadeVP(0.06)} style={{ fontSize: 17, color: BRAND.body, marginBottom: 28 }}>
+              Start free. Upgrade when you need more.
+            </motion.p>
+            {/* Toggle */}
+            <motion.div {...fadeVP(0.1)} style={{ display: "inline-flex", background: BRAND.surface, border: `1.5px solid ${BRAND.border}`, borderRadius: 13, padding: 4 }}>
+              {(["mo","yr"] as const).map(b => (
+                <button key={b} onClick={() => setBilling(b)}
+                  style={{ padding: "8px 20px", borderRadius: 10, fontSize: 13.5, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.18s",
+                    background: billing === b ? BRAND.grad : "transparent",
+                    color: billing === b ? "#fff" : BRAND.muted,
+                    boxShadow: billing === b ? "0 2px 10px rgba(99,102,241,0.35)" : "none" }}>
+                  {b === "mo" ? "Monthly" : <>Yearly <span style={{ marginLeft: 4, fontSize: 10.5, background: billing === "yr" ? "rgba(255,255,255,0.25)" : "#EEF2FF", color: billing === "yr" ? "#fff" : BRAND.primary, borderRadius: 99, padding: "1px 7px" }}>Save 17%</span></>}
+                </button>
               ))}
-            </div>
-            <button onClick={goToDashboard} style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "13px 0", fontSize: "0.9rem", fontWeight: 600, color: "rgba(240,240,248,0.8)", cursor: "pointer", transition: "all 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.1)"}
-              onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,0.06)"}
-            >
-              Get Started Free
-            </button>
-          </motion.div>
+            </motion.div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 26, alignItems: "start" }} className="price-grid">
+            {PLANS.map((p,i) => <PlanCard key={p.name} p={p} billing={billing} i={i} />)}
+          </div>
+        </div>
+      </section>
 
-          {/* PRO */}
-          <motion.div initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-            style={{ background: "linear-gradient(160deg,rgba(124,58,237,0.18) 0%,rgba(79,70,229,0.1) 100%)", border: "1.5px solid rgba(124,58,237,0.5)", borderRadius: 24, padding: "40px 36px", position: "relative", boxShadow: "0 0 60px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.1)" }}>
-            <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", borderRadius: 99, padding: "5px 18px", fontSize: "0.75rem", fontWeight: 800, color: "white", whiteSpace: "nowrap", boxShadow: "0 4px 20px rgba(124,58,237,0.5)" }}>
-              🔥 MOST POPULAR
+      {/* ════════════════════════════════ FAQ */}
+      <section id="faq" style={{ padding: "104px 28px", background: BRAND.surface }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <motion.h2 {...fadeVP(0)} style={{ fontSize: "clamp(1.9rem,4vw,2.75rem)", fontWeight: 900, color: BRAND.text, letterSpacing: "-0.03em", lineHeight: 1.14 }}>
+              Common <Grad>questions</Grad>
+            </motion.h2>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {FAQS.map((f,i) => <FAQItem key={f.q} q={f.q} a={f.a} i={i} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════ CTA BANNER */}
+      <section style={{ padding: "0 28px 104px" }}>
+        <div style={{ maxWidth: 920, margin: "0 auto" }}>
+          <motion.div {...fadeVP(0)}
+            style={{ background: BRAND.grad, borderRadius: 28, padding: "72px 56px", textAlign: "center", position: "relative", overflow: "hidden", boxShadow: "0 36px 96px rgba(99,102,241,0.38)" }}>
+            <div style={{ position: "absolute", top: -80, right: -80, width: 360, height: 360, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
+            <div style={{ position: "absolute", bottom: -60, left: -60, width: 280, height: 280, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{ fontSize: 44, marginBottom: 16 }}>⚡</div>
+              <h2 style={{ fontSize: "clamp(1.9rem,4vw,2.9rem)", fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", marginBottom: 16, lineHeight: 1.1 }}>
+                Ready to chat with your PDFs?
+              </h2>
+              <p style={{ fontSize: 17, color: "rgba(255,255,255,0.78)", marginBottom: 40, maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.65 }}>
+                Join 1,200+ professionals. Upload your first PDF free — no credit card needed.
+              </p>
+              <button onClick={() => router.push("/login")}
+                style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "17px 38px", background: "rgba(255,255,255,0.97)", borderRadius: 14, fontSize: 16, fontWeight: 800, color: BRAND.primary, border: "none", cursor: "pointer", boxShadow: "0 6px 24px rgba(0,0,0,0.14)", transition: "transform 0.15s, box-shadow 0.15s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "none"; }}>
+                Start Free Today <ArrowRight size={18} />
+              </button>
+              <div style={{ marginTop: 22, display: "flex", justifyContent: "center", gap: 22, flexWrap: "wrap" }}>
+                {["Free to start","No credit card","Cancel anytime"].map(t => (
+                  <span key={t} style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Check size={13} strokeWidth={3} /> {t}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#a78bfa", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Pro</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
-              <span style={{ fontSize: "3.5rem", fontWeight: 900, lineHeight: 1 }}>₹299</span>
-              <span style={{ fontSize: "1rem", color: "rgba(240,240,248,0.4)" }}>/month</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
-              <span style={{ fontSize: "0.875rem", color: "rgba(240,240,248,0.4)", textDecoration: "line-through" }}>₹999/mo</span>
-              <span style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)", borderRadius: 99, padding: "2px 10px", fontSize: "0.72rem", fontWeight: 700, color: "#fbbf24" }}>70% OFF — LAUNCH PRICE</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 36 }}>
-              {["Unlimited PDFs","Unlimited questions","Priority AI (2× faster)","Advanced insights & risks","Chat history saved","Priority support"].map(f => (
-                <div key={f} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(124,58,237,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Check size={11} color="#a78bfa" />
-                  </div>
-                  <span style={{ fontSize: "0.9rem", color: "rgba(240,240,248,0.85)" }}>{f}</span>
-                </div>
-              ))}
-            </div>
-            <button onClick={goToDashboard} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", borderRadius: 12, padding: "14px 0", fontSize: "0.95rem", fontWeight: 700, color: "white", cursor: "pointer", transition: "all 0.25s", boxShadow: "0 8px 32px rgba(124,58,237,0.45)" }}
-              onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 14px 44px rgba(124,58,237,0.6)" }}
-              onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 8px 32px rgba(124,58,237,0.45)" }}
-            >
-              Upgrade to Pro →
-            </button>
-            <p style={{ textAlign: "center", fontSize: "0.75rem", color: "rgba(240,240,248,0.35)", marginTop: 14 }}>
-              30-day money-back guarantee
-            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* ── FINAL CTA ──────────────────────────────────────────────────────── */}
-      <section style={{ position: "relative", zIndex: 1, padding: "100px max(24px,calc((100vw - 1280px)/2))" }}>
-        <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.2) 0%,rgba(6,182,212,0.1) 100%)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 32, padding: "80px 48px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-
-          {/* BG glow */}
-          <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 300, borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.25) 0%,transparent 70%)", filter: "blur(40px)", pointerEvents: "none" }} />
-
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <Upload size={40} color="#a78bfa" style={{ margin: "0 auto 24px" }} />
-            <h2 style={{ fontSize: "clamp(2rem,4.5vw,3.5rem)", fontWeight: 900, letterSpacing: "-0.04em", marginBottom: 20, lineHeight: 1.1 }}>
-              Start using AI on your{" "}
-              <span style={{ background: "linear-gradient(135deg,#c4b5fd,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                PDFs today
-              </span>
-            </h2>
-            <p style={{ fontSize: "1.15rem", color: "rgba(240,240,248,0.55)", marginBottom: 40, maxWidth: 480, margin: "0 auto 40px" }}>
-              Join 1,200+ professionals who already save hours every week with Intellixy.
-            </p>
-            <button onClick={goToDashboard}
-              style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "none", cursor: "pointer", color: "white", padding: "18px 40px", borderRadius: 14, fontSize: "1.05rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 10, boxShadow: "0 8px 40px rgba(124,58,237,0.55)", transition: "all 0.25s" }}
-              onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px) scale(1.02)"; e.currentTarget.style.boxShadow="0 16px 56px rgba(124,58,237,0.7)" }}
-              onMouseLeave={e => { e.currentTarget.style.transform="translateY(0) scale(1)"; e.currentTarget.style.boxShadow="0 8px 40px rgba(124,58,237,0.55)" }}
-            >
-              Start Free Trial
-              <ArrowRight size={20} />
-            </button>
-            <div style={{ display: "flex", justifyContent: "center", gap: 28, marginTop: 20, flexWrap: "wrap" }}>
-              {["No credit card required","Takes 10 seconds","Free plan included"].map(t => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", color: "rgba(240,240,248,0.4)" }}>
-                  <Check size={13} color="#4ade80" />
-                  {t}
+      {/* ════════════════════════════════ FOOTER */}
+      <footer style={{ background: "#0B0B1A", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "64px 28px 40px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 56 }} className="footer-grid">
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: BRAND.grad, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Sparkles size={14} color="#fff" />
                 </div>
-              ))}
+                <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>Intellixy</span>
+              </div>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 260, marginBottom: 22 }}>
+                AI-powered PDF assistant. Upload, ask, and understand any document in seconds.
+              </p>
+              <div style={{ display: "flex", gap: 10 }}>
+                {["𝕏","in","gh"].map(ic => (
+                  <div key={ic} style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.45)", transition: "all 0.15s" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(99,102,241,0.2)"; (e.currentTarget as HTMLDivElement).style.color = "#a5b4fc"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.45)"; }}>
+                    {ic}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
-      <footer style={{ position: "relative", zIndex: 1, padding: "40px max(24px,calc((100vw - 1280px)/2)) 48px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 26, height: 26, borderRadius: 7, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Sparkles size={13} color="white" />
-            </div>
-            <span style={{ fontSize: "1rem", fontWeight: 800 }}>Intellixy</span>
-          </div>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {["Features","Pricing","Privacy Policy","Terms of Service"].map(l => (
-              <a key={l} href="#" style={{ fontSize: "0.82rem", color: "rgba(240,240,248,0.35)", textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={e => e.currentTarget.style.color="rgba(240,240,248,0.7)"}
-                onMouseLeave={e => e.currentTarget.style.color="rgba(240,240,248,0.35)"}
-              >{l}</a>
+            {[
+              { h: "Product",  ls: ["Features","Pricing","Templates","Changelog"] },
+              { h: "Company",  ls: ["About","Blog","Careers","Contact"] },
+              { h: "Legal",    ls: ["Privacy Policy","Terms of Service","Refund Policy"] },
+            ].map(({ h, ls }) => (
+              <div key={h}>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 18 }}>{h}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {ls.map(l => (
+                    <a key={l} href="#" style={{ fontSize: 14, color: "rgba(255,255,255,0.48)", textDecoration: "none", transition: "color 0.15s" }}
+                      onMouseEnter={e => ((e.target as HTMLAnchorElement).style.color = "rgba(255,255,255,0.9)")}
+                      onMouseLeave={e => ((e.target as HTMLAnchorElement).style.color = "rgba(255,255,255,0.48)")}>
+                      {l}
+                    </a>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
-          <p style={{ fontSize: "0.8rem", color: "rgba(240,240,248,0.25)", margin: 0 }} suppressHydrationWarning>
-            © {new Date().getFullYear()} Intellixy. All rights reserved.
-          </p>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 28, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>© 2025 Intellixy. All rights reserved.</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E" }} />
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>All systems operational</span>
+            </div>
+          </div>
         </div>
       </footer>
 
-      {/* ── RESPONSIVE STYLES ──────────────────────────────────────────────── */}
       <style>{`
-        @media (max-width: 900px) {
-          .problem-grid   { grid-template-columns: 1fr !important; gap: 16px !important; }
-          .problem-grid > div:nth-child(2) { display: none !important; }
-          .features-grid  { grid-template-columns: 1fr 1fr !important; }
-          .testimonials-grid { grid-template-columns: 1fr !important; }
-          .pricing-grid   { grid-template-columns: 1fr !important; max-width: 480px !important; }
-          .demo-grid      { grid-template-columns: 1fr !important; justify-items: center; }
+        @keyframes pulse2 { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+        @media(max-width:1024px){
+          .hero-grid{grid-template-columns:1fr!important;gap:56px!important}
+          .hero-mockup{display:none!important}
+          .features-grid{grid-template-columns:1fr 1fr!important}
+          .footer-grid{grid-template-columns:1fr 1fr!important}
         }
-        @media (max-width: 600px) {
-          .features-grid  { grid-template-columns: 1fr !important; }
-          .hidden-mobile  { display: none !important; }
-          .demo-grid      { grid-template-columns: 1fr !important; justify-items: center; }
+        @media(max-width:768px){
+          .nav-desktop{display:none!important}
+          .nav-mobile-btn{display:flex!important}
+          .stats-grid{grid-template-columns:repeat(2,1fr)!important}
+          .testi-grid{grid-template-columns:1fr!important}
+          .price-grid{grid-template-columns:1fr!important;max-width:480px;margin:0 auto}
+          .how-grid{grid-template-columns:1fr!important}
+          .how-connector{display:none!important}
+          .features-grid{grid-template-columns:1fr!important}
+          .footer-grid{grid-template-columns:1fr 1fr!important}
+        }
+        @media(max-width:480px){
+          .stats-grid{grid-template-columns:1fr 1fr!important}
+          .footer-grid{grid-template-columns:1fr!important}
         }
       `}</style>
-    </main>
+    </div>
   )
 }

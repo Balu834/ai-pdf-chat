@@ -16,7 +16,7 @@ export async function GET() {
 
     const [isPro, { count, error: countError }] = await Promise.all([
       isProActive(user.id),
-      admin
+      getAdminClient()
         .from("documents")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id),

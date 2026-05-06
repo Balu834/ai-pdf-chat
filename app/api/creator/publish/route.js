@@ -42,7 +42,7 @@ export async function POST(req) {
       let sourceConfig = {};
       if (source_id) {
         const { data: src } = await sb.from("agents").select("role, instructions, tools")
-          .eq("id", source_id).eq("user_id", user.id).single();
+          .eq("id", source_id).eq("user_id", user.id).maybeSingle();
         if (!src) return NextResponse.json({ error: "Source agent not found" }, { status: 404 });
         sourceConfig = src;
       }
@@ -71,7 +71,7 @@ export async function POST(req) {
           .order("position");
 
         // Verify ownership
-        const { data: srcWf } = await sb.from("workflows").select("user_id").eq("id", source_id).single();
+        const { data: srcWf } = await sb.from("workflows").select("user_id").eq("id", source_id).maybeSingle();
         if (!srcWf || srcWf.user_id !== user.id)
           return NextResponse.json({ error: "Source workflow not found" }, { status: 404 });
 

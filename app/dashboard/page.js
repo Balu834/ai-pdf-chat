@@ -41,6 +41,7 @@ import AgentPlatformView from "@/components/dashboard/AgentPlatformView";
 import WorkflowsView from "@/components/dashboard/WorkflowsView";
 import MarketplaceView from "@/components/dashboard/MarketplaceView";
 import CreatorView from "@/components/dashboard/CreatorView";
+import CommandPalette from "@/components/dashboard/CommandPalette";
 
 /* ─── VOICE COMMANDS ────────────────────────────────────────────────────── */
 const VOICE_COMMANDS = [
@@ -205,6 +206,7 @@ export default function DashboardPage() {
   const [shareCopied, setShareCopied] = useState(false);
   const [showShareModal, setShowShareModal]         = useState(false);
   const [showInviteModal, setShowInviteModal]       = useState(false);
+  const [cmdPaletteOpen, setCmdPaletteOpen]         = useState(false);
 
   const [replyTo,  setReplyTo]  = useState(null);
 
@@ -494,10 +496,22 @@ export default function DashboardPage() {
     return data || [];
   }, []);
 
+  /* ── handleFileDrop — called by DragDropUploadZone and handleUpload ── */
+  async function handleFileDrop(file) {
+    if (!file) return;
+    Events.pdfUploadStart();
+    // delegate to the shared processing path
+    return _processFile(file);
+  }
+
   async function handleUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     Events.pdfUploadStart();
+    return _processFile(file);
+  }
+
+  async function _processFile(file) {
 
     // ── Auth guard ────────────────────────────────────────────────────────────
     if (!user?.id) {
@@ -1106,6 +1120,24 @@ export default function DashboardPage() {
 
   function handleKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }
 
+  /* ── Global keyboard shortcuts ── */
+  useEffect(() => {
+    function onGlobalKey(e) {
+      // Cmd+K / Ctrl+K → command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdPaletteOpen((v) => !v);
+      }
+      // Cmd+U / Ctrl+U → upload
+      if ((e.metaKey || e.ctrlKey) && e.key === "u") {
+        e.preventDefault();
+        fileInputRef.current?.click();
+      }
+    }
+    window.addEventListener("keydown", onGlobalKey);
+    return () => window.removeEventListener("keydown", onGlobalKey);
+  }, []);
+
   /* ── Auto-load insights on doc select ── */
   useEffect(() => {
     if (!selectedDoc) { setAutoInsights(null); return; }
@@ -1201,6 +1233,22 @@ export default function DashboardPage() {
             </span>
           )}
 
+          {/* ⌘K palette trigger — always visible */}
+          <motion.button
+            whileHover={{ scale: 1.03, borderColor: "rgba(124,58,237,0.4)" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCmdPaletteOpen(true)}
+            className="cmd-palette-btn"
+            title="Command Palette (Ctrl+K)"
+            style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 9, cursor: "pointer", flexShrink: 0, backdropFilter: "blur(8px)" }}
+          >
+            <svg width="13" height="13" fill="none" stroke="rgba(240,240,248,0.45)" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span className="cmd-palette-label" style={{ fontSize: 12, fontWeight: 500, color: "rgba(240,240,248,0.4)" }}>Search…</span>
+            <kbd style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(240,240,248,0.3)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 5, padding: "1px 5px", letterSpacing: "0.03em" }}>⌘K</kbd>
+          </motion.button>
+
           {view === "chat" && (
             <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
               {selectedDoc && (
@@ -1256,20 +1304,32 @@ export default function DashboardPage() {
               docs={docs} usage={usage} plan={plan} proExpiresAt={proExpiresAt}
               isTrial={isTrial} trialEnd={trialEnd}
               onUpload={() => fileInputRef.current?.click()}
+              onFileDrop={handleFileDrop}
               onSelectDoc={selectDoc}
               onUpgradeClick={() => setUpgradePopup("pdf")}
               onInvite={() => setShowInviteModal(true)}
               user={user}
               onViewChange={setView}
+              uploading={uploading}
+              uploadProgress={uploadProgress}
+              uploadPhase={uploadPhase}
+              uploadFileName={uploadFileName}
             />
           )}
           {view === "pdfs" && (
             <MyPDFsView
               docs={docs} docsLoading={docsLoading} plan={plan}
               onUpload={() => fileInputRef.current?.click()}
+              onFileDrop={handleFileDrop}
               onSelectDoc={selectDoc}
               onDelete={handleDelete}
               onViewChange={setView}
+              uploading={uploading}
+              uploadProgress={uploadProgress}
+              uploadPhase={uploadPhase}
+              uploadFileName={uploadFileName}
+              pdfLimitHit={plan !== "pro" && usage.pdfs >= usage.maxPdfs}
+              onUpgradeClick={() => setUpgradePopup("pdf")}
             />
           )}
           {view === "billing" && (
@@ -1384,7 +1444,15 @@ export default function DashboardPage() {
             <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div ref={chatScrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px 8px" }}>
                 {!selectedDoc ? (
-                  <WelcomeScreen onUpload={() => fileInputRef.current?.click()} usage={usage} plan={plan} />
+                  <WelcomeScreen
+                    onUpload={() => fileInputRef.current?.click()}
+                    onFileDrop={handleFileDrop}
+                    usage={usage} plan={plan}
+                    uploading={uploading}
+                    uploadProgress={uploadProgress}
+                    uploadPhase={uploadPhase}
+                    uploadFileName={uploadFileName}
+                  />
                 ) : historyLoading ? (
                   <div style={{ maxWidth: 740, margin: "0 auto", paddingTop: 16 }}><MessageSkeleton /></div>
                 ) : messages.length === 0 ? (
@@ -1789,6 +1857,26 @@ export default function DashboardPage() {
       {/* Toast notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
+      {/* Command Palette */}
+      <CommandPalette
+        open={cmdPaletteOpen}
+        onClose={() => setCmdPaletteOpen(false)}
+        docs={docs}
+        view={view}
+        selectedDoc={selectedDoc}
+        plan={plan}
+        onViewChange={(v) => { setView(v); setSidebarOpen(false); }}
+        onUpload={() => fileInputRef.current?.click()}
+        onSelectDoc={selectDoc}
+        onNewChat={handleNewChat}
+        onClearChat={handleClearChat}
+        onShare={() => setShowShareModal(true)}
+        onInsights={() => { setShowInsights((v) => !v); setShowCompare(false); }}
+        onCompare={() => { setShowCompare((v) => !v); setShowInsights(false); }}
+        onUpgrade={() => setUpgradePopup("pdf")}
+        onSignOut={handleSignOut}
+      />
+
       {/* Terms acceptance gate — blocks app until all policies accepted */}
       {termsStatus && !termsStatus.all_accepted && (
         <TermsAcceptanceModal
@@ -1881,6 +1969,10 @@ export default function DashboardPage() {
         }
         @media (max-width: 500px) {
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 768px) {
+          .cmd-palette-label { display: none !important; }
+          .cmd-palette-btn kbd { display: none !important; }
         }
         textarea::placeholder { color: rgba(240,240,248,0.25); }
         textarea { scrollbar-width: none; }

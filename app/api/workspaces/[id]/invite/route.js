@@ -47,13 +47,13 @@ export async function POST(req, { params }) {
       .from("workspaces")
       .select("name")
       .eq("id", id)
-      .single();
+      .maybeSingle();
 
     const { data: invite, error } = await getAdminClient()
       .from("workspace_invites")
       .insert({ workspace_id: id, email: email || null, role, invited_by: user.id })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

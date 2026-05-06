@@ -34,7 +34,7 @@ export async function PUT(req, { params }) {
       .eq("id", params.id)
       .eq("creator_id", user.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });

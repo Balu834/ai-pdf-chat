@@ -9,6 +9,7 @@ const MAX_CONTEXT_PER_DOC = 1800;
 const MAX_DOCS_TO_ANALYZE = 10;
 
 export async function POST(req) {
+  try {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,7 +23,7 @@ export async function POST(req) {
     .in("status", ["running", "done"])
     .gte("created_at", thirtySecondsAgo)
     .limit(1)
-    .single();
+    .maybeSingle();
   if (recent) return NextResponse.json({ jobId: recent.id, skipped: true });
 
   // ── Create job record ──────────────────────────────────────────────
@@ -30,8 +31,8 @@ export async function POST(req) {
     .from("ai_jobs")
     .insert({ user_id: user.id, status: "running" })
     .select("id")
-    .single();
-  if (jobErr) return NextResponse.json({ error: "Could not create job" }, { status: 500 });
+    .maybeSingle();
+  if (jobErr || !job) return NextResponse.json({ error: "Could not create job" }, { status: 500 });
 
   const jobId = job.id;
 
@@ -62,7 +63,7 @@ export async function POST(req) {
           .from("insights")
           .select("summary, key_points, suggested_questions")
           .eq("document_id", doc.id)
-          .single();
+          .maybeSingle();
 
         if (insight?.summary) {
           const points = (insight.key_points || []).slice(0, 5).map((p) => `  • ${p}`).join("\n");
@@ -159,5 +160,9 @@ export async function POST(req) {
     console.error("[agent/run]", err.message);
     await supabase.from("ai_jobs").update({ status: "failed", error: err.message }).eq("id", jobId);
     return NextResponse.json({ error: "Agent failed" }, { status: 500 });
+  }
+  } catch (err) {
+    console.error("[agent/run] outer catch:", err?.message ?? err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -294,8 +295,13 @@ function DetailModal({ item, onClose, onToast, onInstalled }) {
   const cc = CAT_COLORS[d?.category] ?? CAT_COLORS.Other;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 620, maxHeight: "88vh", overflowY: "auto", background: "#0e111c", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 20, padding: "28px" }}>
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }} onClick={onClose}>
+      <motion.div
+        initial={{ scale: 0.93, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.93, opacity: 0 }}
+        transition={{ type: "spring", bounce: 0.2, duration: 0.42 }}
+        onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 620, maxHeight: "88vh", overflowY: "auto", background: "linear-gradient(145deg,#0e1120,#0a0d1a)", border: "1px solid rgba(124,58,237,0.28)", borderRadius: 22, padding: "28px", boxShadow: "0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(124,58,237,0.12)" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: "40px 0", color: C.t2 }}>Loading…</div>
         ) : (
@@ -358,8 +364,8 @@ function DetailModal({ item, onClose, onToast, onInstalled }) {
             )}
           </>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -527,11 +533,17 @@ export default function MarketplaceView({ onToast }) {
     <div style={{ minHeight: "100%", background: C.bg }}>
 
       {/* ── Sticky top bar ── */}
-      <div style={{ padding: "18px 28px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(8,11,20,0.9)", backdropFilter: "blur(16px)", position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
+      <div style={{ padding: "18px 28px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(8,11,20,0.92)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 10 }}>
+        <motion.div
+          initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+          style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}
+        >
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: C.t1, margin: 0, letterSpacing: "-0.3px" }}>App Store</h1>
-            <p style={{ fontSize: 12, color: C.t2, margin: 0 }}>AI agents & workflow templates</p>
+            <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0, letterSpacing: "-0.3px" }}>
+              <span style={{ background: "linear-gradient(135deg,#a78bfa,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>App</span>
+              {" "}<span style={{ color: C.t1 }}>Store</span>
+            </h1>
+            <p style={{ fontSize: 12, color: C.t2, margin: 0 }}>AI agents &amp; workflow templates</p>
           </div>
           <div style={{ flex: 1, maxWidth: 440, marginLeft: "auto" }}>
             <input
@@ -539,17 +551,18 @@ export default function MarketplaceView({ onToast }) {
               onChange={onSearchChange}
               onFocus={() => { if (search.trim()) setView("browse"); }}
               placeholder="Search agents, templates…"
-              style={{ width: "100%", padding: "9px 16px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: C.t1, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "9px 16px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: C.t1, fontSize: 13, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
             />
           </div>
-        </div>
-        {/* Nav tabs */}
-        <div style={{ display: "flex", gap: 0 }}>
+        </motion.div>
+        {/* Nav tabs — premium pill style */}
+        <div style={{ display: "flex", gap: 4, padding: "4px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, width: "fit-content", marginBottom: -1 }}>
           {[{ id: "home", l: "🏠 Home" }, { id: "browse", l: "🔍 Browse" }, { id: "my-apps", l: "📦 My Apps" }].map(({ id, l }) => (
-            <button key={id} onClick={() => setView(id)}
-              style={{ padding: "9px 20px", fontSize: 13, fontWeight: view === id ? 700 : 500, color: view === id ? C.accentL : C.t2, background: "none", border: "none", borderBottom: `2px solid ${view === id ? C.accentL : "transparent"}`, cursor: "pointer", transition: "all 0.15s", marginBottom: -1 }}>
+            <motion.button key={id} onClick={() => setView(id)}
+              whileTap={{ scale: 0.95 }}
+              style={{ padding: "7px 18px", fontSize: 13, fontWeight: view === id ? 700 : 500, color: view === id ? "#c4b5fd" : C.t2, background: view === id ? "rgba(124,58,237,0.2)" : "transparent", border: view === id ? "1px solid rgba(124,58,237,0.3)" : "1px solid transparent", borderRadius: 9, cursor: "pointer", transition: "all 0.18s" }}>
               {l}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -646,17 +659,20 @@ export default function MarketplaceView({ onToast }) {
       </div>
 
       {/* Detail modal */}
-      {selected && (
-        <DetailModal
-          item={selected}
-          onClose={() => setSel(null)}
-          onToast={onToast ?? (() => {})}
-          onInstalled={(item) => {
-            handleInstalled(item);
-            setSel((s) => s ? { ...s, installed: true } : null);
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {selected && (
+          <DetailModal
+            key={selected.id}
+            item={selected}
+            onClose={() => setSel(null)}
+            onToast={onToast ?? (() => {})}
+            onInstalled={(item) => {
+              handleInstalled(item);
+              setSel((s) => s ? { ...s, installed: true } : null);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <style>{`
         @keyframes appstore-pulse {

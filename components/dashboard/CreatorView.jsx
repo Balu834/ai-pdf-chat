@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -22,34 +23,34 @@ const PRICE_PRESETS = [
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const s = {
-  wrap:  { padding: "24px 28px", maxWidth: 900 },
-  title: { fontSize: 20, fontWeight: 800, color: "#f1f5f9", margin: 0 },
-  sub:   { fontSize: 13, color: "#94a3b8", marginTop: 4 },
-  statsRow: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 32 },
-  statCard: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 },
-  statVal:  { fontSize: 22, fontWeight: 800, color: "#f1f5f9", marginBottom: 2 },
-  statLbl:  { fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" },
+  wrap:  { padding: "28px 28px 48px", maxWidth: 900 },
+  title: { fontSize: 22, fontWeight: 900, color: "#f0f0f8", margin: 0, letterSpacing: "-0.4px" },
+  sub:   { fontSize: 13, color: "rgba(240,240,248,0.4)", marginTop: 4 },
+  statsRow: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))", gap: 12, marginBottom: 32 },
+  statCard: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "18px 16px", backdropFilter: "blur(12px)" },
+  statVal:  { fontSize: 24, fontWeight: 900, color: "#f1f5f9", marginBottom: 4, letterSpacing: "-0.5px" },
+  statLbl:  { fontSize: 10, color: "rgba(240,240,248,0.35)", textTransform: "uppercase", letterSpacing: "0.08em" },
   section:  { marginBottom: 28 },
   sectionHdr: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
-  sectionTitle: { fontSize: 14, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" },
-  card: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16, marginBottom: 10, display: "flex", alignItems: "center", gap: 14 },
-  cardName: { fontSize: 14, fontWeight: 600, color: "#f1f5f9", marginBottom: 2 },
-  cardMeta: { fontSize: 11, color: "#64748b" },
-  btn: { padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", display: "flex", alignItems: "center", gap: 5 },
-  btnPrimary: { background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff" },
-  btnGhost:   { background: "rgba(255,255,255,0.06)", color: "#cbd5e1", border: "1px solid rgba(255,255,255,0.1)" },
-  btnDanger:  { background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" },
-  btnToggle:  { background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" },
-  overlay: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 },
-  modal: { background: "#1e293b", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 18, padding: 28, width: "90%", maxWidth: 580, maxHeight: "92vh", overflowY: "auto" },
-  input: { width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box", outline: "none" },
-  textarea: { width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box", outline: "none", resize: "vertical", minHeight: 80 },
-  label: { fontSize: 12, color: "#94a3b8", display: "block", marginBottom: 6 },
+  sectionTitle: { fontSize: 12, fontWeight: 700, color: "rgba(240,240,248,0.35)", textTransform: "uppercase", letterSpacing: "0.09em" },
+  card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 16, marginBottom: 10, display: "flex", alignItems: "center", gap: 14, backdropFilter: "blur(8px)" },
+  cardName: { fontSize: 14, fontWeight: 600, color: "#f1f5f9", marginBottom: 3 },
+  cardMeta: { fontSize: 11, color: "rgba(240,240,248,0.35)" },
+  btn: { padding: "7px 14px", borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", display: "flex", alignItems: "center", gap: 5 },
+  btnPrimary: { background: "linear-gradient(135deg,#7c3aed,#5b21b6)", color: "#fff", boxShadow: "0 4px 14px rgba(124,58,237,0.3)" },
+  btnGhost:   { background: "rgba(255,255,255,0.05)", color: "#cbd5e1", border: "1px solid rgba(255,255,255,0.09)" },
+  btnDanger:  { background: "rgba(239,68,68,0.08)", color: "#f87171", border: "1px solid rgba(239,68,68,0.18)" },
+  btnToggle:  { background: "rgba(245,158,11,0.08)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.18)" },
+  overlay: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 },
+  modal: { background: "linear-gradient(145deg,#12152a,#0d1020)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 28, width: "90%", maxWidth: 580, maxHeight: "92vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(124,58,237,0.15)" },
+  input: { width: "100%", padding: "9px 12px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box", outline: "none" },
+  textarea: { width: "100%", padding: "9px 12px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box", outline: "none", resize: "vertical", minHeight: 80 },
+  label: { fontSize: 12, fontWeight: 600, color: "rgba(240,240,248,0.45)", display: "block", marginBottom: 6 },
   fgroup: { marginBottom: 16 },
   pill: { display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 9px", borderRadius: 20, fontSize: 11, fontWeight: 600 },
   priceGrid: { display: "flex", gap: 8, flexWrap: "wrap" },
-  pricePill: { padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", transition: "all 0.12s" },
-  onboard: { background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 16, padding: 32, textAlign: "center", marginBottom: 28 },
+  pricePill: { padding: "6px 14px", borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", transition: "all 0.12s" },
+  onboard: { background: "linear-gradient(135deg,rgba(124,58,237,0.1),rgba(79,70,229,0.06))", border: "1px solid rgba(124,58,237,0.22)", borderRadius: 18, padding: 36, textAlign: "center", marginBottom: 28 },
 };
 
 // ── Onboarding (no creator profile) ──────────────────────────────────────────
@@ -369,16 +370,27 @@ export default function CreatorView({ onToast }) {
     setData((prev) => ({ ...prev, [key]: prev[key].filter((i) => i.id !== id) }));
   };
 
-  if (loading) return <div style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Loading creator dashboard…</div>;
+  if (loading) return (
+    <div style={{ padding: 48, textAlign: "center" }}>
+      <div style={{ width: 36, height: 36, border: "3px solid rgba(124,58,237,0.2)", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 14px" }} />
+      <p style={{ fontSize: 13, color: "rgba(240,240,248,0.3)", margin: 0 }}>Loading creator dashboard…</p>
+    </div>
+  );
 
   // No profile → show onboarding
   if (!data?.profile) {
     return (
       <div style={s.wrap}>
-        <div style={{ marginBottom: 24 }}>
-          <h2 style={s.title}>Creator Studio</h2>
-          <p style={s.sub}>Publish, monetize, and track your AI agents & workflow templates</p>
-        </div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 24 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "rgba(240,240,248,0.3)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 4px" }}>Studio</p>
+          <h2 style={s.title}>
+            Creator{" "}
+            <span style={{ background: "linear-gradient(135deg,#a78bfa,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              Studio
+            </span>
+          </h2>
+          <p style={s.sub}>Publish, monetize, and track your AI agents &amp; workflow templates</p>
+        </motion.div>
         <OnboardingCard onCreated={(profile) => setData((d) => ({ ...d, profile }))} />
       </div>
     );
@@ -391,42 +403,68 @@ export default function CreatorView({ onToast }) {
   return (
     <div style={s.wrap}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}
+      >
         <div>
-          <h2 style={s.title}>Creator Studio</h2>
-          <p style={{ ...s.sub, marginTop: 2 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "rgba(240,240,248,0.3)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 4px" }}>Studio</p>
+          <h2 style={s.title}>
+            Creator{" "}
+            <span style={{ background: "linear-gradient(135deg,#a78bfa,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              Studio
+            </span>
+          </h2>
+          <p style={{ ...s.sub, marginTop: 4 }}>
             <span style={{ color: "#a78bfa", fontWeight: 600 }}>{profile.display_name}</span>
             {profile.bio && <span> · {profile.bio}</span>}
           </p>
         </div>
-        <button style={{ ...s.btn, ...s.btnGhost }} onClick={() => setModal("profile")}>Edit Profile</button>
-      </div>
+        <motion.button
+          whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          style={{ ...s.btn, ...s.btnGhost }}
+          onClick={() => setModal("profile")}
+        >
+          Edit Profile
+        </motion.button>
+      </motion.div>
 
       {/* Stats row */}
       <div style={s.statsRow}>
         {[
-          { val: `₹${earnings.toFixed(0)}`, lbl: "Total Earnings", color: "#10b981" },
-          { val: `₹${pending.toFixed(0)}`,  lbl: "Pending Payout", color: "#f59e0b" },
-          { val: stats.total_installs ?? 0, lbl: "Total Installs",  color: "#a78bfa" },
-          { val: stats.published_agents ?? 0,    lbl: "Agents Published", color: "#60a5fa" },
-          { val: stats.published_templates ?? 0, lbl: "Templates Published", color: "#34d399" },
-        ].map(({ val, lbl, color }) => (
-          <div key={lbl} style={s.statCard}>
+          { val: `₹${earnings.toFixed(0)}`, lbl: "Total Earnings",       color: "#10b981", glow: "rgba(16,185,129,0.12)"  },
+          { val: `₹${pending.toFixed(0)}`,  lbl: "Pending Payout",       color: "#f59e0b", glow: "rgba(245,158,11,0.12)"  },
+          { val: stats.total_installs ?? 0, lbl: "Total Installs",        color: "#a78bfa", glow: "rgba(167,139,250,0.12)" },
+          { val: stats.published_agents ?? 0,    lbl: "Agents Published",    color: "#60a5fa", glow: "rgba(96,165,250,0.1)"   },
+          { val: stats.published_templates ?? 0, lbl: "Templates Published", color: "#34d399", glow: "rgba(52,211,153,0.1)"   },
+        ].map(({ val, lbl, color, glow }, i) => (
+          <motion.div
+            key={lbl}
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, duration: 0.35 }}
+            whileHover={{ scale: 1.02, boxShadow: `0 0 0 1px ${color}44, 0 8px 24px ${glow}` }}
+            style={{ ...s.statCard, background: `linear-gradient(135deg, ${glow}, rgba(255,255,255,0.02))`, transition: "border-color 0.2s" }}
+          >
             <div style={{ ...s.statVal, color }}>{val}</div>
             <div style={s.statLbl}>{lbl}</div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* My Published Agents */}
-      <div style={s.section}>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.35 }} style={s.section}>
         <div style={s.sectionHdr}>
           <div style={s.sectionTitle}>🤖 My Agents ({agents.length})</div>
-          <button style={{ ...s.btn, ...s.btnPrimary }} onClick={() => openPublish("agent")}>+ Publish Agent</button>
+          <motion.button
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            style={{ ...s.btn, ...s.btnPrimary }}
+            onClick={() => openPublish("agent")}
+          >
+            + Publish Agent
+          </motion.button>
         </div>
         {agents.length === 0 ? (
-          <div style={{ padding: "20px", textAlign: "center", color: "#64748b", fontSize: 13, background: "rgba(255,255,255,0.02)", borderRadius: 10, border: "1px dashed rgba(255,255,255,0.07)" }}>
-            No agents published yet
+          <div style={{ padding: "24px", textAlign: "center", color: "rgba(240,240,248,0.3)", fontSize: 13, background: "rgba(255,255,255,0.02)", borderRadius: 12, border: "1px dashed rgba(255,255,255,0.07)" }}>
+            No agents published yet — be the first to share yours!
           </div>
         ) : (
           agents.map((a) => (
@@ -436,16 +474,22 @@ export default function CreatorView({ onToast }) {
             />
           ))
         )}
-      </div>
+      </motion.div>
 
       {/* My Published Templates */}
-      <div style={s.section}>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38, duration: 0.35 }} style={s.section}>
         <div style={s.sectionHdr}>
           <div style={s.sectionTitle}>⚡ My Templates ({templates.length})</div>
-          <button style={{ ...s.btn, ...s.btnPrimary }} onClick={() => openPublish("template")}>+ Publish Template</button>
+          <motion.button
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            style={{ ...s.btn, ...s.btnPrimary }}
+            onClick={() => openPublish("template")}
+          >
+            + Publish Template
+          </motion.button>
         </div>
         {templates.length === 0 ? (
-          <div style={{ padding: "20px", textAlign: "center", color: "#64748b", fontSize: 13, background: "rgba(255,255,255,0.02)", borderRadius: 10, border: "1px dashed rgba(255,255,255,0.07)" }}>
+          <div style={{ padding: "24px", textAlign: "center", color: "rgba(240,240,248,0.3)", fontSize: 13, background: "rgba(255,255,255,0.02)", borderRadius: 12, border: "1px dashed rgba(255,255,255,0.07)" }}>
             No templates published yet
           </div>
         ) : (
@@ -456,7 +500,7 @@ export default function CreatorView({ onToast }) {
             />
           ))
         )}
-      </div>
+      </motion.div>
 
       {/* Recent sales */}
       {recent_purchases.length > 0 && (

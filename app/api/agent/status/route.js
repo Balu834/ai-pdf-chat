@@ -14,7 +14,7 @@ export async function GET() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     return NextResponse.json(job || null);
   } catch {

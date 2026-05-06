@@ -88,7 +88,7 @@ export async function POST(req) {
 
     await recordQuestion(supabase, user.id);
 
-    const ctx  = { supabase, openai, fileUrl, userId: user.id };
+    const ctx  = { supabase, openai: getOpenAI(), fileUrl, userId: user.id };
     const msgs = [
       { role: "system", content: SYSTEM_PROMPT },
       ...history.slice(-10).map(({ role, content }) => ({ role, content })),

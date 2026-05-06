@@ -16,7 +16,7 @@ export async function GET(req) {
       .select("file_path")
       .eq("id", docId)
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (docError || !doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
 

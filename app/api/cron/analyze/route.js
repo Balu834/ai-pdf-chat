@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { getOpenAI } from "@/lib/openai-client";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-client";
 
-
-// Service-role client — bypasses RLS so we can read all users' data
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY  // must be set in Vercel env vars
-  );
+  return getAdminClient();
 }
 
 const MAX_USERS_PER_RUN = 20;   // safety cap so we never time out
@@ -167,7 +162,7 @@ export async function GET(req) {
           .eq("user_id", userId)
           .gte("created_at", fiveHoursAgo)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (recentInsight) { results.skipped++; continue; }
 
@@ -185,7 +180,7 @@ export async function GET(req) {
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         // Save new insight snapshot
         await supabase.from("ai_insights").insert({

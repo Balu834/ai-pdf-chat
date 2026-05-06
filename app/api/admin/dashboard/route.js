@@ -110,7 +110,7 @@ export async function GET(req) {
       creditsRes,
     ] = await Promise.all([
       // ── USERS ──────────────────────────────────────────────────────────────
-      getAdminClient().auth.getAdminClient().listUsers({ perPage: 1 }),
+      getAdminClient().auth.admin.listUsers({ perPage: 1 }),
 
       getAdminClient().from("user_plans").select("user_id", { count: "exact", head: true })
         .gte("created_at", dayStart),

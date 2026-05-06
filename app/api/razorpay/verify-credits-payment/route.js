@@ -40,7 +40,7 @@ export async function POST(request) {
     let userId = user?.id ?? null;
 
     if (!userId && bodyUserId) {
-      const { data: adminUser } = await getAdminClient().auth.getAdminClient().getUserById(bodyUserId);
+      const { data: adminUser } = await getAdminClient().auth.admin.getUserById(bodyUserId);
       userId = adminUser?.user?.id ?? null;
     }
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

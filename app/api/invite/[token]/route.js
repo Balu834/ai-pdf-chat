@@ -28,14 +28,14 @@ export async function GET(req, { params }) {
       .from("workspaces")
       .select("name")
       .eq("id", invite.workspace_id)
-      .single();
+      .maybeSingle();
 
     // Fetch inviter email
     const { data: inviterRow } = await getAdminClient()
       .from("workspace_invites")
       .select("invited_by")
       .eq("token", token)
-      .single();
+      .maybeSingle();
 
     let inviterEmail = null;
     if (inviterRow?.invited_by) {

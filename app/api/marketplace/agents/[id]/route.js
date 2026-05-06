@@ -26,7 +26,7 @@ export async function GET(req, { params }) {
       `)
       .eq("id", params.id)
       .eq("is_published", true)
-      .single();
+      .maybeSingle();
 
     if (error || !agent) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -69,7 +69,7 @@ export async function POST(req, { params }) {
       .select("*")
       .eq("id", params.id)
       .eq("is_published", true)
-      .single();
+      .maybeSingle();
 
     if (!mktAgent) return NextResponse.json({ error: "Agent not found" }, { status: 404 });
 

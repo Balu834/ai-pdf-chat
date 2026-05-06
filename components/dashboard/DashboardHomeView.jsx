@@ -3,59 +3,59 @@
 import { motion } from "framer-motion";
 import { C, timeAgo } from "./tokens";
 import { PlusIcon, UploadIcon, ShieldIcon, PdfIcon, CrownIcon, ChatNavIcon } from "./icons";
+import DragDropUploadZone from "./DragDropUploadZone";
 
 /* ─── WELCOME SCREEN ────────────────────────────────────────────────────── */
-export function WelcomeScreen({ onUpload, usage, plan }) {
+export function WelcomeScreen({ onUpload, onFileDrop, usage, plan, uploading, uploadProgress, uploadPhase, uploadFileName }) {
   const questionsLeft = Math.max(0, (usage?.maxQuestions ?? 5) - (usage?.questions ?? 0));
   const pdfsLeft      = Math.max(0, (usage?.maxPdfs ?? 3)      - (usage?.pdfs ?? 0));
   const isPro = plan === "pro";
+  const pdfLimitHit = !isPro && pdfsLeft === 0;
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", textAlign: "center", minHeight: 0 }}>
-      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.4,0,0.2,1] }}>
-        <div style={{ position: "relative", width: 80, height: 80, margin: "0 auto 28px" }}>
-          <div style={{ position: "absolute", inset: -12, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)" }} />
-          <div style={{ width: 80, height: 80, borderRadius: 24, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 20px 60px rgba(124,58,237,0.45)", position: "relative" }}>
-            <svg width="34" height="34" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="1.8">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-              <polyline strokeLinecap="round" strokeLinejoin="round" points="14 2 14 8 20 8"/>
-            </svg>
-          </div>
+      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.4,0,0.2,1] }} style={{ width: "100%", maxWidth: 500 }}>
+
+        {/* Title + usage pills */}
+        <div style={{ marginBottom: 28 }}>
+          <h2 style={{ fontSize: 26, fontWeight: 900, color: C.textPrimary, margin: "0 0 10px", letterSpacing: "-0.5px" }}>
+            Chat with your PDFs
+          </h2>
+          <p style={{ fontSize: 14, color: C.textSecondary, maxWidth: 340, margin: "0 auto 20px", lineHeight: 1.7 }}>
+            Upload any PDF and get instant AI answers, summaries, and key insights — in seconds.
+          </p>
+
+          {!isPro && (
+            <div style={{ display: "inline-flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+              {[
+                { icon: "📄", count: pdfsLeft,      label: "PDFs remaining", color: pdfsLeft === 0 ? "#f87171" : pdfsLeft <= 1 ? "#f59e0b" : "#4ade80" },
+                { icon: "💬", count: questionsLeft, label: "Questions left", color: questionsLeft === 0 ? "#f87171" : questionsLeft <= 3 ? "#f59e0b" : "#4ade80" },
+              ].map(({ icon, count, label, color }) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 99, fontSize: 12 }}>
+                  <span>{icon}</span>
+                  <span style={{ fontWeight: 800, color }}>{count === 0 ? "None" : count}</span>
+                  <span style={{ color: C.textMuted }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <h2 style={{ fontSize: 26, fontWeight: 900, color: C.textPrimary, margin: "0 0 10px", letterSpacing: "-0.5px" }}>
-          Chat with your PDFs
-        </h2>
-        <p style={{ fontSize: 14, color: C.textSecondary, maxWidth: 340, margin: "0 auto 24px", lineHeight: 1.7 }}>
-          Upload any PDF and get instant AI answers, summaries, and key insights — in seconds.
-        </p>
+        {/* Drag-and-drop upload zone */}
+        <DragDropUploadZone
+          onFile={onFileDrop ?? (() => {})}
+          uploading={uploading}
+          uploadProgress={uploadProgress}
+          uploadPhase={uploadPhase}
+          uploadFileName={uploadFileName}
+          plan={plan}
+          pdfLimitHit={pdfLimitHit}
+        />
 
-        {!isPro && (
-          <div style={{ display: "inline-flex", gap: 10, marginBottom: 24, flexWrap: "wrap", justifyContent: "center" }}>
-            {[
-              { icon: "📄", count: pdfsLeft,      label: "PDFs remaining", color: pdfsLeft === 0 ? "#f87171" : pdfsLeft <= 1 ? "#f59e0b" : "#4ade80" },
-              { icon: "💬", count: questionsLeft, label: "Questions remaining", color: questionsLeft === 0 ? "#f87171" : questionsLeft <= 3 ? "#f59e0b" : "#4ade80" },
-            ].map(({ icon, count, label, color }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 99, fontSize: 12 }}>
-                <span>{icon}</span>
-                <span style={{ fontWeight: 800, color }}>{count === 0 ? "None" : count}</span>
-                <span style={{ color: C.textMuted }}>{label}</span>
-              </div>
-            ))}
+        {!uploading && !pdfLimitHit && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 14, fontSize: 11, color: C.textMuted }}>
+            <ShieldIcon /><span>Your files are private and never shared</span>
           </div>
         )}
-
-        <motion.button
-          whileHover={{ scale: 1.04, boxShadow: "0 20px 60px rgba(124,58,237,0.6)" }}
-          whileTap={{ scale: 0.96 }}
-          onClick={onUpload}
-          style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "14px 28px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontWeight: 700, fontSize: 14, border: "none", borderRadius: 14, cursor: "pointer", boxShadow: "0 8px 32px rgba(124,58,237,0.45)" }}
-        >
-          <UploadIcon /> Upload your first PDF
-        </motion.button>
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 16, fontSize: 11, color: C.textMuted }}>
-          <ShieldIcon /><span>Your files are private and never shared</span>
-        </div>
       </motion.div>
 
       <motion.div
@@ -117,7 +117,7 @@ export function EmptyChatState({ doc, onSend }) {
 }
 
 /* ─── DASHBOARD HOME VIEW ────────────────────────────────────────────────── */
-export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onSelectDoc, onUpgradeClick, onInvite, user, onViewChange }) {
+export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isTrial, trialEnd, onUpload, onFileDrop, onSelectDoc, onUpgradeClick, onInvite, user, onViewChange, uploading, uploadProgress, uploadPhase, uploadFileName }) {
   const isPro = plan === "pro";
   const questionsUsed = usage?.questions ?? 0;
   const questionsMax  = isPro ? "∞" : (usage?.maxQuestions ?? 5);
@@ -264,15 +264,14 @@ export default function DashboardHomeView({ docs, usage, plan, proExpiresAt, isT
           )}
         </div>
         {recentDocs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "32px 20px", background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 16 }}>
-            <div style={{ fontSize: 32, marginBottom: 10 }}>📂</div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: C.textPrimary, margin: "0 0 4px" }}>No PDFs yet</p>
-            <p style={{ fontSize: 12, color: C.textMuted, margin: "0 0 16px" }}>Upload your first PDF to get started</p>
-            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onUpload}
-              style={{ padding: "9px 18px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", color: "white", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 10, cursor: "pointer" }}>
-              Upload PDF →
-            </motion.button>
-          </div>
+          <DragDropUploadZone
+            onFile={onFileDrop ?? (() => {})}
+            uploading={uploading}
+            uploadProgress={uploadProgress}
+            uploadPhase={uploadPhase}
+            uploadFileName={uploadFileName}
+            plan={plan}
+          />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {recentDocs.map((doc, i) => (
