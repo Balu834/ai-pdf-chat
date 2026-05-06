@@ -28,7 +28,7 @@ export function WelcomeScreen({
           <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 320, height: 180, borderRadius: "50%", background: "radial-gradient(ellipse,rgba(124,58,237,0.15) 0%,transparent 70%)", pointerEvents: "none" }} />
           <h2 style={{ fontSize: 28, fontWeight: 900, color: C.textPrimary, margin: "0 0 12px", letterSpacing: "-0.6px", position: "relative" }}>
             Chat with your{" "}
-            <span style={{ background: "linear-gradient(135deg,#c4b5fd,#a78bfa,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <span style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6,#3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               PDFs
             </span>
           </h2>
@@ -137,39 +137,43 @@ export function EmptyChatState({ doc, onSend }) {
 }
 
 /* ─── STAT CARD ───────────────────────────────────────────────────────────── */
-function StatCard({ label, value, sub, icon, color, glow, hoverShadow, onClick, badge, delay }) {
+function StatCard({ label, value, sub, icon, color, glow, border, hoverShadow, onClick, badge, delay }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
       onClick={onClick || undefined}
-      whileHover={{ scale: 1.02, boxShadow: hoverShadow, y: -2, transition: { duration: 0.2 } }}
+      whileHover={{ scale: 1.025, boxShadow: hoverShadow, y: -3, transition: { duration: 0.22 } }}
       style={{
-        background: `linear-gradient(145deg,${glow},rgba(255,255,255,0.015))`,
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 20, padding: "20px 20px",
-        backdropFilter: "blur(16px)",
+        background: `linear-gradient(145deg,${glow},rgba(255,255,255,0.02))`,
+        border: `1px solid ${border}`,
+        borderRadius: 20, padding: "22px 20px",
+        backdropFilter: "blur(20px)",
         cursor: onClick ? "pointer" : "default",
-        transition: "border-color 0.2s",
+        transition: "border-color 0.2s,box-shadow 0.2s",
         position: "relative", overflow: "hidden",
+        boxShadow: `0 4px 24px ${glow.replace("0.28","0.12")}`,
       }}
     >
-      {/* Radial ambient */}
-      <div style={{ position: "absolute", top: -40, right: -40, width: 120, height: 120, borderRadius: "50%", background: `radial-gradient(circle,${glow} 0%,transparent 70%)`, pointerEvents: "none" }} />
+      {/* Top accent stripe */}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${color}88,transparent 80%)`, borderRadius: "20px 20px 0 0" }} />
 
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14, position: "relative" }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(240,240,248,0.35)", textTransform: "uppercase", letterSpacing: "0.08em", lineHeight: 1.4 }}>{label}</span>
-        <div style={{ width: 36, height: 36, borderRadius: 11, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+      {/* Radial ambient blob */}
+      <div style={{ position: "absolute", top: -50, right: -50, width: 150, height: 150, borderRadius: "50%", background: `radial-gradient(circle,${glow} 0%,transparent 65%)`, pointerEvents: "none", filter: "blur(16px)" }} />
+
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16, position: "relative" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(240,240,248,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", lineHeight: 1.4 }}>{label}</span>
+        <div style={{ width: 38, height: 38, borderRadius: 12, background: `${glow}`, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0 }}>
           {icon}
         </div>
       </div>
 
-      <p style={{ fontSize: 38, fontWeight: 900, color, margin: "0 0 6px", letterSpacing: "-2px", lineHeight: 1, position: "relative" }}>{value}</p>
-      <p style={{ fontSize: 11.5, color: "rgba(240,240,248,0.32)", margin: 0, position: "relative" }}>{sub}</p>
+      <p style={{ fontSize: 40, fontWeight: 900, color, margin: "0 0 7px", letterSpacing: "-2.5px", lineHeight: 1, position: "relative" }}>{value}</p>
+      <p style={{ fontSize: 11.5, color: "rgba(240,240,248,0.38)", margin: 0, position: "relative" }}>{sub}</p>
 
       {badge && (
-        <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, color: C.accentLight, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.22)", padding: "3px 9px", borderRadius: 99 }}>
+        <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, color, background: glow, border: `1px solid ${border}`, padding: "3px 10px", borderRadius: 99 }}>
           {badge}
         </div>
       )}
@@ -203,9 +207,10 @@ export default function DashboardHomeView({
       value: pdfsUsed,
       sub: isPro ? "Unlimited plan" : `${pdfsMax} max on free`,
       icon: "📄",
-      color: C.accentLight,
-      glow: "rgba(124,58,237,0.16)",
-      hoverShadow: "0 0 0 1px rgba(124,58,237,0.28), 0 12px 40px rgba(124,58,237,0.2)",
+      color: "#a78bfa",
+      glow: "rgba(99,102,241,0.28)",
+      border: "rgba(99,102,241,0.38)",
+      hoverShadow: "0 0 0 1px rgba(99,102,241,0.45), 0 16px 48px rgba(99,102,241,0.28)",
       onClick: null,
     },
     {
@@ -213,9 +218,10 @@ export default function DashboardHomeView({
       value: questionsUsed,
       sub: isPro ? "Unlimited questions" : `${questionsMax} lifetime`,
       icon: "💬",
-      color: C.cyan,
-      glow: "rgba(6,182,212,0.14)",
-      hoverShadow: "0 0 0 1px rgba(6,182,212,0.28), 0 12px 40px rgba(6,182,212,0.18)",
+      color: "#22d3ee",
+      glow: "rgba(6,182,212,0.24)",
+      border: "rgba(6,182,212,0.35)",
+      hoverShadow: "0 0 0 1px rgba(6,182,212,0.45), 0 16px 48px rgba(6,182,212,0.24)",
       onClick: null,
     },
     {
@@ -223,9 +229,10 @@ export default function DashboardHomeView({
       value: questionsLeft,
       sub: isPro ? "Unlimited on Pro" : `of ${questionsMax} total`,
       icon: "⚡",
-      color: "#a78bfa",
-      glow: "rgba(167,139,250,0.14)",
-      hoverShadow: "0 0 0 1px rgba(167,139,250,0.28), 0 12px 40px rgba(167,139,250,0.18)",
+      color: "#c4b5fd",
+      glow: "rgba(139,92,246,0.26)",
+      border: "rgba(139,92,246,0.38)",
+      hoverShadow: "0 0 0 1px rgba(139,92,246,0.45), 0 16px 48px rgba(139,92,246,0.26)",
       onClick: isPro ? null : onUpgradeClick,
       badge: isPro ? null : "Upgrade for ∞",
     },
@@ -236,11 +243,12 @@ export default function DashboardHomeView({
         ? (proExpiresAt ? `Renews ${new Date(proExpiresAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}` : "Active")
         : "Upgrade for unlimited",
       icon: isPro ? "👑" : "🔓",
-      color: isPro ? C.gold : C.textMuted,
-      glow: isPro ? "rgba(245,158,11,0.13)" : "rgba(255,255,255,0.04)",
+      color: isPro ? "#fbbf24" : "#94a3b8",
+      glow: isPro ? "rgba(245,158,11,0.24)" : "rgba(148,163,184,0.1)",
+      border: isPro ? "rgba(245,158,11,0.38)" : "rgba(148,163,184,0.18)",
       hoverShadow: isPro
-        ? "0 0 0 1px rgba(245,158,11,0.3), 0 12px 40px rgba(245,158,11,0.16)"
-        : "0 0 0 1px rgba(124,58,237,0.28), 0 12px 40px rgba(124,58,237,0.16)",
+        ? "0 0 0 1px rgba(245,158,11,0.45), 0 16px 48px rgba(245,158,11,0.24)"
+        : "0 0 0 1px rgba(99,102,241,0.38), 0 16px 48px rgba(99,102,241,0.18)",
       onClick: isPro ? null : onUpgradeClick,
       badge: isPro ? null : "Upgrade →",
     },
@@ -260,7 +268,7 @@ export default function DashboardHomeView({
         <h1 style={{ fontSize: 28, fontWeight: 900, color: C.textPrimary, margin: 0, letterSpacing: "-0.7px", lineHeight: 1.15 }}>
           Welcome back
           {user?.email && (
-            <span style={{ background: "linear-gradient(135deg,#c4b5fd,#a78bfa,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", marginLeft: 8 }}>
+            <span style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6,#3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", marginLeft: 8 }}>
               {user.email.split("@")[0]}
             </span>
           )}{" "}👋
@@ -340,7 +348,7 @@ export default function DashboardHomeView({
             whileHover={{ scale: 1.02, boxShadow: "0 8px 28px rgba(124,58,237,0.45)", y: -1 }}
             whileTap={{ scale: 0.97 }}
             onClick={onUpload}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: "linear-gradient(135deg,#7c3aed,#4f46e5)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: 12, fontSize: 13, fontWeight: 700, color: "white", cursor: "pointer", boxShadow: "0 4px 18px rgba(124,58,237,0.32)" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: "linear-gradient(135deg,#6366f1,#8b5cf6,#3b82f6)", border: "1px solid rgba(99,102,241,0.45)", borderRadius: 12, fontSize: 13, fontWeight: 700, color: "white", cursor: "pointer", boxShadow: "0 4px 22px rgba(99,102,241,0.45)" }}
           >
             <PlusIcon /> Upload New PDF
           </motion.button>

@@ -50,7 +50,7 @@ export default function MyPDFsView({
           <p style={{ fontSize: 11.5, fontWeight: 700, color: C.textMuted, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.1em" }}>Library</p>
           <h1 style={{ fontSize: 27, fontWeight: 900, color: C.textPrimary, margin: 0, letterSpacing: "-0.6px" }}>
             My{" "}
-            <span style={{ background: "linear-gradient(135deg,#c4b5fd,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <span style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6,#3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               PDFs
             </span>
           </h1>

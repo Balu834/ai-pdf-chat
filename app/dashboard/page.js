@@ -1166,20 +1166,18 @@ export default function DashboardPage() {
   const qLimitHit = plan !== "pro" && usage.questions >= usage.maxQuestions;
 
   return (
-    <div className="dashboard-root" style={{ display: "flex", height: "100dvh", background: "#07071a", overflow: "hidden", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
+    <div className="dashboard-root" style={{ display: "flex", height: "100dvh", background: "#060614", overflow: "hidden", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
 
-      {/* Ambient background mesh */}
+      {/* Ambient background — high-opacity so orbs are actually visible */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        {/* Top-left purple orb */}
-        <div style={{ position: "absolute", top: "-25%", left: "-15%", width: "55%", height: "55%", borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.1) 0%,transparent 68%)" }} />
-        {/* Bottom-right cyan orb */}
-        <div style={{ position: "absolute", bottom: "-20%", right: "-10%", width: "50%", height: "50%", borderRadius: "50%", background: "radial-gradient(circle,rgba(6,182,212,0.07) 0%,transparent 65%)" }} />
-        {/* Center-top subtle indigo */}
-        <div style={{ position: "absolute", top: "10%", left: "40%", width: "30%", height: "30%", borderRadius: "50%", background: "radial-gradient(circle,rgba(99,102,241,0.05) 0%,transparent 70%)" }} />
-        {/* Bottom-left green accent */}
-        <div style={{ position: "absolute", bottom: "5%", left: "10%", width: "20%", height: "20%", borderRadius: "50%", background: "radial-gradient(circle,rgba(74,222,128,0.04) 0%,transparent 70%)" }} />
-        {/* Noise texture overlay */}
-        <div style={{ position: "absolute", inset: 0, background: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\") repeat", opacity: 0.4 }} />
+        {/* Large purple bloom — top-left */}
+        <div style={{ position: "absolute", top: "-30%", left: "-20%", width: "70%", height: "70%", borderRadius: "50%", background: "radial-gradient(circle,rgba(99,102,241,0.28) 0%,rgba(124,58,237,0.18) 30%,transparent 70%)", filter: "blur(40px)" }} />
+        {/* Cyan bloom — bottom-right */}
+        <div style={{ position: "absolute", bottom: "-25%", right: "-15%", width: "60%", height: "60%", borderRadius: "50%", background: "radial-gradient(circle,rgba(6,182,212,0.22) 0%,rgba(14,165,233,0.14) 35%,transparent 70%)", filter: "blur(40px)" }} />
+        {/* Violet mid-accent */}
+        <div style={{ position: "absolute", top: "20%", left: "35%", width: "40%", height: "40%", borderRadius: "50%", background: "radial-gradient(circle,rgba(139,92,246,0.12) 0%,transparent 65%)", filter: "blur(60px)" }} />
+        {/* Top-right gold hint */}
+        <div style={{ position: "absolute", top: "0%", right: "5%", width: "25%", height: "25%", borderRadius: "50%", background: "radial-gradient(circle,rgba(245,158,11,0.07) 0%,transparent 70%)", filter: "blur(30px)" }} />
       </div>
 
       {/* Mobile sidebar backdrop */}

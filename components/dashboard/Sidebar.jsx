@@ -74,9 +74,9 @@ export default function Sidebar({
   return (
     <aside className="sidebar" style={{
       width: 252,
-      background: "linear-gradient(180deg,rgba(9,9,24,0.99) 0%,rgba(6,6,18,0.99) 100%)",
-      backdropFilter: "blur(24px)",
-      borderRight: "1px solid rgba(255,255,255,0.06)",
+      background: "linear-gradient(180deg,rgba(8,6,20,0.98) 0%,rgba(6,5,16,0.98) 100%)",
+      backdropFilter: "blur(32px)",
+      borderRight: "1px solid rgba(99,102,241,0.14)",
       display: "flex", flexDirection: "column", flexShrink: 0,
       position: "relative", zIndex: 1,
     }}>
@@ -91,9 +91,9 @@ export default function Sidebar({
       }}>
         <div style={{
           width: 36, height: 36, borderRadius: 11,
-          background: "linear-gradient(135deg,#7c3aed 0%,#4f46e5 55%,#06b6d4 100%)",
+          background: "linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#3b82f6 100%)",
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          boxShadow: "0 0 0 1px rgba(124,58,237,0.4), 0 4px 24px rgba(124,58,237,0.55), 0 0 48px rgba(124,58,237,0.18)",
+          boxShadow: "0 0 0 1px rgba(99,102,241,0.5), 0 4px 24px rgba(99,102,241,0.6), 0 0 48px rgba(99,102,241,0.2)",
         }}>
           <span style={{ fontSize: 15, fontWeight: 900, color: "white", letterSpacing: "-0.5px" }}>I</span>
         </div>
@@ -141,12 +141,12 @@ export default function Sidebar({
                     padding: "8px 10px", marginBottom: 1, borderRadius: 9,
                     fontSize: 13, fontWeight: isActive ? 600 : 450,
                     color: isActive ? "#c4b5fd" : "rgba(240,240,248,0.42)",
-                    background: isActive ? "rgba(124,58,237,0.15)" : "transparent",
-                    border: isActive ? "1px solid rgba(124,58,237,0.22)" : "1px solid transparent",
+                    background: isActive ? "rgba(99,102,241,0.18)" : "transparent",
+                    border: isActive ? "1px solid rgba(99,102,241,0.32)" : "1px solid transparent",
                     cursor: "pointer", textAlign: "left",
                     transition: "color 0.14s,background 0.14s,border-color 0.14s",
                     boxShadow: isActive
-                      ? "inset 3px 0 0 0 rgba(124,58,237,0.85), 0 2px 16px rgba(124,58,237,0.1)"
+                      ? "inset 3px 0 0 0 rgba(99,102,241,0.9), 0 2px 20px rgba(99,102,241,0.18)"
                       : "none",
                   }}
                   onMouseEnter={(e) => {
@@ -188,11 +188,11 @@ export default function Sidebar({
           style={{
             width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
             padding: "10px 14px", fontSize: 12.5, fontWeight: 700, color: "white",
-            background: pdfLimitHit ? "rgba(239,68,68,0.1)" : "linear-gradient(135deg,#7c3aed 0%,#4f46e5 60%,#6366f1 100%)",
-            border: pdfLimitHit ? "1px solid rgba(239,68,68,0.22)" : "1px solid rgba(124,58,237,0.35)",
+            background: pdfLimitHit ? "rgba(239,68,68,0.1)" : "linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#3b82f6 100%)",
+            border: pdfLimitHit ? "1px solid rgba(239,68,68,0.22)" : "1px solid rgba(99,102,241,0.4)",
             borderRadius: 10, cursor: uploading ? "not-allowed" : "pointer",
             opacity: uploading ? 0.7 : 1,
-            boxShadow: pdfLimitHit ? "none" : "0 4px 20px rgba(124,58,237,0.3)",
+            boxShadow: pdfLimitHit ? "none" : "0 4px 20px rgba(99,102,241,0.4)",
             position: "relative", overflow: "hidden",
           }}
         >
@@ -427,10 +427,10 @@ export default function Sidebar({
             onClick={onUpgradeClick}
             style={{
               width: "100%", padding: "11px 14px", marginBottom: 8,
-              background: "linear-gradient(135deg,#7c3aed 0%,#4f46e5 50%,#06b6d4 100%)",
+              background: "linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#3b82f6 100%)",
               border: "none", borderRadius: 10, cursor: "pointer",
               position: "relative", overflow: "hidden",
-              boxShadow: "0 4px 24px rgba(124,58,237,0.38)",
+              boxShadow: "0 4px 28px rgba(99,102,241,0.5)",
             }}
           >
             <motion.div
