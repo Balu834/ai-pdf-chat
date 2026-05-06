@@ -1,3 +1,4 @@
+// Next.js 16 proxy (replaces middleware.js)
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
