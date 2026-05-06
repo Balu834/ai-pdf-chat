@@ -15,7 +15,7 @@ function isPublicPath(pathname) {
   );
 }
 
-export async function middleware(request) {
+export async function proxy(request) {
   const { pathname, searchParams } = request.nextUrl;
 
   // ── Supabase sometimes sends ?code= to / when Site URL is misconfigured.
@@ -27,18 +27,14 @@ export async function middleware(request) {
   }
 
   // ── Public paths: skip all auth logic entirely.
-  //    This prevents a Supabase outage / missing env var from ever returning
-  //    403 on /, /login, /api/*, or /auth/*.
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  // ── Guard: if env vars are absent (e.g. not set in Vercel dashboard),
-  //    pass the request through rather than crashing the Edge runtime.
-  //    The page itself will handle the unauthenticated state.
+  // ── Guard: if env vars are absent, pass through rather than crashing.
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.error(
-      "[middleware] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY — skipping auth check"
+      "[proxy] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY — skipping auth check"
     );
     return NextResponse.next();
   }
@@ -51,8 +47,6 @@ export async function middleware(request) {
         getAll() {
           return request.cookies.getAll();
         },
-        // Write refreshed tokens onto both request and response so the
-        // browser always receives an up-to-date JWT.
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
@@ -65,18 +59,13 @@ export async function middleware(request) {
       },
     });
 
-    // getUser() revalidates the JWT server-side on every request.
-    // Never use getSession() here — it trusts a local cookie without
-    // confirming with Supabase, which is a security hole.
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
 
     if (error) {
-      // Log but do NOT block — a Supabase error (e.g. project paused,
-      // network timeout) must never turn into a 403 for the visitor.
-      console.error("[middleware] getUser error:", error.message);
+      console.error("[proxy] getUser error:", error.message);
     }
 
     // ── Dashboard guard
@@ -98,9 +87,7 @@ export async function middleware(request) {
       }
     }
   } catch (err) {
-    // Any unhandled Edge-runtime exception would become a 403/500 on Vercel.
-    // Catch everything and allow the request through — the page handles auth.
-    console.error("[middleware] unexpected error:", err?.message ?? String(err));
+    console.error("[proxy] unexpected error:", err?.message ?? String(err));
     return NextResponse.next({ request });
   }
 
@@ -109,8 +96,6 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    // Run on every path except Next.js internals and static assets.
-    // This keeps session cookies fresh on every page navigation.
     "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mjs|woff|woff2|ttf)$).*)",
   ],
 };
