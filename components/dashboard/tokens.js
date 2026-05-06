@@ -1,28 +1,55 @@
 /* ─── DESIGN TOKENS ─────────────────────────────────────────────────────── */
 export const C = {
+  /* Backgrounds */
   bg:           "#07071a",
-  sidebar:      "rgba(10,10,28,0.92)",
+  bgDeep:       "#050510",
+  sidebar:      "rgba(8,8,22,0.98)",
+
+  /* Glass surfaces */
   glass:        "rgba(255,255,255,0.04)",
   glassBorder:  "rgba(255,255,255,0.08)",
   glassHover:   "rgba(255,255,255,0.07)",
   surface:      "rgba(255,255,255,0.05)",
   surfaceHover: "rgba(255,255,255,0.08)",
+
+  /* Brand — purple */
   accent:       "#7c3aed",
   accentLight:  "#a78bfa",
   accentGlow:   "rgba(124,58,237,0.4)",
+  accentSoft:   "rgba(124,58,237,0.12)",
+  accentBorder: "rgba(124,58,237,0.25)",
+
+  /* Cyan */
   cyan:         "#06b6d4",
+  cyanSoft:     "rgba(6,182,212,0.12)",
+  cyanBorder:   "rgba(6,182,212,0.25)",
+
+  /* Indigo */
+  indigo:       "#6366f1",
+  indigoSoft:   "rgba(99,102,241,0.12)",
+
+  /* Text */
   textPrimary:  "#f0f0f8",
   textSecondary:"rgba(240,240,248,0.6)",
   textMuted:    "rgba(240,240,248,0.3)",
+
+  /* Semantic */
   danger:       "#ef4444",
   dangerSoft:   "rgba(239,68,68,0.1)",
   gold:         "#fbbf24",
+  goldSoft:     "rgba(245,158,11,0.12)",
   green:        "#4ade80",
+  greenSoft:    "rgba(74,222,128,0.12)",
+  greenBorder:  "rgba(74,222,128,0.2)",
+};
+
+/* ─── GRADIENTS ──────────────────────────────────────────────────────────── */
+export const G = {
+  brand:     "linear-gradient(135deg,#7c3aed 0%,#4f46e5 50%,#6366f1 100%)",
+  brandCyan: "linear-gradient(135deg,#7c3aed 0%,#06b6d4 100%)",
 };
 
 /* ─── NAV ITEMS ──────────────────────────────────────────────────────────── */
-// Note: Icon components are injected at usage time to avoid circular imports.
-// NAV_ITEMS_IDS used for reference; Sidebar builds the full list with icons directly.
 export const NAV_ITEM_IDS = ["dashboard", "pdfs", "chat", "billing", "settings"];
 
 /* ─── SMART ACTIONS ──────────────────────────────────────────────────────── */
@@ -34,12 +61,9 @@ export const SMART_ACTIONS = [
   { label: "❓ Questions",   prompt: "Generate 5 smart follow-up questions someone should ask about this document." },
 ];
 
-/* ─── HELPERS ────────────────────────────────────────────────────────────── */
+/* ─── HELPERS ─────────────────────────────────────────────────────────── */
 export function timeAgo(ts) {
   if (!ts) return "";
-  // Supabase may return "2024-01-15 05:00:00" (space, no timezone) which browsers
-  // parse as LOCAL time, causing a timezone-offset error (e.g. "5h ago" in IST).
-  // Normalize: replace space separator → T, then force UTC if no offset present.
   const iso = String(ts).replace(" ", "T");
   const utc = /Z|[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
   const diff = (Date.now() - new Date(utc)) / 1000;
