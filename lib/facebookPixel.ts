@@ -196,3 +196,19 @@ export function trackSubscribe(value: number, currency = "INR") {
     predicted_ltv: value * 12,
   });
 }
+
+/**
+ * trackSearch() — fire when a user submits a question in the chat.
+ *
+ * Where to call:
+ *   - In handleSend() before the API fetch
+ *
+ * Meta standard event: Search
+ */
+export function trackSearch(searchTerm?: string) {
+  if (searchTerm) {
+    fbq("track", "Search", { search_string: searchTerm.slice(0, 100) });
+  } else {
+    fbq("track", "Search");
+  }
+}

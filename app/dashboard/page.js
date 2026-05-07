@@ -696,6 +696,7 @@ export default function DashboardPage() {
   }
 
   async function selectDoc(doc) {
+    Events.pdfOpened(doc.file_name);
     setSelectedDoc(doc); setMessages([]); setLimitError(null);
     setSidebarOpen(false); setShowCompare(false); setShareUrl(null); setShowInsights(true);
     setView("chat"); setSuggestions([]); setActiveSession(null); setSessions([]);
@@ -745,6 +746,7 @@ export default function DashboardPage() {
     setSuggestions([]); setSuggestionsLoading(false);
     const isFirst = isFirstMsgRef.current;
     if (isFirst) isFirstMsgRef.current = false;
+    Events.questionAsked(text);
     const userMsg = { role: "user", content: text, id: Date.now() };
     const aiMsgId = userMsg.id + 1;
     // Always scroll to the new message when user sends — even if they scrolled up

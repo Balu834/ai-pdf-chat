@@ -17,6 +17,7 @@ import {
   trackPurchase,
   trackSubscribe,
   trackViewContent,
+  trackSearch,
 } from "@/lib/facebookPixel";
 
 type Props = Record<string, string | number | boolean | undefined>;
@@ -70,9 +71,14 @@ export const Events = {
     trackViewContent("PDF Uploaded");  // Meta Pixel: user uploaded a PDF
     trackStartTrial();                 // Meta Pixel: user is actively using the product
   },
-  questionAsked: () => {
+  questionAsked: (searchTerm?: string) => {
     track("question_asked", { event_category: "product" });
-    trackViewContent("Chat Started"); // Meta Pixel: user started a chat session
+    trackViewContent("Chat Started"); // Meta Pixel: user engaged with chat
+    trackSearch(searchTerm);          // Meta Pixel: Search event with query text
+  },
+  pdfOpened: (fileName: string) => {
+    track("pdf_opened", { event_category: "product", file_name: fileName });
+    trackViewContent("PDF Opened");  // Meta Pixel: user opened a document
   },
   aiResponseGenerated: () => track("ai_response_generated", { event_category: "product" }),
   summaryViewed:       () => track("summary_viewed",         { event_category: "product" }),
