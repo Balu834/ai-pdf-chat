@@ -3,25 +3,32 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { track } from "@/lib/analytics";
+import { pageview } from "@/lib/facebookPixel";
 
 /**
- * Fires a GA4 page_view on every client-side route change.
- * Next.js App Router doesn't trigger gtag's built-in pageview
- * on navigation — this fills that gap.
+ * RouteAnalytics — tracks client-side SPA navigation for GA4 + Meta Pixel.
  *
- * Mount once inside <Suspense> in layout.tsx.
+ * Next.js App Router doesn't trigger built-in pageview events on navigation,
+ * so this component fills that gap. Mount it once inside <Suspense> in layout.tsx.
+ *
+ * Deduplication strategy:
+ *   • lastUrl ref — prevents double-fires on the same URL (e.g. query-string flicker).
+ *   • isFirstMount ref — skips the very first render for Meta Pixel only, because the
+ *     FacebookPixel init script already fires fbq('track','PageView') on initial load.
+ *     GA4 behavior is left unchanged to avoid affecting existing reports.
  */
 export default function RouteAnalytics() {
   const pathname     = usePathname();
   const searchParams = useSearchParams();
   const lastUrl      = useRef<string>("");
+  const isFirstMount = useRef(true);
 
   useEffect(() => {
     const url = pathname + (searchParams.toString() ? `?${searchParams}` : "");
-    if (url === lastUrl.current) return; // no duplicate fires
+    if (url === lastUrl.current) return; // deduplicate same-URL fires
     lastUrl.current = url;
 
-    // Tell GA4 about the navigation
+    // ── GA4 page_view (unchanged behaviour) ──────────────────────────────
     if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
       (window as any).gtag("event", "page_view", {
         page_path:     pathname,
@@ -31,6 +38,14 @@ export default function RouteAnalytics() {
     }
 
     track("page_view", { page: url });
+
+    // ── Meta Pixel PageView ───────────────────────────────────────────────
+    // Skip first mount: FacebookPixel's init script already fired PageView.
+    // Every subsequent navigation (SPA route change) needs an explicit call.
+    if (!isFirstMount.current) {
+      pageview();
+    }
+    isFirstMount.current = false;
   }, [pathname, searchParams]);
 
   return null;

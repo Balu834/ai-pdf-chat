@@ -9,6 +9,7 @@ import RouteAnalytics from "@/components/RouteAnalytics";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import InstallPopup from "@/components/InstallPopup";
+import FacebookPixel from "@/components/FacebookPixel";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -91,15 +92,30 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body suppressHydrationWarning>
+        {/* Meta Pixel noscript fallback — for users with JavaScript disabled */}
+        {process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID && process.env.NODE_ENV === "production" && (
+          <noscript>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              height="1" width="1" style={{ display: "none" }}
+              src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID}&ev=PageView&noscript=1`}
+              alt=""
+            />
+          </noscript>
+        )}
+
         <AnimatedBackground />
         {children}
+
+        {/* Analytics — GA4, Clarity, Meta Pixel */}
         <Analytics />
+        <FacebookPixel />
         <Suspense fallback={null}><RouteAnalytics /></Suspense>
-        {/* Only mount Vercel observability on real Vercel deployments.
-            In local dev / non-Vercel hosts these call /api/v6/deployments/
-            which 404s repeatedly and pollutes the console. */}
+
+        {/* Vercel observability — only on real Vercel deployments */}
         {process.env.VERCEL === "1" && <VercelAnalytics />}
         {process.env.VERCEL === "1" && <SpeedInsights />}
+
         <ServiceWorkerRegistration />
         <InstallPopup />
       </body>

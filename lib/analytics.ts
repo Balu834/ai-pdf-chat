@@ -1,9 +1,23 @@
 /**
  * lib/analytics.ts
  *
- * Unified event tracking — fires to GA4 + Vercel Analytics simultaneously.
+ * Unified event tracking — fires to GA4 + Vercel Analytics + Meta Pixel.
  * Safe during SSR (all guards check typeof window).
+ *
+ * Meta Pixel events fire alongside GA4 at key conversion touchpoints.
+ * To add a new pixel event anywhere in the app, import directly from
+ * @/lib/facebookPixel instead of going through this file.
  */
+
+import {
+  trackLead,
+  trackCompleteRegistration,
+  trackStartTrial,
+  trackInitiateCheckout,
+  trackPurchase,
+  trackSubscribe,
+  trackViewContent,
+} from "@/lib/facebookPixel";
 
 type Props = Record<string, string | number | boolean | undefined>;
 
@@ -33,30 +47,44 @@ export const Events = {
   upgradeClick:     () => track("upgrade_click",    { event_category: "monetization" }),
 
   // ── Auth ─────────────────────────────────────────────────────────────────
-  signupStart:      () => track("signup_start",    { event_category: "auth" }),
-  signupComplete:   (method: "email" | "google") =>
-    track("signup_complete", { event_category: "auth", method }),
-  loginStart:       () => track("login_start",     { event_category: "auth" }),
-  loginComplete:    (method: "email" | "google") =>
+  signupStart: () => {
+    track("signup_start", { event_category: "auth" });
+    trackLead(); // Meta Pixel: user shows signup intent
+  },
+  signupComplete: (method: "email" | "google") => {
+    track("signup_complete", { event_category: "auth", method });
+    trackCompleteRegistration(method); // Meta Pixel: account created
+  },
+  loginStart:    () => track("login_start",  { event_category: "auth" }),
+  loginComplete: (method: "email" | "google") =>
     track("login",           { event_category: "auth", method }),
 
   // ── Product ──────────────────────────────────────────────────────────────
   pdfUploadStart:   () => track("upload_pdf_start", { event_category: "product" }),
-  pdfUploadSuccess: (fileName: string, fileSizeKb: number) =>
+  pdfUploadSuccess: (fileName: string, fileSizeKb: number) => {
     track("upload_pdf", {
       event_category: "product",
       file_name:       fileName,
       file_size_kb:    Math.round(fileSizeKb),
-    }),
-  questionAsked:    () => track("question_asked",        { event_category: "product" }),
+    });
+    trackViewContent("PDF Uploaded");  // Meta Pixel: user uploaded a PDF
+    trackStartTrial();                 // Meta Pixel: user is actively using the product
+  },
+  questionAsked: () => {
+    track("question_asked", { event_category: "product" });
+    trackViewContent("Chat Started"); // Meta Pixel: user started a chat session
+  },
   aiResponseGenerated: () => track("ai_response_generated", { event_category: "product" }),
-  summaryViewed:    () => track("summary_viewed",        { event_category: "product" }),
+  summaryViewed:       () => track("summary_viewed",         { event_category: "product" }),
 
   // ── Monetization ─────────────────────────────────────────────────────────
-  paymentStart:   () => track("payment_start", { event_category: "monetization" }),
-  paymentFailed:  () => track("payment_failed", { event_category: "monetization" }),
+  paymentStart: () => {
+    track("payment_start", { event_category: "monetization" });
+    trackInitiateCheckout(); // Meta Pixel: user opened payment flow
+  },
+  paymentFailed: () => track("payment_failed", { event_category: "monetization" }),
 
-  /** Fires both a custom payment_success + GA4's standard purchase event */
+  /** Fires GA4 purchase + Meta Pixel Purchase + Subscribe */
   paymentSuccess: (paymentId: string, amountPaise: number) => {
     const value = amountPaise / 100;
     track("payment_success", { event_category: "monetization", value, currency: "INR" });
@@ -70,6 +98,10 @@ export const Events = {
         items: [{ item_id: "pro_monthly", item_name: "Pro Plan", price: value, quantity: 1 }],
       });
     }
+
+    // Meta Pixel: purchase confirmed + subscription started
+    trackPurchase(value, "INR");
+    trackSubscribe(value, "INR");
   },
 
   // ── Retention ─────────────────────────────────────────────────────────────
