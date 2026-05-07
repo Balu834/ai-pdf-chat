@@ -10,7 +10,8 @@
  * Env var: NEXT_PUBLIC_FACEBOOK_PIXEL_ID (set in Vercel → Settings → Environment Variables)
  */
 
-export const PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID ?? "";
+export const PIXEL_ID =
+  (process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim()) || "1923754734936306";
 
 // Extend Window so TypeScript knows fbq exists after the pixel script loads.
 declare global {

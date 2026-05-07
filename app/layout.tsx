@@ -92,13 +92,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body suppressHydrationWarning>
-        {/* Meta Pixel noscript fallback — for users with JavaScript disabled */}
-        {process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID && process.env.NODE_ENV === "production" && (
+        {/* Meta Pixel noscript fallback — fires for users with JavaScript disabled */}
+        {process.env.NODE_ENV === "production" && (
           <noscript>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               height="1" width="1" style={{ display: "none" }}
-              src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID}&ev=PageView&noscript=1`}
+              src="https://www.facebook.com/tr?id=1923754734936306&ev=PageView&noscript=1"
               alt=""
             />
           </noscript>
