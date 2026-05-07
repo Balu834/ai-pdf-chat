@@ -26,8 +26,8 @@ const BRAND = {
 
 /* ═══════════════════════════════════════════════ DATA */
 const FEATURES = [
-  { icon: MessageSquare, label: "Instant AI Answers",
-    desc: "Ask anything in plain English. Get precise answers pulled from your exact document in under 2 seconds.",
+  { icon: MessageSquare, label: "AI-Powered Answers",
+    desc: "Ask anything in plain English. Get relevant answers sourced directly from your document content.",
     color: "#6366F1", bg: "#EEF2FF", badge: "Core" },
   { icon: Zap, label: "Smart Summaries",
     desc: "Structured bullet-point overviews of any document. Perfect for reports, contracts and research papers.",
@@ -39,7 +39,7 @@ const FEATURES = [
     desc: "Dates, amounts, names, and key terms auto-extracted and structured for instant review.",
     color: "#059669", bg: "#ECFDF5", badge: "AI" },
   { icon: FileText, label: "Every Document Type",
-    desc: "Invoices, contracts, research papers, medical bills, resumes — every PDF handled intelligently.",
+    desc: "Invoices, contracts, research papers, medical bills, resumes — built to work across a wide range of document types.",
     color: "#D97706", bg: "#FFFBEB", badge: "Flexible" },
   { icon: Shield, label: "Secure & Private",
     desc: "End-to-end encryption, zero AI training on your data. Your documents stay yours — always.",
@@ -51,15 +51,15 @@ const STEPS = [
     desc: "Drag & drop or browse to upload. Any PDF up to 50MB processed in seconds." },
   { n: "02", icon: MessageSquare, color: "#8B5CF6", title: "Ask in plain English",
     desc: "Type naturally. No special syntax — just ask exactly what you want to know." },
-  { n: "03", icon: Sparkles, color: "#3B82F6", title: "Get instant answers",
-    desc: "AI pulls precise answers directly from your document with source context." },
+  { n: "03", icon: Sparkles, color: "#3B82F6", title: "Get AI answers",
+    desc: "AI surfaces relevant answers directly from your document with source context." },
 ]
 
 const TESTIMONIALS = [
   { name: "Priya Sharma", role: "Chartered Accountant", company: "Mumbai", av: "PS", color: "#6366F1", stars: 5,
-    quote: "I process 20+ invoices daily. Intellixy cut my review time in half. I just ask 'what's the GST amount?' and get the answer in seconds." },
+    quote: "I process 20+ invoices daily. Intellixy has significantly sped up my review process. I just ask 'what's the GST amount?' and it finds the answer for me." },
   { name: "Rahul Verma", role: "Law Student", company: "NLU Delhi", av: "RV", color: "#8B5CF6", stars: 5,
-    quote: "Reading 100-page case files used to take hours. Now I ask questions and get the key points in 30 seconds. Absolute game changer for law school." },
+    quote: "Reading 100-page case files used to take hours. Now I ask questions and quickly get the key points I need. Absolute game changer for law school." },
   { name: "Ananya Iyer", role: "Product Manager", company: "Razorpay", av: "AI", color: "#059669", stars: 5,
     quote: "We use it for competitor research reports. The summary + key risks feature is exactly what our team needed to move faster on decisions." },
 ]
@@ -86,7 +86,7 @@ const FAQS = [
   { q: "Is Intellixy really free to start?",
     a: "Yes. The free plan gives you 3 PDFs and 20 questions per month — no credit card required. You get full AI capability so you can evaluate before upgrading." },
   { q: "How accurate are the AI answers?",
-    a: "Very accurate. Intellixy uses retrieval-augmented generation (RAG) — answers are pulled directly from your document, not from general AI knowledge. Sources are cited." },
+    a: "Intellixy uses retrieval-augmented generation (RAG) — answers are sourced directly from your document, not from general AI knowledge. Sources are cited so you can verify each answer." },
   { q: "What document types are supported?",
     a: "Any text-based PDF: invoices, contracts, legal documents, research papers, medical reports, financial statements and resumes. Scanned image PDFs may have limited accuracy." },
   { q: "Is my data secure?",
@@ -354,7 +354,7 @@ function ProductMockup() {
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E" }} />
           <span style={{ fontSize: 11.5, fontWeight: 700, color: BRAND.text }}>AI Response</span>
-          <span style={{ fontSize: 10.5, color: BRAND.muted, marginLeft: "auto" }}>1.2s</span>
+          <span style={{ fontSize: 10.5, color: BRAND.muted, marginLeft: "auto" }}>Ready</span>
         </div>
         <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 22 }}>
           {[10,16,8,20,14,18,10,16,12,20].map((h, i) => (
@@ -601,13 +601,13 @@ export default function Page() {
 
             {/* Sub */}
             <motion.p {...fade(0.16)} style={{ fontSize: "1.12rem", color: BRAND.body, lineHeight: 1.76, marginBottom: 36, maxWidth: 480 }}>
-              Upload any PDF and get instant AI-powered answers, summaries and insights in seconds. No reading required. Used by 1,200+ professionals.
+              Upload any PDF and get AI-powered answers, summaries and insights from your documents. No reading required.
             </motion.p>
 
             {/* Feature chips */}
             <motion.div {...fade(0.22)} style={{ display: "flex", flexWrap: "wrap", gap: 9, marginBottom: 36 }}>
               {[
-                { icon: Zap, t: "< 2s answers",  c: BRAND.primary },
+                { icon: Zap, t: "Fast AI responses",  c: BRAND.primary },
                 { icon: Lock, t: "End-to-end encrypted", c: "#059669" },
                 { icon: Globe, t: "Any PDF type", c: BRAND.blue },
               ].map(({ icon: Ic, t, c }) => (
@@ -647,7 +647,7 @@ export default function Page() {
                   {Array.from({length:5}).map((_,k) => <Star key={k} size={12} fill="#F59E0B" color="#F59E0B" />)}
                 </div>
                 <div style={{ fontSize: 12.5, color: BRAND.muted }}>
-                  Trusted by <strong style={{ color: BRAND.text }}>1,200+</strong> professionals
+                  Used by <strong style={{ color: BRAND.text }}>professionals</strong> worldwide
                 </div>
               </div>
             </motion.div>
@@ -667,7 +667,7 @@ export default function Page() {
             { v: "1,200+", l: "Active Users",          c: BRAND.primary },
             { v: "50K+",   l: "PDFs Analyzed",          c: BRAND.violet },
             { v: "500K+",  l: "Questions Answered",     c: BRAND.blue },
-            { v: "< 2s",   l: "Average Response",       c: "#059669" },
+            { v: "0",      l: "Data Sold or Shared",      c: "#059669" },
           ].map((s,i) => (
             <motion.div key={s.l} {...fadeVP(i * 0.07)}>
               <div style={{ fontSize: "2.1rem", fontWeight: 900, color: BRAND.text, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 5 }}>{s.v}</div>
@@ -689,7 +689,7 @@ export default function Page() {
               Powerful AI for <Grad>every document</Grad>
             </motion.h2>
             <motion.p {...fadeVP(0.12)} style={{ fontSize: 17, color: BRAND.body, maxWidth: 520, margin: "0 auto", lineHeight: 1.72 }}>
-              From quick answers to deep analysis — Intellixy gives you everything to understand any PDF instantly.
+              From quick answers to deep analysis — Intellixy helps you get the most out of any PDF document.
             </motion.p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22 }} className="features-grid">
@@ -703,7 +703,7 @@ export default function Page() {
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 72 }}>
             <motion.h2 {...fadeVP(0)} style={{ fontSize: "clamp(1.9rem,4vw,2.75rem)", fontWeight: 900, color: BRAND.text, letterSpacing: "-0.03em", marginBottom: 14, lineHeight: 1.14 }}>
-              Up and running in <Grad>30 seconds</Grad>
+              Up and running in <Grad>minutes</Grad>
             </motion.h2>
             <motion.p {...fadeVP(0.06)} style={{ fontSize: 17, color: BRAND.body, maxWidth: 440, margin: "0 auto" }}>
               No setup. No learning curve. Just upload and start asking.
@@ -724,7 +724,7 @@ export default function Page() {
               Loved by <Grad>professionals</Grad>
             </motion.h2>
             <motion.p {...fadeVP(0.06)} style={{ fontSize: 17, color: BRAND.body }}>
-              Join 1,200+ people who save hours every week.
+              Join professionals who use Intellixy for their document workflow.
             </motion.p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }} className="testi-grid">
@@ -789,7 +789,7 @@ export default function Page() {
                 Ready to chat with your PDFs?
               </h2>
               <p style={{ fontSize: 17, color: "rgba(255,255,255,0.78)", marginBottom: 40, maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.65 }}>
-                Join 1,200+ professionals. Upload your first PDF free — no credit card needed.
+                Upload your first PDF free — no credit card needed.
               </p>
               <button onClick={() => router.push("/login")}
                 style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "17px 38px", background: "rgba(255,255,255,0.97)", borderRadius: 14, fontSize: 16, fontWeight: 800, color: BRAND.primary, border: "none", cursor: "pointer", boxShadow: "0 6px 24px rgba(0,0,0,0.14)", transition: "transform 0.15s, box-shadow 0.15s" }}
@@ -821,7 +821,7 @@ export default function Page() {
                 <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>Intellixy</span>
               </div>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, maxWidth: 260, marginBottom: 22 }}>
-                AI-powered PDF assistant. Upload, ask, and understand any document in seconds.
+                AI-powered PDF assistant. Upload your documents and get AI-powered answers.
               </p>
               <div style={{ display: "flex", gap: 10 }}>
                 {["𝕏","in","gh"].map(ic => (

@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     template: "%s | Intellixy",
   },
   description:
-    "Upload any PDF and get instant AI answers, summaries, and key insights in seconds. Free plan available — no credit card needed.",
+    "Upload any PDF and ask questions using AI. Get answers, summaries, and insights from your documents. Free plan available — no credit card needed.",
   metadataBase: new URL(APP_URL),
   alternates: { canonical: APP_URL },
   keywords: [
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Intellixy – Chat with PDFs using AI",
     description:
-      "Upload any PDF and get instant AI answers, summaries, and key insights in seconds.",
+      "Upload any PDF and ask questions using AI. Get answers, summaries, and insights from your documents.",
     url: APP_URL,
     siteName: "Intellixy",
     type: "website",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Intellixy – Chat with PDFs using AI",
     description:
-      "Upload any PDF and get instant AI answers, summaries, and key insights in seconds.",
+      "Upload any PDF and ask questions using AI. Get answers, summaries, and insights from your documents.",
     images: [`${APP_URL}/og-image.png`],
   },
   manifest: "/manifest.json",
