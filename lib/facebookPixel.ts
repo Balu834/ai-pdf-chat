@@ -1,30 +1,43 @@
 /**
  * lib/facebookPixel.ts
  *
- * Meta Pixel utility — all fbq calls go through here.
+ * Meta Pixel event helpers — all fbq calls go through here.
  * Every function is SSR-safe and ad-blocker-safe (silent no-ops on failure).
  *
- * Usage:
- *   import { pageview, event, trackPurchase } from "@/lib/facebookPixel";
+ * The pixel base code lives in app/layout.tsx.
+ * Route-change PageView tracking lives in components/RouteAnalytics.tsx.
  *
- * Env var: NEXT_PUBLIC_FACEBOOK_PIXEL_ID (set in Vercel → Settings → Environment Variables)
+ * Usage anywhere in the app:
+ *   import { trackLead, trackPurchase } from "@/lib/facebookPixel";
+ *
+ * To add a new event:
+ *   1. Export a new function below
+ *   2. Call it from the relevant component or API callback
  */
 
 export const PIXEL_ID =
   (process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim()) || "1923754734936306";
 
-// Extend Window so TypeScript knows fbq exists after the pixel script loads.
+// ── TypeScript: tell the compiler fbq exists on window ─────────────────────
 declare global {
   interface Window {
-    fbq:  ((...args: unknown[]) => void) & { callMethod?: Function; queue?: unknown[]; loaded?: boolean; version?: string; };
+    fbq:  ((...args: unknown[]) => void) & {
+      callMethod?: (...args: unknown[]) => void;
+      queue?:      unknown[];
+      loaded?:     boolean;
+      version?:    string;
+    };
     _fbq: unknown;
   }
 }
 
-/** Internal — safe wrapper around window.fbq. Returns false if unavailable. */
+/**
+ * Internal safe wrapper — silently returns false when fbq is unavailable
+ * (SSR, ad-blockers, or script not yet loaded).
+ */
 function fbq(...args: unknown[]): boolean {
-  if (typeof window === "undefined") return false;       // SSR guard
-  if (typeof window.fbq !== "function") return false;    // ad-blocker / not loaded yet
+  if (typeof window === "undefined") return false;
+  if (typeof window.fbq !== "function") return false;
   try {
     window.fbq(...args);
     return true;
@@ -33,27 +46,25 @@ function fbq(...args: unknown[]): boolean {
   }
 }
 
-// ─── Core ────────────────────────────────────────────────────────────────────
+// ── Core ───────────────────────────────────────────────────────────────────
 
 /**
- * PageView — fire this on every SPA navigation (after the initial page load,
- * which the base code handles automatically).
- * Called by RouteAnalytics on route changes.
+ * pageview() — fire on every SPA route change.
+ * Called automatically by RouteAnalytics; you rarely need to call this directly.
  */
 export function pageview() {
   fbq("track", "PageView");
 }
 
 /**
- * Generic event helper — use for any standard or custom event.
+ * event() — fire any standard or custom Meta Pixel event.
  *
- * @param name  Standard Meta event (e.g. "Lead") or custom string (e.g. "PDFUploaded")
- * @param data  Optional event parameters (value, currency, content_name, etc.)
+ * @param name  Standard event name (e.g. "Lead") or custom (e.g. "VideoWatched")
+ * @param data  Optional parameters: value, currency, content_name, etc.
  *
  * @example
  *   event("Lead");
  *   event("Purchase", { value: 299, currency: "INR" });
- *   event("PDFUploaded", { content_name: "invoice.pdf" });
  */
 export function event(name: string, data?: Record<string, unknown>) {
   if (data !== undefined) {
@@ -63,74 +74,125 @@ export function event(name: string, data?: Record<string, unknown>) {
   }
 }
 
-// ─── Standard Conversion Events ──────────────────────────────────────────────
+// ── Standard Conversion Events ─────────────────────────────────────────────
 
 /**
- * Lead — user shows purchase intent (sign-up start, pricing page view, etc.).
- * Fires: when user clicks "Start Free" / "Get Pro" / opens login page.
+ * trackLead() — fire when a user shows signup or purchase intent.
+ *
+ * Where to call:
+ *   - User clicks "Start Free" or "Get Pro" on landing page
+ *   - User lands on /login page from an ad
+ *
+ * Meta standard event: Lead
  */
 export function trackLead() {
   fbq("track", "Lead");
 }
 
 /**
- * CompleteRegistration — user successfully creates an account.
- * Fires: after email confirmed / OAuth signup completes.
+ * trackRegistration() — fire when a new account is successfully created.
  *
- * @param method  "email" | "google"
+ * Where to call:
+ *   - After email verification completes
+ *   - After Google OAuth signup succeeds
+ *
+ * Meta standard event: CompleteRegistration
  */
-export function trackCompleteRegistration(method?: string) {
+export function trackRegistration(method?: string) {
   fbq("track", "CompleteRegistration", method ? { method } : {});
 }
 
+/** Alias kept for backwards compatibility with existing analytics.ts calls */
+export const trackCompleteRegistration = trackRegistration;
+
 /**
- * StartTrial — user activates the free plan (first PDF upload, first question).
- * Fires: when free-plan user first engages with core product.
+ * trackPDFUpload() — fire when a user successfully uploads a PDF.
+ *
+ * Where to call:
+ *   - In the upload success handler (dashboard or chat page)
+ *   - After /api/upload confirms processing
+ *
+ * Meta standard event: ViewContent (with content_name = "PDF Uploaded")
+ */
+export function trackPDFUpload(fileName?: string) {
+  fbq("track", "ViewContent", {
+    content_name:     "PDF Uploaded",
+    content_category: "product",
+    ...(fileName ? { content_ids: [fileName] } : {}),
+  });
+}
+
+/** Alias kept for backwards compatibility */
+export const trackViewContent = (contentName: string) =>
+  fbq("track", "ViewContent", { content_name: contentName });
+
+/**
+ * trackChatStarted() — fire when a user sends their first question in a session.
+ *
+ * Where to call:
+ *   - In the chat handler after the first message is submitted
+ *   - In Events.questionAsked() in lib/analytics.ts (already wired up)
+ *
+ * Meta custom event: ChatStarted
+ */
+export function trackChatStarted() {
+  fbq("track", "ViewContent", {
+    content_name:     "Chat Started",
+    content_category: "product",
+  });
+}
+
+/**
+ * trackStartTrial() — fire when a free-plan user first engages with the product.
+ *
+ * Where to call:
+ *   - After first PDF upload
+ *   - After first question asked
+ *
+ * Meta standard event: StartTrial
  */
 export function trackStartTrial() {
   fbq("track", "StartTrial", { predicted_ltv: 0, currency: "INR", value: 0 });
 }
 
 /**
- * InitiateCheckout — user opens payment modal / clicks a paid plan CTA.
- * Fires: before the Razorpay dialog opens.
+ * trackInitiateCheckout() — fire when payment modal opens.
+ *
+ * Where to call:
+ *   - When Razorpay dialog is about to open
+ *   - When user clicks "Get Pro" on pricing page (if going to payment)
+ *
+ * Meta standard event: InitiateCheckout
  */
 export function trackInitiateCheckout() {
   fbq("track", "InitiateCheckout");
 }
 
 /**
- * Purchase — payment confirmed and subscription/credits activated.
- * Fires: inside paymentSuccess after Razorpay verify succeeds.
+ * trackPurchase() — fire after a successful payment is confirmed.
  *
- * @param value     Amount in primary currency units (₹299 → 299)
- * @param currency  ISO 4217 code — defaults to "INR"
+ * Where to call:
+ *   - After Razorpay verify-payment API returns success
+ *
+ * @param value     Amount in primary currency units (₹299 → pass 299)
+ * @param currency  ISO 4217 code, default "INR"
+ *
+ * Meta standard event: Purchase
  */
 export function trackPurchase(value: number, currency = "INR") {
   fbq("track", "Purchase", { value, currency });
 }
 
 /**
- * Subscribe — user upgrades to a recurring paid plan.
- * Fires: alongside Purchase for subscription (not one-time credit) payments.
+ * trackSubscribe() — fire when user starts a recurring paid plan.
+ * Call alongside trackPurchase() for subscription payments.
  *
- * @param value     Monthly price (₹299 → 299)
- * @param currency  ISO 4217 code — defaults to "INR"
+ * Meta standard event: Subscribe
  */
 export function trackSubscribe(value: number, currency = "INR") {
   fbq("track", "Subscribe", {
     value,
     currency,
-    predicted_ltv: value * 12, // annual LTV estimate for Meta's bidding algorithm
+    predicted_ltv: value * 12,
   });
-}
-
-/**
- * ViewContent — user views a meaningful product surface.
- * Use for PDF upload success, chat started, summary viewed, etc.
- *
- * @param contentName  Descriptive label, e.g. "PDF Uploaded", "Chat Started"
- */
-export function trackViewContent(contentName: string) {
-  fbq("track", "ViewContent", { content_name: contentName });
 }

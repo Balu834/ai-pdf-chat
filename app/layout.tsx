@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Suspense } from "react";
+import Script from "next/script";
 import "./globals.css";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -9,7 +10,6 @@ import RouteAnalytics from "@/components/RouteAnalytics";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import InstallPopup from "@/components/InstallPopup";
-import FacebookPixel from "@/components/FacebookPixel";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,6 +18,10 @@ const inter = Inter({
 });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app";
+
+// Hardcoded as primary value; env var can override.
+// This pixel ID is a public client-side identifier — safe to embed in source.
+const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim() || "1923754734936306";
 
 export const viewport: Viewport = {
   themeColor: "#7c3aed",
@@ -92,27 +96,48 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body suppressHydrationWarning>
-        {/* Meta Pixel noscript fallback — fires for users with JavaScript disabled */}
-        {process.env.NODE_ENV === "production" && (
-          <noscript>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              height="1" width="1" style={{ display: "none" }}
-              src="https://www.facebook.com/tr?id=1923754734936306&ev=PageView&noscript=1"
-              alt=""
-            />
-          </noscript>
-        )}
+        {/* ── Meta Pixel noscript fallback (JS-disabled users) ────────── */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
+            alt=""
+          />
+        </noscript>
 
         <AnimatedBackground />
         {children}
 
-        {/* Analytics — GA4, Clarity, Meta Pixel */}
+        {/* ── Google Analytics 4, Microsoft Clarity ───────────────────── */}
         <Analytics />
-        <FacebookPixel />
+
+        {/* ── Meta Pixel — placed directly in root layout (not a sub-component)
+             so next/script can reliably hoist it. strategy="afterInteractive"
+             defers execution until after React hydration — zero render blocking.
+             The built-in `if(f.fbq)return` guard prevents double-initialization.
+             To add new tracking events anywhere: import from @/lib/facebookPixel ── */}
+        <Script id="meta-pixel" strategy="afterInteractive">{`
+          !function(f,b,e,v,n,t,s){
+            if(f.fbq)return;
+            n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;
+            n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)
+          }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init','${FB_PIXEL_ID}');
+          fbq('track','PageView');
+        `}</Script>
+
+        {/* ── SPA route-change tracking (GA4 + Meta Pixel PageView) ───── */}
         <Suspense fallback={null}><RouteAnalytics /></Suspense>
 
-        {/* Vercel observability — only on real Vercel deployments */}
+        {/* ── Vercel observability (production only) ───────────────────── */}
         {process.env.VERCEL === "1" && <VercelAnalytics />}
         {process.env.VERCEL === "1" && <SpeedInsights />}
 
