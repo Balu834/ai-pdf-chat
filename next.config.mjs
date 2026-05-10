@@ -28,6 +28,7 @@ const nextConfig = {
                 " https://www.googletagmanager.com" +
                 " https://www.google-analytics.com" +
                 " https://ssl.google-analytics.com" +
+                " https://connect.facebook.net" +
                 " https://vercel.live https://*.vercel-scripts.com",
 
               "script-src-elem 'self' 'unsafe-inline'" +
@@ -35,6 +36,7 @@ const nextConfig = {
                 " https://www.googletagmanager.com" +
                 " https://www.google-analytics.com" +
                 " https://ssl.google-analytics.com" +
+                " https://connect.facebook.net" +
                 " https://vercel.live https://*.vercel-scripts.com",
 
               // Styles
@@ -56,7 +58,8 @@ const nextConfig = {
                 " https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com" +
                 " https://slack.com https://api.slack.com" +
                 " https://api.notion.com" +
-                " https://api.openai.com",
+                " https://api.openai.com" +
+                " https://connect.facebook.net https://www.facebook.com",
 
               // Images
               "img-src 'self' data: blob: https:",
