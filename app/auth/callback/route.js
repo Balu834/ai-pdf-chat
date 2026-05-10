@@ -91,24 +91,25 @@ export async function GET(request) {
   console.log("[auth/callback] session exchanged OK for user:", data.user?.id);
 
   // Send welcome email to brand-new users.
-  // New user detection: user_plans row was created within the last 30 s
-  // (the on_auth_user_created trigger fires synchronously on INSERT to auth.users).
+  // New user detection: profile.created_at within the last 60 s means the
+  // on_auth_user_created trigger just ran (i.e. this is their first login).
   if (data.user?.id) {
     try {
-      const { data: planRow } = await adminDb
-        .from("user_plans")
-        .select("updated_at")
-        .eq("user_id", data.user.id)
+      const { data: profile } = await adminDb
+        .from("profiles")
+        .select("created_at")
+        .eq("id", data.user.id)
         .maybeSingle();
 
       const isNewUser =
-        planRow?.updated_at &&
-        Date.now() - new Date(planRow.updated_at).getTime() < 30_000;
+        profile?.created_at &&
+        Date.now() - new Date(profile.created_at).getTime() < 60_000;
 
       if (isNewUser && data.user.email) {
         sendWelcomeEmail(
           data.user.email,
-          data.user.user_metadata?.full_name
+          data.user.user_metadata?.full_name ??
+            data.user.user_metadata?.name
         ).catch((e) =>
           console.warn("[auth/callback] welcome email failed (non-fatal):", e.message)
         );
