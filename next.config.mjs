@@ -59,7 +59,9 @@ const nextConfig = {
                 " https://slack.com https://api.slack.com" +
                 " https://api.notion.com" +
                 " https://api.openai.com" +
-                " https://connect.facebook.net https://www.facebook.com",
+                " https://connect.facebook.net https://www.facebook.com" +
+                " https://*.birch.events" +
+                " https://*.awsapprunner.com",
 
               // Images
               "img-src 'self' data: blob: https:",
