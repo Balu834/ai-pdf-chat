@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { sendWelcomeEmail } from "@/lib/email";
 import { getAdminClient } from "@/lib/admin-client";
@@ -11,12 +12,51 @@ export async function GET(request) {
 
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app";
 
+  // Detect what kind of code we received for diagnostics
+  const isGoogleCode  = typeof code === "string" && /^4\/0/.test(code);
+  const hasVerifier   = request.cookies.getAll().some(
+    (c) => c.name.includes("code-verifier") || c.name.includes("verifier")
+  );
+
   console.log("[auth/callback] hit", {
     origin,
-    hasCode:  !!code,
-    hasError: !!error,
-    cookieNames: request.cookies.getAll().map((c) => c.name),
+    hasCode:      !!code,
+    isGoogleCode,        // true → Google is redirecting here directly (config error)
+    hasVerifier,         // false → PKCE verifier cookie missing
+    hasError:     !!error,
+    allCookies:   request.cookies.getAll().map((c) => c.name),
   });
+
+  // ── Raw Google code detected ─────────────────────────────────────────────
+  // Google OAuth codes start with "4/0...". Receiving one here means Google
+  // is redirecting directly to this URL instead of going through Supabase's
+  // callback first.
+  //
+  // ROOT CAUSE: In Google Cloud Console → Credentials → OAuth 2.0 Client,
+  //   the Authorized Redirect URI is set to this app's URL instead of the
+  //   Supabase callback URL.
+  //
+  // FIX (Google Cloud Console):
+  //   Remove:  https://intellixy.vercel.app/auth/callback
+  //   Add:     https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
+  //   (replace YOUR_PROJECT_REF with your Supabase project ref)
+  //
+  // FIX (Supabase Dashboard → Auth → URL Configuration):
+  //   Site URL:      https://intellixy.vercel.app
+  //   Redirect URLs: https://intellixy.vercel.app/auth/callback
+  if (isGoogleCode) {
+    console.error(
+      "[auth/callback] MISCONFIGURATION: received raw Google OAuth code. " +
+      "Google must redirect to Supabase's callback URL, not this app. " +
+      "Google Cloud Console → Authorized Redirect URI should be: " +
+      "https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback"
+    );
+    return NextResponse.redirect(
+      `${siteUrl}/login?error=${encodeURIComponent(
+        "OAuth configuration error — please try again or contact support"
+      )}`
+    );
+  }
 
   // ── OAuth error returned by Supabase / Google ────────────────────────────
   if (error) {
@@ -26,14 +66,27 @@ export async function GET(request) {
     );
   }
 
-  // ── No code — send to dashboard (already authenticated, or lost code) ────
+  // ── No code ──────────────────────────────────────────────────────────────
   if (!code) {
-    console.warn("[auth/callback] no code param");
+    console.warn("[auth/callback] no code param — redirecting to dashboard");
     return NextResponse.redirect(`${siteUrl}/dashboard`);
   }
 
-  // ── Build redirect response first so we can attach session cookies ────────
-  const response = NextResponse.redirect(`${siteUrl}/dashboard`);
+  // ── PKCE verifier missing — log a specific warning ───────────────────────
+  // Without the verifier cookie, exchangeCodeForSession will always fail.
+  // Causes: incognito mode with strict tracking protection, cross-origin
+  // redirect stripping cookies, or cookie domain mismatch.
+  if (!hasVerifier) {
+    console.warn(
+      "[auth/callback] PKCE code-verifier cookie is MISSING. " +
+      "exchangeCodeForSession will likely fail. " +
+      "Cookies present: " + request.cookies.getAll().map((c) => c.name).join(", ")
+    );
+  }
+
+  // ── Build redirect response so session cookies attach to it ──────────────
+  const response    = NextResponse.redirect(`${siteUrl}/dashboard`);
+  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -41,7 +94,7 @@ export async function GET(request) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll();
+          return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
@@ -56,21 +109,17 @@ export async function GET(request) {
 
   if (sessionError) {
     console.error("[auth/callback] exchangeCodeForSession FAILED:", {
-      message: sessionError.message,
-      status:  sessionError.status,
-      verifierCookies: request.cookies
-        .getAll()
-        .filter((c) => c.name.includes("verifier") || c.name.includes("code"))
-        .map((c) => c.name),
+      message:      sessionError.message,
+      status:       sessionError.status,
+      hasVerifier,
+      codeSnippet:  code?.slice(0, 12),  // first 12 chars for diagnostics
     });
-    // "Database error saving new user" means the DB trigger failed.
-    // The SQL fix in FIX-THIS-IN-SUPABASE.sql must be run in Supabase.
     return NextResponse.redirect(
       `${siteUrl}/login?error=${encodeURIComponent(sessionError.message)}`
     );
   }
 
-  console.log("[auth/callback] session OK, user:", data.user?.id);
+  console.log("[auth/callback] session exchanged OK, user:", data.user?.id);
 
   if (data.user?.id) {
     await provisionUserRows(data.user);
@@ -82,7 +131,7 @@ export async function GET(request) {
 /**
  * Ensure all required profile rows exist for this user.
  * Uses the service-role admin client to bypass RLS.
- * Errors here are logged but NEVER block the redirect.
+ * Errors here are logged but never block the redirect.
  */
 async function provisionUserRows(user) {
   const uid  = user.id;
@@ -93,7 +142,7 @@ async function provisionUserRows(user) {
     admin = getAdminClient();
   } catch (err) {
     console.error(
-      "[auth/callback] MISSING SUPABASE_SERVICE_ROLE_KEY — backup provisioning disabled.",
+      "[auth/callback] MISSING SUPABASE_SERVICE_ROLE_KEY — backup provisioning skipped.",
       err.message
     );
     return;
@@ -110,7 +159,6 @@ async function provisionUserRows(user) {
         },
         { onConflict: "id", ignoreDuplicates: true }
       ),
-
       admin.from("user_plans").upsert(
         {
           user_id:             uid,
@@ -121,7 +169,6 @@ async function provisionUserRows(user) {
         },
         { onConflict: "user_id", ignoreDuplicates: true }
       ),
-
       admin.from("user_credits").upsert(
         {
           user_id:         uid,
@@ -132,7 +179,6 @@ async function provisionUserRows(user) {
         },
         { onConflict: "user_id", ignoreDuplicates: true }
       ),
-
       admin.from("user_stats").upsert(
         {
           user_id:         uid,
@@ -146,12 +192,15 @@ async function provisionUserRows(user) {
 
     const errors = results.map((r) => r.error).filter(Boolean);
     if (errors.length > 0) {
-      console.error("[auth/callback] provision partial failure:", errors.map((e) => e.message));
+      console.error(
+        "[auth/callback] provision partial failure for user:", uid,
+        errors.map((e) => e.message)
+      );
     } else {
-      console.log("[auth/callback] provisioned rows for user:", uid);
+      console.log("[auth/callback] provisioned rows OK for user:", uid);
     }
   } catch (e) {
-    console.error("[auth/callback] provision threw:", e.message);
+    console.error("[auth/callback] provision threw for user:", uid, e.message);
   }
 
   // ── Welcome email for new users ──────────────────────────────────────────

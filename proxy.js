@@ -21,7 +21,18 @@ export async function proxy(request) {
 
   // ── Supabase sometimes sends ?code= to / when Site URL is misconfigured.
   //    Redirect to the proper callback handler before anything else.
+  //    If the code looks like a raw Google OAuth code (4/0...) it means the
+  //    Supabase Site URL is wrong AND Google Cloud Console redirect URI is
+  //    pointing to this app instead of https://[project].supabase.co/auth/v1/callback.
   if (pathname === "/" && searchParams.has("code")) {
+    const rawCode = searchParams.get("code") ?? "";
+    if (/^4\/0/.test(rawCode)) {
+      console.error(
+        "[proxy] Raw Google OAuth code at site root — Supabase Site URL or " +
+        "Google Cloud Console redirect URI is misconfigured. " +
+        "Google must redirect to https://[project-ref].supabase.co/auth/v1/callback"
+      );
+    }
     const callbackUrl = new URL("/auth/callback", request.url);
     callbackUrl.search = request.nextUrl.search;
     return NextResponse.redirect(callbackUrl);
