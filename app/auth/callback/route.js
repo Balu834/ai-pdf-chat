@@ -38,8 +38,8 @@ export async function GET(request) {
   //
   // FIX (Google Cloud Console):
   //   Remove:  https://intellixy.vercel.app/auth/callback
-  //   Add:     https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
-  //   (replace YOUR_PROJECT_REF with your Supabase project ref)
+  //   Add:     https://udgcixztydnkhvfurgdj.supabase.co/auth/v1/callback
+  //   (replace udgcixztydnkhvfurgdj with your Supabase project ref)
   //
   // FIX (Supabase Dashboard → Auth → URL Configuration):
   //   Site URL:      https://intellixy.vercel.app
@@ -49,7 +49,7 @@ export async function GET(request) {
       "[auth/callback] MISCONFIGURATION: received raw Google OAuth code. " +
       "Google must redirect to Supabase's callback URL, not this app. " +
       "Google Cloud Console → Authorized Redirect URI should be: " +
-      "https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback"
+      "https://udgcixztydnkhvfurgdj.supabase.co/auth/v1/callback"
     );
     return NextResponse.redirect(
       `${siteUrl}/login?error=${encodeURIComponent(
