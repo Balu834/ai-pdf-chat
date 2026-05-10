@@ -27,9 +27,9 @@ export async function proxy(request) {
     return NextResponse.redirect(callbackUrl);
   }
 
-  // ── Public paths: skip all auth logic entirely.
+  // ── Public paths: still pass { request } so session cookies can refresh.
   if (isPublicPath(pathname)) {
-    return NextResponse.next();
+    return NextResponse.next({ request });
   }
 
   // ── Guard: if env vars are absent, pass through rather than crashing.

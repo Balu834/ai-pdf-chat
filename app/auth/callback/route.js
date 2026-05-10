@@ -90,15 +90,57 @@ export async function GET(request) {
 
   console.log("[auth/callback] session exchanged OK for user:", data.user?.id);
 
-  // Send welcome email to brand-new users.
-  // New user detection: profile.created_at within the last 60 s means the
-  // on_auth_user_created trigger just ran (i.e. this is their first login).
   if (data.user?.id) {
+    const uid  = data.user.id;
+    const meta = data.user.user_metadata ?? {};
+
+    // ── Backup profile provisioning ──────────────────────────────────────────
+    // The on_auth_user_created DB trigger normally creates these rows.
+    // We upsert here as a second safety net so that if the trigger fails
+    // (silently, via its EXCEPTION block) the user still gets a working account.
+    // ignoreDuplicates: true  → existing rows are left untouched.
+    try {
+      await Promise.all([
+        adminDb.from("profiles").upsert({
+          id:         uid,
+          email:      data.user.email ?? meta.email ?? "",
+          full_name:  meta.full_name ?? meta.name ?? (data.user.email ?? "").split("@")[0],
+          avatar_url: meta.avatar_url ?? meta.picture ?? null,
+        }, { onConflict: "id", ignoreDuplicates: true }),
+
+        adminDb.from("user_plans").upsert({
+          user_id:             uid,
+          plan:                "free",
+          subscription_status: "inactive",
+          updated_at:          new Date().toISOString(),
+        }, { onConflict: "user_id", ignoreDuplicates: true }),
+
+        adminDb.from("user_credits").upsert({
+          user_id:         uid,
+          balance:         10,
+          lifetime_earned: 10,
+          lifetime_spent:  0,
+          updated_at:      new Date().toISOString(),
+        }, { onConflict: "user_id", ignoreDuplicates: true }),
+
+        adminDb.from("user_stats").upsert({
+          user_id:         uid,
+          total_questions: 0,
+          total_pdfs:      0,
+          updated_at:      new Date().toISOString(),
+        }, { onConflict: "user_id", ignoreDuplicates: true }),
+      ]);
+      console.log("[auth/callback] profile rows ensured for user:", uid);
+    } catch (e) {
+      console.warn("[auth/callback] backup upsert failed (non-fatal):", e.message);
+    }
+
+    // ── Welcome email (new users only) ───────────────────────────────────────
     try {
       const { data: profile } = await adminDb
         .from("profiles")
         .select("created_at")
-        .eq("id", data.user.id)
+        .eq("id", uid)
         .maybeSingle();
 
       const isNewUser =
@@ -108,8 +150,7 @@ export async function GET(request) {
       if (isNewUser && data.user.email) {
         sendWelcomeEmail(
           data.user.email,
-          data.user.user_metadata?.full_name ??
-            data.user.user_metadata?.name
+          meta.full_name ?? meta.name
         ).catch((e) =>
           console.warn("[auth/callback] welcome email failed (non-fatal):", e.message)
         );
