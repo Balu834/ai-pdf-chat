@@ -183,7 +183,10 @@ grant execute on function public.insert_document_if_under_limit(uuid, text, text
 -- ─────────────────────────────────────────────────────────────────────────────
 -- STEP 5 — Rebuild the signup trigger (idempotent).
 --
--- Ensures every new auth.users row gets a free user_plans row immediately.
+-- CRITICAL: The EXCEPTION block is mandatory. Without it, any INSERT failure
+-- inside the trigger propagates out and causes "Database error saving new user",
+-- blocking the entire signup. The EXCEPTION block ensures auth.users INSERT
+-- always succeeds even if profile/credits provisioning fails.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create or replace function public.handle_new_user()
@@ -193,12 +196,42 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.user_plans (user_id, plan, subscription_status, updated_at)
-  values (new.id, 'free', 'inactive', now())
+  insert into public.profiles (id, email, full_name, avatar_url, created_at)
+  values (
+    new.id,
+    coalesce(new.email, new.raw_user_meta_data->>'email', ''),
+    coalesce(
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'name',
+      split_part(coalesce(new.email, ''), '@', 1)
+    ),
+    coalesce(
+      new.raw_user_meta_data->>'avatar_url',
+      new.raw_user_meta_data->>'picture'
+    ),
+    now()
+  )
+  on conflict (id) do nothing;
+
+  insert into public.user_plans (user_id, plan, subscription_status, is_trial, updated_at)
+  values (new.id, 'free', 'inactive', false, now())
   on conflict (user_id) do nothing;
 
-  raise notice '[handle_new_user] provisioned free plan for new user %', new.id;
+  insert into public.user_credits (user_id, balance, lifetime_earned, lifetime_spent, updated_at)
+  values (new.id, 10, 10, 0, now())
+  on conflict (user_id) do nothing;
+
+  insert into public.user_stats (user_id, total_questions, total_pdfs, updated_at)
+  values (new.id, 0, 0, now())
+  on conflict (user_id) do nothing;
+
   return new;
+
+exception
+  when others then
+    raise warning '[handle_new_user] non-fatal error for user=% err=% state=%',
+      new.id, sqlerrm, sqlstate;
+    return new;
 end;
 $$;
 
