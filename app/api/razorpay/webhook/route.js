@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-client";
 import crypto from "crypto";
 import { getUserIdByRazorpaySubscription } from "@/lib/user-plan";
+import { logger, reqCtx } from "@/lib/logger";
 
 /**
  * POST /api/razorpay/webhook
@@ -22,12 +23,18 @@ import { getUserIdByRazorpaySubscription } from "@/lib/user-plan";
  * Env: RAZORPAY_WEBHOOK_SECRET
  */
 export async function POST(request) {
+  const ctx     = reqCtx(request);
+  const route   = "api/razorpay/webhook";
+
+  let adminClient;
+  try { adminClient = getAdminClient(); } catch { /* no service key */ }
+
   // 1. Read raw body for signature verification
-  const rawBody = await request.text();
+  const rawBody   = await request.text();
   const signature = request.headers.get("x-razorpay-signature");
 
   if (!process.env.RAZORPAY_WEBHOOK_SECRET) {
-    console.error("[webhook] RAZORPAY_WEBHOOK_SECRET not set");
+    logger.critical({ ...ctx, route, message: "RAZORPAY_WEBHOOK_SECRET env var is not set", adminClient }).catch(() => {});
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 503 });
   }
 
@@ -38,7 +45,7 @@ export async function POST(request) {
     .digest("hex");
 
   if (expected !== signature) {
-    console.error("[webhook] Invalid signature — possible spoofed request");
+    logger.error({ ...ctx, route, message: "Invalid Razorpay signature — possible spoofed webhook", adminClient }).catch(() => {});
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 

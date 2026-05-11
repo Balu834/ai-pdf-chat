@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Events } from "@/lib/analytics";
+import { reportClientAuthError } from "@/lib/auth-logger";
 
 /* ─── Feature highlights shown in left panel ─────────────────────────────── */
 const FEATURES = [
@@ -93,6 +94,7 @@ export default function LoginPage() {
     });
     if (error) {
       setStatus({ type: "error", msg: error.message });
+      reportClientAuthError({ route: "login", error: error.message, provider: "google", email });
       setLoading(false);
     }
   };
@@ -104,6 +106,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setStatus({ type: "error", msg: error.message });
+      reportClientAuthError({ route: "login", error: error.message, provider: "email", email });
     } else {
       Events.loginComplete("email");
       router.push("/dashboard");
@@ -123,6 +126,7 @@ export default function LoginPage() {
     });
     if (error) {
       setStatus({ type: "error", msg: error.message });
+      reportClientAuthError({ route: "signup", error: error.message, provider: "email", email });
     } else {
       Events.signupComplete("email");
       setStatus({ type: "success", msg: "Check your email to confirm your account." });
