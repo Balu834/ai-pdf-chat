@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-client";
+import { withErrorHandler } from "@/lib/with-error-handler";
 
 /**
  * GET /api/cron/check-subscriptions
@@ -29,7 +30,7 @@ import { getAdminClient } from "@/lib/admin-client";
  * Security: Vercel sends `Authorization: Bearer <CRON_SECRET>` automatically.
  * Env: CRON_SECRET
  */
-export async function GET(request) {
+async function _GET(request) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -139,3 +140,5 @@ export async function GET(request) {
   console.log("[cron] ✅ Done:", JSON.stringify(stats));
   return NextResponse.json({ ok: true, ran_at: now, ...stats });
 }
+
+export const GET = withErrorHandler(_GET, { route: "api/cron/check-subscriptions" });

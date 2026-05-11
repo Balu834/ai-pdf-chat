@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase-server-client";
 import { getOpenAI } from "@/lib/openai-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
 import { logUsage } from "@/lib/credits";
+import { withErrorHandler } from "@/lib/with-error-handler";
 
 const TOP_K = 5;
 const MAX_CONTEXT = 3000;
@@ -415,9 +416,23 @@ export async function POST(req) {
     });
 
   } catch (err) {
-    console.error("[CHAT] Error:", err);
-    if (err?.status === 401) return NextResponse.json({ error: "Invalid OpenAI API key" }, { status: 500 });
-    if (err?.status === 429) return NextResponse.json({ error: "OpenAI rate limit reached. Try again shortly." }, { status: 500 });
+    // Detect OpenAI-specific errors for targeted alerts
+    const isRateLimit = err?.status === 429;
+    const isAuthErr   = err?.status === 401;
+    const { logger, reqCtx } = await import("@/lib/logger");
+    const { getAdminClient } = await import("@/lib/admin-client");
+    let adminClient; try { adminClient = getAdminClient(); } catch { /* */ }
+    logger[isRateLimit ? "warning" : "error"]({
+      ...reqCtx(req),
+      route:    "api/chat",
+      message:  isRateLimit ? "OpenAI rate limit hit" : isAuthErr ? "Invalid OpenAI API key" : (err.message ?? "Chat error"),
+      stack:    err.stack,
+      provider: "openai",
+      metadata: { status: err.status },
+      adminClient,
+    }).catch(() => {});
+    if (isAuthErr)   return NextResponse.json({ error: "Invalid OpenAI API key" }, { status: 500 });
+    if (isRateLimit) return NextResponse.json({ error: "OpenAI rate limit reached. Try again shortly." }, { status: 500 });
     return NextResponse.json({ error: "Chat failed. Please try again." }, { status: 500 });
   }
 }

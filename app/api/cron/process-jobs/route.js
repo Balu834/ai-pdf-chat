@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-client";
 import { runAgent } from "@/lib/agent-runner";
 import { runWorkflow } from "@/lib/workflow-engine";
+import { withErrorHandler } from "@/lib/with-error-handler";
 
 const adminClient = () => getAdminClient();
 
-export async function GET(req) {
+async function _GET(req) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -88,3 +89,5 @@ export async function GET(req) {
 
   return NextResponse.json({ processed, count: processed.length });
 }
+
+export const GET = withErrorHandler(_GET, { route: "api/cron/process-jobs" });

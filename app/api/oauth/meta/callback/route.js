@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-client";
 import { parseState } from "@/lib/oauth-state";
+import { logger, reqCtx } from "@/lib/logger";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -8,11 +9,14 @@ export async function GET(req) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
-  const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? "";
-  const dashUrl = `${appUrl}/dashboard?view=agents`;
+  const appUrl   = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const dashUrl  = `${appUrl}/dashboard?view=agents`;
+  const ctx      = reqCtx(req);
+  let adminClient; try { adminClient = getAdminClient(); } catch { /* */ }
 
   try {
     if (error || !code || !state) {
+      logger.error({ ...ctx, route: "api/oauth/meta/callback", message: `Meta OAuth error: ${error ?? "missing_params"}`, provider: "meta_ads", adminClient }).catch(() => {});
       return NextResponse.redirect(
         `${dashUrl}&oauth_error=${encodeURIComponent(error ?? "missing_params")}`
       );
@@ -75,7 +79,7 @@ export async function GET(req) {
 
     return NextResponse.redirect(`${dashUrl}&oauth_success=meta_ads`);
   } catch (err) {
-    console.error("[oauth/meta/callback]", err?.message ?? err);
+    logger.error({ ...ctx, route: "api/oauth/meta/callback", message: err?.message ?? "unknown_error", stack: err?.stack, provider: "meta_ads", adminClient }).catch(() => {});
     return NextResponse.redirect(
       `${dashUrl}&oauth_error=${encodeURIComponent(err?.message ?? "unknown_error")}`
     );

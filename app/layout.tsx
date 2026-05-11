@@ -10,6 +10,7 @@ import RouteAnalytics from "@/components/RouteAnalytics";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import InstallPopup from "@/components/InstallPopup";
+import GlobalErrorHandler from "@/app/components/GlobalErrorHandler";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -108,6 +109,7 @@ export default function RootLayout({
           />
         </noscript>
 
+        <GlobalErrorHandler />
         <AnimatedBackground />
         {children}
 

@@ -5,6 +5,7 @@ import { getAdminClient } from "@/lib/admin-client";
 import { getOpenAI } from "@/lib/openai-client";
 import { checkUploadLimit, LIMITS } from "@/lib/subscription";
 import { uploadLimiter } from "@/lib/rate-limit";
+import { logger, reqCtx } from "@/lib/logger";
 
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
@@ -38,13 +39,15 @@ async function embedChunks(openai, chunks) {
 }
 
 export async function POST(req) {
+  const ctx = reqCtx(req);
+  let adminClient;
+  try { adminClient = getAdminClient(); } catch { /* no service key */ }
+
   try {
     const supabase = await createClient();
 
     // ── Auth ──────────────────────────────────────────────────
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    console.log("USER:", user);
-    console.log("USER ID:", user?.id);
     if (authError || !user) {
       console.error("[UPLOAD] Auth failed:", authError?.message ?? "no user in session");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -66,7 +69,7 @@ export async function POST(req) {
     try {
       limitCheck = await checkUploadLimit(user.id);
     } catch (limitErr) {
-      console.error("[UPLOAD] Subscription check failed:", limitErr.message);
+      logger.error({ ...ctx, route: "api/upload", message: `Subscription check failed: ${limitErr.message}`, userId: user.id, adminClient }).catch(() => {});
       return NextResponse.json({ error: "Could not verify subscription. Please try again." }, { status: 500 });
     }
     // Debug log — visible in Vercel function logs and local dev console.
@@ -108,7 +111,7 @@ export async function POST(req) {
       .upload(fileName, file, { contentType: "application/pdf", upsert: false });
 
     if (storageError) {
-      console.error("[UPLOAD] Storage error:", storageError.message);
+      logger.error({ ...ctx, route: "api/upload", message: `Storage upload failed: ${storageError.message}`, userId: user.id, adminClient }).catch(() => {});
       if (
         storageError.message?.includes("Bucket not found") ||
         storageError.statusCode === "404"
@@ -144,7 +147,7 @@ export async function POST(req) {
           { status: 403 }
         );
       }
-      console.error("[UPLOAD] DB error:", dbError.message);
+      logger.error({ ...ctx, route: "api/upload", message: `DB insert failed: ${dbError.message}`, userId: user.id, adminClient }).catch(() => {});
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
@@ -187,7 +190,7 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true, url: fileUrl, id: docRecord.id });
   } catch (err) {
-    console.error("[UPLOAD] Unhandled error:", err);
-    return NextResponse.json({ error: err.message || "Upload failed" }, { status: 500 });
+    logger.error({ ...ctx, route: "api/upload", message: err.message ?? "Unhandled upload error", stack: err.stack, adminClient }).catch(() => {});
+    return NextResponse.json({ error: "Upload failed. Our team has been alerted." }, { status: 500 });
   }
 }
