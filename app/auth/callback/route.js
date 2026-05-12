@@ -208,26 +208,34 @@ async function provisionUserRows(user, adminClient, ctx) {
     }).catch(() => {});
   }
 
-  // ── Welcome email for new users ──────────────────────────────────────────
-  try {
-    const { data: profile } = await adminClient
-      .from("profiles")
-      .select("created_at")
-      .eq("id", uid)
-      .maybeSingle();
-
-    const isNewUser =
-      profile?.created_at &&
-      Date.now() - new Date(profile.created_at).getTime() < 60_000;
-
-    if (isNewUser && user.email) {
-      sendWelcomeEmail(user.email, meta.full_name ?? meta.name).catch((e) =>
-        console.warn("[auth/callback] welcome email failed (non-fatal):", e.message)
+  // ── New-user detection — user object timestamps, no extra DB query ────────
+  // profile.created_at is unreliable: the Supabase trigger inserts the profile
+  // row inside the auth.users INSERT, so it can be slightly before created_at.
+  // Using user.created_at vs last_sign_in_at is more reliable and instant.
+  const isNewUser = (() => {
+    if (!user?.created_at) return false;
+    if (user.last_sign_in_at) {
+      const diff = Math.abs(
+        new Date(user.created_at).getTime() -
+          new Date(user.last_sign_in_at).getTime()
       );
+      return diff < 5000; // created and first sign-in within 5 s = new signup
     }
-    return !!isNewUser;
-  } catch (e) {
-    console.warn("[auth/callback] new-user check threw (non-fatal):", e.message);
-    return false;
+    const ageMs = Date.now() - new Date(user.created_at).getTime();
+    return ageMs < 5 * 60 * 1000; // fallback: created within last 5 minutes
+  })();
+
+  console.log("[auth/callback] new-user check:", {
+    uid,
+    isNewUser,
+    created_at:      user.created_at,
+    last_sign_in_at: user.last_sign_in_at,
+  });
+
+  if (isNewUser && user.email) {
+    sendWelcomeEmail(user.email, meta.full_name ?? meta.name).catch((e) =>
+      console.warn("[auth/callback] welcome email failed (non-fatal):", e.message)
+    );
   }
+  return !!isNewUser;
 }
