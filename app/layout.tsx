@@ -20,9 +20,7 @@ const inter = Inter({
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app";
 
-// Hardcoded as primary value; env var can override.
-// This pixel ID is a public client-side identifier — safe to embed in source.
-const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim() || "1923754734936306";
+const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim();
 
 export const viewport: Viewport = {
   themeColor: "#7c3aed",
@@ -98,16 +96,18 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body suppressHydrationWarning>
         {/* ── Meta Pixel noscript fallback (JS-disabled users) ────────── */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
-            alt=""
-          />
-        </noscript>
+        {FB_PIXEL_ID && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <noscript>
+            <img
+              height="1"
+              width="1"
+              style={{ display: "none" }}
+              src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
+              alt=""
+            />
+          </noscript>
+        )}
 
         <GlobalErrorHandler />
         <AnimatedBackground />
@@ -121,20 +121,22 @@ export default function RootLayout({
              defers execution until after React hydration — zero render blocking.
              The built-in `if(f.fbq)return` guard prevents double-initialization.
              To add new tracking events anywhere: import from @/lib/facebookPixel ── */}
-        <Script id="meta-pixel" strategy="afterInteractive">{`
-          !function(f,b,e,v,n,t,s){
-            if(f.fbq)return;
-            n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;
-            n.push=n;n.loaded=!0;n.version='2.0';
-            n.queue=[];t=b.createElement(e);t.async=!0;
-            t.src=v;s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)
-          }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init','${FB_PIXEL_ID}');
-          fbq('track','PageView');
-        `}</Script>
+        {FB_PIXEL_ID && (
+          <Script id="meta-pixel" strategy="afterInteractive">{`
+            !function(f,b,e,v,n,t,s){
+              if(f.fbq)return;
+              n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;
+              n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)
+            }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init','${FB_PIXEL_ID}');
+            fbq('track','PageView');
+          `}</Script>
+        )}
 
         {/* ── SPA route-change tracking (GA4 + Meta Pixel PageView) ───── */}
         <Suspense fallback={null}><RouteAnalytics /></Suspense>

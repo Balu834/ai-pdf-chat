@@ -15,8 +15,11 @@
  *   2. Call it from the relevant component or API callback
  */
 
-export const PIXEL_ID =
-  (process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim()) || "1923754734936306";
+export const PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim();
+
+if (!PIXEL_ID && typeof window !== "undefined") {
+  console.warn("[fb-pixel] NEXT_PUBLIC_FACEBOOK_PIXEL_ID is not set");
+}
 
 // ── TypeScript: tell the compiler fbq exists on window ─────────────────────
 declare global {
@@ -37,7 +40,11 @@ declare global {
  */
 function fbq(...args: unknown[]): boolean {
   if (typeof window === "undefined") return false;
-  if (typeof window.fbq !== "function") return false;
+  if (typeof window.fbq !== "function") {
+    console.warn("[fb-pixel] Tried to track", args[1], "but window.fbq is not loaded yet");
+    return false;
+  }
+  console.log("[fb-pixel]", args[1], args[2] ?? "");
   try {
     window.fbq(...args);
     return true;
