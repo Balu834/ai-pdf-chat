@@ -126,12 +126,24 @@ export async function GET(request) {
   console.log("[auth/callback] session exchanged OK, user:", data.user?.id);
 
   if (data.user?.id) {
-    await provisionUserRows(data.user, adminClient, ctx);
+    const isNewUser = await provisionUserRows(data.user, adminClient, ctx);
+    // Only set ?welcome=1 for OAuth providers (Google etc.) — email signups
+    // already fire trackRegistration in the signup form via Events.signupComplete
+    const provider = data.user?.app_metadata?.provider ?? "email";
+    if (isNewUser && provider !== "email") {
+      response.headers.set("location", `${siteUrl}/dashboard?welcome=1`);
+    }
   }
 
   return response;
 }
 
+/**
+ * @param {object} user
+ * @param {object} adminClient
+ * @param {object} ctx
+ * @returns {Promise<boolean>} true if this was a new user's first login
+ */
 async function provisionUserRows(user, adminClient, ctx) {
   const uid  = user.id;
   const meta = user.user_metadata ?? {};
@@ -143,7 +155,7 @@ async function provisionUserRows(user, adminClient, ctx) {
       message: "SUPABASE_SERVICE_ROLE_KEY missing — backup provisioning skipped",
       userId:  uid,
     }).catch(() => {});
-    return;
+    return false;
   }
 
   try {
@@ -213,7 +225,9 @@ async function provisionUserRows(user, adminClient, ctx) {
         console.warn("[auth/callback] welcome email failed (non-fatal):", e.message)
       );
     }
+    return !!isNewUser;
   } catch (e) {
     console.warn("[auth/callback] new-user check threw (non-fatal):", e.message);
+    return false;
   }
 }

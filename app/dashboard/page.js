@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -40,6 +40,7 @@ import WorkflowsView from "@/components/dashboard/WorkflowsView";
 import MarketplaceView from "@/components/dashboard/MarketplaceView";
 import CreatorView from "@/components/dashboard/CreatorView";
 import CommandPalette from "@/components/dashboard/CommandPalette";
+import OAuthSignupTracker from "@/app/components/OAuthSignupTracker";
 
 /* ─── VOICE COMMANDS ────────────────────────────────────────────────────── */
 const VOICE_COMMANDS = [
@@ -1148,6 +1149,7 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-root" style={{ display: "flex", height: "100dvh", background: "#060614", overflow: "hidden", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
+      <Suspense fallback={null}><OAuthSignupTracker /></Suspense>
 
       {/* Ambient background — high-opacity so orbs are actually visible */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
