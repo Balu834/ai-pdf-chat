@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fraunces, JetBrains_Mono, Caveat, Geist } from "next/font/google";
 import { Suspense } from "react";
 import Script from "next/script";
 import "./globals.css";
@@ -16,6 +16,33 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  display: "swap",
+  axes: ["opsz", "SOFT", "WONK"],
+});
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+  weight: ["400", "500"],
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
+  display: "swap",
+  weight: ["400", "600"],
 });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app";
@@ -93,7 +120,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${fraunces.variable} ${geist.variable} ${jetbrainsMono.variable} ${caveat.variable}`}>
       <body suppressHydrationWarning>
         {/* ── Meta Pixel noscript fallback (JS-disabled users) ────────── */}
         {FB_PIXEL_ID && (
