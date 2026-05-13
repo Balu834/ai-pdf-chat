@@ -52,9 +52,9 @@ const CMD_ITEMS = [
 ];
 
 const PLACEHOLDER_DOCS = [
-  { id: "p1", file_name: "sample.pdf",               created_at: new Date(Date.now() - 3600000).toISOString(),    pages: 12, questions: 2, isNew: true  },
-  { id: "p2", file_name: "Q3 Financial Report",       created_at: new Date(Date.now() - 86400000).toISOString(),   pages: 42, questions: 7, isNew: false },
-  { id: "p3", file_name: "Research Notes — May",      created_at: new Date(Date.now() - 259200000).toISOString(),  pages: 8,  questions: 5, isNew: false },
+  { id: "p1", file_name: "sample.pdf",               file_url: "", created_at: new Date(Date.now() - 3600000).toISOString(),    pages: 12, questions: 2, isNew: true  },
+  { id: "p2", file_name: "Q3 Financial Report",       file_url: "", created_at: new Date(Date.now() - 86400000).toISOString(),   pages: 42, questions: 7, isNew: false },
+  { id: "p3", file_name: "Research Notes — May",      file_url: "", created_at: new Date(Date.now() - 259200000).toISOString(),  pages: 8,  questions: 5, isNew: false },
 ];
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
@@ -95,8 +95,14 @@ export default function DashboardPage() {
   const [glowPos,       setGlowPos]       = useState({ x: 60, y: 60 });
   const [toastShow,     setToastShow]     = useState(false);
   const [toastIn,       setToastIn]       = useState(false);
+  const [toastMsg,      setToastMsg]      = useState("sample.pdf processed · 12 pages indexed");
+  const [toastVariant,  setToastVariant]  = useState<"ok" | "err">("ok");
   const [inviteCopied,  setInviteCopied]  = useState(false);
   const [barsReady,     setBarsReady]     = useState(false);
+  const [uploading,     setUploading]     = useState(false);
+  const [uploadError,   setUploadError]   = useState<string | null>(null);
+  const [menuOpenId,    setMenuOpenId]    = useState<string | null>(null);
+  const [deleting,      setDeleting]      = useState<string | null>(null);
 
   const proCardRef  = useRef<HTMLDivElement>(null);
   const cmdInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +126,7 @@ export default function DashboardPage() {
     ? docs.slice(0, 3).map((d, i) => ({
         id:        d.id,
         file_name: d.file_name,
+        file_url:  d.file_url,
         created_at:d.created_at,
         pages:     PLACEHOLDER_DOCS[i]?.pages ?? 10,
         questions: PLACEHOLDER_DOCS[i]?.questions ?? 0,
@@ -248,6 +255,13 @@ export default function DashboardPage() {
     if (cmdOpen) setTimeout(() => cmdInputRef.current?.focus(), 50);
   }, [cmdOpen]);
 
+  useEffect(() => {
+    if (!menuOpenId) return;
+    function close() { setMenuOpenId(null); }
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [menuOpenId]);
+
   /* ── Data functions (preserved exactly) ────────────────────────────────── */
   async function fetchPlan(userId: string) {
     try {
@@ -336,6 +350,85 @@ export default function DashboardPage() {
     setTimeout(() => setInviteCopied(false), 1800);
   }
 
+  function showToast(msg: string, variant: "ok" | "err" = "ok") {
+    setToastMsg(msg);
+    setToastVariant(variant);
+    setToastShow(false);
+    setToastIn(false);
+    // mount → slide in → hold → slide out
+    setTimeout(() => {
+      setToastShow(true);
+      setTimeout(() => setToastIn(true), 30);
+      setTimeout(() => {
+        setToastIn(false);
+        setTimeout(() => setToastShow(false), 350);
+      }, 5000);
+    }, 0);
+  }
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      setUploadError("Only PDF files are supported.");
+      return;
+    }
+    setUploading(true);
+    setUploadError(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUploadError(data.error || "Upload failed. Please try again.");
+        return;
+      }
+      if (user) await fetchDocs(user.id);
+      await fetchUsage();
+      showToast(`${file.name} uploaded · ready to chat`);
+    } catch {
+      setUploadError("Upload failed. Please check your connection.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleOpenDoc(fileUrl: string) {
+    window.location.href = `/viewer?url=${encodeURIComponent(fileUrl)}`;
+  }
+
+  async function handleDeleteDoc(docId: string, fileUrl: string) {
+    if (!confirm("Delete this PDF? This action cannot be undone.")) return;
+    setDeleting(docId);
+    setMenuOpenId(null);
+    try {
+      const res = await fetch("/api/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: docId, fileUrl }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.proRequired ? "Deleting PDFs requires a Pro plan." : (data.error || "Delete failed."), "err");
+        return;
+      }
+      setDocs(prev => prev.filter(d => d.id !== docId));
+      await fetchUsage();
+      showToast("PDF deleted.");
+    } catch {
+      showToast("Delete failed. Please try again.", "err");
+    } finally {
+      setDeleting(null);
+    }
+  }
+
   function handleCmdAction(action?: string) {
     setCmdOpen(false);
     if (action === "upload") fileInputRef.current?.click();
@@ -360,14 +453,14 @@ export default function DashboardPage() {
       <Suspense fallback={null}><OAuthSignupTracker /></Suspense>
 
       {/* Hidden file input */}
-      <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display: "none" }} onChange={() => {}} />
+      <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display: "none" }} onChange={handleFileSelect} />
 
       {/* ── TOAST ─────────────────────────────────────────────────────────── */}
       {toastShow && (
         <div className="d-toast-wrap">
-          <div className={`d-toast${toastIn ? "" : " hidden"}`}>
+          <div className={`d-toast${toastVariant === "err" ? " err" : ""}${toastIn ? "" : " hidden"}`}>
             <div className="d-toast-dot" />
-            <div className="d-toast-text">sample.pdf processed · 12 pages indexed</div>
+            <div className="d-toast-text">{toastMsg}</div>
           </div>
         </div>
       )}
@@ -480,12 +573,25 @@ export default function DashboardPage() {
           </nav>
 
           <div className="d-sidebar-bottom">
-            <button className="d-upload-btn" onClick={() => fileInputRef.current?.click()}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              Upload PDF
+            <button
+              className={`d-upload-btn${uploading ? " uploading" : ""}`}
+              onClick={() => { if (!uploading) { setUploadError(null); fileInputRef.current?.click(); } }}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <span style={{ fontFamily: "var(--ff-mono)", letterSpacing: ".06em", fontSize: "11px" }}>Uploading…</span>
+              ) : (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Upload PDF
+                </>
+              )}
             </button>
+            {uploadError && (
+              <div className="d-upload-error">{uploadError}</div>
+            )}
 
             <div className="d-usage-card">
               <div className="d-usage-hdr">
@@ -580,7 +686,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="d-quick-actions">
-                <button className="d-qbtn d-qbtn-dark" onClick={() => fileInputRef.current?.click()}>
+                <button className="d-qbtn d-qbtn-dark" onClick={() => { if (!uploading) { setUploadError(null); fileInputRef.current?.click(); } }} disabled={uploading}>
                   <span>Upload a new PDF</span>
                   <span className="d-qbtn-arrow">→</span>
                 </button>
@@ -691,7 +797,40 @@ export default function DashboardPage() {
                       <div className="d-pdf-meta">{timeAgo(doc.created_at)} · {doc.pages}p · {doc.questions}q</div>
                     </div>
                     <span className={`d-pdf-pill ${doc.isNew ? "new" : "read"}`}>{doc.isNew ? "New" : "Read"}</span>
-                    <div className="d-pdf-action">Open →</div>
+                    <button
+                      className="d-pdf-action"
+                      onClick={() => doc.file_url && handleOpenDoc(doc.file_url)}
+                      disabled={!doc.file_url || deleting === doc.id}
+                    >
+                      {deleting === doc.id ? "…" : "Open →"}
+                    </button>
+                    {doc.file_url && (
+                      <div className="d-options-wrap" onClick={e => e.stopPropagation()}>
+                        <button
+                          className="d-options-btn"
+                          onClick={() => setMenuOpenId(menuOpenId === doc.id ? null : doc.id)}
+                          aria-label="More options"
+                        >
+                          ⋮
+                        </button>
+                        {menuOpenId === doc.id && (
+                          <div className="d-options-menu">
+                            <button className="d-opt-item" onClick={() => { setMenuOpenId(null); handleOpenDoc(doc.file_url); }}>
+                              Open
+                            </button>
+                            <a className="d-opt-item" href={doc.file_url} target="_blank" rel="noreferrer" onClick={() => setMenuOpenId(null)}>
+                              Download
+                            </a>
+                            <button
+                              className={`d-opt-item danger${plan !== "pro" ? " locked" : ""}`}
+                              onClick={() => handleDeleteDoc(doc.id, doc.file_url)}
+                            >
+                              Delete {plan !== "pro" && <span className="d-opt-pro-badge">Pro</span>}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

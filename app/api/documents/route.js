@@ -1,42 +1,22 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const uploadDir = path.join(process.cwd(), "uploads");
+import { createClient } from "@/lib/supabase-server-client";
 
 export async function GET() {
   try {
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
-    }
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const files = fs.readdirSync(uploadDir);
+    const { data, error } = await supabase
+      .from("documents")
+      .select("id, file_name, file_url, file_size, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
-    const documents = files.map((file, index) => ({
-      id: index + 1,
-      name: file,
-      path: `/uploads/${file}`
-    }));
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    return NextResponse.json({ documents });
-
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ documents: [] });
+    return NextResponse.json({ documents: data ?? [] });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-}
-
-export async function DELETE(req) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
-
-  const files = fs.readdirSync(uploadDir);
-
-  const file = files[id - 1];
-
-  if (file) {
-    fs.unlinkSync(path.join(uploadDir, file));
-  }
-
-  return NextResponse.json({ success: true });
 }

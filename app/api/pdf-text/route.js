@@ -12,7 +12,7 @@ export async function GET(req) {
     if (!documentId) return NextResponse.json({ error: "Missing documentId" }, { status: 400 });
 
     const { data, error } = await supabase
-      .from("chunks")
+      .from("document_chunks")
       .select("content")
       .eq("document_id", documentId);
 

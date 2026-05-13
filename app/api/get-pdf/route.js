@@ -11,22 +11,20 @@ export async function GET(req) {
     const docId = searchParams.get("docId");
     if (!docId) return NextResponse.json({ error: "Missing docId" }, { status: 400 });
 
+    // Verify ownership, then return the public URL stored at upload time
     const { data: doc, error: docError } = await supabase
       .from("documents")
-      .select("file_path")
+      .select("file_url")
       .eq("id", docId)
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (docError || !doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (docError || !doc?.file_url) {
+      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    }
 
-    const { data: file, error: storageError } = await supabase.storage
-      .from("pdfs")
-      .download(doc.file_path);
-
-    if (storageError || !file) return NextResponse.json({ error: "File not found" }, { status: 404 });
-
-    return new Response(file, { headers: { "Content-Type": "application/pdf" } });
+    // Redirect to the Supabase Storage public URL — no need to proxy the bytes
+    return NextResponse.redirect(doc.file_url);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
