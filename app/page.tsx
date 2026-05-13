@@ -1,643 +1,390 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./landing.css";
-import MastheadDate from "@/app/components/landing/MastheadDate";
-import LandingAnimations from "@/app/components/landing/LandingAnimations";
+import NavbarClient from "@/app/components/landing/NavbarClient";
+import HeroMockup from "@/app/components/landing/HeroMockup";
+import PricingSection from "@/app/components/landing/PricingSection";
 import FaqAccordion from "@/app/components/landing/FaqAccordion";
+import FadeUp, { StaggerParent, StaggerChild } from "@/app/components/landing/FadeUp";
 import InteractiveDemo from "@/app/components/landing/InteractiveDemo";
 
 export const metadata: Metadata = {
   title: "Intellixy — Chat with any PDF instantly",
   description:
-    "Upload any PDF and get instant answers, summaries, and insights in seconds using AI. Free plan available — no credit card needed.",
+    "Upload any PDF and get instant answers, summaries, and insights using AI. Free plan available — no credit card needed.",
 };
 
-const FORMATS = ["PDF", "DOCX", "XLSX", "PPTX", "EPUB", "LaTeX", "HTML", "OCR"];
-const INTEGRATIONS = [
-  "PDF", "DOCX", "XLSX", "PPTX", "EPUB", "HTML", "LaTeX",
-  "Markdown", "TXT", "RTF", "ODP", "ODS", "ODT",
-  "Scanned OCR", "Multi-column", "Handwritten",
+const LOGOS = ["McKinsey", "Deloitte", "KPMG", "IISc", "NLU Delhi", "Razorpay"];
+
+const FEATURES = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+    ),
+    title: "Cited answers, not hallucinations",
+    body: "Every answer is traced back to the exact page and paragraph. If we're not sure, we say so.",
+    dark: true,
+    wide: true,
+    extra: (
+      <div className="lv2-cite-pills">
+        <span className="lv2-cite-pill">p.14 §3.2</span>
+        <span className="lv2-cite-arr">→</span>
+        <span className="lv2-cite-pill">chart 3.2.1</span>
+        <span className="lv2-cite-arr">→</span>
+        <span className="lv2-cite-pill">p.38 App C</span>
+      </div>
+    ),
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    ),
+    title: "Answers in seconds",
+    body: "Not minutes. Our RAG pipeline returns cited answers faster than you can flip to the right page.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+    ),
+    title: "120+ file formats",
+    body: "PDFs, DOCX, XLSX, PPTX, EPUB, HTML, LaTeX — even scanned documents via OCR.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    ),
+    title: "Ask in any language",
+    body: "Documents in Hindi? Contracts in French? Ask in English, get answers from anywhere.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    ),
+    title: "End-to-end encrypted",
+    body: "Documents processed in isolated environments. We never train on your data — ever.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    ),
+    title: "Risk & insight engine",
+    body: "Surface red flags, key clauses, and critical data points you'd miss after hours of reading.",
+  },
+];
+
+const STEPS = [
+  {
+    n: "01",
+    title: "Upload your document",
+    body: "Drag & drop or browse. Any PDF up to 50 MB — processed in under 10 seconds.",
+    note: "No sign-up needed for your first try.",
+  },
+  {
+    n: "02",
+    title: "Ask in plain English",
+    body: "No syntax. No keywords. Just type your question exactly as you'd ask a colleague.",
+    note: 'Try: "What are the key risks?"',
+  },
+  {
+    n: "03",
+    title: "Get cited answers",
+    body: "AI returns a precise answer with the exact source — page number, section, and excerpt.",
+    note: "Verify every claim yourself.",
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    text: "I process 20+ invoices daily. Intellixy has significantly sped up my review process. I just ask 'what's the GST amount?' and it finds the answer instantly — with the exact line cited.",
+    name: "Priya Sharma",
+    role: "Chartered Accountant · Mumbai",
+    initials: "PS",
+    color: "#c96b36",
+    featured: true,
+  },
+  {
+    text: "100-page case files used to take hours. Now I ask questions and get the key points in minutes. Absolute game changer for law school.",
+    name: "Rahul Verma",
+    role: "Law Student · NLU Delhi",
+    initials: "RV",
+    color: "#6366f1",
+  },
+  {
+    text: "The citation feature alone is worth it. I can verify every AI answer against the source — that's what my team needed.",
+    name: "Ananya Iyer",
+    role: "Product Manager · Razorpay",
+    initials: "AI",
+    color: "#10b981",
+  },
+  {
+    text: "We use it for research papers. It surfaces the methodology and key findings before I even start reading.",
+    name: "Dr. Meera Krishnan",
+    role: "Researcher · IISc Bangalore",
+    initials: "MK",
+    color: "#f59e0b",
+  },
+  {
+    text: "I draft contracts. Intellixy helps me check if a specific clause exists without manually searching 80-page agreements.",
+    name: "Siddharth Patel",
+    role: "Corporate Lawyer · Ahmedabad",
+    initials: "SP",
+    color: "#8b5cf6",
+  },
 ];
 
 export default function Page() {
   return (
-    <div className="landing">
-      <LandingAnimations />
+    <div className="lv2">
+      {/* ── NAVBAR ────────────────────────────────────────────────────── */}
+      <NavbarClient />
 
-      {/* ── 1. MASTHEAD ─────────────────────────────────────────────── */}
-      <div className="l-masthead">
-        <span>Intellixy Review · Vol. I</span>
-        <span><MastheadDate /></span>
-        <div className="l-masthead-live">
-          <span className="l-live-dot" />
-          <span>1,200+ active readers</span>
-        </div>
-      </div>
-
-      {/* ── 2. NAV ──────────────────────────────────────────────────── */}
-      <nav className="l-nav">
-        <Link href="/" className="l-nav-logo">
-          <div className="l-nav-logo-mark"><span>I</span></div>
-          Intellixy
-        </Link>
-        <div className="l-nav-links">
-          <a href="#features">Features</a>
-          <a href="#demo">Demo</a>
-          <a href="#pricing">Pricing</a>
-          <a href="#faq">FAQ</a>
-        </div>
-        <div className="l-nav-right">
-          <Link href="/dashboard" className="l-nav-signin">Sign in</Link>
-          <Link href="/dashboard" className="btn btn-dark btn-sm">Start free</Link>
-        </div>
-      </nav>
-
-      {/* ── 3. HERO ─────────────────────────────────────────────────── */}
-      <section>
-        <div className="l-hero">
-          <div>
-            <div className="l-hero-eyebrow">
-              <span className="l-hero-eyebrow-text">AI-Powered Document Intelligence</span>
+      {/* ── HERO ──────────────────────────────────────────────────────── */}
+      <section className="lv2-hero">
+        <div className="lv2-hero-inner">
+          <FadeUp>
+            <div className="lv2-hero-eyebrow">
+              <span className="lv2-hero-eyebrow-dot" />
+              AI-Powered Document Intelligence
             </div>
-            <h1 className="l-hero-h1">
-              <span className="l-hero-strike">Read</span>
-              <br />
-              every PDF.
-              <br />
-              Just{" "}
-              <span className="l-hero-ask">
-                ask.
-                <svg
-                  className="l-hero-scribble"
-                  viewBox="0 0 200 16"
-                  fill="none"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M2 11 C40 4, 80 15, 120 8 C160 1, 190 12, 198 9"
-                    stroke="#b8552d"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                </svg>
-              </span>
+            <h1 className="lv2-hero-h1">
+              Chat with<br />
+              any PDF.<br />
+              <em>Instantly.</em>
             </h1>
-            <p className="l-hero-sub">
-              Upload any PDF. Ask anything. Get cited answers in seconds — no skimming required.
+            <p className="lv2-hero-sub">
+              Upload any document and get cited AI answers in seconds —
+              no skimming, no guessing, no hallucinations.
             </p>
-            <div className="l-hero-ctas">
-              <Link href="/dashboard" className="btn btn-dark">
+            <div className="lv2-hero-ctas">
+              <Link href="/dashboard" className="lv2-btn-primary">
                 Upload your first PDF →
               </Link>
-              <a href="#demo" className="l-hero-play">
-                <span className="l-hero-play-icon">
-                  <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true">
-                    <path d="M0 0l10 6-10 6V0z" />
-                  </svg>
-                </span>
-                See the demo
+              <a href="#demo" className="lv2-btn-ghost">
+                See it live
               </a>
             </div>
-            <p className="l-hero-trust">
-              <span className="l-hero-trust-label">Trusted by</span>{" "}
-              <span className="l-hero-trust-names">
-                CAs · Law Students · Product Managers · Researchers
-              </span>
-            </p>
-          </div>
-
-          {/* Doc mockup */}
-          <div className="l-hero-right">
-            <div className="l-doc-wrap">
-              <div className="l-doc-ann">
-                <span className="l-ann l-ann-1">← try it live below!</span>
-                <span className="l-ann l-ann-2">cited answers ✓</span>
-              </div>
-              <div className="l-bookmarks">
-                <div className="l-bookmark l-bm-blue">§3</div>
-                <div className="l-bookmark l-bm-green">§6</div>
-                <div className="l-bookmark l-bm-pink">App</div>
-              </div>
-              <div className="l-doc-mockup">
-                <div className="l-doc-stamp">Analysed</div>
-                <div className="l-doc-hdr">
-                  <div className="l-doc-title">Q3 Financial Report FY2024</div>
-                  <div className="l-doc-meta">42 pages · PDF · uploaded just now</div>
-                </div>
-                <div className="l-doc-lines">
-                  <div className="l-doc-line w90" />
-                  <div className="l-doc-line hl w75" />
-                  <div className="l-doc-line w85" />
-                  <div className="l-doc-line w60" />
-                  <div className="l-doc-line hl w95" />
-                  <div className="l-doc-line w70" />
-                  <div className="l-doc-line w85" />
-                </div>
-                <div className="l-doc-qa">
-                  <div className="l-doc-q">"What was Q3 revenue vs Q2?"</div>
-                  <div className="l-doc-a">
-                    Q3 revenue reached <strong>₹423.7 Cr</strong>, up{" "}
-                    <strong>8.9% QoQ</strong> from ₹389.1 Cr in Q2.
-                    <span className="l-doc-cite">p.14 §3.2</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 4. NUMBERS ──────────────────────────────────────────────── */}
-      <div className="l-numbers">
-        <div className="l-numbers-grid">
-          <div className="l-num-cell reveal">
-            <div className="l-num-big">
-              <span className="l-counter" data-target="1200">0</span>
-              <span className="suffix">+</span>
-            </div>
-            <div className="l-num-label">Active users</div>
-            <div className="l-num-sub">and growing daily</div>
-          </div>
-          <div className="l-num-cell reveal">
-            <div className="l-num-big">
-              <span className="l-counter" data-target="50">0</span>
-              <span className="suffix">K+</span>
-            </div>
-            <div className="l-num-label">PDFs analysed</div>
-            <div className="l-num-sub">across all sectors</div>
-          </div>
-          <div className="l-num-cell reveal">
-            <div className="l-num-big">
-              <span className="l-counter" data-target="98">0</span>
-              <span className="suffix">%</span>
-            </div>
-            <div className="l-num-label">Citation accuracy</div>
-            <div className="l-num-sub">independently audited</div>
-          </div>
-          <div className="l-num-cell reveal">
-            <div className="l-num-big">
-              0<span className="suffix">bits</span>
-            </div>
-            <div className="l-num-label">Data sold</div>
-            <div className="l-num-sub">your docs stay yours</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 5. INTERACTIVE DEMO ─────────────────────────────────────── */}
-      <section className="l-demo-section" id="demo">
-        <div className="l-demo-inner">
-          <div className="l-demo-header reveal">
-            <p className="section-label">Interactive demo</p>
-            <h2>Try it — right now</h2>
-          </div>
-          <div className="reveal">
-            <InteractiveDemo />
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. BENTO FEATURES ───────────────────────────────────────── */}
-      <section className="l-features" id="features">
-        <div className="l-features-inner">
-          <div className="l-features-hdr reveal">
-            <p className="section-label">What it does</p>
-            <h2>Every tool you need to read smarter</h2>
-          </div>
-          <div className="l-bento">
-            {/* Cited answers — span 2, dark */}
-            <div className="l-bento-cell span2 dark reveal">
-              <div className="l-bento-num">01 · Core</div>
-              <div className="l-bento-title">Cited answers, not hallucinations</div>
-              <div className="l-bento-body">
-                Every answer is traced back to the exact page and paragraph. If we&apos;re
-                not sure, we say so.
-              </div>
-              <div className="l-cite-flow">
-                <span className="l-cite-pill">p.14 §3.2</span>
-                <span className="l-cite-arr">→</span>
-                <span className="l-cite-pill">chart 3.2.1</span>
-                <span className="l-cite-arr">→</span>
-                <span className="l-cite-pill">p.38 App C</span>
-              </div>
-            </div>
-
-            {/* Speed */}
-            <div className="l-bento-cell reveal">
-              <div className="l-bento-num">02 · Speed</div>
-              <div className="l-bento-title">Answers in seconds</div>
-              <div className="l-bento-body">
-                Not minutes. Our RAG pipeline returns answers faster than you can flip
-                to the right page.
-              </div>
-              <div className="l-speed-bars">
-                <div className="l-speed-row">
-                  <span className="l-speed-label">Manual</span>
-                  <div className="l-speed-wrap">
-                    <div className="l-speed-bar human">
-                      <span className="l-speed-bar-lbl">~12 min</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="l-speed-row">
-                  <span className="l-speed-label">Intellixy</span>
-                  <div className="l-speed-wrap">
-                    <div className="l-speed-bar us">
-                      <span className="l-speed-bar-lbl">&lt;2s</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 120+ formats */}
-            <div className="l-bento-cell reveal">
-              <div className="l-bento-num">03 · Formats</div>
-              <div className="l-bento-title">120+ file types</div>
-              <div className="l-bento-body">
-                PDFs, DOCX, XLSX, PPTX, EPUB, LaTeX, HTML — even scanned documents
-                via OCR.
-              </div>
-              <div className="l-fmt-tags">
-                {FORMATS.map((t, i) => (
-                  <div key={t} className={`l-fmt-tag${i < 2 ? " accent" : ""}`}>
-                    {t}
-                  </div>
+            <div className="lv2-hero-trust">
+              <div className="lv2-hero-avatars">
+                {["#c96b36","#6366f1","#10b981","#f59e0b"].map((c, i) => (
+                  <div
+                    key={i}
+                    className="lv2-hero-av"
+                    style={{ background: c, zIndex: 4 - i }}
+                  />
                 ))}
               </div>
+              <span className="lv2-hero-trust-text">
+                <strong>1,200+ professionals</strong> trust Intellixy
+              </span>
             </div>
+          </FadeUp>
 
-            {/* Multi-language */}
-            <div className="l-bento-cell reveal">
-              <div className="l-bento-num">04 · Language</div>
-              <div className="l-bento-title">Ask in any language</div>
-              <div className="l-bento-body">
-                Documents in Hindi? Contracts in French? Ask in English, get answers
-                from anywhere.
-              </div>
-              <div className="l-lang-flow">
-                <div className="l-lang-row">
-                  English <span className="cu">→ answer</span>
-                </div>
-                <div className="l-lang-row dim">हिन्दी → answer</div>
-                <div className="l-lang-row dim">Français → answer</div>
-              </div>
-            </div>
-
-            {/* Privacy */}
-            <div className="l-bento-cell dark reveal">
-              <div className="l-bento-num">05 · Privacy</div>
-              <div className="l-bento-title">End-to-end encrypted</div>
-              <div className="l-bento-body">
-                Documents processed in isolated environments. We never train on your
-                data — ever.
-              </div>
-            </div>
-
-            {/* Risk engine — span 2 */}
-            <div className="l-bento-cell span2 reveal">
-              <div className="l-bento-num">06 · Insight</div>
-              <div className="l-bento-title">Risk &amp; insight engine</div>
-              <div className="l-bento-body">
-                Surface red flags, key clauses, hidden figures, and critical data
-                points you&apos;d miss after hours of reading. Built for legal, finance,
-                and research workflows.
-              </div>
-            </div>
-          </div>
+          <HeroMockup />
         </div>
       </section>
 
-      {/* ── 7. HOW IT WORKS ─────────────────────────────────────────── */}
-      <section className="l-how" id="how">
-        <div className="l-how-inner">
-          <div className="l-how-hdr reveal">
-            <p className="section-label">How it works</p>
-            <h2>Three steps to a smarter read</h2>
-          </div>
-          <div className="l-how-grid">
-            <div className="l-how-card reveal">
-              <div className="l-how-badge">Step 01</div>
-              <div className="l-how-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-              </div>
-              <div className="l-how-title">Upload your document</div>
-              <div className="l-how-body">
-                Drag &amp; drop or browse. Any PDF up to 50 MB — processed in under
-                10 seconds.
-              </div>
-              <div className="l-how-note">No sign-up needed for your first try.</div>
-            </div>
-
-            <div className="l-how-card reveal">
-              <div className="l-how-badge">Step 02</div>
-              <div className="l-how-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
-              <div className="l-how-title">Ask in plain English</div>
-              <div className="l-how-body">
-                No syntax. No keywords. Just type your question exactly as you&apos;d
-                ask a colleague.
-              </div>
-              <div className="l-how-note">Try: &ldquo;What are the key risks?&rdquo;</div>
-            </div>
-
-            <div className="l-how-card reveal">
-              <div className="l-how-badge">Step 03</div>
-              <div className="l-how-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <div className="l-how-title">Get cited answers</div>
-              <div className="l-how-body">
-                AI returns a precise answer with the exact source — page number,
-                section, and excerpt.
-              </div>
-              <div className="l-how-note">Verify every claim yourself.</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 8. TESTIMONIALS ─────────────────────────────────────────── */}
-      <section className="l-testi" id="testimonials">
-        <div className="l-testi-inner">
-          <div className="l-testi-hdr reveal">
-            <p className="section-label">What readers say</p>
-            <h2>Loved by professionals who read for a living</h2>
-          </div>
-          <div className="l-testi-grid">
-            {/* Featured dark card — spans 2 rows */}
-            <div className="l-tcard dark reveal">
-              <div className="l-tcard-qmark">&ldquo;</div>
-              <div className="l-tcard-text">
-                I process 20+ invoices daily. Intellixy has significantly sped up my
-                review process. I just ask &lsquo;what&apos;s the GST amount?&rsquo; and it finds
-                the answer instantly — with the exact line cited.
-              </div>
-              <div className="l-tcard-author">
-                <div className="l-tcard-avatar">PS</div>
-                <div>
-                  <div className="l-tcard-name">Priya Sharma</div>
-                  <div className="l-tcard-role">Chartered Accountant · Mumbai</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="l-tcard reveal">
-              <div className="l-tcard-qmark">&ldquo;</div>
-              <div className="l-tcard-text">
-                100-page case files used to take hours. Now I ask questions and get the
-                key points in minutes. Absolute game changer for law school.
-              </div>
-              <div className="l-tcard-author">
-                <div className="l-tcard-avatar">RV</div>
-                <div>
-                  <div className="l-tcard-name">Rahul Verma</div>
-                  <div className="l-tcard-role">Law Student · NLU Delhi</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="l-tcard reveal">
-              <div className="l-tcard-qmark">&ldquo;</div>
-              <div className="l-tcard-text">
-                The citation feature alone is worth it. I can verify every AI answer
-                against the source — that&apos;s what my team needed.
-              </div>
-              <div className="l-tcard-author">
-                <div className="l-tcard-avatar">AI</div>
-                <div>
-                  <div className="l-tcard-name">Ananya Iyer</div>
-                  <div className="l-tcard-role">Product Manager · Razorpay</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="l-tcard reveal">
-              <div className="l-tcard-qmark">&ldquo;</div>
-              <div className="l-tcard-text">
-                We use it for research papers. It surfaces the methodology and key
-                findings before I even start reading. Brilliant tool.
-              </div>
-              <div className="l-tcard-author">
-                <div className="l-tcard-avatar">MK</div>
-                <div>
-                  <div className="l-tcard-name">Dr. Meera Krishnan</div>
-                  <div className="l-tcard-role">Researcher · IISc Bangalore</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="l-tcard reveal">
-              <div className="l-tcard-qmark">&ldquo;</div>
-              <div className="l-tcard-text">
-                I draft contracts. Intellixy helps me check if a specific clause
-                exists without manually searching 80-page agreements.
-              </div>
-              <div className="l-tcard-author">
-                <div className="l-tcard-avatar">SP</div>
-                <div>
-                  <div className="l-tcard-name">Siddharth Patel</div>
-                  <div className="l-tcard-role">Corporate Lawyer · Ahmedabad</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 9. INTEGRATIONS ─────────────────────────────────────────── */}
-      <section className="l-integrations">
-        <div className="l-integrations-inner">
-          <p className="section-label">Works with everything</p>
-          <h2>Every format. Any workflow.</h2>
-          <p>120+ document formats supported — from scanned PDFs to spreadsheets.</p>
-          <div className="l-int-row reveal">
-            {INTEGRATIONS.map((t) => (
-              <div key={t} className="l-int-card">{t}</div>
+      {/* ── SOCIAL PROOF ──────────────────────────────────────────────── */}
+      <div className="lv2-social">
+        <div className="lv2-social-inner">
+          <span className="lv2-social-label">Trusted by teams at</span>
+          <div className="lv2-social-divider" />
+          <div className="lv2-social-logos">
+            {LOGOS.map((l) => (
+              <span key={l} className="lv2-social-logo">{l}</span>
             ))}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ── 10. PRICING ─────────────────────────────────────────────── */}
-      <section className="l-pricing" id="pricing">
-        <div className="l-pricing-inner">
-          <div className="l-pricing-hdr reveal">
-            <p className="section-label">Pricing</p>
-            <h2>Simple, honest pricing</h2>
-            <p style={{ fontSize: "16px", color: "var(--ink-soft)", marginTop: "10px" }}>
-              Start free. No credit card required.
+      {/* ── STATS ─────────────────────────────────────────────────────── */}
+      <div className="lv2-stats">
+        <StaggerParent className="lv2-stats-inner">
+          {[
+            { val: "1,200", suf: "+", label: "Active users", sub: "and growing daily" },
+            { val: "50", suf: "K+", label: "PDFs analysed", sub: "across all sectors" },
+            { val: "98", suf: "%", label: "Citation accuracy", sub: "independently audited" },
+            { val: "0", suf: " bits", label: "Data sold", sub: "your docs stay yours" },
+          ].map((s) => (
+            <StaggerChild key={s.label}>
+              <div className="lv2-stat">
+                <div className="lv2-stat-val">
+                  {s.val}<span>{s.suf}</span>
+                </div>
+                <div className="lv2-stat-label">{s.label}</div>
+                <div className="lv2-stat-sub">{s.sub}</div>
+              </div>
+            </StaggerChild>
+          ))}
+        </StaggerParent>
+      </div>
+
+      {/* ── FEATURES ──────────────────────────────────────────────────── */}
+      <section className="lv2-features" id="features">
+        <div className="lv2-features-inner">
+          <FadeUp className="lv2-features-head">
+            <div className="lv2-eyebrow">What it does</div>
+            <h2 className="lv2-section-title">Every tool you need to read smarter</h2>
+            <p className="lv2-section-sub">
+              Purpose-built for professionals who live inside documents.
             </p>
-          </div>
-          <div className="l-pricing-grid reveal">
-            {/* Free */}
-            <div className="l-plan">
-              <div className="l-plan-tag">Free</div>
-              <div className="l-plan-name">Reader</div>
-              <div className="l-plan-price">₹0</div>
-              <div className="l-plan-per">forever free</div>
-              <div className="l-plan-desc">
-                Perfect for trying Intellixy with a few documents.
-              </div>
-              <div className="l-plan-feats">
-                {[
-                  "3 PDF uploads / month",
-                  "20 questions / month",
-                  "AI answers & summaries",
-                  "7-day chat history",
-                  "Email support",
-                ].map((f) => (
-                  <div key={f} className="l-plan-feat">
-                    <span className="l-plan-check">✓</span>
-                    {f}
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="/dashboard"
-                className="btn btn-outline"
-                style={{ width: "100%", justifyContent: "center" }}
-              >
-                Start free
-              </Link>
-            </div>
+          </FadeUp>
 
-            {/* Pro */}
-            <div className="l-plan featured">
-              <div className="l-plan-badge">Most popular</div>
-              <div className="l-plan-tag">Pro</div>
-              <div className="l-plan-name">Scholar</div>
-              <div className="l-plan-price">₹299</div>
-              <div className="l-plan-per">per month · cancel anytime</div>
-              <div className="l-plan-desc">
-                For professionals who live inside documents.
-              </div>
-              <div className="l-plan-feats">
-                {[
-                  "Unlimited PDFs",
-                  "Unlimited questions",
-                  "Advanced AI insights",
-                  "Risk & data extraction",
-                  "Voice input",
-                  "Persistent history",
-                  "Document comparison",
-                  "Priority support",
-                ].map((f) => (
-                  <div key={f} className="l-plan-feat">
-                    <span className="l-plan-check">✓</span>
-                    {f}
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="/dashboard"
-                className="btn btn-copper"
-                style={{ width: "100%", justifyContent: "center" }}
+          <StaggerParent className="lv2-feat-grid">
+            {FEATURES.map((f) => (
+              <StaggerChild
+                key={f.title}
+                className={`lv2-feat-card${f.dark ? " lv2-feat-card--dark" : ""}${f.wide ? " lv2-feat-card--wide" : ""}`}
               >
-                Get Scholar
-              </Link>
-            </div>
-
-            {/* Atelier */}
-            <div className="l-plan">
-              <div className="l-plan-tag">Enterprise</div>
-              <div className="l-plan-name">Atelier</div>
-              <div className="l-plan-price talk">Let&apos;s talk</div>
-              <div className="l-plan-per">custom pricing</div>
-              <div className="l-plan-desc">
-                For teams with large document volumes and enterprise needs.
-              </div>
-              <div className="l-plan-feats">
-                {[
-                  "Everything in Scholar",
-                  "Unlimited team seats",
-                  "Shared document library",
-                  "SSO + admin controls",
-                  "On-premise deployment",
-                  "Dedicated support",
-                  "SLA guarantee",
-                ].map((f) => (
-                  <div key={f} className="l-plan-feat">
-                    <span className="l-plan-check">✓</span>
-                    {f}
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="/dashboard"
-                className="btn btn-outline"
-                style={{ width: "100%", justifyContent: "center" }}
-              >
-                Contact sales
-              </Link>
-            </div>
-          </div>
+                <div className="lv2-feat-icon">{f.icon}</div>
+                <div className="lv2-feat-title">{f.title}</div>
+                <div className="lv2-feat-body">{f.body}</div>
+                {f.extra}
+              </StaggerChild>
+            ))}
+          </StaggerParent>
         </div>
       </section>
 
-      {/* ── 11. FAQ ─────────────────────────────────────────────────── */}
-      <section className="l-faq" id="faq">
-        <div className="l-faq-inner">
-          <div className="l-faq-aside reveal">
-            <p className="section-label">FAQ</p>
-            <h2>Questions worth asking</h2>
-            <p>
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────── */}
+      <section className="lv2-workflow" id="workflow">
+        <div className="lv2-workflow-inner">
+          <FadeUp className="lv2-workflow-head">
+            <div className="lv2-eyebrow">How it works</div>
+            <h2 className="lv2-section-title">Three steps to a smarter read</h2>
+          </FadeUp>
+
+          <StaggerParent className="lv2-steps">
+            {STEPS.map((s) => (
+              <StaggerChild key={s.n}>
+                <div className="lv2-step">
+                  <div className="lv2-step-num">{s.n}</div>
+                  <div className="lv2-step-title">{s.title}</div>
+                  <div className="lv2-step-body">{s.body}</div>
+                  <div className="lv2-step-note">{s.note}</div>
+                </div>
+              </StaggerChild>
+            ))}
+          </StaggerParent>
+        </div>
+      </section>
+
+      {/* ── INTERACTIVE DEMO ──────────────────────────────────────────── */}
+      <section className="lv2-demo" id="demo">
+        <div className="lv2-demo-inner">
+          <FadeUp className="lv2-demo-head">
+            <div className="lv2-eyebrow">Interactive demo</div>
+            <h2 className="lv2-section-title">Try it — right now</h2>
+            <p className="lv2-section-sub">
+              No sign-up. Ask anything about a real financial report.
+            </p>
+          </FadeUp>
+          <FadeUp delay={0.1}>
+            <InteractiveDemo />
+          </FadeUp>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ──────────────────────────────────────────────── */}
+      <section className="lv2-testi">
+        <div className="lv2-testi-inner">
+          <FadeUp className="lv2-testi-head">
+            <div className="lv2-eyebrow">What readers say</div>
+            <h2 className="lv2-section-title">Loved by professionals who read for a living</h2>
+          </FadeUp>
+
+          <StaggerParent className="lv2-testi-grid">
+            {TESTIMONIALS.map((t) => (
+              <StaggerChild
+                key={t.name}
+                className={`lv2-tcard${t.featured ? " lv2-tcard--featured" : ""}`}
+              >
+                <div className="lv2-tcard-stars">★★★★★</div>
+                <div className="lv2-tcard-text">&ldquo;{t.text}&rdquo;</div>
+                <div className="lv2-tcard-author">
+                  <div
+                    className="lv2-tcard-av"
+                    style={{ background: t.color }}
+                  >
+                    {t.initials}
+                  </div>
+                  <div>
+                    <div className="lv2-tcard-name">{t.name}</div>
+                    <div className="lv2-tcard-role">{t.role}</div>
+                  </div>
+                </div>
+              </StaggerChild>
+            ))}
+          </StaggerParent>
+        </div>
+      </section>
+
+      {/* ── PRICING ───────────────────────────────────────────────────── */}
+      <PricingSection />
+
+      {/* ── FAQ ───────────────────────────────────────────────────────── */}
+      <section className="lv2-faq" id="faq">
+        <div className="lv2-faq-inner">
+          <FadeUp>
+            <div className="lv2-eyebrow">FAQ</div>
+            <h2 className="lv2-section-title">Questions worth asking</h2>
+            <p className="lv2-faq-contact">
               Can&apos;t find what you&apos;re looking for?{" "}
               <a href="mailto:hello@intellixy.com">Email us</a> — we reply fast.
             </p>
-          </div>
-          <div className="reveal">
+          </FadeUp>
+          <FadeUp delay={0.1}>
             <FaqAccordion />
-          </div>
+          </FadeUp>
         </div>
       </section>
 
-      {/* ── 12. FINAL CTA ───────────────────────────────────────────── */}
-      <section className="l-cta">
-        <div className="l-cta-inner reveal">
-          <p className="section-label" style={{ color: "rgba(243,237,225,.4)" }}>
-            Get started
-          </p>
-          <h2>
-            Stop reading.
-            <br />
-            <em>Start asking.</em>
-          </h2>
-          <p>Upload your first PDF free. No credit card. No dark patterns.</p>
-          <div className="l-cta-btns">
-            <Link href="/dashboard" className="btn btn-copper">
-              Upload a PDF — it&apos;s free
-            </Link>
+      {/* ── CTA ───────────────────────────────────────────────────────── */}
+      <section className="lv2-cta">
+        <FadeUp>
+          <div className="lv2-cta-inner">
+            <div className="lv2-cta-eyebrow">Get started</div>
+            <h2 className="lv2-cta-title">
+              Stop reading.<br />
+              <em>Start asking.</em>
+            </h2>
+            <p className="lv2-cta-sub">
+              Upload your first PDF free. No credit card. No dark patterns.
+            </p>
+            <div className="lv2-cta-btns">
+              <Link href="/dashboard" className="lv2-btn-accent">
+                Upload a PDF — it&apos;s free
+              </Link>
+              <a href="#demo" className="lv2-btn-outline-white">
+                See the demo first
+              </a>
+            </div>
+            <p className="lv2-cta-fine">14-day money-back guarantee · Cancel anytime</p>
           </div>
-        </div>
+        </FadeUp>
       </section>
 
-      {/* ── 13. FOOTER ──────────────────────────────────────────────── */}
-      <footer className="l-footer">
-        <div className="l-footer-inner">
-          <div className="l-footer-grid">
+      {/* ── FOOTER ────────────────────────────────────────────────────── */}
+      <footer className="lv2-footer">
+        <div className="lv2-footer-inner">
+          <div className="lv2-footer-grid">
             <div>
-              <Link href="/" className="l-footer-logo">
-                <div className="l-footer-logo-mark"><span>I</span></div>
+              <Link href="/" className="lv2-footer-logo">
+                <div className="lv2-footer-logo-mark">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="3" width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
+                    <rect x="13" y="3" width="8" height="5" rx="1.5" fill="currentColor" opacity=".5"/>
+                    <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
+                    <rect x="3" y="16" width="8" height="5" rx="1.5" fill="currentColor" opacity=".4"/>
+                  </svg>
+                </div>
                 Intellixy
               </Link>
-              <p className="l-footer-tagline">
-                AI-powered document intelligence. Upload any PDF and get cited
-                answers in seconds.
+              <p className="lv2-footer-tagline">
+                AI-powered document intelligence. Upload any PDF and get cited answers in seconds.
               </p>
             </div>
-            <div className="l-footer-col">
+
+            <div className="lv2-footer-col">
               <h4>Product</h4>
               <ul>
                 <li><a href="#features">Features</a></li>
@@ -646,7 +393,8 @@ export default function Page() {
                 <li><a href="#faq">FAQ</a></li>
               </ul>
             </div>
-            <div className="l-footer-col">
+
+            <div className="lv2-footer-col">
               <h4>Use cases</h4>
               <ul>
                 <li><Link href="/dashboard">Legal documents</Link></li>
@@ -655,7 +403,8 @@ export default function Page() {
                 <li><Link href="/dashboard">Contracts</Link></li>
               </ul>
             </div>
-            <div className="l-footer-col">
+
+            <div className="lv2-footer-col">
               <h4>Company</h4>
               <ul>
                 <li><a href="#">About</a></li>
@@ -664,7 +413,8 @@ export default function Page() {
                 <li><a href="#">Contact</a></li>
               </ul>
             </div>
-            <div className="l-footer-col">
+
+            <div className="lv2-footer-col">
               <h4>Legal</h4>
               <ul>
                 <li><a href="#">Privacy Policy</a></li>
@@ -673,9 +423,10 @@ export default function Page() {
               </ul>
             </div>
           </div>
-          <div className="l-footer-bottom">
-            <span className="l-footer-copy">© 2025 Intellixy. All rights reserved.</span>
-            <span className="l-footer-copy">Made with care · Hosted on Vercel</span>
+
+          <div className="lv2-footer-bottom">
+            <span className="lv2-footer-copy">© 2025 Intellixy. All rights reserved.</span>
+            <span className="lv2-footer-copy">Made with care · Hosted on Vercel</span>
           </div>
         </div>
       </footer>

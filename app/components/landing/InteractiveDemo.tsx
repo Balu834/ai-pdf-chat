@@ -58,7 +58,9 @@ export default function InteractiveDemo() {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > INITIAL.length || typing) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, typing]);
 
   function send(q: string) {

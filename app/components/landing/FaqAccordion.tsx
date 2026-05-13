@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const FAQS = [
   {
@@ -16,7 +17,7 @@ const FAQS = [
   },
   {
     q: "Is there a document size limit?",
-    a: "Free plans support documents up to 50 MB (roughly 500 pages). Pro supports up to 500 MB per document. Atelier supports unlimited size with chunked processing for very large document sets.",
+    a: "Free plans support documents up to 50 MB (roughly 500 pages). Pro supports up to 500 MB per document. Enterprise supports unlimited size with chunked processing for very large document sets.",
   },
   {
     q: "Can I cancel anytime?",
@@ -24,51 +25,50 @@ const FAQS = [
   },
   {
     q: "Do you work offline?",
-    a: "Not currently — Intellixy requires an internet connection to process documents and run AI inference. Offline mode is on our roadmap for Atelier enterprise customers. Subscribe to our changelog for updates.",
+    a: "Not currently — Intellixy requires an internet connection to process documents and run AI inference. Offline mode is on our roadmap for Enterprise customers. Subscribe to our changelog for updates.",
   },
 ];
 
 export default function FaqAccordion() {
-  const [open, setOpen] = useState<number>(0);
+  const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <div className="l-faq-list">
+    <div className="fq-list">
       {FAQS.map((faq, i) => (
-        <div key={i} className={`l-faq-item${open === i ? " l-faq-open" : ""}`}>
+        <div key={i} className={`fq-item${open === i ? " fq-item--open" : ""}`}>
           <button
-            className="l-faq-q f"
-            onClick={() => setOpen(open === i ? -1 : i)}
+            className="fq-question"
+            onClick={() => setOpen(open === i ? null : i)}
             aria-expanded={open === i}
           >
-            {faq.q}
-            <span className="l-faq-icon">{open === i ? "×" : "+"}</span>
+            <span>{faq.q}</span>
+            <span className="fq-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d={open === i ? "M2 7h10" : "M7 2v10M2 7h10"}
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
           </button>
-          <div className="l-faq-a" aria-hidden={open !== i}>
-            <div className="l-faq-a-inner">{faq.a}</div>
-          </div>
+          <AnimatePresence initial={false}>
+            {open === i && (
+              <motion.div
+                key="answer"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                style={{ overflow: "hidden" }}
+              >
+                <div className="fq-answer">{faq.a}</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       ))}
-
-      <style jsx>{`
-        .l-faq-list { display: flex; flex-direction: column; }
-        .l-faq-item { border-bottom: 1px solid var(--rule, #d9d1bf); }
-        .l-faq-q {
-          width: 100%; display: flex; justify-content: space-between; align-items: center;
-          padding: 20px 0; font-family: var(--font-fraunces, Georgia, serif); font-size: 17px;
-          font-weight: 600; font-variation-settings: 'SOFT' 30; text-align: left; cursor: pointer;
-          color: var(--ink, #1a1814); background: none; border: none; transition: color .15s;
-        }
-        .l-faq-q:hover { color: var(--accent, #b8552d); }
-        .l-faq-icon {
-          width: 22px; height: 22px; border: 1.5px solid var(--rule, #d9d1bf); border-radius: 50%;
-          display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
-          color: var(--ink-faint, #8a8378); transition: transform .25s, background .2s, border-color .2s, color .2s;
-        }
-        .l-faq-open .l-faq-icon { transform: rotate(45deg); background: var(--accent, #b8552d); border-color: var(--accent, #b8552d); color: white; }
-        .l-faq-a { max-height: 0; overflow: hidden; transition: max-height .35s cubic-bezier(.22,1,.36,1); }
-        .l-faq-open .l-faq-a { max-height: 300px; }
-        .l-faq-a-inner { padding-bottom: 20px; font-size: 14.5px; color: var(--ink-soft, #4a443d); line-height: 1.7; }
-      `}</style>
     </div>
   );
 }
