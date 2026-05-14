@@ -1,99 +1,239 @@
 @import "tailwindcss";
 
-/* ── Reset ─────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   INTELLIXY — Design System v2
+   Token-first. Every visual decision is a variable.
+   Naming: --brand (primary), --n-* (neutral scale), --bg-* (surfaces),
+           --text-* (typography), status colors, spacing, radii, shadows.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Reset ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; overscroll-behavior: none; }
-
 body {
-  margin: 0;
-  padding: 0;
-  touch-action: manipulation;
-  overscroll-behavior: none;
+  margin: 0; padding: 0;
   background: #ffffff;
   color: #0a0a0a;
   font-family: var(--font-inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
 a { color: inherit; text-decoration: none; }
-button { font-family: inherit; }
+button, input, textarea, select { font-family: inherit; font-size: inherit; }
+img, video, canvas, svg { display: block; max-width: 100%; }
 
 /* ── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
+
+  /* ─ Brand ───────────────────────────────────────────────────────────── */
+  --brand:        #10A37F;
+  --brand-dark:   #0d8c6e;
+  --brand-bg:     rgba(16, 163, 127, 0.08);
+  --brand-ring:   rgba(16, 163, 127, 0.22);
+  --brand-glow:   rgba(16, 163, 127, 0.14);
+
+  /* Backward-compat aliases used throughout existing TSX */
   --accent:        #10A37F;
   --accent-dark:   #0d8c6e;
-  --accent-pale:   #f0fdf9;
-  --accent-glow:   rgba(16,163,127,0.12);
-  --bg:            #ffffff;
-  --bg-2:          #f5f5f5;
-  --bg-3:          #e8e8e8;
-  --bg-dark:       #0a0a0a;
-  --text:          #0a0a0a;
-  --text-2:        #737373;
-  --text-3:        #a3a3a3;
-  --border:        rgba(0,0,0,0.08);
-  --border-md:     rgba(0,0,0,0.12);
-  --shadow-xs:     0 1px 2px rgba(0,0,0,0.04);
-  --shadow-sm:     0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow:        0 4px 20px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
-  --shadow-lg:     0 12px 48px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
-  --shadow-xl:     0 24px 64px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06);
-  --radius-xs:     4px;
-  --radius-sm:     8px;
-  --radius:        12px;
-  --radius-lg:     16px;
-  --radius-xl:     20px;
-  --radius-full:   999px;
+  --accent-pale:   rgba(16, 163, 127, 0.08);
+  --accent-glow:   rgba(16, 163, 127, 0.12);
+
+  /* ─ Neutral Scale (Tailwind-aligned) ────────────────────────────────── */
+  --n-0:   #ffffff;
+  --n-50:  #f9fafb;
+  --n-100: #f3f4f6;
+  --n-150: #ebebeb;
+  --n-200: #e5e7eb;
+  --n-300: #d1d5db;
+  --n-400: #9ca3af;
+  --n-500: #6b7280;
+  --n-600: #4b5563;
+  --n-700: #374151;
+  --n-800: #1f2937;
+  --n-900: #111827;
+  --n-950: #0a0a0a;
+
+  /* ─ Semantic Surfaces ────────────────────────────────────────────────── */
+  --bg:         #ffffff;        /* page canvas        */
+  --bg-2:       #f5f5f5;        /* subtle surface     */
+  --bg-3:       #ebebeb;        /* muted surface      */
+  --bg-dark:    #0a0a0a;        /* inverse canvas     */
+
+  /* ─ Semantic Text ────────────────────────────────────────────────────── */
+  --text:   #0a0a0a;            /* body copy          */
+  --text-2: #6b7280;            /* secondary          */
+  --text-3: #9ca3af;            /* tertiary / hint    */
+
+  /* Inverse (on dark surfaces) */
+  --text-inv:   rgba(255, 255, 255, 0.90);
+  --text-inv-2: rgba(255, 255, 255, 0.50);
+  --text-inv-3: rgba(255, 255, 255, 0.25);
+
+  /* ─ Borders ──────────────────────────────────────────────────────────── */
+  --border:      rgba(0, 0, 0, 0.07);
+  --border-mid:  rgba(0, 0, 0, 0.12);
+  --border-dark: rgba(255, 255, 255, 0.07);
+  --border-dark-mid: rgba(255, 255, 255, 0.12);
+
+  /* ─ Status Colors ────────────────────────────────────────────────────── */
+  --blue:        #3b82f6;    --blue-pale:   rgba(59,  130, 246, 0.08);
+  --green:       #10A37F;    --green-pale:  rgba(16,  163, 127, 0.08);
+  --orange:      #f59e0b;    --orange-pale: rgba(245, 158,  11, 0.08);
+  --red:         #ef4444;    --red-pale:    rgba(239,  68,  68, 0.08);
+  --purple:      #8b5cf6;    --purple-pale: rgba(139,  92, 246, 0.08);
+
+  /* ─ Typography ───────────────────────────────────────────────────────── */
+  --ff-sans:    var(--font-inter, system-ui, -apple-system, sans-serif);
+  --ff-display: var(--font-geist, var(--font-inter, system-ui, sans-serif));
+  /* Note: --font-mono is already set by next/font; reference it directly */
+
+  /* Type scale */
+  --fs-2xs:  10px;
+  --fs-xs:   11px;
+  --fs-sm:   12px;
+  --fs-base: 13px;
+  --fs-md:   14px;
+  --fs-lg:   16px;
+  --fs-xl:   18px;
+  --fs-2xl:  22px;
+  --fs-3xl:  28px;
+  --fs-4xl:  36px;
+  --fs-5xl:  48px;
+
+  /* ─ Spacing (4 px base grid) ─────────────────────────────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --sp-24: 96px;
+
+  /* ─ Border Radii ─────────────────────────────────────────────────────── */
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   8px;
+  --r-lg:   12px;
+  --r-xl:   16px;
+  --r-2xl:  20px;
+  --r-full: 999px;
+
+  /* ─ Shadows ──────────────────────────────────────────────────────────── */
+  --sh-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --sh-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --sh-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --sh-lg: 0 12px 32px rgba(0,0,0,0.09), 0 4px 8px rgba(0,0,0,0.05);
+  --sh-xl: 0 24px 64px rgba(0,0,0,0.11), 0 8px 24px rgba(0,0,0,0.06);
+
+  /* Legacy shadow names (existing code compatibility) */
+  --shadow-xs: var(--sh-xs);
+  --shadow-sm: var(--sh-sm);
+  --shadow:    var(--sh-md);
+  --shadow-md: var(--sh-md);
+  --shadow-lg: var(--sh-lg);
+  --shadow-xl: var(--sh-xl);
+
+  /* ─ Motion ───────────────────────────────────────────────────────────── */
+  --ease-fast:   100ms ease;
+  --ease-base:   150ms ease;
+  --ease-smooth: 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ── Scrollbar ──────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+::-webkit-scrollbar            { width: 4px; height: 4px; }
+::-webkit-scrollbar-track      { background: transparent; }
+::-webkit-scrollbar-thumb      { background: rgba(0,0,0,0.12); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover{ background: rgba(0,0,0,0.22); }
 
 /* ── Selection ───────────────────────────────────────────────────────────── */
-::selection { background: rgba(16,163,127,0.15); color: #0d8c6e; }
+::selection { background: rgba(16,163,127,0.15); color: var(--brand-dark); }
 
 /* ── Focus ───────────────────────────────────────────────────────────────── */
 *:focus-visible {
-  outline: 2px solid rgba(16,163,127,0.5);
+  outline: 2px solid var(--brand-ring);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--r-sm);
 }
 
-/* ── Shimmer ─────────────────────────────────────────────────────────────── */
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position:  200% 0; }
-}
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATION LIBRARY
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fade-in    { from { opacity: 0; }                                  to { opacity: 1; } }
+@keyframes fade-up    { from { opacity: 0; transform: translateY(14px); }     to { opacity: 1; transform: none; } }
+@keyframes fade-down  { from { opacity: 0; transform: translateY(-10px); }    to { opacity: 1; transform: none; } }
+@keyframes scale-in   { from { opacity: 0; transform: scale(0.95); }          to { opacity: 1; transform: scale(1); } }
+@keyframes slide-up   { from { opacity: 0; transform: translateY(8px); }      to { opacity: 1; transform: none; } }
+@keyframes slide-down { from { opacity: 0; transform: translateY(-6px); }     to { opacity: 1; transform: none; } }
+@keyframes spin       { to { transform: rotate(360deg); } }
+@keyframes pulse-ring { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.82); } }
+@keyframes blink      { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes float      { 0%,100% { transform: translateY(0); }  50% { transform: translateY(-8px); } }
+@keyframes marquee    { from { transform: translateX(0); }      to { transform: translateX(-50%); } }
+@keyframes shimmer    { 0% { background-position: -200% 0; }    100% { background-position: 200% 0; } }
+
+/* Utility animation classes */
+.animate-fade-in  { animation: fade-in  var(--ease-base)   both; }
+.animate-fade-up  { animation: fade-up  var(--ease-smooth) both; }
+.animate-scale-in { animation: scale-in var(--ease-smooth) both; }
+.animate-slide-up { animation: slide-up var(--ease-smooth) both; }
+.animate-spin     { animation: spin     0.65s linear infinite; }
+.animate-blink    { animation: blink    1s step-end infinite; }
+.animate-pulse    { animation: pulse-ring 2s ease-in-out infinite; }
+.animate-float    { animation: float    3.5s ease-in-out infinite; }
+.animate-marquee  { animation: marquee  28s linear infinite; }
+
+/* Legacy class names (used in page.tsx inline styles) */
+.spin             { animation: spin     0.65s linear infinite; }
+.animate-fadeUp   { animation: fade-up  var(--ease-smooth) both; }
+.animate-fadeIn   { animation: fade-in  var(--ease-base)   both; }
+.animate-pulse-dot { animation: pulse-ring 2s ease-in-out infinite; }
+
 .shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-2) 50%, var(--bg-3) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease infinite;
 }
 
-/* ── Core Animations ─────────────────────────────────────────────────────── */
-@keyframes fadeUp   { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scaleIn  { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-@keyframes slideIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes float    { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-@keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.85); } }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
-@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* ══════════════════════════════════════════════════════════════════════════
+   PROSE / MARKDOWN  (AI responses)
+   ══════════════════════════════════════════════════════════════════════════ */
 
-.animate-fadeUp   { animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
-.animate-fadeIn   { animation: fadeIn 0.5s ease both; }
-.animate-float    { animation: float 3.5s ease-in-out infinite; }
-.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
-.animate-blink    { animation: blink 1s step-end infinite; }
-.spin             { animation: spin 0.65s linear infinite; }
-.animate-marquee  { animation: marquee 28s linear infinite; }
+.prose-ai {
+  color: var(--text-2);
+  line-height: 1.75;
+  font-size: var(--fs-base);
+}
+.prose-ai strong { color: var(--text); font-weight: 600; }
+.prose-ai code {
+  background: var(--accent-pale);
+  border: 1px solid var(--brand-ring);
+  border-radius: var(--r-xs);
+  padding: 1px 5px;
+  font-size: var(--fs-xs);
+  color: var(--brand-dark);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.prose-ai pre {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  overflow-x: auto;
+  font-size: var(--fs-sm);
+}
+.prose-ai ul { padding-left: 1.4em; }
+.prose-ai li { margin-bottom: 3px; }
 
-/* ── Dashboard Layout ────────────────────────────────────────────────────── */
+/* ── Misc layout helpers ─────────────────────────────────────────────────── */
 .dashboard-root { height: 100vh; height: 100dvh; }
 
 @media (max-width: 768px) {
@@ -103,30 +243,3 @@ button { font-family: inherit; }
     backdrop-filter: blur(4px);
   }
 }
-
-/* ── Prose / Markdown ────────────────────────────────────────────────────── */
-.prose-ai {
-  color: #374151;
-  line-height: 1.75;
-  font-size: 0.9rem;
-}
-.prose-ai strong { color: #0a0a0a; font-weight: 600; }
-.prose-ai code {
-  background: #f0fdf9;
-  border: 1px solid rgba(16,163,127,0.2);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 0.82rem;
-  color: #0d8c6e;
-  font-family: var(--font-mono, ui-monospace, monospace);
-}
-.prose-ai pre {
-  background: #f5f5f5;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 8px;
-  padding: 14px 16px;
-  overflow-x: auto;
-  font-size: 0.82rem;
-}
-.prose-ai ul { padding-left: 1.4em; }
-.prose-ai li { margin-bottom: 4px; }

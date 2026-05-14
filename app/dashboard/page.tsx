@@ -5,16 +5,16 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard, FileText, MessageCircle, BarChart2, Users,
-  Bookmark, Settings, CreditCard, Upload, Search, Bell, Sparkles,
+  FileText, MessageCircle, BarChart2,
+  Search, Bell, Sparkles,
   ChevronRight, MoreHorizontal, ExternalLink, Trash2, Download,
   ArrowUpRight, Zap, Shield, Clock, TrendingUp, BookOpen,
-  FileSearch, Lightbulb, AlertCircle, CheckCircle2,
+  FileSearch, Lightbulb, AlertCircle, CheckCircle2, Upload, Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import OAuthSignupTracker from "@/app/components/OAuthSignupTracker";
-import "../dashboard.css";
+import Sidebar from "@/app/components/dashboard/Sidebar";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 interface Doc {
@@ -419,9 +419,9 @@ export default function DashboardPage() {
   /* ── Loading ────────────────────────────────────────────────────────────── */
   if (loading) {
     return (
-      <div className="ix-dash">
-        <div className="ix-loading">
-          <div className="ix-loading-logo">
+      <div className="ds-dash">
+        <div className="ds-loading">
+          <div className="ds-loading-mark">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <rect x="3" y="3" width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
               <rect x="13" y="3" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
@@ -429,7 +429,7 @@ export default function DashboardPage() {
               <rect x="3" y="16" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".4"/>
             </svg>
           </div>
-          <div className="ix-loading-text">Loading your workspace…</div>
+          <div className="ds-loading-text">Loading your workspace…</div>
         </div>
       </div>
     );
@@ -439,7 +439,7 @@ export default function DashboardPage() {
      RENDER
   ════════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="ix-dash">
+    <div className="ds-dash">
       <Suspense fallback={null}><OAuthSignupTracker /></Suspense>
 
       {/* Hidden file input */}
@@ -528,155 +528,54 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ── LAYOUT ──────────────────────────────────────────────────────── */}
-      <div className="ix-layout">
+      <div className="ds-layout">
 
         {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
-        <aside className="ix-sidebar">
-          {/* Logo */}
-          <div className="ix-logo">
-            <Link href="/" className="ix-logo-mark">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="3" width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
-                <rect x="13" y="3" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
-                <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
-                <rect x="3" y="16" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".4"/>
-              </svg>
-            </Link>
-            <span className="ix-logo-text">Intellixy</span>
-            <span className={`ix-logo-plan ${plan}`}>{plan === "pro" ? "Pro" : "Free"}</span>
-          </div>
-
-          {/* Navigation */}
-          <nav className="ix-nav">
-            <div className="ix-nav-section">
-              <div className="ix-nav-section-label">Workspace</div>
-              <button className="ix-nav-item active">
-                <LayoutDashboard size={15} />
-                <span>Overview</span>
-              </button>
-              <button className="ix-nav-item">
-                <FileText size={15} />
-                <span>Documents</span>
-                <span className="ix-nav-badge">{docs.length || 2}</span>
-              </button>
-              <button className="ix-nav-item">
-                <MessageCircle size={15} />
-                <span>Conversations</span>
-              </button>
-              <button className="ix-nav-item">
-                <BarChart2 size={15} />
-                <span>Analytics</span>
-              </button>
-              <button className="ix-nav-item">
-                <Bookmark size={15} />
-                <span>Saved</span>
-              </button>
-            </div>
-
-            <div className="ix-nav-section">
-              <div className="ix-nav-section-label">Team</div>
-              <button className="ix-nav-item">
-                <Users size={15} />
-                <span>Members</span>
-              </button>
-            </div>
-
-            <div className="ix-nav-section">
-              <div className="ix-nav-section-label">Account</div>
-              <button className="ix-nav-item">
-                <CreditCard size={15} />
-                <span>Billing</span>
-              </button>
-              <button className="ix-nav-item">
-                <Settings size={15} />
-                <span>Settings</span>
-              </button>
-            </div>
-          </nav>
-
-          {/* Bottom: upload + usage + profile */}
-          <div className="ix-sidebar-bottom">
-            <button
-              className={`ix-upload-btn${uploading ? " uploading" : ""}`}
-              onClick={() => { if (!uploading) { setUploadError(null); fileInputRef.current?.click(); } }}
-              disabled={uploading}
-            >
-              <Upload size={14} />
-              {uploading ? "Uploading…" : "Upload PDF"}
-            </button>
-            {uploadError && <div className="ix-upload-err">{uploadError}</div>}
-
-            <div className="ix-usage">
-              <div className="ix-usage-head">
-                <span>{plan === "pro" ? "Pro plan" : "Free plan"}</span>
-                {plan === "free" && <button className="ix-usage-upgrade">Upgrade ↑</button>}
-              </div>
-              <div className="ix-usage-row">
-                <div className="ix-usage-lbl">
-                  <span>PDFs</span>
-                  <span>{usage.pdfs}/{usage.maxPdfs === Infinity ? "∞" : usage.maxPdfs}</span>
-                </div>
-                <div className="ix-usage-track">
-                  <div className="ix-usage-fill" style={{ width: `${usage.maxPdfs === Infinity ? 0 : pdfPct}%` }} />
-                </div>
-              </div>
-              <div className="ix-usage-row">
-                <div className="ix-usage-lbl">
-                  <span>Questions</span>
-                  <span>{usage.questions}/{usage.maxQuestions === Infinity ? "∞" : usage.maxQuestions}</span>
-                </div>
-                <div className="ix-usage-track">
-                  <div className="ix-usage-fill" style={{ width: `${usage.maxQuestions === Infinity ? 0 : qPct}%` }} />
-                </div>
-              </div>
-            </div>
-
-            <div className="ix-profile">
-              <div className="ix-av accent">{avatarLetter}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="ix-profile-name">{userName}</div>
-                <div className="ix-profile-email">{user?.email}</div>
-              </div>
-              <Settings size={14} color="var(--text-3)" />
-            </div>
-          </div>
-        </aside>
+        <Sidebar
+          user={user}
+          plan={plan}
+          docsCount={docs.length}
+          usage={usage}
+          uploading={uploading}
+          uploadError={uploadError}
+          onUpload={() => { setUploadError(null); fileInputRef.current?.click(); }}
+        />
 
         {/* ── MAIN ────────────────────────────────────────────────────── */}
-        <div className="ix-main">
+        <div className="ds-main">
 
           {/* ── TOPBAR ────────────────────────────────────────────────── */}
-          <header className="ix-topbar">
-            <div className="ix-topbar-left">
-              <div className="ix-breadcrumb">
+          <header className="ds-topbar">
+            <div className="ds-topbar-left">
+              <div className="ds-breadcrumb">
                 <Link href="/">Intellixy</Link>
-                <ChevronRight size={12} className="ix-breadcrumb-sep" />
-                <span className="ix-breadcrumb-cur">Overview</span>
+                <ChevronRight size={12} className="ds-breadcrumb-sep" />
+                <span className="ds-breadcrumb-cur">Overview</span>
               </div>
             </div>
-            <div className="ix-topbar-right">
+            <div className="ds-topbar-right">
               <button
-                className="ix-search"
+                className="ds-search"
                 onClick={() => { setCmdOpen(true); setCmdQuery(""); setCmdIdx(0); }}
               >
                 <Search size={13} />
                 <span>Search or run a command…</span>
-                <kbd className="ix-search-kbd">⌘K</kbd>
+                <kbd className="ds-search-kbd">⌘K</kbd>
               </button>
-              <button className="ix-ai-btn">
+              <button className="ds-ai-btn">
                 <Sparkles size={13} />
                 AI Assistant
               </button>
-              <button className="ix-bell" aria-label="Notifications">
+              <button className="ds-bell" aria-label="Notifications">
                 <Bell size={15} />
-                <span className="ix-bell-dot" />
+                <span className="ds-bell-dot" />
               </button>
-              <div className="ix-topbar-av" title={userName}>{avatarLetter}</div>
+              <div className="ds-topbar-av" title={userName}>{avatarLetter}</div>
             </div>
           </header>
 
           {/* ── CONTENT ─────────────────────────────────────────────── */}
-          <main className="ix-content">
+          <main className="ds-content">
 
             {/* ── 1. WELCOME HERO ───────────────────────────────────── */}
             <motion.div
