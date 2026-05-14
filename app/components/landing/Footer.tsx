@@ -22,10 +22,10 @@ const COLS = [
   {
     head: "Company",
     links: [
-      { label: "About",   href: "#" },
-      { label: "Blog",    href: "#" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "About",    href: "#" },
+      { label: "Blog",     href: "#" },
+      { label: "Careers",  href: "#" },
+      { label: "Contact",  href: "#" },
     ],
   },
 ];
@@ -34,12 +34,10 @@ export default function Footer() {
   return (
     <footer className="lp-footer">
       <div className="lp-footer-inner">
-
-        {/* Brand */}
         <div>
           <Link href="/" className="lp-footer-logo">
-            <span className="lp-footer-logo-mark">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <span className="lp-footer-logo-mark" aria-hidden>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                 <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
                 <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
                 <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
@@ -53,15 +51,12 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Link columns */}
         {COLS.map(col => (
           <div key={col.head}>
             <p className="lp-footer-col-head">{col.head}</p>
             <ul className="lp-footer-links" role="list">
               {col.links.map(l => (
-                <li key={l.label}>
-                  <a href={l.href}>{l.label}</a>
-                </li>
+                <li key={l.label}><a href={l.href}>{l.label}</a></li>
               ))}
             </ul>
           </div>

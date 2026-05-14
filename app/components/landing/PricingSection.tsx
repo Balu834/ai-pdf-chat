@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 const PLANS = [
   {
@@ -15,7 +16,7 @@ const PLANS = [
       "3 PDF uploads (lifetime)",
       "5 questions per month",
       "Cited answers",
-      "Standard processing speed",
+      "Standard processing",
       "Community support",
     ],
   },
@@ -55,46 +56,64 @@ const PLANS = [
   },
 ];
 
+const card = {
+  hidden: { opacity: 0, y: 24 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
+};
+
 export default function PricingSection() {
   const [annual, setAnnual] = useState(false);
 
   return (
     <section className="lp-pricing-section" id="pricing">
       <div className="lp-pricing-inner">
-        <div className="lp-section-head">
+        <motion.div
+          className="lp-section-head"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
           <p className="lp-section-eyebrow">Pricing</p>
           <h2 className="lp-section-title">Simple, transparent pricing</h2>
           <p className="lp-section-sub">Start free. Upgrade when you need more.</p>
-        </div>
+        </motion.div>
 
+        {/* Toggle */}
         <div className="lp-pricing-toggle">
           <span className={`lp-pricing-label${!annual ? " active" : ""}`}>Monthly</span>
           <button
             className={`lp-pricing-toggle-track${annual ? " on" : ""}`}
             onClick={() => setAnnual(a => !a)}
-            aria-label={annual ? "Switch to monthly billing" : "Switch to annual billing"}
+            aria-label={annual ? "Switch to monthly" : "Switch to annual billing"}
           >
             <span className="lp-pricing-toggle-thumb" />
           </button>
           <span className={`lp-pricing-label${annual ? " active" : ""}`}>
-            Annual
-            <span className="lp-pricing-save">Save 20%</span>
+            Annual <span className="lp-pricing-save">Save 20%</span>
           </span>
         </div>
 
-        <div className="lp-pricing-grid">
+        {/* Cards */}
+        <motion.div
+          className="lp-pricing-grid"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+        >
           {PLANS.map(plan => (
-            <div key={plan.name} className={`lp-price-card${plan.featured ? " featured" : ""}`}>
+            <motion.div
+              key={plan.name}
+              className={`lp-price-card${plan.featured ? " featured" : ""}`}
+              variants={card}
+            >
               {plan.featured && <div className="lp-price-popular">Most popular</div>}
 
               <div className="lp-price-name">{plan.name}</div>
-
               <div className="lp-price-amount">
                 {plan.monthly !== null ? (
-                  <>
-                    <sup>₹</sup>
-                    {annual ? plan.annual : plan.monthly}
-                  </>
+                  <><sup>₹</sup>{annual ? plan.annual : plan.monthly}</>
                 ) : (
                   "Custom"
                 )}
@@ -106,18 +125,16 @@ export default function PricingSection() {
               <ul className="lp-price-features">
                 {plan.features.map(f => (
                   <li key={f} className="lp-price-feat">
-                    <span className="lp-price-check">✓</span>
+                    <span className="lp-price-check" aria-hidden>✓</span>
                     {f}
                   </li>
                 ))}
               </ul>
 
-              <Link href={plan.href} className="lp-price-btn">
-                {plan.cta}
-              </Link>
-            </div>
+              <Link href={plan.href} className="lp-price-btn">{plan.cta}</Link>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

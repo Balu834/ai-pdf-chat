@@ -12,14 +12,13 @@ const LINKS = [
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
-
   return (
     <>
-      <nav className="lp-nav">
+      <nav className="lp-nav" role="navigation">
         <div className="lp-nav-inner">
           <Link href="/" className="lp-nav-brand">
-            <span className="lp-nav-mark">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <span className="lp-nav-mark" aria-hidden>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
                 <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
                 <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
@@ -31,9 +30,7 @@ export default function Nav() {
 
           <ul className="lp-nav-links" role="list">
             {LINKS.map(l => (
-              <li key={l.href}>
-                <a href={l.href}>{l.label}</a>
-              </li>
+              <li key={l.href}><a href={l.href}>{l.label}</a></li>
             ))}
           </ul>
 
