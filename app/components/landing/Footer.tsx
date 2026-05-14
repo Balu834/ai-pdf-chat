@@ -4,37 +4,28 @@ const COLS = [
   {
     head: "Product",
     links: [
-      { label: "Features",     href: "#features" },
-      { label: "How it works", href: "#workflow" },
-      { label: "Pricing",      href: "#pricing"  },
-      { label: "Changelog",    href: "#"         },
+      { label: "Features",     href: "#features"    },
+      { label: "How it works", href: "#how-it-works" },
+      { label: "Pricing",      href: "#pricing"      },
+      { label: "Changelog",    href: "#"             },
     ],
   },
   {
     head: "Use cases",
     links: [
-      { label: "Legal contracts",     href: "#" },
-      { label: "Financial reports",   href: "#" },
-      { label: "Research papers",     href: "#" },
-      { label: "Compliance reviews",  href: "#" },
+      { label: "Legal contracts",    href: "#" },
+      { label: "Financial reports",  href: "#" },
+      { label: "Research papers",    href: "#" },
+      { label: "Compliance reviews", href: "#" },
     ],
   },
   {
     head: "Company",
     links: [
-      { label: "About",    href: "#" },
-      { label: "Blog",     href: "#" },
-      { label: "Careers",  href: "#" },
-      { label: "Contact",  href: "#" },
-    ],
-  },
-  {
-    head: "Legal",
-    links: [
-      { label: "Privacy policy",  href: "#" },
-      { label: "Terms of service",href: "#" },
-      { label: "Cookie policy",   href: "#" },
-      { label: "Security",        href: "#" },
+      { label: "About",   href: "#" },
+      { label: "Blog",    href: "#" },
+      { label: "Careers", href: "#" },
+      { label: "Contact", href: "#" },
     ],
   },
 ];
@@ -42,43 +33,46 @@ const COLS = [
 export default function Footer() {
   return (
     <footer className="lp-footer">
-      <div className="lp-footer-top">
+      <div className="lp-footer-inner">
 
-        {/* Brand block */}
-        <div className="lp-footer-brand">
-          <Link href="/" className="lp-nav-brand">
-            <div className="lp-nav-mark">I</div>
-            <span className="lp-nav-name">Intellixy</span>
+        {/* Brand */}
+        <div>
+          <Link href="/" className="lp-footer-logo">
+            <span className="lp-footer-logo-mark">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
+                <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
+                <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
+                <rect x="3"  y="16" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".4"/>
+              </svg>
+            </span>
+            Intellixy
           </Link>
           <p className="lp-footer-tagline">
             Chat with any document.<br />Get cited answers, instantly.
           </p>
         </div>
 
-        {/* Columns */}
-        <div className="lp-footer-cols">
-          {COLS.map(col => (
-            <div key={col.head} className="lp-footer-col">
-              <p className="lp-footer-col-head">{col.head}</p>
-              <ul className="lp-footer-col-list">
-                {col.links.map(l => (
-                  <li key={l.label}>
-                    <a href={l.href} className="lp-footer-link">{l.label}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+        {/* Link columns */}
+        {COLS.map(col => (
+          <div key={col.head}>
+            <p className="lp-footer-col-head">{col.head}</p>
+            <ul className="lp-footer-links" role="list">
+              {col.links.map(l => (
+                <li key={l.label}>
+                  <a href={l.href}>{l.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
 
       <div className="lp-footer-bottom">
-        <p className="lp-footer-copy">
-          © {new Date().getFullYear()} Intellixy. All rights reserved.
-        </p>
-        <p className="lp-footer-made">
-          Made with care · Hosted on Vercel
-        </p>
+        <span>© {new Date().getFullYear()} Intellixy. All rights reserved.</span>
+        <span>
+          <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Security</a>
+        </span>
       </div>
     </footer>
   );

@@ -1,17 +1,17 @@
 const STATS = [
-  { num: "1,200+", label: "Professionals" },
-  { num: "50K+",   label: "PDFs processed" },
-  { num: "98%",    label: "Citation accuracy" },
-  { num: "0 bits", label: "Data sold" },
+  { val: "50K+",  label: "Documents processed" },
+  { val: "3.4s",  label: "Average answer time"  },
+  { val: "98%",   label: "Citation accuracy"     },
+  { val: "4.9★",  label: "Average user rating"   },
 ];
 
 export default function Stats() {
   return (
-    <section className="lp-stats">
-      <div className="lp-stats-grid">
-        {STATS.map((s, i) => (
-          <div key={i} className="lp-stat-item">
-            <div className="lp-stat-num">{s.num}</div>
+    <section className="lp-stats-section">
+      <div className="lp-stats-inner">
+        {STATS.map(s => (
+          <div key={s.label} className="lp-stat-item">
+            <div className="lp-stat-val">{s.val}</div>
             <div className="lp-stat-label">{s.label}</div>
           </div>
         ))}

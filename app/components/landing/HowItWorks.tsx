@@ -1,38 +1,48 @@
 const STEPS = [
   {
-    num:   "01",
-    title: "Upload your document",
-    body:  "Drop any PDF, DOCX, or scanned file. We extract, chunk, and embed it in seconds.",
+    n: "1",
+    title: "Upload your PDF",
+    body: "Drop any PDF — research papers, contracts, financial reports, lecture notes. We index it instantly, no size limit on Pro.",
+    tag: "⚡ Ready in seconds",
   },
   {
-    num:   "02",
-    title: "Ask in plain language",
-    body:  "Type any question — summarise, compare, extract numbers, find risks. No special syntax.",
+    n: "2",
+    title: "Ask in plain English",
+    body: "Type any question naturally. No need to scroll through 100 pages — just ask what you want to know.",
+    tag: "💬 Conversational AI",
   },
   {
-    num:   "03",
+    n: "3",
     title: "Get cited answers",
-    body:  "Every response links back to the exact page and passage. Verify any claim in one click.",
+    body: "Every answer includes exact page and section references. Click to jump to the source instantly. No hallucinations.",
+    tag: "📎 Verified citations",
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="lp-workflow" id="workflow">
-      <div className="lp-section-head">
-        <p className="lp-section-eyebrow">How it works</p>
-        <h2 className="lp-section-title">From upload to answer in three steps</h2>
-      </div>
+    <section className="lp-workflow-section" id="how-it-works">
+      <div className="lp-workflow-inner">
+        <div className="lp-section-head">
+          <p className="lp-section-eyebrow">How it works</p>
+          <h2 className="lp-section-title">Three steps to instant insight</h2>
+          <p className="lp-section-sub">
+            From upload to cited answer in under 30 seconds.
+          </p>
+        </div>
 
-      <div className="lp-steps-grid">
-        {STEPS.map((s, i) => (
-          <div key={s.num} className="lp-step">
-            {i < STEPS.length - 1 && <div className="lp-step-divider" aria-hidden />}
-            <div className="lp-step-num" aria-hidden>{s.num}</div>
-            <h3 className="lp-step-title">{s.title}</h3>
-            <p className="lp-step-body">{s.body}</p>
-          </div>
-        ))}
+        <div className="lp-workflow-steps">
+          {STEPS.map(s => (
+            <div key={s.n} className="lp-workflow-step">
+              <div className="lp-workflow-num">{s.n}</div>
+              <div>
+                <div className="lp-workflow-title">{s.title}</div>
+                <div className="lp-workflow-body">{s.body}</div>
+                <div className="lp-workflow-tag">{s.tag}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Check } from "lucide-react";
 
 const PLANS = [
   {
@@ -41,7 +40,7 @@ const PLANS = [
     name:     "Enterprise",
     monthly:  null,
     annual:   null,
-    desc:     "For teams and compliance-heavy workflows",
+    desc:     "For teams and compliance workflows",
     cta:      "Contact sales",
     href:     "mailto:sales@intellixy.com",
     featured: false,
@@ -57,72 +56,68 @@ const PLANS = [
 ];
 
 export default function PricingSection() {
-  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  const [annual, setAnnual] = useState(false);
 
   return (
-    <section className="lp-pricing" id="pricing">
-      <div className="lp-section-head">
-        <p className="lp-section-eyebrow">Pricing</p>
-        <h2 className="lp-section-title">Simple, transparent pricing</h2>
-        <p className="lp-section-sub">Start free. Upgrade when you need more.</p>
-      </div>
+    <section className="lp-pricing-section" id="pricing">
+      <div className="lp-pricing-inner">
+        <div className="lp-section-head">
+          <p className="lp-section-eyebrow">Pricing</p>
+          <h2 className="lp-section-title">Simple, transparent pricing</h2>
+          <p className="lp-section-sub">Start free. Upgrade when you need more.</p>
+        </div>
 
-      {/* Billing toggle */}
-      <div className="lp-billing-toggle" role="group" aria-label="Billing period">
-        <button
-          className={`lp-billing-opt${billing === "monthly" ? " active" : ""}`}
-          onClick={() => setBilling("monthly")}
-        >
-          Monthly
-        </button>
-        <button
-          className={`lp-billing-opt${billing === "annual" ? " active" : ""}`}
-          onClick={() => setBilling("annual")}
-        >
-          Annual
-          <span className="lp-billing-save">Save 20%</span>
-        </button>
-      </div>
-
-      {/* Plans */}
-      <div className="lp-price-grid">
-        {PLANS.map(plan => (
-          <div
-            key={plan.name}
-            className={`lp-price-card${plan.featured ? " featured" : ""}`}
+        <div className="lp-pricing-toggle">
+          <span className={`lp-pricing-label${!annual ? " active" : ""}`}>Monthly</span>
+          <button
+            className={`lp-pricing-toggle-track${annual ? " on" : ""}`}
+            onClick={() => setAnnual(a => !a)}
+            aria-label={annual ? "Switch to monthly billing" : "Switch to annual billing"}
           >
-            <div className="lp-price-head">
-              <p className="lp-price-name">{plan.name}</p>
-              <p className="lp-price-desc">{plan.desc}</p>
+            <span className="lp-pricing-toggle-thumb" />
+          </button>
+          <span className={`lp-pricing-label${annual ? " active" : ""}`}>
+            Annual
+            <span className="lp-pricing-save">Save 20%</span>
+          </span>
+        </div>
 
-              {plan.monthly !== null ? (
-                <div className="lp-price-amount">
-                  <span className="lp-price-num">
-                    ₹{billing === "monthly" ? plan.monthly : plan.annual}
-                  </span>
-                  <span className="lp-price-per">/mo</span>
-                </div>
-              ) : (
-                <div className="lp-price-amount">
-                  <span className="lp-price-num">Custom</span>
-                </div>
-              )}
+        <div className="lp-pricing-grid">
+          {PLANS.map(plan => (
+            <div key={plan.name} className={`lp-price-card${plan.featured ? " featured" : ""}`}>
+              {plan.featured && <div className="lp-price-popular">Most popular</div>}
+
+              <div className="lp-price-name">{plan.name}</div>
+
+              <div className="lp-price-amount">
+                {plan.monthly !== null ? (
+                  <>
+                    <sup>₹</sup>
+                    {annual ? plan.annual : plan.monthly}
+                  </>
+                ) : (
+                  "Custom"
+                )}
+              </div>
+              <div className="lp-price-period">
+                {plan.monthly !== null ? "per month" : "talk to us"}
+              </div>
+
+              <ul className="lp-price-features">
+                {plan.features.map(f => (
+                  <li key={f} className="lp-price-feat">
+                    <span className="lp-price-check">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <Link href={plan.href} className="lp-price-btn">
+                {plan.cta}
+              </Link>
             </div>
-
-            <Link href={plan.href} className={`lp-price-cta${plan.featured ? " featured" : ""}`}>
-              {plan.cta}
-            </Link>
-
-            <ul className="lp-price-feats">
-              {plan.features.map(f => (
-                <li key={f} className="lp-price-feat">
-                  <Check size={15} strokeWidth={2.5} aria-hidden />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );

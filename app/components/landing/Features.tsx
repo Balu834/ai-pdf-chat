@@ -1,59 +1,81 @@
 import { FileSearch, Zap, FileText, Globe, Shield, AlertTriangle } from "lucide-react";
 
-const FEATURES = [
+const CARDS = [
   {
-    Icon:  FileSearch,
-    title: "Cited answers",
-    body:  "Every answer links back to the exact page, section, and sentence. No black-box output — just verifiable claims.",
+    icon: <FileSearch size={20} />,
+    eyebrow: "Core feature",
+    title: "Cited answers, every time",
+    body: "Every AI response links back to the exact page, section, and sentence. No black-box output — every claim is verifiable.",
+    featured: true,
+    demo: true,
   },
   {
-    Icon:  Zap,
-    title: "Answer in seconds",
-    body:  "Average response time under 3.4 seconds. Streaming output so you see answers as they form.",
+    icon: <Zap size={20} />,
+    eyebrow: "Performance",
+    title: "Answer in 3.4 seconds",
+    body: "Streaming output so you see answers as they form. Average full response under 3.4s.",
   },
   {
-    Icon:  FileText,
-    title: "120+ formats + OCR",
-    body:  "PDFs, DOCX, XLSX, scanned images, handwritten notes, academic LaTeX. If it's a document, we read it.",
+    icon: <FileText size={20} />,
+    eyebrow: "Compatibility",
+    title: "PDFs, DOCX, scans",
+    body: "OCR for scanned documents, handwritten notes, and academic LaTeX. If it's a document, we read it.",
   },
   {
-    Icon:  Globe,
-    title: "Multi-language",
-    body:  "Ask in English, get answers from a French contract. Cross-lingual retrieval with no manual translation.",
+    icon: <Globe size={20} />,
+    eyebrow: "Languages",
+    title: "Multi-language retrieval",
+    body: "Ask in English, get answers from a French contract. Cross-lingual without manual translation.",
   },
   {
-    Icon:  Shield,
+    icon: <Shield size={20} />,
+    eyebrow: "Privacy",
     title: "End-to-end encrypted",
-    body:  "Documents are encrypted at rest and in transit. We never train on your data. Enterprise on-premise available.",
+    body: "Encrypted at rest and in transit. We never train on your data. Enterprise on-premise available.",
+    dark: true,
   },
   {
-    Icon:  AlertTriangle,
-    title: "Risk extraction",
-    body:  "Automatically flags legal exposure, concentration risk, and compliance gaps in contracts and financial reports.",
+    icon: <AlertTriangle size={20} />,
+    eyebrow: "Intelligence",
+    title: "Automatic risk extraction",
+    body: "Flags legal exposure, concentration risk, and compliance gaps in contracts and reports.",
+    dark: true,
   },
 ];
 
 export default function Features() {
   return (
-    <section className="lp-features" id="features">
-      <div className="lp-section-head">
-        <p className="lp-section-eyebrow">Features</p>
-        <h2 className="lp-section-title">Everything you need to read smarter</h2>
-        <p className="lp-section-sub">
-          Built for professionals who can&apos;t afford to miss a detail.
-        </p>
-      </div>
+    <section className="lp-features-section" id="features">
+      <div className="lp-features-inner">
+        <div className="lp-section-head">
+          <p className="lp-section-eyebrow">Features</p>
+          <h2 className="lp-section-title">Everything you need to read smarter</h2>
+          <p className="lp-section-sub">
+            Built for professionals who can&apos;t afford to miss a detail.
+          </p>
+        </div>
 
-      <div className="lp-feat-grid">
-        {FEATURES.map(({ Icon, title, body }) => (
-          <div key={title} className="lp-feat-card">
-            <div className="lp-feat-icon">
-              <Icon size={20} strokeWidth={1.75} />
+        <div className="lp-bento">
+          {CARDS.map((c, i) => (
+            <div
+              key={i}
+              className={`lp-bento-card${c.featured ? " featured" : ""}${c.dark ? " dark" : ""}`}
+            >
+              <div className="lp-bento-icon">{c.icon}</div>
+              <div className="lp-bento-eyebrow">{c.eyebrow}</div>
+              <div className="lp-bento-title">{c.title}</div>
+              <div className="lp-bento-body">{c.body}</div>
+              {c.demo && (
+                <div className="lp-bento-cite-demo">
+                  Q3 revenue was <strong>₹423.7 crore</strong>, up 23.4% YoY, beating
+                  analyst consensus by 4.2 pp.
+                  <span className="lp-bento-cite-pill">p.14</span>
+                  <span className="lp-bento-cite-pill">§3.2</span>
+                </div>
+              )}
             </div>
-            <h3 className="lp-feat-title">{title}</h3>
-            <p className="lp-feat-body">{body}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );
