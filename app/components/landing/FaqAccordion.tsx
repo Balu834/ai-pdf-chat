@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const FAQS = [
@@ -30,40 +31,36 @@ const FAQS = [
 ];
 
 export default function FaqAccordion() {
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <div className="fq-list">
+    <div className="lp-faq-list">
       {FAQS.map((faq, i) => (
-        <div key={i} className={`fq-item${open === i ? " fq-item--open" : ""}`}>
+        <div key={i} className="lp-faq-item">
           <button
-            className="fq-question"
+            className="lp-faq-question"
             onClick={() => setOpen(open === i ? null : i)}
             aria-expanded={open === i}
           >
             <span>{faq.q}</span>
-            <span className="fq-icon">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path
-                  d={open === i ? "M2 7h10" : "M7 2v10M2 7h10"}
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
+            <ChevronDown
+              size={16}
+              strokeWidth={2}
+              className={`lp-faq-chevron${open === i ? " open" : ""}`}
+              aria-hidden
+            />
           </button>
           <AnimatePresence initial={false}>
             {open === i && (
               <motion.div
-                key="answer"
+                key="body"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 style={{ overflow: "hidden" }}
               >
-                <div className="fq-answer">{faq.a}</div>
+                <p className="lp-faq-body">{faq.a}</p>
               </motion.div>
             )}
           </AnimatePresence>
