@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./landing.css";
 import NavbarClient from "@/app/components/landing/NavbarClient";
-import HeroMockup from "@/app/components/landing/HeroMockup";
 import PricingSection from "@/app/components/landing/PricingSection";
 import FaqAccordion from "@/app/components/landing/FaqAccordion";
 import FadeUp, { StaggerParent, StaggerChild } from "@/app/components/landing/FadeUp";
@@ -147,20 +146,19 @@ export default function Page() {
               AI-Powered Document Intelligence
             </div>
             <h1 className="lv2-hero-h1">
-              Chat with<br />
-              any PDF.<br />
-              <em>Instantly.</em>
+              Ask your PDFs.<br />
+              <em>Get cited answers.</em>
             </h1>
             <p className="lv2-hero-sub">
-              Upload any document and get cited AI answers in seconds —
-              no skimming, no guessing, no hallucinations.
+              Upload any document and chat with it instantly. AI that shows its
+              work — every answer traces back to the exact page and paragraph.
             </p>
             <div className="lv2-hero-ctas">
               <Link href="/dashboard" className="lv2-btn-primary">
-                Upload your first PDF →
+                Upload a PDF — it&apos;s free
               </Link>
               <a href="#demo" className="lv2-btn-ghost">
-                See it live
+                See live demo →
               </a>
             </div>
             <div className="lv2-hero-trust">
@@ -174,12 +172,10 @@ export default function Page() {
                 ))}
               </div>
               <span className="lv2-hero-trust-text">
-                <strong>1,200+ professionals</strong> trust Intellixy
+                <strong>1,200+ professionals</strong> use Intellixy daily
               </span>
             </div>
           </FadeUp>
-
-          <HeroMockup />
         </div>
       </section>
 
