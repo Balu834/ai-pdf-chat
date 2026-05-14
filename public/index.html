@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intellixy — Read Less. Know More.</title>
+<meta name="description" content="Upload any PDF and ask questions using AI. Get cited answers in seconds. Trusted by researchers, lawyers, and analysts worldwide.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ─────────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:'Geist',system-ui,sans-serif;line-height:1.65;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+img,svg{display:block;max-width:100%}
+ul{list-style:none}
+
+/* ── TOKENS ─────────────────────────────────────────────────────────────── */
+:root{
+  --paper:#faf6ef;--paper-2:#f3ede1;--paper-3:#ede5d3;
+  --ink:#1a1814;--ink-soft:#4a443d;--ink-faint:#8a8378;
+  --rule:#d9d1bf;--accent:#b8552d;--accent-deep:#8a3d1d;
+  --accent-soft:#f4e4d8;--highlight:#f5e6a8;
+  --tab-blue:#4a6c8a;--tab-green:#5a7d3f;--tab-pink:#c97a8a;
+  --sh:4px 4px 0 var(--ink);--sh-hover:6px 6px 0 var(--ink);
+  --sh-sm:2px 2px 0 var(--ink);--sh-12:12px 12px 0 var(--ink);
+  --radius:4px;--px:64px;--max:1280px;
+}
+
+/* ── PAPER TEXTURE ──────────────────────────────────────────────────────── */
+body::before{content:'';position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.055;mix-blend-mode:multiply;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ── TYPE UTILITIES ─────────────────────────────────────────────────────── */
+.f{font-family:'Fraunces',Georgia,serif}
+.mono{font-family:'JetBrains Mono',monospace}
+.cav{font-family:'Caveat',cursive}
+em.cu{font-style:italic;color:var(--accent);font-variation-settings:'SOFT' 80,'WONK' 1}
+.tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.section-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:16px}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
+.reveal.visible{opacity:1;transform:none}
+
+/* ── BUTTON STYLES ──────────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;font-family:'Geist',sans-serif;font-size:15px;font-weight:500;border-radius:var(--radius);transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden;border:1.5px solid transparent}
+.btn::before{content:'';position:absolute;inset:0;background:var(--accent);transform:translateY(101%);transition:transform .22s cubic-bezier(.22,1,.36,1);z-index:0}
+.btn>*{position:relative;z-index:1}
+.btn span{position:relative;z-index:1}
+.btn-dark{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn-dark:hover{transform:translateY(-2px);box-shadow:var(--sh-hover);color:var(--paper)}
+.btn-dark:hover::before{transform:translateY(0)}
+.btn-outline{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn-outline:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.btn-outline:hover::before{transform:translateY(0);background:var(--ink)}
+.btn-outline:hover{color:var(--paper)}
+.btn-copper{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+.btn-copper:hover{background:var(--accent-deep);transform:translateY(-2px);box-shadow:var(--sh-hover)}
+.btn-sm{padding:9px 18px;font-size:13px}
+
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+.nav{position:sticky;top:0;z-index:500;background:var(--paper);border-bottom:1px solid var(--rule);padding:0 var(--px);display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-size:19px;font-weight:600;letter-spacing:-.02em;font-variation-settings:'SOFT' 30}
+.nav-logo-mark{width:30px;height:30px;background:var(--ink);display:flex;align-items:center;justify-content:center;border-radius:2px}
+.nav-logo-mark span{font-family:'Fraunces',serif;font-style:italic;color:var(--paper);font-size:17px;font-variation-settings:'SOFT' 80,'WONK' 1;line-height:1}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-size:14px;font-weight:500;color:var(--ink-soft);position:relative;padding-bottom:2px}
+.nav-links a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .22s cubic-bezier(.22,1,.36,1)}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a:hover::after{width:100%}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-signin{font-size:14px;font-weight:500;color:var(--ink-soft);transition:color .15s}
+.nav-signin:hover{color:var(--accent)}
+
+/* ── MASTHEAD ───────────────────────────────────────────────────────────── */
+.masthead{background:var(--ink);color:var(--paper-3);padding:9px var(--px);display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+.masthead-live{display:flex;align-items:center;gap:8px;color:var(--paper)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
+.masthead-center{color:var(--paper-3);letter-spacing:.12em}
+.masthead-right{color:var(--paper-3)}
+
+/* ── HERO ────────────────────────────────────────────────────────────────── */
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:64px;padding:80px var(--px);max-width:var(--max);margin:0 auto;align-items:center;min-height:calc(100vh - 130px)}
+.hero-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.hero-eyebrow::before{content:'';display:block;width:40px;height:1.5px;background:var(--accent)}
+.hero-eyebrow-text{font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--accent);font-variation-settings:'SOFT' 80,'WONK' 1}
+.hero-h1{font-family:'Fraunces',serif;font-size:clamp(64px,7vw,108px);line-height:.95;letter-spacing:-.03em;font-weight:700;margin-bottom:28px;font-variation-settings:'SOFT' 30}
+.hero-strike{text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:3px;color:var(--ink-soft)}
+.hero-ask{font-style:italic;color:var(--accent);font-variation-settings:'SOFT' 80,'WONK' 1;position:relative;display:inline-block}
+.hero-ask .scribble{position:absolute;bottom:-10px;left:0;width:100%;height:16px;overflow:visible}
+.hero-ask .scribble path{stroke-dasharray:220;stroke-dashoffset:220;animation:scribble 1.1s cubic-bezier(.25,.46,.45,.94) .7s forwards}
+@keyframes scribble{to{stroke-dashoffset:0}}
+.hero-sub{font-size:19px;color:var(--ink-soft);max-width:480px;margin-bottom:36px;line-height:1.6}
+.hero-ctas{display:flex;align-items:center;gap:16px;margin-bottom:40px;flex-wrap:wrap}
+.hero-play{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--ink-soft);border-bottom:1px dashed var(--rule);padding-bottom:2px;transition:color .15s,border-color .15s}
+.hero-play:hover{color:var(--accent);border-color:var(--accent)}
+.hero-play-icon{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s,background .15s}
+.hero-play:hover .hero-play-icon{background:var(--accent);border-color:var(--accent)}
+.hero-trust{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.hero-trust-label{font-size:12px;color:var(--ink-faint);font-style:italic;font-family:'Fraunces',serif}
+.hero-trust-names{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-faint);letter-spacing:.05em;text-transform:uppercase}
+
+/* DOC MOCKUP */
+.hero-right{position:relative;display:flex;justify-content:center;align-items:center}
+.doc-wrap{position:relative}
+.doc-annotations{position:absolute;inset:0;pointer-events:none;z-index:10}
+.ann{position:absolute;font-family:'Caveat',cursive;font-size:17px;color:var(--accent);font-weight:600;white-space:nowrap}
+.ann-1{top:-28px;right:20px;transform:rotate(-3deg)}
+.ann-2{bottom:60px;left:-80px;transform:rotate(2deg)}
+.ann-arrow{position:absolute;width:60px;height:40px;overflow:visible}
+.doc-mockup{background:var(--paper-2);border:1px solid var(--rule);box-shadow:10px 10px 0 var(--ink);transform:rotate(1.2deg);animation:float 5s ease-in-out infinite;padding:24px;width:420px;position:relative;overflow:visible}
+@keyframes float{0%,100%{transform:rotate(1.2deg) translateY(0)}50%{transform:rotate(1.2deg) translateY(-12px)}}
+.doc-stamp{position:absolute;top:18px;right:18px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;color:var(--accent);border:2px solid var(--accent);padding:3px 8px;transform:rotate(-2deg);opacity:.85}
+.doc-header-inner{border-bottom:1px solid var(--rule);padding-bottom:12px;margin-bottom:14px}
+.doc-title-inner{font-family:'Fraunces',serif;font-size:16px;font-weight:600;font-variation-settings:'SOFT' 30;margin-bottom:4px}
+.doc-meta-inner{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.08em}
+.doc-lines{margin-bottom:16px}
+.doc-line{height:8px;background:var(--paper-3);border-radius:2px;margin-bottom:7px}
+.doc-line.hl{background:var(--highlight)}
+.doc-line.w90{width:90%}.doc-line.w75{width:75%}.doc-line.w85{width:85%}.doc-line.w60{width:60%}.doc-line.w95{width:95%}.doc-line.w70{width:70%}
+.doc-qa-box{background:var(--paper);border-left:3px solid var(--accent);padding:10px 12px;font-size:12.5px}
+.doc-q{font-family:'Fraunces',serif;font-style:italic;color:var(--ink-soft);margin-bottom:6px;font-size:13px}
+.doc-a{color:var(--ink-soft);line-height:1.5}
+.doc-a strong{color:var(--ink);font-weight:600}
+.doc-cite{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);padding:1px 5px;border-radius:2px;margin-left:4px;vertical-align:middle}
+.bookmarks{position:absolute;left:-16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px}
+.bookmark{width:16px;height:44px;border-radius:2px 0 0 2px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:8px;color:white;letter-spacing:.05em;writing-mode:vertical-rl}
+.bookmark.bblue{background:var(--tab-blue)}.bookmark.bgreen{background:var(--tab-green)}.bookmark.bpink{background:var(--tab-pink)}
+
+/* ── NUMBERS STRIP ─────────────────────────────────────────────────────── */
+.numbers-strip{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);background:var(--paper-2);padding:48px var(--px)}
+.numbers-grid{display:grid;grid-template-columns:repeat(4,1fr);max-width:var(--max);margin:0 auto;gap:0}
+.number-cell{padding:24px 40px;position:relative;text-align:center}
+.number-cell:not(:last-child)::after{content:'';position:absolute;right:0;top:10%;height:80%;width:1px;background:var(--rule)}
+.number-big{font-family:'Fraunces',serif;font-size:52px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variation-settings:'SOFT' 30;margin-bottom:6px}
+.number-big .suffix{font-style:italic;color:var(--accent);font-variation-settings:'SOFT' 80,'WONK' 1;font-size:.75em}
+.number-label{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:4px}
+.number-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase}
+
+/* ── DEMO ────────────────────────────────────────────────────────────────── */
+.demo-section{padding:96px var(--px);background:var(--paper)}
+.demo-inner{max-width:var(--max);margin:0 auto}
+.demo-header{text-align:center;margin-bottom:48px}
+.demo-header h2{font-family:'Fraunces',serif;font-size:42px;font-weight:700;letter-spacing:-.03em;font-variation-settings:'SOFT' 30;margin-bottom:12px}
+.demo-browser{background:var(--paper-2);border:1.5px solid var(--ink);box-shadow:var(--sh-12);border-radius:6px;overflow:hidden}
+.browser-chrome{background:var(--paper-3);border-bottom:1.5px solid var(--rule);padding:12px 16px;display:flex;align-items:center;gap:12px}
+.browser-dots{display:flex;gap:6px}
+.browser-dot{width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+.bd-red{background:#ff5f57}.bd-yellow{background:#febc2e}.bd-green{background:#28c840}
+.browser-url{flex:1;background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);text-align:center}
+.demo-panels{display:grid;grid-template-columns:1fr 1fr;min-height:480px}
+.demo-pdf{border-right:1.5px solid var(--rule);padding:24px;overflow:hidden}
+.demo-pdf-header{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:16px}
+.demo-pdf-header span{color:var(--accent)}
+.pdf-para{font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:14px}
+.pdf-para mark{background:var(--highlight);padding:0 2px;border-radius:1px}
+.pdf-pill{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9px;border:1.5px solid var(--accent);color:var(--accent);padding:1px 5px;border-radius:2px;margin-left:3px;vertical-align:middle;cursor:default;transition:background .15s}
+.pdf-pill:hover{background:var(--accent-soft)}
+.demo-chat{display:flex;flex-direction:column;padding:20px}
+.chat-messages{flex:1;display:flex;flex-direction:column;gap:14px;margin-bottom:16px;min-height:280px;max-height:320px;overflow-y:auto}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:3px;font-size:13px;line-height:1.6}
+.chat-user{background:var(--ink);color:var(--paper);align-self:flex-end;border-radius:3px 3px 0 3px;font-family:'Geist',sans-serif}
+.chat-ai{background:var(--paper-3);border:1px solid var(--rule);align-self:flex-start;border-radius:3px 3px 3px 0;color:var(--ink-soft)}
+.chat-ai-cite{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);margin-top:6px;border-top:1px solid var(--rule);padding-top:6px}
+.chat-typing{display:none;align-items:center;gap:4px;padding:12px 14px;background:var(--paper-3);border:1px solid var(--rule);border-radius:3px 3px 3px 0;align-self:flex-start}
+.chat-typing.active{display:flex}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--ink-faint);animation:typing .9s infinite ease-in-out}
+.typing-dot:nth-child(2){animation-delay:.15s}.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes typing{0%,80%,100%{transform:scale(1);opacity:.5}40%{transform:scale(1.3);opacity:1}}
+.chat-input-row{display:flex;gap:8px;align-items:center}
+.chat-input{flex:1;border:1.5px solid var(--rule);background:var(--paper);padding:9px 12px;font-family:'Geist',sans-serif;font-size:13px;border-radius:3px;outline:none;transition:border-color .15s;color:var(--ink)}
+.chat-input:focus{border-color:var(--accent)}
+.chat-send{width:36px;height:36px;background:var(--ink);color:var(--paper);border-radius:3px;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.chat-send:hover{background:var(--accent)}
+.chat-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chat-chip{font-family:'JetBrains Mono',monospace;font-size:10px;border:1px solid var(--rule);padding:4px 8px;border-radius:2px;color:var(--ink-soft);cursor:pointer;transition:border-color .15s,color .15s;text-transform:uppercase;letter-spacing:.05em}
+.chat-chip:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── FEATURES BENTO ─────────────────────────────────────────────────────── */
+.features-section{padding:96px var(--px);background:var(--paper-2)}
+.features-inner{max-width:var(--max);margin:0 auto}
+.features-header{margin-bottom:48px}
+.features-header h2{font-family:'Fraunces',serif;font-size:40px;font-weight:700;letter-spacing:-.03em;font-variation-settings:'SOFT' 30}
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:auto;gap:12px}
+.bento-cell{background:var(--paper);border:1.5px solid var(--rule);padding:28px;border-radius:var(--radius);transition:transform .18s,box-shadow .18s;position:relative;overflow:hidden}
+.bento-cell:hover{transform:translateY(-3px);box-shadow:6px 6px 0 var(--ink)}
+.bento-cell.dark{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.bento-cell.dark .bento-num{color:rgba(255,255,255,.25)}
+.bento-cell.dark .bento-body{color:rgba(255,255,255,.6)}
+.bento-cell.span2{grid-column:span 2}
+.bento-num{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:20px}
+.bento-title{font-family:'Fraunces',serif;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:10px;font-variation-settings:'SOFT' 30;line-height:1.2}
+.bento-body{font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+.bento-cell.dark .bento-title{color:var(--paper)}
+.cite-flow{display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap}
+.cite-pill-f{font-family:'JetBrains Mono',monospace;font-size:10px;border:1.5px dashed var(--accent);color:var(--accent);padding:4px 10px;border-radius:2px;background:transparent}
+.cite-arrow{color:var(--accent);font-size:14px}
+.speed-bars{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.speed-row{display:flex;align-items:center;gap:10px}
+.speed-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.08em;width:55px;flex-shrink:0;text-transform:uppercase}
+.speed-bar-wrap{flex:1;height:20px;background:var(--paper-3);border-radius:2px;overflow:hidden;position:relative}
+.speed-bar{height:100%;border-radius:2px;display:flex;align-items:center;padding:0 8px}
+.speed-bar-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;white-space:nowrap;color:var(--paper)}
+.speed-bar.human{background:var(--paper-3);width:100%}
+.speed-bar.human .speed-bar-label{color:var(--ink-faint)}
+.speed-bar.us{background:var(--accent);width:12%}
+.format-tags{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:16px}
+.format-tag{font-family:'JetBrains Mono',monospace;font-size:10px;border:1px solid var(--rule);padding:5px 4px;text-align:center;border-radius:2px;color:var(--ink-faint);letter-spacing:.05em;text-transform:uppercase;transition:border-color .15s,color .15s}
+.format-tag:hover{border-color:var(--accent);color:var(--accent)}
+.lang-flow{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.lang-row{font-family:'Fraunces',serif;font-size:20px;font-weight:600;font-variation-settings:'SOFT' 30}
+.lang-row span{font-style:italic;color:var(--accent);font-variation-settings:'SOFT' 80,'WONK' 1}
+.lang-arrow{color:var(--ink-faint);font-size:12px;margin-left:8px}
+
+/* ── HOW IT WORKS ────────────────────────────────────────────────────────── */
+.how-section{padding:96px var(--px);background:var(--paper)}
+.how-inner{max-width:var(--max);margin:0 auto}
+.how-header{text-align:center;margin-bottom:64px}
+.how-header h2{font-family:'Fraunces',serif;font-size:40px;font-weight:700;letter-spacing:-.03em;font-variation-settings:'SOFT' 30}
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative}
+.how-grid::before{content:'';position:absolute;top:68px;left:calc(16.67% + 24px);right:calc(16.67% + 24px);height:1.5px;background:var(--rule);border-top:2px dashed var(--rule);background:none}
+.how-card{background:var(--paper-2);border:1.5px solid var(--rule);padding:28px 28px 24px;margin:0 8px;position:relative}
+.how-badge{position:absolute;top:-14px;left:24px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink);color:var(--paper);padding:4px 10px;border-radius:2px}
+.how-icon{width:56px;height:56px;background:var(--paper);border:1.5px solid var(--rule);box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;margin-bottom:20px;margin-top:8px;flex-shrink:0}
+.how-icon svg{width:24px;height:24px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.how-title{font-family:'Fraunces',serif;font-size:20px;font-weight:700;font-variation-settings:'SOFT' 30;margin-bottom:10px}
+.how-body{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:20px}
+.how-note{font-family:'Caveat',cursive;font-size:16px;color:var(--accent);margin-top:auto}
+
+/* ── TESTIMONIALS ────────────────────────────────────────────────────────── */
+.testi-section{padding:96px var(--px);background:var(--paper-2);border-top:1px solid var(--rule)}
+.testi-inner{max-width:var(--max);margin:0 auto}
+.testi-header{text-align:center;margin-bottom:48px}
+.testi-header h2{font-family:'Fraunces',serif;font-size:40px;font-weight:700;letter-spacing:-.03em;font-variation-settings:'SOFT' 30}
+.testi-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;grid-template-rows:repeat(2,auto);gap:12px}
+.testi-card{background:var(--paper);border:1.5px solid var(--rule);padding:28px;border-radius:var(--radius);position:relative;transition:transform .18s,box-shadow .18s}
+.testi-card:hover{transform:translateY(-3px);box-shadow:6px 6px 0 var(--ink)}
+.testi-card.dark{background:var(--ink);color:var(--paper);border-color:var(--ink);grid-row:span 2}
+.testi-card.dark .testi-quote-mark{color:rgba(184,85,45,.4);font-size:100px}
+.testi-quote-mark{font-family:'Fraunces',serif;font-size:80px;line-height:1;color:var(--accent-soft);position:absolute;top:12px;right:16px;font-variation-settings:'SOFT' 30;pointer-events:none;user-select:none;font-weight:700}
+.testi-card.dark .testi-quote-mark{color:rgba(184,85,45,.35);font-size:100px}
+.testi-text{font-family:'Fraunces',serif;font-style:italic;font-size:16px;line-height:1.65;margin-bottom:24px;font-variation-settings:'SOFT' 60;position:relative;z-index:1}
+.testi-card.dark .testi-text{font-size:19px;color:var(--paper-2)}
+.testi-author{display:flex;align-items:center;gap:12px;margin-top:auto}
+.testi-avatar{width:36px;height:36px;background:var(--accent);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:15px;font-weight:700;flex-shrink:0;border-radius:2px}
+.testi-card.dark .testi-avatar{background:rgba(255,255,255,.15)}
+.testi-name{font-family:'Fraunces',serif;font-size:14px;font-weight:600}
+.testi-role{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.testi-card.dark .testi-role{color:rgba(255,255,255,.4)}
+.testi-card.dark .testi-name{color:var(--paper)}
+
+/* ── INTEGRATIONS ───────────────────────────────────────────────────────── */
+.integrations-section{padding:96px var(--px);background:var(--paper);border-top:1px solid var(--rule)}
+.integrations-inner{max-width:var(--max);margin:0 auto;text-align:center}
+.integrations-inner h2{font-family:'Fraunces',serif;font-size:40px;font-weight:700;letter-spacing:-.03em;font-variation-settings:'SOFT' 30;margin-bottom:12px}
+.integrations-inner p{font-size:17px;color:var(--ink-soft);margin-bottom:48px}
+.integrations-row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.integration-card{border:1.5px solid var(--rule);padding:12px 22px;border-radius:var(--radius);font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);transition:transform .15s,border-color .15s,color .15s,box-shadow .15s;cursor:default}
+.integration-card:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--accent);box-shadow:3px 3px 0 var(--accent-soft)}
+
+/* ── PRICING ─────────────────────────────────────────────────────────────── */
+.pricing-section{padding:96px var(--px);background:var(--paper-2)}
+.pricing-inner{max-width:var(--max);margin:0 auto}
+.pricing-header{text-align:center;margin-bottom:48px}
+.pricing-header h2{font-family:'Fraunces',serif;font-size:40px;font-weight:700;letter-spacing:-.03em;font-variation-settings:'SOFT' 30}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid var(--ink);border-radius:4px;overflow:hidden}
+.pricing-plan{padding:40px 32px;border-right:1px solid var(--rule);position:relative}
+.pricing-plan:last-child{border-right:none}
+.pricing-plan.featured{background:var(--ink);color:var(--paper);border-right-color:var(--ink)}
+.pricing-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:var(--accent);color:var(--paper);padding:4px 12px;border-radius:2px;white-space:nowrap}
+.pricing-tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.pricing-plan.featured .pricing-tag{color:rgba(255,255,255,.4)}
+.pricing-name{font-family:'Fraunces',serif;font-size:28px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px;font-variation-settings:'SOFT' 30}
+.pricing-price{font-family:'Fraunces',serif;font-size:48px;font-weight:700;letter-spacing:-.03em;color:var(--accent);font-style:italic;font-variation-settings:'SOFT' 80,'WONK' 1;line-height:1;margin-bottom:6px}
+.pricing-period{font-size:13px;color:var(--ink-faint);margin-bottom:16px}
+.pricing-plan.featured .pricing-period{color:rgba(255,255,255,.5)}
+.pricing-desc{font-size:14px;color:var(--ink-soft);margin-bottom:28px;line-height:1.5;border-bottom:1px solid var(--rule);padding-bottom:20px}
+.pricing-plan.featured .pricing-desc{color:rgba(255,255,255,.6);border-bottom-color:rgba(255,255,255,.1)}
+.pricing-features{display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+.pricing-feature{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--ink-soft)}
+.pricing-plan.featured .pricing-feature{color:rgba(255,255,255,.75)}
+.pricing-check{width:16px;height:16px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.pricing-plan.featured .pricing-check{background:rgba(255,255,255,.1)}
+.pricing-check::before{content:'✓';font-size:9px;color:var(--accent);font-weight:700}
+.pricing-plan.featured .pricing-check::before{color:var(--accent)}
+
+/* ── FAQ ─────────────────────────────────────────────────────────────────── */
+.faq-section{padding:96px var(--px);background:var(--paper);border-top:1px solid var(--rule)}
+.faq-inner{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:80px;align-items:start}
+.faq-aside{position:sticky;top:80px}
+.faq-aside h2{font-family:'Fraunces',serif;font-size:36px;font-weight:700;letter-spacing:-.03em;font-variation-settings:'SOFT' 30;line-height:1.1;margin-bottom:16px}
+.faq-aside p{font-size:14px;color:var(--ink-soft);line-height:1.65;margin-bottom:16px}
+.faq-aside a{color:var(--accent);border-bottom:1px solid var(--accent-soft);transition:border-color .15s}
+.faq-aside a:hover{border-color:var(--accent)}
+.faq-list{display:flex;flex-direction:column}
+.faq-item{border-bottom:1px solid var(--rule)}
+.faq-q{width:100%;display:flex;justify-content:space-between;align-items:center;padding:20px 0;font-family:'Fraunces',serif;font-size:17px;font-weight:600;font-variation-settings:'SOFT' 30;text-align:left;cursor:pointer;color:var(--ink);transition:color .15s}
+.faq-q:hover{color:var(--accent)}
+.faq-icon{width:22px;height:22px;border:1.5px solid var(--rule);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:transform .25s,background .2s,border-color .2s;color:var(--ink-faint)}
+.faq-item.open .faq-icon{transform:rotate(45deg);background:var(--accent);border-color:var(--accent);color:white}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.22,1,.36,1);font-size:14.5px;color:var(--ink-soft);line-height:1.7}
+.faq-item.open .faq-a{max-height:300px}
+.faq-a-inner{padding-bottom:20px}
+
+/* ── FINAL CTA ──────────────────────────────────────────────────────────── */
+.final-cta{padding:120px var(--px);background:var(--ink);position:relative;overflow:hidden;text-align:center}
+.final-cta::before{content:'';position:absolute;left:-10%;top:50%;transform:translateY(-50%);width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(184,85,45,.25) 0%,transparent 70%);pointer-events:none}
+.final-cta-inner{position:relative;z-index:1;max-width:700px;margin:0 auto}
+.final-cta h2{font-family:'Fraunces',serif;font-size:56px;font-weight:700;letter-spacing:-.03em;color:var(--paper);font-variation-settings:'SOFT' 30;margin-bottom:20px;line-height:1.05}
+.final-cta h2 em{font-style:italic;color:var(--accent);font-variation-settings:'SOFT' 80,'WONK' 1}
+.final-cta p{font-size:17px;color:rgba(250,246,239,.6);margin-bottom:40px;line-height:1.6}
+.final-cta-btns{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+
+/* ── FOOTER ─────────────────────────────────────────────────────────────── */
+footer{background:var(--paper-2);border-top:1.5px solid var(--rule);padding:64px var(--px) 40px}
+.footer-inner{max-width:var(--max);margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:40px;margin-bottom:56px}
+.footer-brand{}
+.footer-logo{display:flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:12px;font-variation-settings:'SOFT' 30}
+.footer-logo-mark{width:24px;height:24px;background:var(--ink);display:flex;align-items:center;justify-content:center;border-radius:2px}
+.footer-logo-mark span{font-family:'Fraunces',serif;font-style:italic;color:var(--paper);font-size:13px;font-variation-settings:'SOFT' 80,'WONK' 1;line-height:1}
+.footer-tagline{font-size:13px;color:var(--ink-faint);line-height:1.6;max-width:200px}
+.footer-col h4{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:16px}
+.footer-col ul{display:flex;flex-direction:column;gap:10px}
+.footer-col ul a{font-size:14px;color:var(--ink-soft);transition:color .15s}
+.footer-col ul a:hover{color:var(--accent)}
+.footer-bottom{border-top:1px solid var(--rule);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:gap}
+.footer-copy{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.footer-made{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+
+/* ── ANIMATIONS ─────────────────────────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:none}}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────────────── */
+@media(max-width:1100px){
+  :root{--px:40px}
+  .hero{gap:40px}
+  .doc-mockup{width:360px}
+  .bento{grid-template-columns:repeat(2,1fr)}
+  .bento-cell.span2{grid-column:span 2}
+  .footer-grid{grid-template-columns:1fr 1fr 1fr}
+}
+@media(max-width:860px){
+  :root{--px:24px}
+  .nav-links{display:none}
+  .hero{grid-template-columns:1fr;padding:48px var(--px)}
+  .hero-h1{font-size:clamp(48px,10vw,72px)}
+  .hero-right{justify-content:center}
+  .doc-mockup{width:320px}
+  .numbers-grid{grid-template-columns:repeat(2,1fr)}
+  .number-cell:nth-child(2)::after{display:none}
+  .demo-panels{grid-template-columns:1fr;min-height:auto}
+  .demo-pdf{border-right:none;border-bottom:1.5px solid var(--rule)}
+  .bento{grid-template-columns:1fr 1fr}
+  .how-grid{grid-template-columns:1fr}
+  .how-grid::before{display:none}
+  .how-card{margin:0 0 12px;padding-top:40px}
+  .testi-grid{grid-template-columns:1fr}
+  .testi-card.dark{grid-row:auto}
+  .pricing-grid{grid-template-columns:1fr}
+  .pricing-plan{border-right:none;border-bottom:1px solid var(--rule)}
+  .pricing-plan:last-child{border-bottom:none}
+  .faq-inner{grid-template-columns:1fr;gap:40px}
+  .faq-aside{position:static}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .final-cta h2{font-size:40px}
+}
+@media(max-width:540px){
+  .hero-h1{font-size:clamp(40px,12vw,60px)}
+  .numbers-grid{grid-template-columns:1fr 1fr}
+  .number-cell:nth-child(2)::after{display:none}
+  .integrations-row{gap:8px}
+  .bento{grid-template-columns:1fr}
+  .bento-cell.span2{grid-column:span 1}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .footer-bottom{flex-direction:column;gap:8px;text-align:center}
+  .masthead-center,.masthead-right{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ─────────────── 1. NAV ─────────────────────────────────────────────── -->
+<nav class="nav">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark"><span>i</span></div>
+    Intellixy
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="nav-right">
+    <a href="dashboard.html" class="nav-signin">Sign in</a>
+    <a href="dashboard.html" class="btn btn-dark btn-sm"><span>Start free →</span></a>
+  </div>
+</nav>
+
+<!-- ─────────────── 2. MASTHEAD ──────────────────────────────────────────── -->
+<div class="masthead">
+  <div class="masthead-live">
+    <div class="live-dot"></div>
+    <span>Live · 1,247 reading now</span>
+  </div>
+  <div class="masthead-center">Est. MMXXIV · Bengaluru · London · SF</div>
+  <div class="masthead-right mono" id="masthead-date"></div>
+</div>
+
+<!-- ─────────────── 3. HERO ──────────────────────────────────────────────── -->
+<section class="hero" id="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-text">An AI-powered reading machine</span>
+    </div>
+    <h1 class="hero-h1 f">
+      <span class="hero-strike">Read</span> the<br>document.<br>
+      <span class="hero-ask">Ask instead.<svg class="scribble" viewBox="0 0 160 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none"><path d="M3,10 C25,3 50,14 80,8 C110,2 135,13 157,9" stroke="#b8552d" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </h1>
+    <p class="hero-sub">Upload any PDF. Ask anything. Get answers with exact citations — in under 4 seconds.</p>
+    <div class="hero-ctas">
+      <a href="dashboard.html" class="btn btn-dark"><span>Try it free →</span> <span style="font-size:12px;opacity:.6;font-family:'JetBrains Mono',monospace">No card needed</span></a>
+      <a href="#demo" class="hero-play">
+        <div class="hero-play-icon">
+          <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><path d="M0 0l10 6-10 6V0z"/></svg>
+        </div>
+        See it work below
+      </a>
+    </div>
+    <div class="hero-trust">
+      <span class="hero-trust-label">Trusted by readers at —</span>
+      <span class="hero-trust-names">Harvard Law · Nomura · Pearson · McKinsey · RBI</span>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="doc-wrap">
+      <!-- Handwritten annotations -->
+      <div class="doc-annotations">
+        <div class="ann ann-1">ask anything!
+          <svg style="position:absolute;bottom:-28px;left:-10px;width:50px;height:30px;overflow:visible" viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8,4 C15,12 30,18 42,24" stroke="#b8552d" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M42,24 L35,20 M42,24 L40,16" stroke="#b8552d" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="ann ann-2">← cites the source</div>
+      </div>
+
+      <div class="doc-mockup">
+        <div class="doc-stamp">Processed</div>
+
+        <!-- Bookmarks -->
+        <div class="bookmarks">
+          <div class="bookmark bblue">01</div>
+          <div class="bookmark bgreen">02</div>
+          <div class="bookmark bpink">03</div>
+        </div>
+
+        <div class="doc-header-inner">
+          <div class="doc-title-inner">Q3 Financial Report</div>
+          <div class="doc-meta-inner">42 PAGES · PDF · SEPT 2024 · CONFIDENTIAL</div>
+        </div>
+
+        <div class="doc-lines">
+          <div class="doc-line w90"></div>
+          <div class="doc-line w75 hl"></div>
+          <div class="doc-line w85"></div>
+          <div class="doc-line w60 hl"></div>
+          <div class="doc-line w95"></div>
+          <div class="doc-line w70"></div>
+          <div class="doc-line w85 hl"></div>
+          <div class="doc-line w90"></div>
+        </div>
+
+        <div class="doc-qa-box">
+          <div class="doc-q">"What was revenue growth in H2 FY24?"</div>
+          <div class="doc-a">Revenue grew <strong>23.4%</strong> YoY to <strong>₹847 Cr</strong> in H2 FY24, driven by enterprise segment expansion. <span class="doc-cite">p.14, §3.2</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 4. NUMBERS STRIP ─────────────────────────────────────── -->
+<section class="numbers-strip">
+  <div class="numbers-grid">
+    <div class="number-cell reveal">
+      <div class="number-big f"><span class="counter" data-target="42">0</span><span class="suffix">M+</span></div>
+      <div class="number-label f">Pages read</div>
+      <div class="number-sub mono">Across 67 countries</div>
+    </div>
+    <div class="number-cell reveal">
+      <div class="number-big f"><span class="counter" data-target="98">0</span><span class="suffix">%</span></div>
+      <div class="number-label f">Citation accuracy</div>
+      <div class="number-sub mono">Independently audited</div>
+    </div>
+    <div class="number-cell reveal">
+      <div class="number-big f"><span class="counter" data-target="3" data-decimal="1">0</span><span class="suffix">.4s</span></div>
+      <div class="number-label f">Avg. answer time</div>
+      <div class="number-sub mono">From upload to insight</div>
+    </div>
+    <div class="number-cell reveal">
+      <div class="number-big f"><span class="counter" data-target="120">0</span><span class="suffix">+</span></div>
+      <div class="number-label f">Document types</div>
+      <div class="number-sub mono">PDFs, scans, slides, more</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 5. INTERACTIVE DEMO ──────────────────────────────────── -->
+<section class="demo-section" id="demo">
+  <div class="demo-inner">
+    <div class="demo-header reveal">
+      <div class="section-label mono">Live demo</div>
+      <h2 class="f">See it think. Watch it <em class="cu">cite.</em></h2>
+    </div>
+    <div class="demo-browser reveal">
+      <div class="browser-chrome">
+        <div class="browser-dots">
+          <div class="browser-dot bd-red"></div>
+          <div class="browser-dot bd-yellow"></div>
+          <div class="browser-dot bd-green"></div>
+        </div>
+        <div class="browser-url">app.intellixy.com/chat/q3-financial-report</div>
+      </div>
+      <div class="demo-panels">
+        <!-- PDF Preview -->
+        <div class="demo-pdf">
+          <div class="demo-pdf-header">Q3_Financial_Report.pdf · PAGE <span>14/42</span> · §3.2 REVENUE BREAKDOWN</div>
+          <div class="pdf-para">
+            The consolidated revenue for Q3 FY2024 reached <mark>₹423.7 crore</mark>, representing a year-on-year growth of <mark>23.4%</mark> compared to ₹343.2 crore in Q3 FY2023. This performance exceeded analyst consensus estimates by approximately 4.2 percentage points.<span class="pdf-pill">p.14</span>
+          </div>
+          <div class="pdf-para">
+            Enterprise segment revenues surged to <mark>₹289 crore</mark>, comprising 68.2% of total revenue, driven by expansion in BFSI and healthcare verticals. Customer retention rates improved to <mark>94.7%</mark>, the highest in company history.<span class="pdf-pill">chart 3.2.1</span>
+          </div>
+          <div class="pdf-para">
+            Operating margins contracted by 120 basis points to <mark>18.3%</mark> on account of increased R&D investment (₹42 Cr), strategic talent additions, and cloud infrastructure scale-up. EBITDA grew 16.1% to ₹77.5 crore.<span class="pdf-pill">p.38</span><span class="pdf-pill">App. C</span>
+          </div>
+        </div>
+        <!-- Chat Interface -->
+        <div class="demo-chat">
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg chat-user">What was the revenue growth in Q3?</div>
+            <div class="chat-msg chat-ai">
+              Revenue grew <strong>23.4% YoY</strong> to ₹423.7 crore in Q3 FY24, exceeding analyst estimates by 4.2 percentage points. The enterprise segment was the primary driver, contributing 68.2% of total revenue.
+              <div class="chat-ai-cite">📎 cited from p.14, §3.2 · chart 3.2.1</div>
+            </div>
+          </div>
+          <div class="chat-typing" id="chat-typing">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="chat-input" type="text" placeholder="Ask about this document…" autocomplete="off">
+            <button class="chat-send" id="chat-send" aria-label="Send">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 1L1 7l4 2m8-8L7 13l-2-4m8-8L5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="chat-chips">
+            <div class="chat-chip" data-msg="Summarise this document">Summarise this</div>
+            <div class="chat-chip" data-msg="Revenue breakdown?">Revenue breakdown?</div>
+            <div class="chat-chip" data-msg="What are all the risks?">All risks?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 6. FEATURES BENTO ────────────────────────────────────── -->
+<section class="features-section" id="features">
+  <div class="features-inner">
+    <div class="features-header reveal">
+      <div class="section-label mono">01 / WHAT WE DO</div>
+      <h2 class="f">Built for people who <em class="cu">actually</em> read documents.</h2>
+    </div>
+    <div class="bento">
+
+      <!-- Wide dark cell: Citations -->
+      <div class="bento-cell dark span2 reveal">
+        <div class="bento-num mono">01 / FOUNDATIONAL</div>
+        <div class="bento-title">Every answer comes with a <em class="cu">citation.</em></div>
+        <div class="bento-body">Not a hallucination. Not a paraphrase. A traceable reference to the exact page, section, and sentence that supports the answer.</div>
+        <div class="cite-flow">
+          <span class="cite-pill-f">p.14, §3.2</span>
+          <span class="cite-arrow">→</span>
+          <span class="cite-pill-f">p.41, chart</span>
+          <span class="cite-arrow">→</span>
+          <span class="cite-pill-f">App. C</span>
+        </div>
+      </div>
+
+      <!-- Speed -->
+      <div class="bento-cell reveal">
+        <div class="bento-num mono">02 / PERFORMANCE</div>
+        <div class="bento-title">Answers in under 4 seconds.</div>
+        <div class="speed-bars">
+          <div class="speed-row">
+            <div class="speed-label mono">Human</div>
+            <div class="speed-bar-wrap">
+              <div class="speed-bar human"><span class="speed-bar-label" style="color:var(--ink-faint)">47 min avg.</span></div>
+            </div>
+          </div>
+          <div class="speed-row">
+            <div class="speed-label mono" style="color:var(--accent)">Intellixy</div>
+            <div class="speed-bar-wrap">
+              <div class="speed-bar us"><span class="speed-bar-label">3.4s</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document types -->
+      <div class="bento-cell reveal">
+        <div class="bento-num mono">03 / COMPATIBILITY</div>
+        <div class="bento-title">Any document.</div>
+        <div class="format-tags">
+          <div class="format-tag">PDF</div>
+          <div class="format-tag">DOCX</div>
+          <div class="format-tag">EPUB</div>
+          <div class="format-tag">SCAN</div>
+          <div class="format-tag">PPTX</div>
+          <div class="format-tag">HTML</div>
+          <div class="format-tag">TEX</div>
+          <div class="format-tag" style="color:var(--accent);border-color:var(--accent)">+114</div>
+        </div>
+      </div>
+
+      <!-- Output modes -->
+      <div class="bento-cell reveal">
+        <div class="bento-num mono">04 / OUTPUT</div>
+        <div class="bento-title">One paragraph, three bullets, or one line.</div>
+        <div class="bento-body">You choose the format. Intellixy adapts the answer length and density to what you're asking.</div>
+      </div>
+
+      <!-- Compare -->
+      <div class="bento-cell reveal">
+        <div class="bento-num mono">05 / MULTI-DOC</div>
+        <div class="bento-title">Side-by-side across documents.</div>
+        <div class="bento-body">Compare clauses, financials, or findings across multiple PDFs in a single question. No switching tabs.</div>
+      </div>
+
+      <!-- Languages — dark -->
+      <div class="bento-cell dark span2 reveal">
+        <div class="bento-num mono">06 / LANGUAGE</div>
+        <div class="bento-title">27 languages. Ask in any, answer in any.</div>
+        <div class="lang-flow">
+          <div class="lang-row f"><span>हिन्दी</span><span class="lang-arrow">→</span></div>
+          <div class="lang-row f"><span>English</span><span class="lang-arrow">→</span></div>
+          <div class="lang-row f"><span>日本語</span><span class="lang-arrow">→</span></div>
+          <div class="lang-row f"><span style="color:rgba(255,255,255,.3)">Deutsch</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 7. HOW IT WORKS ──────────────────────────────────────── -->
+<section class="how-section" id="how">
+  <div class="how-inner">
+    <div class="how-header reveal">
+      <div class="section-label mono">02 / PROCESS</div>
+      <h2 class="f">From upload to insight in <em class="cu">three steps.</em></h2>
+    </div>
+    <div class="how-grid">
+      <div class="how-card reveal">
+        <div class="how-badge mono">Step 01</div>
+        <div class="how-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="how-title f">Drop the <em class="cu">PDF.</em></div>
+        <div class="how-body">Drag, paste a link, or connect your cloud storage. Any PDF, any size, any language. We handle scans too.</div>
+        <div class="how-note cav">takes about 2 seconds ✓</div>
+      </div>
+      <div class="how-card reveal" style="transition-delay:.1s">
+        <div class="how-badge mono">Step 02</div>
+        <div class="how-icon">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div class="how-title f">Type your <em class="cu">question.</em></div>
+        <div class="how-body">Plain English. No boolean operators, no query syntax. Just ask like you'd ask a colleague who'd read every page.</div>
+        <div class="how-note cav">any language works!</div>
+      </div>
+      <div class="how-card reveal" style="transition-delay:.2s">
+        <div class="how-badge mono">Step 03</div>
+        <div class="how-icon">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="how-title f">Get cited <em class="cu">answers.</em></div>
+        <div class="how-body">Every answer links back to the exact source. Click any citation to jump to the paragraph. Trust, but verify.</div>
+        <div class="how-note cav">exact page & section →</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 8. TESTIMONIALS ──────────────────────────────────────── -->
+<section class="testi-section" id="testimonials">
+  <div class="testi-inner">
+    <div class="testi-header reveal">
+      <div class="section-label mono">03 / READERS SAY</div>
+      <h2 class="f">What people <em class="cu">actually</em> said.</h2>
+    </div>
+    <div class="testi-grid">
+
+      <!-- Featured dark testimonial -->
+      <div class="testi-card dark reveal">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-text">"I used to spend three hours reading a 60-page term sheet. Now I ask Intellixy the <em style="color:var(--accent)">exact questions</em> I need answered and I'm done in eight minutes. The citations are a legal professional's dream — I can verify everything."</div>
+        <div class="testi-author">
+          <div class="testi-avatar">A</div>
+          <div>
+            <div class="testi-name">Arjun Krishnan</div>
+            <div class="testi-role mono">M&A Counsel · Singapore</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Small testimonials -->
+      <div class="testi-card reveal" style="transition-delay:.1s">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-text">"The accuracy is <em style="font-style:italic;color:var(--accent)">remarkable.</em> I cross-checked 40 answers against the source documents. Not a single hallucination."</div>
+        <div class="testi-author">
+          <div class="testi-avatar">P</div>
+          <div>
+            <div class="testi-name">Priya Menon</div>
+            <div class="testi-role mono">Equity Analyst · Mumbai</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card reveal" style="transition-delay:.15s">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-text">"Our research team ingests 200+ papers a month. Intellixy cut our synthesis time by <em style="font-style:italic;color:var(--accent)">two-thirds.</em>"</div>
+        <div class="testi-author">
+          <div class="testi-avatar">S</div>
+          <div>
+            <div class="testi-name">Dr. Sarah Chen</div>
+            <div class="testi-role mono">Research Fellow · Oxford</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card reveal" style="transition-delay:.2s">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-text">"Compliance reviews that used to take two days now take a <em style="font-style:italic;color:var(--accent)">morning.</em> And I can show my work with page citations."</div>
+        <div class="testi-author">
+          <div class="testi-avatar">R</div>
+          <div>
+            <div class="testi-name">Rohit Sharma</div>
+            <div class="testi-role mono">Compliance Lead · Mumbai</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card reveal" style="transition-delay:.25s">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-text">"I assign it to students: 'Read this paper and ask Intellixy what the methodology section means.' <em style="font-style:italic;color:var(--accent)">Better engagement</em> than any seminar."</div>
+        <div class="testi-author">
+          <div class="testi-avatar">M</div>
+          <div>
+            <div class="testi-name">Prof. Maria Costa</div>
+            <div class="testi-role mono">Economics Faculty · IIM-B</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 9. INTEGRATIONS ──────────────────────────────────────── -->
+<section class="integrations-section" id="integrations">
+  <div class="integrations-inner">
+    <div class="section-label mono reveal">04 / ECOSYSTEM</div>
+    <h2 class="f reveal">Plays well with everything <em class="cu">you already use.</em></h2>
+    <p class="reveal">Connect to your existing workflow. Export, sync, automate — without leaving Intellixy.</p>
+    <div class="integrations-row reveal">
+      <div class="integration-card">Notion</div>
+      <div class="integration-card">Slack</div>
+      <div class="integration-card">Drive</div>
+      <div class="integration-card">Zotero</div>
+      <div class="integration-card">Mendeley</div>
+      <div class="integration-card">Dropbox</div>
+      <div class="integration-card">Obsidian</div>
+      <div class="integration-card">Zapier</div>
+      <div class="integration-card">Linear</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 10. PRICING ───────────────────────────────────────────── -->
+<section class="pricing-section" id="pricing">
+  <div class="pricing-inner">
+    <div class="pricing-header reveal">
+      <div class="section-label mono">05 / PLANS</div>
+      <h2 class="f">Simple pricing. No <em class="cu">surprises.</em></h2>
+    </div>
+    <div class="pricing-grid reveal">
+
+      <!-- Free -->
+      <div class="pricing-plan">
+        <div class="pricing-tag mono">Starter</div>
+        <div class="pricing-name f">Free</div>
+        <div class="pricing-price f">₹0</div>
+        <div class="pricing-period">forever</div>
+        <div class="pricing-desc">Everything you need to see if Intellixy is for you.</div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><div class="pricing-check"></div>3 PDFs per month</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>5 questions per document</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Basic citations (page number)</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Email support</div>
+        </div>
+        <a href="dashboard.html" class="btn btn-outline" style="width:100%;justify-content:center"><span>Get started free</span></a>
+      </div>
+
+      <!-- Pro -->
+      <div class="pricing-plan featured">
+        <div class="pricing-badge">★ Most chosen</div>
+        <div class="pricing-tag mono" style="color:rgba(255,255,255,.4)">Professional</div>
+        <div class="pricing-name f" style="color:var(--paper)">Pro</div>
+        <div class="pricing-price f">₹299</div>
+        <div class="pricing-period">/month · billed monthly</div>
+        <div class="pricing-desc">Unlimited reading. Professional-grade citations.</div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><div class="pricing-check"></div>Unlimited PDFs</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Unlimited questions</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Advanced citations (page, section, paragraph)</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Priority processing queue</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Export to Notion & Google Docs</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Cross-document comparison</div>
+        </div>
+        <a href="dashboard.html" class="btn btn-copper" style="width:100%;justify-content:center"><span>Start Pro →</span></a>
+      </div>
+
+      <!-- Atelier -->
+      <div class="pricing-plan">
+        <div class="pricing-tag mono">Enterprise</div>
+        <div class="pricing-name f">Atelier</div>
+        <div class="pricing-price f" style="font-size:32px;padding-top:8px">Let's talk</div>
+        <div class="pricing-period">custom contract</div>
+        <div class="pricing-desc">For teams that live inside documents.</div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><div class="pricing-check"></div>Team document libraries</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>SSO + full audit logs</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>On-premise deployment</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Named support contact</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>Custom integrations</div>
+          <div class="pricing-feature"><div class="pricing-check"></div>SLA guarantee</div>
+        </div>
+        <a href="dashboard.html" class="btn btn-outline" style="width:100%;justify-content:center"><span>Contact us →</span></a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 11. FAQ ───────────────────────────────────────────────── -->
+<section class="faq-section" id="faq">
+  <div class="faq-inner">
+    <aside class="faq-aside reveal">
+      <div class="section-label mono">06 / QUESTIONS</div>
+      <h2 class="f">Frequently <em class="cu">asked.</em></h2>
+      <p>Can't find an answer? <a href="dashboard.html">Write to us directly</a> — we reply within one business day.</p>
+    </aside>
+    <div class="faq-list">
+      <div class="faq-item open">
+        <button class="faq-q f">Is my data private? <div class="faq-icon">+</div></button>
+        <div class="faq-a"><div class="faq-a-inner">Yes. Your documents are encrypted at rest and in transit. We process them in isolated compute environments and never use your documents to train our models. Enterprise customers can opt for on-premise deployment.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q f">How accurate are the citations? <div class="faq-icon">+</div></button>
+        <div class="faq-a"><div class="faq-a-inner">In independent audits, Intellixy achieved 98% citation accuracy — meaning the cited passage genuinely supports the answer 98 out of 100 times. The remaining 2% are flagged with a lower-confidence indicator. We never hide uncertainty.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q f">What document types do you support? <div class="faq-icon">+</div></button>
+        <div class="faq-a"><div class="faq-a-inner">120+ formats including PDFs (including scanned OCR), DOCX, XLSX, PPTX, EPUB, HTML, LaTeX, and more. We handle handwritten notes and multi-column academic layouts. If your document type isn't listed, contact us.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q f">Is there a document size limit? <div class="faq-icon">+</div></button>
+        <div class="faq-a"><div class="faq-a-inner">Free plans support documents up to 50MB (roughly 500 pages). Pro supports up to 500MB per document. Atelier supports unlimited size with chunked processing for very large document sets.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q f">Can I cancel anytime? <div class="faq-icon">+</div></button>
+        <div class="faq-a"><div class="faq-a-inner">Yes. Cancel from your account settings at any moment. Your Pro access continues until the end of the billing period. No cancellation fees, no dark patterns, no angry retention calls.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q f">Do you work offline? <div class="faq-icon">+</div></button>
+        <div class="faq-a"><div class="faq-a-inner">Not currently — Intellixy requires an internet connection to process documents and run the AI inference. Offline mode is on our roadmap for Atelier enterprise customers. Subscribe to our changelog for updates.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 12. FINAL CTA ─────────────────────────────────────────── -->
+<section class="final-cta">
+  <div class="final-cta-inner">
+    <div class="section-label mono reveal" style="color:rgba(250,246,239,.3)">07 / BEGIN</div>
+    <h2 class="f reveal"><em>Stop reading.</em><br>Start asking.</h2>
+    <p class="reveal">Join 80,000+ professionals who've made the switch. No credit card. No setup. Just answers.</p>
+    <div class="final-cta-btns reveal">
+      <a href="dashboard.html" class="btn btn-copper"><span>Try it free →</span> <span style="font-size:12px;opacity:.75;font-family:'JetBrains Mono',monospace">No card needed</span></a>
+      <a href="#demo" class="btn btn-outline" style="color:var(--paper);border-color:rgba(250,246,239,.3)"><span>See the demo</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── 13. FOOTER ────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-mark"><span>i</span></div>
+          Intellixy
+        </div>
+        <div class="footer-tagline">Read less. Know more. Ask anything, get cited answers.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#demo">Demo</a></li>
+          <li><a href="dashboard.html">Try it free</a></li>
+          <li><a href="#">Changelog</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">API Reference</a></li>
+          <li><a href="#">Status</a></li>
+          <li><a href="#">Community</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy mono">© MMXXVI Intellixy Labs · Made with care in India</div>
+      <div class="footer-made mono">Built with patience, not haste</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── MASTHEAD DATE ────────────────────────────────────────────────────────────
+(function(){
+  const d=new Date();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('masthead-date').textContent=
+    days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+})();
+
+// ── REVEAL ON SCROLL ─────────────────────────────────────────────────────────
+(function(){
+  const els=document.querySelectorAll('.reveal');
+  if(!els.length)return;
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}});
+  },{threshold:0.12,rootMargin:'0px 0px -40px 0px'});
+  els.forEach(el=>io.observe(el));
+})();
+
+// ── COUNTER ANIMATIONS ───────────────────────────────────────────────────────
+(function(){
+  const counters=document.querySelectorAll('.counter');
+  if(!counters.length)return;
+  function easeOut(t){return 1-Math.pow(1-t,3);}
+  function animateCounter(el){
+    const target=+el.dataset.target;
+    const decimal=el.dataset.decimal;
+    const duration=1500;
+    const start=performance.now();
+    function step(now){
+      const p=Math.min((now-start)/duration,1);
+      const val=target*easeOut(p);
+      el.textContent=decimal?val.toFixed(1):Math.floor(val);
+      if(p<1)requestAnimationFrame(step);
+      else el.textContent=decimal?target.toFixed(1):target;
+    }
+    requestAnimationFrame(step);
+  }
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){animateCounter(e.target);io.unobserve(e.target);}});
+  },{threshold:0.5});
+  counters.forEach(c=>io.observe(c));
+})();
+
+// ── FAQ ACCORDION ────────────────────────────────────────────────────────────
+(function(){
+  const items=document.querySelectorAll('.faq-item');
+  items.forEach(item=>{
+    const btn=item.querySelector('.faq-q');
+    btn.addEventListener('click',()=>{
+      const isOpen=item.classList.contains('open');
+      items.forEach(i=>i.classList.remove('open'));
+      if(!isOpen)item.classList.add('open');
+    });
+  });
+})();
+
+// ── INTERACTIVE DEMO ─────────────────────────────────────────────────────────
+(function(){
+  const input=document.getElementById('chat-input');
+  const send=document.getElementById('chat-send');
+  const messages=document.getElementById('chat-messages');
+  const typing=document.getElementById('chat-typing');
+  const chips=document.querySelectorAll('.chat-chip');
+  if(!input||!send)return;
+
+  const RESPONSES={
+    summarise:{
+      text:'<strong>Executive Summary:</strong> Q3 FY24 revenue reached ₹423.7 crore (+23.4% YoY), driven by the enterprise segment (68.2% of revenue). EBITDA grew 16.1% to ₹77.5 crore despite a 120bps margin compression from increased R&D spend. Customer retention hit an all-time high of 94.7%.',
+      cite:'p.1 (executive summary) · p.14, §3.2 · p.38'
+    },
+    revenue:{
+      text:'Revenue totalled <strong>₹423.7 crore</strong> in Q3 FY24, a <strong>23.4% YoY increase</strong>. Enterprise segment contributed ₹289 crore (68.2%). This beat analyst consensus by 4.2 percentage points. H2 FY24 total: <strong>₹847 crore</strong>.',
+      cite:'p.14, §3.2 · chart 3.2.1 · p.22'
+    },
+    risk:{
+      text:'Key risks identified: (1) <strong>Margin pressure</strong> — R&D costs elevated at ₹42 Cr, 120bps compression. (2) <strong>Client concentration</strong> — top 5 clients = 34% of revenue. (3) <strong>Currency exposure</strong> — 22% of contracts in USD. (4) <strong>Regulatory</strong> — pending DPDPA compliance review.',
+      cite:'p.31, §6.1 · p.38, App. C · p.41, risk register'
+    },
+    growth:{
+      text:'Growth drivers: Enterprise BFSI (+38% YoY), Healthcare vertical (new, ₹28 Cr in first full quarter), International markets (+41% from a small base). Pipeline coverage ratio stands at <strong>3.2×</strong> for the next quarter.',
+      cite:'p.18, §4.1 · p.24 · p.29, §5.3'
+    },
+    customer:{
+      text:'Customer metrics: Retention rate <strong>94.7%</strong> (all-time high). Net Revenue Retention <strong>118%</strong>. New logos added: 47 enterprise accounts. Average contract value up <strong>12.4%</strong> to ₹3.8 Cr.',
+      cite:'p.26, §5.1 · p.27, customer appendix'
+    }
+  };
+
+  function getResponse(q){
+    q=q.toLowerCase();
+    if(q.includes('summar')||q.includes('overview')||q.includes('brief'))return RESPONSES.summarise;
+    if(q.includes('revenue')||q.includes('breakdown')||q.includes('income')||q.includes('growth')&&q.includes('q3'))return RESPONSES.revenue;
+    if(q.includes('risk')||q.includes('concern')||q.includes('challenge'))return RESPONSES.risk;
+    if(q.includes('growth')||q.includes('driver')||q.includes('segment'))return RESPONSES.growth;
+    if(q.includes('customer')||q.includes('retention')||q.includes('client'))return RESPONSES.customer;
+    return{text:'Based on the document, that relates to the financial performance data across Q3 FY24. The report provides detailed breakdowns by segment, geography, and product line.',cite:'p.2 (table of contents) · §1.0 introduction'};
+  }
+
+  function addMessage(html,type,cite){
+    const msg=document.createElement('div');
+    msg.className='chat-msg chat-'+type;
+    msg.innerHTML=html;
+    if(cite){
+      const c=document.createElement('div');
+      c.className='chat-ai-cite';
+      c.textContent='📎 cited from '+cite;
+      msg.appendChild(c);
+    }
+    messages.appendChild(msg);
+    messages.scrollTop=messages.scrollHeight;
+  }
+
+  function handleSend(q){
+    if(!q.trim())return;
+    addMessage(q,'user');
+    input.value='';
+    typing.classList.add('active');
+    messages.scrollTop=messages.scrollHeight;
+    setTimeout(()=>{
+      typing.classList.remove('active');
+      const r=getResponse(q);
+      addMessage(r.text,'ai',r.cite);
+    },1200+Math.random()*600);
+  }
+
+  send.addEventListener('click',()=>handleSend(input.value));
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')handleSend(input.value);});
+  chips.forEach(c=>c.addEventListener('click',()=>{
+    handleSend(c.dataset.msg);
+  }));
+})();
+</script>
+</body>
+</html>

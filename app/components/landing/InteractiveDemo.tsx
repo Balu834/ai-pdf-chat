@@ -76,69 +76,85 @@ export default function InteractiveDemo() {
   }
 
   return (
-    <div className="l-demo-browser">
-      {/* Window chrome */}
-      <div className="l-browser-chrome">
-        <div className="l-browser-dots">
-          <span className="l-bd l-bd-r" /><span className="l-bd l-bd-y" /><span className="l-bd l-bd-g" />
+    <div style={S.browser}>
+      {/* Browser chrome */}
+      <div style={S.chrome}>
+        <div style={S.dots}>
+          <span style={{ ...S.dot, background: "#ff5f57" }} />
+          <span style={{ ...S.dot, background: "#febc2e" }} />
+          <span style={{ ...S.dot, background: "#28c840" }} />
         </div>
-        <div className="l-browser-url">app.intellixy.com/chat/q3-financial-report</div>
+        <div style={S.url}>app.intellixy.com/chat/q3-financial-report</div>
       </div>
 
-      <div className="l-demo-panels">
-        {/* PDF Preview (static) */}
-        <div className="l-demo-pdf">
-          <div className="l-demo-pdf-hdr">
-            Q3_Financial_Report.pdf · PAGE <span className="accent">14/42</span> · §3.2 REVENUE BREAKDOWN
+      <div style={S.panels}>
+        {/* PDF preview */}
+        <div style={S.pdfPanel}>
+          <div style={S.pdfHdr}>
+            Q3_Financial_Report.pdf · PAGE <span style={{ color: "#10A37F", fontWeight: 700 }}>14/42</span> · §3.2 REVENUE BREAKDOWN
           </div>
-          <p className="l-pdf-para">
+          <p style={S.pdfPara}>
             The consolidated revenue for Q3 FY2024 reached{" "}
-            <mark>₹423.7 crore</mark>, representing a year-on-year growth of{" "}
-            <mark>23.4%</mark> compared to ₹343.2 crore in Q3 FY2023. This
-            performance exceeded analyst consensus estimates by approximately
-            4.2 percentage points.{" "}
-            <span className="l-pdf-pill">p.14</span>
+            <mark style={S.mark}>₹423.7 crore</mark>, representing a year-on-year growth of{" "}
+            <mark style={S.mark}>23.4%</mark> compared to ₹343.2 crore in Q3 FY2023. This
+            performance exceeded analyst consensus estimates by approximately 4.2 percentage points.{" "}
+            <span style={S.pill}>p.14</span>
           </p>
-          <p className="l-pdf-para">
-            Enterprise segment revenues surged to <mark>₹289 crore</mark>,
-            comprising 68.2% of total revenue, driven by expansion in BFSI and
-            healthcare verticals. Customer retention rates improved to{" "}
-            <mark>94.7%</mark>, the highest in company history.{" "}
-            <span className="l-pdf-pill">chart 3.2.1</span>
+          <p style={S.pdfPara}>
+            Enterprise segment revenues surged to <mark style={S.mark}>₹289 crore</mark>,
+            comprising 68.2% of total revenue, driven by expansion in BFSI and healthcare verticals.
+            Customer retention rates improved to <mark style={S.mark}>94.7%</mark>, the highest in company history.{" "}
+            <span style={S.pill}>chart 3.2.1</span>
           </p>
-          <p className="l-pdf-para">
+          <p style={S.pdfPara}>
             Operating margins contracted by 120 basis points to{" "}
-            <mark>18.3%</mark> on account of increased R&D investment (₹42 Cr),
+            <mark style={S.mark}>18.3%</mark> on account of increased R&D investment (₹42 Cr),
             strategic talent additions, and cloud infrastructure scale-up.{" "}
-            <span className="l-pdf-pill">p.38</span>{" "}
-            <span className="l-pdf-pill">App. C</span>
+            <span style={S.pill}>p.38</span>{" "}
+            <span style={S.pill}>App. C</span>
           </p>
         </div>
 
         {/* Chat panel */}
-        <div className="l-demo-chat">
-          <div className="l-chat-msgs">
+        <div style={S.chatPanel}>
+          <div style={S.msgs}>
             {messages.map((m, i) => (
-              <div key={i} className={`l-chat-msg l-chat-${m.role}`}>
+              <div key={i} style={m.role === "user" ? S.msgUser : S.msgAiWrap}>
                 {m.role === "ai" ? (
                   <>
-                    <span>{m.text}</span>
-                    {m.cite && <div className="l-chat-cite">📎 cited from {m.cite}</div>}
+                    <div style={S.aiLabel}>
+                      <span style={S.aiDot} />
+                      Intellixy AI
+                    </div>
+                    <div style={S.msgAi}>
+                      <span>{m.text}</span>
+                      {m.cite && (
+                        <div style={S.cite}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0d8c6e" strokeWidth="2" style={{ flexShrink: 0 }}>
+                            <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/>
+                            <polyline points="15 3 15 9 21 9"/>
+                          </svg>
+                          Cited from {m.cite}
+                        </div>
+                      )}
+                    </div>
                   </>
-                ) : m.text}
+                ) : (
+                  <div style={S.msgUser}>{m.text}</div>
+                )}
               </div>
             ))}
             {typing && (
-              <div className="l-chat-msg l-chat-ai l-chat-typing">
-                <span className="l-dot" /><span className="l-dot" /><span className="l-dot" />
+              <div style={S.typingRow}>
+                <span style={S.typingDot} /><span style={{ ...S.typingDot, animationDelay: ".15s" }} /><span style={{ ...S.typingDot, animationDelay: ".3s" }} />
               </div>
             )}
             <div ref={endRef} />
           </div>
 
-          <div className="l-chat-input-row">
+          <div style={S.inputRow}>
             <input
-              className="l-chat-input"
+              style={S.input}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send(input)}
@@ -146,57 +162,226 @@ export default function InteractiveDemo() {
               disabled={typing}
               autoComplete="off"
             />
-            <button className="l-chat-send" onClick={() => send(input)} disabled={typing} aria-label="Send">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <button style={{ ...S.sendBtn, ...(typing ? S.sendBtnDisabled : {}) }} onClick={() => send(input)} disabled={typing} aria-label="Send">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
                 <path d="M13 1L1 7l4 2m8-8L7 13l-2-4m8-8L5 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
           </div>
 
-          <div className="l-chat-chips">
+          <div style={S.chips}>
             {CHIPS.map((c) => (
-              <button key={c} className="l-chip" onClick={() => send(c)} disabled={typing}>{c}</button>
+              <button key={c} style={S.chip} onClick={() => send(c)} disabled={typing}>{c}</button>
             ))}
           </div>
         </div>
       </div>
 
-      <style jsx>{`
-        .l-demo-browser { background: var(--paper-2, #f3ede1); border: 1.5px solid var(--ink, #1a1814); box-shadow: 12px 12px 0 var(--ink, #1a1814); border-radius: 4px; overflow: hidden; }
-        .l-browser-chrome { background: var(--paper-3, #ede5d3); border-bottom: 1.5px solid var(--rule, #d9d1bf); padding: 11px 16px; display: flex; align-items: center; gap: 12px; }
-        .l-browser-dots { display: flex; gap: 6px; }
-        .l-bd { width: 11px; height: 11px; border-radius: 50%; border: 1px solid rgba(0,0,0,.12); display: block; }
-        .l-bd-r { background: #ff5f57; } .l-bd-y { background: #febc2e; } .l-bd-g { background: #28c840; }
-        .l-browser-url { flex: 1; background: var(--paper, #faf6ef); border: 1px solid var(--rule, #d9d1bf); border-radius: 3px; padding: 5px 12px; font-family: var(--font-mono, monospace); font-size: 11px; color: var(--ink-faint, #8a8378); text-align: center; }
-        .l-demo-panels { display: grid; grid-template-columns: 1fr 1fr; min-height: 460px; }
-        .l-demo-pdf { border-right: 1.5px solid var(--rule, #d9d1bf); padding: 22px; overflow: hidden; }
-        .l-demo-pdf-hdr { font-family: var(--font-mono, monospace); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint, #8a8378); border-bottom: 1px solid var(--rule, #d9d1bf); padding-bottom: 10px; margin-bottom: 14px; }
-        .accent { color: var(--accent, #b8552d); }
-        .l-pdf-para { font-size: 12.5px; color: var(--ink-soft, #4a443d); line-height: 1.7; margin-bottom: 13px; }
-        .l-pdf-para mark { background: var(--highlight, #f5e6a8); padding: 0 2px; border-radius: 1px; }
-        .l-pdf-pill { display: inline-block; font-family: var(--font-mono, monospace); font-size: 9px; border: 1.5px solid var(--accent, #b8552d); color: var(--accent, #b8552d); padding: 1px 5px; border-radius: 2px; margin-left: 2px; vertical-align: middle; cursor: default; }
-        .l-demo-chat { display: flex; flex-direction: column; padding: 18px; }
-        .l-chat-msgs { flex: 1; display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; min-height: 260px; max-height: 300px; overflow-y: auto; }
-        .l-chat-msg { max-width: 87%; padding: 10px 13px; border-radius: 3px; font-size: 13px; line-height: 1.6; }
-        .l-chat-user { background: var(--ink, #1a1814); color: var(--paper, #faf6ef); align-self: flex-end; border-radius: 3px 3px 0 3px; }
-        .l-chat-ai { background: var(--paper-3, #ede5d3); border: 1px solid var(--rule, #d9d1bf); align-self: flex-start; border-radius: 3px 3px 3px 0; color: var(--ink-soft, #4a443d); }
-        .l-chat-cite { font-family: var(--font-mono, monospace); font-size: 10px; color: var(--accent, #b8552d); margin-top: 6px; border-top: 1px solid var(--rule, #d9d1bf); padding-top: 6px; }
-        .l-chat-typing { display: flex; align-items: center; gap: 5px; }
-        .l-dot { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint, #8a8378); animation: l-typing .9s infinite ease-in-out; }
-        .l-dot:nth-child(2) { animation-delay: .15s; } .l-dot:nth-child(3) { animation-delay: .3s; }
-        @keyframes l-typing { 0%,80%,100%{transform:scale(1);opacity:.5} 40%{transform:scale(1.3);opacity:1} }
-        .l-chat-input-row { display: flex; gap: 8px; align-items: center; }
-        .l-chat-input { flex: 1; border: 1.5px solid var(--rule, #d9d1bf); background: var(--paper, #faf6ef); padding: 9px 12px; font-family: inherit; font-size: 13px; border-radius: 3px; outline: none; transition: border-color .15s; color: var(--ink, #1a1814); }
-        .l-chat-input:focus { border-color: var(--accent, #b8552d); }
-        .l-chat-send { width: 36px; height: 36px; background: var(--ink, #1a1814); color: var(--paper, #faf6ef); border: none; border-radius: 3px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .15s; flex-shrink: 0; }
-        .l-chat-send:hover:not(:disabled) { background: var(--accent, #b8552d); }
-        .l-chat-send:disabled { opacity: .5; cursor: default; }
-        .l-chat-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-        .l-chip { font-family: var(--font-mono, monospace); font-size: 10px; border: 1px solid var(--rule, #d9d1bf); padding: 4px 8px; border-radius: 2px; color: var(--ink-soft, #4a443d); cursor: pointer; background: none; transition: border-color .15s, color .15s; text-transform: uppercase; letter-spacing: .05em; }
-        .l-chip:hover:not(:disabled) { border-color: var(--accent, #b8552d); color: var(--accent, #b8552d); }
-        .l-chip:disabled { opacity: .5; cursor: default; }
-        @media (max-width: 680px) { .l-demo-panels { grid-template-columns: 1fr; } .l-demo-pdf { border-right: none; border-bottom: 1.5px solid var(--rule, #d9d1bf); } }
+      <style>{`
+        @keyframes demo-bounce {
+          0%,80%,100%{transform:scale(1);opacity:.5}
+          40%{transform:scale(1.3);opacity:1}
+        }
       `}</style>
     </div>
   );
 }
+
+const S: Record<string, React.CSSProperties> = {
+  browser: {
+    background: "#ffffff",
+    border: "1px solid rgba(0,0,0,0.1)",
+    boxShadow: "0 20px 60px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  chrome: {
+    background: "#f5f5f5",
+    borderBottom: "1px solid rgba(0,0,0,0.08)",
+    padding: "10px 16px",
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  },
+  dots: { display: "flex", gap: 5 },
+  dot: { width: 10, height: 10, borderRadius: "50%", display: "block" },
+  url: {
+    flex: 1,
+    background: "#ffffff",
+    border: "1px solid rgba(0,0,0,0.08)",
+    borderRadius: 6,
+    padding: "4px 12px",
+    fontFamily: "ui-monospace, monospace",
+    fontSize: 11,
+    color: "#999",
+    textAlign: "center" as const,
+  },
+  panels: { display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: 460 },
+  pdfPanel: {
+    borderRight: "1px solid rgba(0,0,0,0.08)",
+    padding: "20px 22px",
+    overflow: "hidden",
+    background: "#fafafa",
+  },
+  pdfHdr: {
+    fontFamily: "ui-monospace, monospace",
+    fontSize: 10,
+    letterSpacing: ".1em",
+    textTransform: "uppercase" as const,
+    color: "#999",
+    borderBottom: "1px solid rgba(0,0,0,0.08)",
+    paddingBottom: 10,
+    marginBottom: 14,
+  },
+  pdfPara: {
+    fontSize: 12.5,
+    color: "#444",
+    lineHeight: 1.7,
+    marginBottom: 13,
+  },
+  mark: {
+    background: "rgba(16,163,127,.12)",
+    padding: "0 2px",
+    borderRadius: 2,
+    color: "#0d8c6e",
+    fontWeight: 600,
+  },
+  pill: {
+    display: "inline-block",
+    fontFamily: "ui-monospace, monospace",
+    fontSize: 9,
+    border: "1.5px solid #10A37F",
+    color: "#10A37F",
+    padding: "1px 5px",
+    borderRadius: 4,
+    marginLeft: 2,
+    verticalAlign: "middle" as const,
+  },
+  chatPanel: {
+    display: "flex",
+    flexDirection: "column" as const,
+    background: "#ffffff",
+    padding: 18,
+  },
+  msgs: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 12,
+    marginBottom: 14,
+    minHeight: 260,
+    maxHeight: 300,
+    overflowY: "auto" as const,
+  },
+  msgUser: {
+    alignSelf: "flex-end" as const,
+    background: "#111",
+    color: "#fff",
+    padding: "9px 13px",
+    borderRadius: "12px 12px 3px 12px",
+    fontSize: 13,
+    lineHeight: 1.5,
+    maxWidth: "86%",
+  },
+  msgAiWrap: {
+    alignSelf: "flex-start" as const,
+    maxWidth: "92%",
+  },
+  aiLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: ".06em",
+    textTransform: "uppercase" as const,
+    color: "#10A37F",
+    marginBottom: 4,
+  },
+  aiDot: {
+    width: 6,
+    height: 6,
+    borderRadius: "50%",
+    background: "#10A37F",
+    display: "inline-block",
+  },
+  msgAi: {
+    background: "#f5f5f5",
+    border: "1px solid rgba(0,0,0,0.07)",
+    padding: "10px 13px",
+    borderRadius: "3px 12px 12px 12px",
+    fontSize: 13,
+    lineHeight: 1.65,
+    color: "#333",
+  },
+  cite: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 5,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTop: "1px solid rgba(0,0,0,0.08)",
+    fontFamily: "ui-monospace, monospace",
+    fontSize: 10,
+    color: "#0d8c6e",
+  },
+  typingRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 4,
+    padding: "10px 13px",
+    background: "#f5f5f5",
+    border: "1px solid rgba(0,0,0,0.07)",
+    borderRadius: "3px 12px 12px 12px",
+    alignSelf: "flex-start" as const,
+  },
+  typingDot: {
+    display: "block",
+    width: 6,
+    height: 6,
+    borderRadius: "50%",
+    background: "#999",
+    animation: "demo-bounce .9s infinite ease-in-out",
+  },
+  inputRow: { display: "flex", gap: 8, alignItems: "center" },
+  input: {
+    flex: 1,
+    border: "1.5px solid rgba(0,0,0,0.1)",
+    background: "#f9f9f9",
+    padding: "8px 12px",
+    fontFamily: "inherit",
+    fontSize: 13,
+    borderRadius: 8,
+    outline: "none",
+    color: "#111",
+  },
+  sendBtn: {
+    width: 34,
+    height: 34,
+    background: "#111",
+    color: "#fff",
+    border: "none",
+    borderRadius: 8,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    flexShrink: 0,
+    transition: "background .15s",
+  },
+  sendBtnDisabled: { opacity: 0.4, cursor: "default" },
+  chips: { display: "flex", gap: 6, flexWrap: "wrap" as const, marginTop: 10 },
+  chip: {
+    fontFamily: "ui-monospace, monospace",
+    fontSize: 10,
+    border: "1px solid rgba(0,0,0,0.1)",
+    padding: "4px 9px",
+    borderRadius: 20,
+    color: "#666",
+    cursor: "pointer",
+    background: "none",
+    transition: "border-color .15s, color .15s",
+    textTransform: "uppercase" as const,
+    letterSpacing: ".05em",
+  },
+};

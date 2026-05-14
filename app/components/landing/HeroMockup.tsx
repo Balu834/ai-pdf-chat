@@ -110,7 +110,7 @@ export default function HeroMockup() {
         transition={{ duration: 0.6, delay: 1.2, ease }}
       >
         <div className="hm-avatars">
-          {["#c96b36","#6366f1","#10b981","#f59e0b"].map((c, i) => (
+          {["#10A37F","#6366f1","#0d8c6e","#f59e0b"].map((c, i) => (
             <div key={i} className="hm-avatar" style={{ background: c, zIndex: 4 - i }} />
           ))}
         </div>

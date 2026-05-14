@@ -77,16 +77,26 @@ export async function GET(request: Request) {
 
     try {
       // ── 1. Onboarding: signed up > 1h ago, 0 documents uploaded ──────────
-      const { count: docCount } = await getAdminClient()
+      const { count: docCount, error: docCountErr } = await getAdminClient()
         .from("documents")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user_id);
 
-      const { data: planRow } = await getAdminClient()
+      if (docCountErr) {
+        stats.errors.push(`${user_id}: doc count failed — ${docCountErr.message}`);
+        continue;
+      }
+
+      const { data: planRow, error: planRowErr } = await getAdminClient()
         .from("user_plans")
         .select("updated_at")
         .eq("user_id", user_id)
         .maybeSingle();
+
+      if (planRowErr) {
+        stats.errors.push(`${user_id}: plan row read failed — ${planRowErr.message}`);
+        continue;
+      }
 
       const signedUpOver1hAgo =
         planRow?.updated_at && new Date(planRow.updated_at) < new Date(cutoff1h);
@@ -106,11 +116,16 @@ export async function GET(request: Request) {
       }
 
       // ── 2. Activation: has docs but 0 questions ───────────────────────────
-      const { data: statsRow } = await getAdminClient()
+      const { data: statsRow, error: statsRowErr } = await getAdminClient()
         .from("user_stats")
         .select("total_questions")
         .eq("user_id", user_id)
         .maybeSingle();
+
+      if (statsRowErr) {
+        stats.errors.push(`${user_id}: stats read failed — ${statsRowErr.message}`);
+        continue;
+      }
 
       if ((docCount ?? 0) > 0 && (statsRow?.total_questions ?? 0) === 0) {
         const { data: firstDoc } = await getAdminClient()

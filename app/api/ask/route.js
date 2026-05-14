@@ -1,42 +1,21 @@
+/**
+ * POST /api/ask — DEPRECATED STUB
+ *
+ * The original implementation used fs.readFileSync(filePath) with a
+ * client-supplied path — a path-traversal vulnerability that could expose
+ * any file on the server.
+ *
+ * All PDF Q&A now goes through /api/chat (Supabase Storage + OpenAI).
+ * This stub exists to give callers a clear migration error instead of a crash.
+ */
 import { NextResponse } from "next/server";
-import fs from "fs";
-import pdfParse from "pdf-parse";
 
-export async function POST(req) {
-  try {
-    const body = await req.json();
-
-    const { question, filePath } = body;
-
-    // ❌ SAFETY CHECK
-    if (!filePath) {
-      return NextResponse.json(
-        { error: "No file uploaded yet" },
-        { status: 400 }
-      );
-    }
-
-    // ✅ READ PDF
-    const dataBuffer = fs.readFileSync(filePath);
-
-    // ✅ EXTRACT TEXT
-    const pdfData = await pdfParse(dataBuffer);
-
-    const text = pdfData.text;
-
-    // ✅ SIMPLE ANSWER (NO OPENAI YET)
-    const answer = text.slice(0, 1000);
-
-    return NextResponse.json({
-      answer,
-    });
-
-  } catch (error) {
-    console.error("ASK API ERROR:", error);
-
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      error:      "This endpoint has been removed.",
+      migration:  "Use POST /api/chat with { documentId, question } instead.",
+    },
+    { status: 410 } // 410 Gone — intentionally removed
+  );
 }

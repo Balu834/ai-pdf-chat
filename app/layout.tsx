@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Fraunces, JetBrains_Mono, Caveat, Geist, Playfair_Display } from "next/font/google";
+import { Inter, Fraunces, JetBrains_Mono, Caveat, Geist } from "next/font/google";
 import { Suspense } from "react";
 import Script from "next/script";
 import "./globals.css";
@@ -45,13 +45,6 @@ const caveat = Caveat({
   weight: ["400", "600"],
 });
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
-});
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app";
 
@@ -128,7 +121,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${fraunces.variable} ${geist.variable} ${jetbrainsMono.variable} ${caveat.variable} ${playfair.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${fraunces.variable} ${geist.variable} ${jetbrainsMono.variable} ${caveat.variable}`}>
       <body suppressHydrationWarning>
         {/* ── Meta Pixel noscript fallback (JS-disabled users) ────────── */}
         {FB_PIXEL_ID && (

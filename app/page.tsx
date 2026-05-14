@@ -99,7 +99,7 @@ const TESTIMONIALS = [
     name: "Priya Sharma",
     role: "Chartered Accountant · Mumbai",
     initials: "PS",
-    color: "#c96b36",
+    color: "#10A37F",
     featured: true,
   },
   {
@@ -165,7 +165,7 @@ export default function Page() {
             </div>
             <div className="lv2-hero-trust">
               <div className="lv2-hero-avatars">
-                {["#c96b36","#6366f1","#10b981","#f59e0b"].map((c, i) => (
+                {["#10A37F","#6366f1","#0d8c6e","#f59e0b"].map((c, i) => (
                   <div
                     key={i}
                     className="lv2-hero-av"

@@ -3,6 +3,11 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  webpack(config) {
+    // pdf.js needs canvas — alias to false to avoid SSR errors
+    config.resolve.alias.canvas = false;
+    return config;
+  },
   async headers() {
     return [
       {
@@ -15,8 +20,8 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value: [
-              // Service workers
-              "worker-src 'self'",
+              // Service workers + pdf.js workers (blob: from webpack bundling)
+              "worker-src 'self' blob:",
 
               // Media (TTS audio, blob: URLs)
               "media-src 'self' blob:",

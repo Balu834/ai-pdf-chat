@@ -128,15 +128,14 @@ export async function POST(req) {
     const fileUrl = urlData.publicUrl;
 
     // ── DB record (atomic limit check + insert to prevent race conditions) ──
-    const pdfLimit = limitCheck.isPro ? 2147483647 : LIMITS.free.pdfs;
+    // p_limit intentionally omitted — the DB function reads the plan itself.
     const { data: docId, error: dbError } = await getAdminClient().rpc(
       "insert_document_if_under_limit",
       {
         p_user_id:   user.id,
         p_file_name: file.name,
         p_file_url:  fileUrl,
-        p_file_size: file.size,
-        p_limit:     pdfLimit,
+        p_file_size: Math.min(file.size, 2_147_483_647),
       }
     );
 

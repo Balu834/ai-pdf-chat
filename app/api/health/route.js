@@ -1,21 +1,16 @@
 /**
  * GET /api/health
  *
- * Comprehensive health check. Returns 200 if all critical services are up,
- * 503 if any required service is degraded.
+ * Tiered health check:
+ *   - Public  (no auth): { status, ts } — 200 or 503, nothing sensitive
+ *   - Private (Bearer CRON_SECRET): full service status, env-var audit, latencies
  *
- * Checks:
- *   - Supabase DB (lightweight query to system_error_logs)
- *   - Supabase Auth (auth.getUser with a dummy call)
- *   - OpenAI API key present (ping only when HEALTH_DEEP=1)
- *   - Telegram bot reachable (getMe)
- *   - Discord webhook env var set
+ * Checks (private only):
+ *   - Supabase DB connection + latency
+ *   - Telegram bot reachability
+ *   - Discord webhook env var
+ *   - OpenAI key present (API ping only when HEALTH_DEEP=1)
  *   - Required env vars
- *
- * Use from:
- *   - Vercel cron: GET /api/health every 5 min
- *   - UptimeRobot / BetterStack monitor
- *   - Deployment verification script
  */
 
 import { NextResponse } from "next/server";
@@ -38,8 +33,9 @@ async function checkSupabase() {
   try {
     const admin = getAdminClient();
     const start = Date.now();
+    // Use the production table; fall back to any accessible table
     const { error } = await admin
-      .from("system_error_logs")
+      .from("production_error_logs")
       .select("id")
       .limit(1);
     return {
@@ -57,9 +53,13 @@ async function checkTelegram() {
   if (!token) return { ok: false, error: "TELEGRAM_BOT_TOKEN not set" };
   try {
     const start = Date.now();
-    const r = await fetch(`https://api.telegram.org/bot${token}/getMe`, {
-      signal: AbortSignal.timeout(5000),
-    });
+    const ctrl  = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5_000);
+    const r = await fetch(
+      `https://api.telegram.org/bot${token}/getMe`,
+      { signal: ctrl.signal }
+    );
+    clearTimeout(timer);
     const body = await r.json().catch(() => ({}));
     return {
       ok:       r.ok && body.ok,
@@ -75,16 +75,18 @@ async function checkTelegram() {
 async function checkOpenAI() {
   const key = process.env.OPENAI_API_KEY;
   if (!key) return { ok: false, error: "OPENAI_API_KEY not set" };
-  // Only do a real ping when HEALTH_DEEP=1 to avoid unnecessary API cost
   if (process.env.HEALTH_DEEP !== "1") {
     return { ok: true, note: "key present (deep check skipped)" };
   }
   try {
     const start = Date.now();
+    const ctrl  = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8_000);
     const r = await fetch("https://api.openai.com/v1/models", {
       headers: { Authorization: `Bearer ${key}` },
-      signal:  AbortSignal.timeout(8000),
+      signal:  ctrl.signal,
     });
+    clearTimeout(timer);
     return {
       ok:      r.ok,
       latency: Date.now() - start,
@@ -95,24 +97,37 @@ async function checkOpenAI() {
   }
 }
 
-export async function GET(request) {
-  const url = new URL(request.url);
-
-  // Allow bypassing the auth check for internal Vercel cron calls
+function isAuthed(request) {
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const auth = request.headers.get("authorization");
-    // Public health check (no auth needed) — just check core services
-    // Cron can pass Bearer <CRON_SECRET> for the full check
-    const isCron = auth === `Bearer ${cronSecret}`;
-    if (!isCron && url.searchParams.get("key") !== cronSecret) {
-      // Public endpoint — return minimal status
-    }
-  }
+  if (!cronSecret) return false;
+  const auth  = request.headers.get("authorization");
+  const param = new URL(request.url).searchParams.get("key");
+  return auth === `Bearer ${cronSecret}` || param === cronSecret;
+}
 
+export async function GET(request) {
   const start = Date.now();
 
-  // Run checks in parallel
+  // ── Public response — safe minimal status ────────────────────────────────
+  if (!isAuthed(request)) {
+    // Perform a lightweight DB ping only — don't reveal service details
+    let dbOk = false;
+    try {
+      const { error } = await getAdminClient()
+        .from("production_error_logs")
+        .select("id")
+        .limit(1);
+      dbOk = !error;
+    } catch { /* */ }
+
+    const ok = dbOk;
+    return NextResponse.json(
+      { status: ok ? "ok" : "degraded", ts: new Date().toISOString() },
+      { status: ok ? 200 : 503 }
+    );
+  }
+
+  // ── Private (authenticated) — full diagnostics ───────────────────────────
   const [supabase, telegram, openai] = await Promise.all([
     checkSupabase(),
     checkTelegram(),
@@ -120,38 +135,28 @@ export async function GET(request) {
   ]);
 
   const discord = {
-    ok:    !!process.env.DISCORD_WEBHOOK_URL,
+    ok:    !!(process.env.DISCORD_WEBHOOK_URL &&
+              process.env.DISCORD_WEBHOOK_URL !== "ADD_MY_WEBHOOK_URL"),
     error: process.env.DISCORD_WEBHOOK_URL ? null : "DISCORD_WEBHOOK_URL not set",
   };
 
   const missingRequired = REQUIRED_ENV.filter((k) => !process.env[k]);
   const missingAlerts   = ALERT_ENV.filter((k) => !process.env[k]);
 
-  const allOk = supabase.ok && missingRequired.length === 0;
-  const status = allOk ? 200 : 503;
+  const allOk  = supabase.ok && missingRequired.length === 0;
 
-  const body = {
-    status:   allOk ? "healthy" : "degraded",
-    ts:       new Date().toISOString(),
-    env:      process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown",
-    latency:  Date.now() - start,
-    services: {
-      supabase,
-      telegram,
-      openai,
-      discord,
-    },
-    env_vars: {
-      required: {
-        ok:      missingRequired.length === 0,
-        missing: missingRequired,
-      },
-      alerts: {
-        ok:      missingAlerts.length === 0,
-        missing: missingAlerts,
+  return NextResponse.json(
+    {
+      status:   allOk ? "healthy" : "degraded",
+      ts:       new Date().toISOString(),
+      env:      process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown",
+      latency:  Date.now() - start,
+      services: { supabase, telegram, openai, discord },
+      env_vars: {
+        required: { ok: missingRequired.length === 0, missing: missingRequired },
+        alerts:   { ok: missingAlerts.length   === 0, missing: missingAlerts   },
       },
     },
-  };
-
-  return NextResponse.json(body, { status });
+    { status: allOk ? 200 : 503 }
+  );
 }
