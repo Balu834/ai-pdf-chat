@@ -3,10 +3,11 @@ const nextConfig = {
   webpack(config, { isServer }) {
     // pdf.js needs canvas — alias to false to avoid SSR errors
     config.resolve.alias.canvas = false;
-    // Ensure all Node.js built-ins (crypto, fs, etc.) are external in server
-    // bundles, and silently ignored in client/edge bundles.
     if (isServer) {
-      config.externalsPresets = { ...config.externalsPresets, node: true };
+      // Externalize Node.js built-in 'crypto' used in instrumentation.ts /
+      // lib/logger — don't bundle it, rely on the Node.js runtime.
+      const existing = Array.isArray(config.externals) ? config.externals : [config.externals].filter(Boolean);
+      config.externals = [...existing, "crypto"];
     } else {
       config.resolve.fallback = { ...config.resolve.fallback, crypto: false };
     }
