@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    instrumentationHook: true,
-  },
   webpack(config) {
     // pdf.js needs canvas — alias to false to avoid SSR errors
     config.resolve.alias.canvas = false;
