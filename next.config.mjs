@@ -1,11 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["crypto"],
   webpack(config, { isServer }) {
     // pdf.js needs canvas — alias to false to avoid SSR errors
     config.resolve.alias.canvas = false;
-    // crypto is a Node.js built-in; prevent webpack from trying to bundle it
-    if (!isServer) {
+    // Ensure all Node.js built-ins (crypto, fs, etc.) are external in server
+    // bundles, and silently ignored in client/edge bundles.
+    if (isServer) {
+      config.externalsPresets = { ...config.externalsPresets, node: true };
+    } else {
       config.resolve.fallback = { ...config.resolve.fallback, crypto: false };
     }
     return config;
