@@ -4,10 +4,10 @@ const COLS = [
   {
     head: "Product",
     links: [
-      { label: "Features",     href: "#features"    },
-      { label: "How it works", href: "#how-it-works" },
-      { label: "Pricing",      href: "#pricing"      },
-      { label: "Changelog",    href: "#"             },
+      { label: "Features", href: "#features" },
+      { label: "Live demo", href: "#demo"     },
+      { label: "Pricing",  href: "#pricing"   },
+      { label: "Changelog", href: "#"         },
     ],
   },
   {
@@ -22,10 +22,10 @@ const COLS = [
   {
     head: "Company",
     links: [
-      { label: "About",    href: "#" },
-      { label: "Blog",     href: "#" },
-      { label: "Careers",  href: "#" },
-      { label: "Contact",  href: "#" },
+      { label: "About",   href: "#" },
+      { label: "Blog",    href: "#" },
+      { label: "Careers", href: "#" },
+      { label: "Contact", href: "#" },
     ],
   },
 ];

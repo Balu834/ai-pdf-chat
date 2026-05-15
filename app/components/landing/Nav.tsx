@@ -4,10 +4,9 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
 const LINKS = [
-  { label: "Features",     href: "#features"    },
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Pricing",      href: "#pricing"      },
-  { label: "FAQ",          href: "#faq"          },
+  { label: "Features", href: "#features" },
+  { label: "Demo",     href: "#demo"     },
+  { label: "Pricing",  href: "#pricing"  },
 ];
 
 export default function Nav() {
@@ -18,7 +17,7 @@ export default function Nav() {
         <div className="lp-nav-inner">
           <Link href="/" className="lp-nav-brand">
             <span className="lp-nav-mark" aria-hidden>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                 <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
                 <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
                 <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
@@ -36,7 +35,7 @@ export default function Nav() {
 
           <div className="lp-nav-actions">
             <Link href="/login" className="lp-btn-ghost">Sign in</Link>
-            <Link href="/login" className="lp-btn-green">Get started →</Link>
+            <Link href="/login" className="lp-btn-green">Start free →</Link>
           </div>
 
           <button
@@ -63,7 +62,7 @@ export default function Nav() {
           <div className="lp-mobile-foot">
             <Link href="/login" className="lp-btn-ghost" style={{ textAlign: "center" }}>Sign in</Link>
             <Link href="/login" className="lp-btn-green lp-btn-lg" style={{ justifyContent: "center" }}>
-              Get started free
+              Start free
             </Link>
           </div>
         </div>

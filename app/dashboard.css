@@ -82,6 +82,13 @@
 .ds-nav-item:hover { background: var(--bg-hover); color: var(--text); }
 .ds-nav-item.is-active {
   background: var(--brand-bg); color: var(--accent); font-weight: 600;
+  position: relative;
+}
+.ds-nav-item.is-active::before {
+  content: '';
+  position: absolute; left: 0; top: 5px; bottom: 5px;
+  width: 3px; border-radius: 0 2px 2px 0;
+  background: var(--accent);
 }
 .ds-nav-badge {
   margin-left: auto; font-size: 10.5px; font-weight: 700;

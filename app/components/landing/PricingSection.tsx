@@ -1,137 +1,115 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 
 const PLANS = [
   {
-    name:     "Free",
-    monthly:  0,
-    annual:   0,
-    desc:     "For individuals getting started",
-    cta:      "Get started free",
-    href:     "/dashboard",
-    featured: false,
-    features: [
-      "3 PDF uploads (lifetime)",
-      "5 questions per month",
-      "Cited answers",
-      "Standard processing",
-      "Community support",
+    name: "Free",
+    price: "0",
+    per: "forever",
+    desc: "Perfect for trying Intellixy on personal documents.",
+    feats: [
+      "3 PDFs / month",
+      "Up to 50 pages per PDF",
+      "5 questions per document",
+      "Basic citation links",
+      "1 workspace",
     ],
+    cta: { label: "Get started free", href: "/login", style: "outline" },
   },
   {
-    name:     "Pro",
-    monthly:  249,
-    annual:   199,
-    desc:     "For professionals who read daily",
-    cta:      "Start free trial",
-    href:     "/login",
+    name: "Pro",
+    price: "12",
+    per: "/ month",
+    desc: "For professionals who work with documents daily.",
+    badge: "Most popular",
     featured: true,
-    features: [
-      "Unlimited PDF uploads",
+    feats: [
+      "Unlimited PDFs",
+      "Up to 500 pages per PDF",
       "Unlimited questions",
-      "Priority processing",
-      "Multi-document chat",
-      "Export to Notion & Docs",
-      "API access",
+      "Cited answers + page jump",
+      "3 workspaces",
+      "OCR for scanned docs",
+      "Priority support",
     ],
+    cta: { label: "Start Pro free", href: "/login", style: "filled" },
   },
   {
-    name:     "Enterprise",
-    monthly:  null,
-    annual:   null,
-    desc:     "For teams and compliance workflows",
-    cta:      "Contact sales",
-    href:     "mailto:sales@intellixy.com",
-    featured: false,
-    features: [
+    name: "Team",
+    price: "49",
+    per: "/ month",
+    desc: "For teams that need collaboration and advanced controls.",
+    feats: [
       "Everything in Pro",
-      "On-premise deployment",
-      "SSO / SAML",
+      "5 team members",
+      "Shared workspaces",
+      "Admin controls",
       "Audit logs",
-      "SLA guarantee",
+      "SSO / SAML",
       "Dedicated support",
     ],
+    cta: { label: "Contact sales", href: "mailto:hello@intellixy.com", style: "outline" },
   },
 ];
 
 const card = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 16 },
   show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
 export default function PricingSection() {
-  const [annual, setAnnual] = useState(false);
-
   return (
     <section className="lp-pricing-section" id="pricing">
       <div className="lp-pricing-inner">
         <motion.div
           className="lp-section-head"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
           <p className="lp-section-eyebrow">Pricing</p>
           <h2 className="lp-section-title">Simple, transparent pricing</h2>
-          <p className="lp-section-sub">Start free. Upgrade when you need more.</p>
+          <p className="lp-section-sub">
+            Start free. Upgrade when you&apos;re ready. No hidden fees.
+          </p>
         </motion.div>
 
-        {/* Toggle */}
-        <div className="lp-pricing-toggle">
-          <span className={`lp-pricing-label${!annual ? " active" : ""}`}>Monthly</span>
-          <button
-            className={`lp-pricing-toggle-track${annual ? " on" : ""}`}
-            onClick={() => setAnnual(a => !a)}
-            aria-label={annual ? "Switch to monthly" : "Switch to annual billing"}
-          >
-            <span className="lp-pricing-toggle-thumb" />
-          </button>
-          <span className={`lp-pricing-label${annual ? " active" : ""}`}>
-            Annual <span className="lp-pricing-save">Save 20%</span>
-          </span>
-        </div>
-
-        {/* Cards */}
         <motion.div
           className="lp-pricing-grid"
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, margin: "-60px" }}
+          viewport={{ once: true, margin: "-40px" }}
         >
-          {PLANS.map(plan => (
+          {PLANS.map(p => (
             <motion.div
-              key={plan.name}
-              className={`lp-price-card${plan.featured ? " featured" : ""}`}
+              key={p.name}
+              className={`lp-plan${p.featured ? " featured" : ""}`}
               variants={card}
             >
-              {plan.featured && <div className="lp-price-popular">Most popular</div>}
-
-              <div className="lp-price-name">{plan.name}</div>
-              <div className="lp-price-amount">
-                {plan.monthly !== null ? (
-                  <><sup>₹</sup>{annual ? plan.annual : plan.monthly}</>
-                ) : (
-                  "Custom"
-                )}
+              {p.badge && <div className="lp-plan-badge">{p.badge}</div>}
+              <div className="lp-plan-name">{p.name}</div>
+              <div className="lp-plan-price">
+                <span className="lp-plan-price-sup">$</span>
+                {p.price}
               </div>
-              <div className="lp-price-period">
-                {plan.monthly !== null ? "per month" : "talk to us"}
-              </div>
-
-              <ul className="lp-price-features">
-                {plan.features.map(f => (
-                  <li key={f} className="lp-price-feat">
-                    <span className="lp-price-check" aria-hidden>✓</span>
+              <div className="lp-plan-per">{p.per}</div>
+              <div className="lp-plan-desc">{p.desc}</div>
+              <hr className="lp-plan-divider" />
+              <ul className="lp-plan-feats">
+                {p.feats.map(f => (
+                  <li key={f} className="lp-plan-feat">
+                    <Check size={12} strokeWidth={2.5} className="lp-plan-check" />
                     {f}
                   </li>
                 ))}
               </ul>
-
-              <Link href={plan.href} className="lp-price-btn">{plan.cta}</Link>
+              <Link href={p.cta.href} className={`lp-plan-cta ${p.cta.style}`}>
+                {p.cta.label}
+              </Link>
             </motion.div>
           ))}
         </motion.div>
