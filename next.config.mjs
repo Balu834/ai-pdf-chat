@@ -1,8 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack(config) {
+  webpack(config, { isServer }) {
     // pdf.js needs canvas — alias to false to avoid SSR errors
     config.resolve.alias.canvas = false;
+    // crypto is a Node.js built-in used in server-only code (instrumentation,
+    // logger). Tell webpack to skip it in client/edge bundles.
+    if (!isServer) {
+      config.resolve.fallback = { ...config.resolve.fallback, crypto: false };
+    }
     return config;
   },
   async headers() {
