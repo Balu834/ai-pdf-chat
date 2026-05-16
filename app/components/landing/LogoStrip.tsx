@@ -13,7 +13,7 @@ const LOGOS = [
   {
     name: "ACME",
     icon: (
-      <svg width="14" height="13" viewBox="0 0 24 22" fill="none">
+      <svg width="15" height="14" viewBox="0 0 24 22" fill="none">
         <path d="M12 2 L23 21 H1 Z" fill="currentColor" />
       </svg>
     ),
@@ -30,7 +30,7 @@ const LOGOS = [
   {
     name: "CloudSync",
     icon: (
-      <svg width="17" height="14" viewBox="0 0 26 21" fill="none">
+      <svg width="18" height="14" viewBox="0 0 26 21" fill="none">
         <path d="M19.5 8.5A6.5 6.5 0 0 0 7 9v.5A5 5 0 1 0 7 19h12a4.5 4.5 0 0 0 .5-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       </svg>
     ),
@@ -38,7 +38,7 @@ const LOGOS = [
   {
     name: "Vertex",
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <path d="M3 5 L12 20 L21 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M7 12 L17 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
       </svg>
@@ -47,7 +47,7 @@ const LOGOS = [
   {
     name: "Novus",
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <path d="M4 20 V4 L12 16 L20 4 V20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
@@ -55,7 +55,7 @@ const LOGOS = [
   {
     name: "DataHive",
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <circle cx="5"  cy="5"  r="2" fill="currentColor" />
         <circle cx="12" cy="5"  r="2" fill="currentColor" />
         <circle cx="19" cy="5"  r="2" fill="currentColor" />
@@ -93,10 +93,12 @@ export default function LogoStrip() {
             return (
               <motion.div key={s.label} className="lp-stat-card" variants={cardVariant}>
                 <div className="lp-stat-card-icon">
-                  <Icon size={17} strokeWidth={1.75} />
+                  <Icon size={20} strokeWidth={1.6} />
                 </div>
-                <div className="lp-stat-card-val">{s.val}</div>
-                <div className="lp-stat-card-label">{s.label}</div>
+                <div className="lp-stat-card-body">
+                  <div className="lp-stat-card-val">{s.val}</div>
+                  <div className="lp-stat-card-label">{s.label}</div>
+                </div>
               </motion.div>
             );
           })}

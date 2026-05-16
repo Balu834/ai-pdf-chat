@@ -99,9 +99,9 @@
 .lp-hero::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 90% 100% at 76% 50%, rgba(245,158,11,0.32) 0%, rgba(251,191,36,0.14) 38%, rgba(253,230,138,0.04) 58%, transparent 72%),
-    radial-gradient(ellipse 55% 65% at 98% 20%, rgba(253,230,138,0.24) 0%, transparent 55%),
-    radial-gradient(ellipse 45% 55% at 60% 92%, rgba(245,158,11,0.10) 0%, transparent 48%);
+    radial-gradient(ellipse 82% 96% at 74% 52%, rgba(245,158,11,0.42) 0%, rgba(251,191,36,0.20) 32%, rgba(253,230,138,0.06) 55%, transparent 70%),
+    radial-gradient(ellipse 58% 68% at 98% 22%, rgba(253,230,138,0.32) 0%, transparent 50%),
+    radial-gradient(ellipse 48% 58% at 52% 88%, rgba(245,158,11,0.14) 0%, transparent 46%);
 }
 .lp-hero-glow { display: none; }
 .lp-hero-inner {
@@ -192,19 +192,16 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
 }
 
-/* Document Insights (top-left, small, dark) */
+/* Document Insights (top-left, white panel) */
 .lp-mp-insights {
-  top: 30px; left: 0; width: 136px; z-index: 8;
+  top: 30px; left: 0; width: 148px; z-index: 8;
   padding: 14px;
   animation: lp-float 5s ease-in-out infinite 0.3s;
 }
-.lp-mp-insights-hdr { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.38); margin-bottom: 10px; }
-.lp-mp-insights-val { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1; }
-.lp-mp-insights-sub { font-size: 10px; color: rgba(255,255,255,0.42); margin-top: 2px; margin-bottom: 10px; }
-.lp-mp-insights-bars { display: flex; align-items: flex-end; gap: 3px; height: 28px; }
-.lp-mp-insights-bar { width: 6px; border-radius: 2px 2px 0 0; }
-.lp-mp-insights-bar.hi { background: linear-gradient(to top, #F59E0B, #D97706); }
-.lp-mp-insights-bar.lo { background: rgba(245,158,11,0.22); }
+.lp-mp-insights-hdr { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9CA3AF; margin-bottom: 6px; }
+.lp-mp-insights-val { font-size: 24px; font-weight: 800; color: #F59E0B; letter-spacing: -1px; line-height: 1; }
+.lp-mp-insights-sub { font-size: 10px; color: #94A3B8; margin-top: 2px; margin-bottom: 4px; }
+.lp-mp-insights-bars { display: none; }
 
 /* Intellixy AI Chat (center, large, dark) */
 .lp-mp-chat {
@@ -791,9 +788,8 @@
 @media (max-width: 680px) { .lp-stats-grid { grid-template-columns: repeat(2, 1fr); } }
 .lp-stat-card {
   background: #FFFFFF; border: 1px solid #EDE9E0;
-  border-radius: 18px; padding: 24px 16px;
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  text-align: center;
+  border-radius: 20px; padding: 20px 22px;
+  display: flex; flex-direction: row; align-items: center; gap: 14px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   transition: all 0.22s;
 }
@@ -803,38 +799,41 @@
   transform: translateY(-2px);
 }
 .lp-stat-card-icon {
-  width: 42px; height: 42px; border-radius: 13px;
+  width: 48px; height: 48px; border-radius: 50%;
   background: rgba(245,158,11,0.10); color: #F59E0B;
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 2px;
+  flex-shrink: 0;
 }
+.lp-stat-card-body { display: flex; flex-direction: column; gap: 2px; }
 .lp-stat-card-val {
-  font-size: 30px; font-weight: 800; letter-spacing: -1.5px;
-  color: #0F172A; line-height: 1;
+  font-size: 26px; font-weight: 800; letter-spacing: -1px;
+  color: #D97706; line-height: 1;
 }
 .lp-stat-card-label {
-  font-size: 12.5px; color: #64748B; font-weight: 500; line-height: 1.4;
+  font-size: 12px; color: #64748B; font-weight: 500; line-height: 1.4;
 }
 
-/* Company logos */
+/* Company logos — single horizontal row */
 .lp-logos-row {
   max-width: 1120px; margin: 0 auto;
-  padding: 4px 24px 52px;
-  display: flex; flex-direction: column; align-items: center; gap: 18px;
+  padding: 0 24px 52px;
+  display: flex; flex-direction: row; align-items: center;
+  gap: 28px; flex-wrap: wrap;
 }
 .lp-logos-eyebrow {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.14em; color: #9CA3AF;
+  white-space: nowrap; flex-shrink: 0;
 }
 .lp-logos-list {
   display: flex; align-items: center; flex-wrap: wrap;
-  justify-content: center; gap: 6px 36px;
+  gap: 4px 28px; flex: 1;
 }
 .lp-logo-item {
-  display: flex; align-items: center; gap: 7px;
-  color: #9CA3AF; transition: color 0.15s; cursor: default;
+  display: flex; align-items: center; gap: 6px;
+  color: #94A3B8; transition: color 0.15s; cursor: default;
 }
-.lp-logo-item:hover { color: #6B7280; }
+.lp-logo-item:hover { color: #475569; }
 .lp-logo-icon { display: flex; align-items: center; }
 .lp-logo-name { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
 

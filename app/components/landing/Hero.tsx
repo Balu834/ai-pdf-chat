@@ -103,9 +103,9 @@ export default function Hero() {
         >
           <div className="lp-mp-wrap">
 
-            {/* Document Insights (top-left, small, dark) */}
+            {/* Document Insights (top-left, white panel) */}
             <motion.div
-              className="lp-mp-panel lp-mp-dark lp-mp-insights"
+              className="lp-mp-panel lp-mp-light lp-mp-insights"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5, duration: 0.4, ease }}
@@ -113,15 +113,16 @@ export default function Hero() {
               <div className="lp-mp-insights-hdr">Document Insights</div>
               <div className="lp-mp-insights-val">2.4M+</div>
               <div className="lp-mp-insights-sub">Docs analyzed</div>
-              <div className="lp-mp-insights-bars">
-                {BAR_HEIGHTS.map((h, i) => (
-                  <div
-                    key={i}
-                    className={`lp-mp-insights-bar ${i >= 5 ? "hi" : "lo"}`}
-                    style={{ height: `${h}px` }}
-                  />
-                ))}
-              </div>
+              <svg width="108" height="32" viewBox="0 0 108 32" fill="none" style={{marginTop: '6px', display: 'block'}}>
+                <defs>
+                  <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.28"/>
+                    <stop offset="100%" stopColor="#F59E0B" stopOpacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1" stroke="#F59E0B" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1 L108 32 L0 32Z" fill="url(#spark-grad)"/>
+              </svg>
             </motion.div>
 
             {/* Intellixy AI Chat (center, large, dark) */}
