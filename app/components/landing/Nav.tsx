@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown, Sun } from "lucide-react";
 
 const LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Demo",     href: "#demo"     },
-  { label: "Pricing",  href: "#pricing"  },
+  { label: "Features",  href: "#features", dropdown: true  },
+  { label: "Demo",      href: "#demo",     dropdown: false },
+  { label: "Pricing",   href: "#pricing",  dropdown: false },
+  { label: "Resources", href: "#",         dropdown: true  },
+  { label: "Company",   href: "#",         dropdown: true  },
 ];
 
 export default function Nav() {
@@ -29,11 +31,21 @@ export default function Nav() {
 
           <ul className="lp-nav-links" role="list">
             {LINKS.map(l => (
-              <li key={l.href}><a href={l.href}>{l.label}</a></li>
+              <li key={l.label}>
+                <a href={l.href} className="lp-nav-link">
+                  {l.label}
+                  {l.dropdown && (
+                    <ChevronDown size={12} strokeWidth={2.5} className="lp-nav-chevron" />
+                  )}
+                </a>
+              </li>
             ))}
           </ul>
 
           <div className="lp-nav-actions">
+            <button className="lp-nav-icon-btn" aria-label="Toggle theme">
+              <Sun size={15} strokeWidth={1.75} />
+            </button>
             <Link href="/login" className="lp-btn-ghost">Sign in</Link>
             <Link href="/login" className="lp-btn-green">Start free →</Link>
           </div>
@@ -55,7 +67,7 @@ export default function Nav() {
             <X size={22} />
           </button>
           {LINKS.map(l => (
-            <a key={l.href} href={l.href} className="lp-mobile-link" onClick={() => setOpen(false)}>
+            <a key={l.label} href={l.href} className="lp-mobile-link" onClick={() => setOpen(false)}>
               {l.label}
             </a>
           ))}

@@ -48,13 +48,15 @@ export default function Hero() {
           transition={{ duration: 0.55, ease }}
         >
           <div className="lp-hero-eyebrow">
-            <span className="lp-hero-eyebrow-dot" />
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+            </svg>
             AI Document Intelligence
           </div>
 
           <h1 className="lp-hero-h1">
             Stop reading.<br />
-            <span className="lp-hero-h1-accent">Start knowing.</span>
+            <span className="lp-hero-h1-accent">Start understanding.</span>
           </h1>
 
           <p className="lp-hero-sub">
@@ -66,6 +68,10 @@ export default function Hero() {
               Start for free <ArrowRight size={14} strokeWidth={2.5} />
             </Link>
             <a href="#demo" className="lp-hero-cta-ghost">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                <path d="M10 8l6 4-6 4V8z" fill="currentColor"/>
+              </svg>
               See live demo
             </a>
           </div>
