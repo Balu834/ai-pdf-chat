@@ -5,39 +5,39 @@
 
 /* ── ROOT SHELL ──────────────────────────────────────────────────────────── */
 .ds-dash {
-  /* ── Dark theme: scoped to dashboard only ───────────────────────────── */
-  --bg:             #030810;
-  --bg-secondary:   #060F1A;
-  --bg-hover:       rgba(255,255,255,0.06);
-  --border:         rgba(255,255,255,0.08);
-  --border-strong:  rgba(255,255,255,0.14);
-  --text:           #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-tertiary:  #64748B;
+  /* ── Light theme: white background ─────────────────────────────────── */
+  --bg:             #FFFFFF;
+  --bg-secondary:   #F9F9F9;
+  --bg-hover:       #F0F0F0;
+  --border:         #E5E5E5;
+  --border-strong:  #D4D4D4;
+  --text:           #0D0D0D;
+  --text-secondary: #5D5D5D;
+  --text-tertiary:  #8E8E8E;
   --accent:         #F59E0B;
   --accent-dark:    #D97706;
   --accent-fg:      #FFFFFF;
-  --accent-pale:    rgba(245,158,11,0.12);
-  --accent-glow:    rgba(245,158,11,0.18);
+  --accent-pale:    rgba(245,158,11,0.10);
+  --accent-glow:    rgba(245,158,11,0.15);
   --green:          #F59E0B;
-  --green-pale:     rgba(245,158,11,0.12);
+  --green-pale:     rgba(245,158,11,0.10);
   --brand:          #F59E0B;
   --brand-dark:     #D97706;
-  --brand-bg:       rgba(245,158,11,0.12);
-  --brand-ring:     rgba(245,158,11,0.28);
-  --brand-glow:     rgba(245,158,11,0.18);
-  --blue:           #60A5FA;
-  --blue-pale:      rgba(96,165,250,0.12);
+  --brand-bg:       rgba(245,158,11,0.10);
+  --brand-ring:     rgba(245,158,11,0.25);
+  --brand-glow:     rgba(245,158,11,0.15);
+  --blue:           #3B82F6;
+  --blue-pale:      rgba(59,130,246,0.10);
   --orange:         #F97316;
-  --orange-pale:    rgba(249,115,22,0.12);
-  --red:            #F87171;
-  --red-pale:       rgba(248,113,113,0.12);
-  --purple:         #A78BFA;
-  --purple-pale:    rgba(167,139,250,0.12);
-  --citation-bg:    rgba(245,158,11,0.15);
-  --sh-sm:          0 2px 8px  rgba(0,0,0,0.5);
-  --sh-md:          0 4px 20px rgba(0,0,0,0.6);
-  --sh-lg:          0 8px 40px rgba(0,0,0,0.7);
+  --orange-pale:    rgba(249,115,22,0.10);
+  --red:            #EF4444;
+  --red-pale:       rgba(239,68,68,0.10);
+  --purple:         #8B5CF6;
+  --purple-pale:    rgba(139,92,246,0.10);
+  --citation-bg:    rgba(245,158,11,0.12);
+  --sh-sm:          0 2px 8px  rgba(0,0,0,0.06);
+  --sh-md:          0 4px 20px rgba(0,0,0,0.08);
+  --sh-lg:          0 8px 40px rgba(0,0,0,0.10);
   /* ── Layout ─────────────────────────────────────────────────────────── */
   height: 100vh; height: 100dvh;
   display: flex; flex-direction: column;
