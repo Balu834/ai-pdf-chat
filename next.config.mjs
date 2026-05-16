@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {},
+  experimental: {
+    optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
+  },
   webpack(config, { isServer }) {
     // pdf.js needs canvas — alias to false to avoid SSR errors
     config.resolve.alias.canvas = false;
