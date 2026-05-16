@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {},
   webpack(config, { isServer }) {
     // pdf.js needs canvas — alias to false to avoid SSR errors
     config.resolve.alias.canvas = false;

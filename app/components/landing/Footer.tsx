@@ -64,7 +64,7 @@ export default function Footer() {
       </div>
 
       <div className="lp-footer-bottom">
-        <span>© {new Date().getFullYear()} Intellixy. All rights reserved.</span>
+        <span suppressHydrationWarning>© {new Date().getFullYear()} Intellixy. All rights reserved.</span>
         <span>
           <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Security</a>
         </span>

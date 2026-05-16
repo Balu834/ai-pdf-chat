@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import "./landing.css";
 import Nav             from "@/app/components/landing/Nav";
 import Hero            from "@/app/components/landing/Hero";
+import LogoStrip       from "@/app/components/landing/LogoStrip";
+import HowItWorks      from "@/app/components/landing/HowItWorks";
 import Features        from "@/app/components/landing/Features";
+import Testimonials    from "@/app/components/landing/Testimonials";
 import InteractiveDemo from "@/app/components/landing/InteractiveDemo";
 import Stats           from "@/app/components/landing/Stats";
 import PricingSection  from "@/app/components/landing/PricingSection";
@@ -20,8 +23,22 @@ export default function Page() {
     <div className="lp-page">
       <Nav />
       <main>
+        {/* 1. Hero — copy + preview */}
         <Hero />
+
+        {/* 2. Social proof — logo strip */}
+        <LogoStrip />
+
+        {/* 3. How it works — 3-step process */}
+        <HowItWorks />
+
+        {/* 4. Features — conversation card demos */}
         <Features />
+
+        {/* 5. Testimonials — user quotes */}
+        <Testimonials />
+
+        {/* 6. Live interactive demo */}
         <section className="lp-demo-section" id="demo">
           <div className="lp-demo-inner">
             <div className="lp-section-head">
@@ -34,8 +51,14 @@ export default function Page() {
             <InteractiveDemo />
           </div>
         </section>
+
+        {/* 7. Stats / metrics bar */}
         <Stats />
+
+        {/* 8. Pricing */}
         <PricingSection />
+
+        {/* 9. Final CTA */}
         <FinalCTA />
       </main>
       <Footer />

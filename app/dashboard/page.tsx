@@ -59,10 +59,12 @@ const CMD_ITEMS = [
   { section: "Navigate", icon: "⚙", label: "Settings",                    kbd: "⌘,", action: "settings" },
 ];
 
+/* Placeholder docs: created_at is a fixed ISO string to avoid SSR/client Date.now() divergence.
+   timeAgo() treats anything older than 1h as "Xh ago" so the labels below are deterministic. */
 const PLACEHOLDER_DOCS = [
-  { id: "p1", file_name: "sample.pdf",              file_url: "", created_at: new Date(Date.now() - 3600000).toISOString(),   pages: 12, questions: 2, isNew: true  },
-  { id: "p2", file_name: "Q3 Financial Report.pdf", file_url: "", created_at: new Date(Date.now() - 86400000).toISOString(),  pages: 42, questions: 7, isNew: false },
-  { id: "p3", file_name: "Research Notes — May.pdf",file_url: "", created_at: new Date(Date.now() - 259200000).toISOString(), pages: 8,  questions: 5, isNew: false },
+  { id: "p1", file_name: "sample.pdf",              file_url: "", created_at: "2000-01-01T00:00:00.000Z", timeLabel: "1h ago",    pages: 12, questions: 2, isNew: true  },
+  { id: "p2", file_name: "Q3 Financial Report.pdf", file_url: "", created_at: "2000-01-01T00:00:00.000Z", timeLabel: "Yesterday", pages: 42, questions: 7, isNew: false },
+  { id: "p3", file_name: "Research Notes — May.pdf",file_url: "", created_at: "2000-01-01T00:00:00.000Z", timeLabel: "3d ago",    pages: 8,  questions: 5, isNew: false },
 ];
 
 const DOC_SUMMARIES: Record<string, string> = {
@@ -129,6 +131,9 @@ export default function DashboardPage() {
   const [inviteCopied, setInviteCopied] = useState(false);
   const [barsReady,    setBarsReady]    = useState(false);
   const [uploading,    setUploading]    = useState(false);
+  const [greeting,     setGreeting]     = useState<string>("Good morning");
+  const [todayLabel,   setTodayLabel]   = useState<string>("");
+  const [heroDate,     setHeroDate]     = useState<string>("");
   const [uploadError,  setUploadError]  = useState<string | null>(null);
   const [menuOpenId,   setMenuOpenId]   = useState<string | null>(null);
   const [deleting,     setDeleting]     = useState<string | null>(null);
@@ -140,9 +145,6 @@ export default function DashboardPage() {
   /* ── Derived ────────────────────────────────────────────────────────────── */
   const userName     = user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Scholar";
   const avatarLetter = userName[0]?.toUpperCase() ?? "S";
-  const hour         = new Date().getHours();
-  const greeting     = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const todayLabel   = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const pdfPct       = Math.min(100, Math.round((usage.pdfs / (usage.maxPdfs || 3)) * 100));
   const qPct         = Math.min(100, Math.round((usage.questions / (usage.maxQuestions || 5)) * 100));
   const qLeft        = Math.max(0, (usage.maxQuestions || 5) - usage.questions);
@@ -156,6 +158,7 @@ export default function DashboardPage() {
         pages:     PLACEHOLDER_DOCS[i]?.pages ?? 10,
         questions: PLACEHOLDER_DOCS[i]?.questions ?? 0,
         isNew:     i === 0,
+        timeLabel: undefined as string | undefined,
       }))
     : PLACEHOLDER_DOCS;
 
@@ -165,6 +168,15 @@ export default function DashboardPage() {
   const cmdSections = [...new Set(filteredCmds.map(it => it.section))];
 
   /* ── Effects ────────────────────────────────────────────────────────────── */
+
+  /* Date/greeting — client-only to avoid SSR/hydration mismatch */
+  useEffect(() => {
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening");
+    setTodayLabel(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }));
+    setHeroDate(new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }));
+  }, []);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { window.location.href = "/login"; return; }
@@ -617,7 +629,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ix-hero-right">
-                <div className="ix-hero-date">{new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
+                <div className="ix-hero-date">{heroDate}</div>
                 <div className="ix-hero-sync">Last sync: 4 mins ago</div>
               </div>
             </motion.div>
@@ -708,7 +720,7 @@ export default function DashboardPage() {
                           <div className="ix-doc-meta">
                             <span>{doc.pages}p</span>
                             <span className="ix-doc-meta-sep">·</span>
-                            <span>{timeAgo(doc.created_at)}</span>
+                            <span>{(doc as {timeLabel?: string}).timeLabel ?? timeAgo(doc.created_at)}</span>
                             <span className="ix-doc-meta-sep">·</span>
                             <span>{doc.questions} Q&amp;A</span>
                           </div>
@@ -926,7 +938,7 @@ export default function DashboardPage() {
                 <div className="ix-card-body">
                   <div className="ix-timeline">
                     {[
-                      { dot: "accent", text: `Uploaded ${displayDocs[0]?.file_name.replace(/\.pdf$/i,"")} · ${displayDocs[0]?.pages}p indexed`, time: timeAgo(displayDocs[0]?.created_at ?? new Date().toISOString()) },
+                      { dot: "accent", text: `Uploaded ${displayDocs[0]?.file_name.replace(/\.pdf$/i,"")} · ${displayDocs[0]?.pages}p indexed`, time: displayDocs[0]?.created_at ? timeAgo(displayDocs[0].created_at) : "Just now" },
                       { dot: "",      text: `Asked ${displayDocs[1]?.questions ?? 7} questions on Q3 Financial Report`, time: "Yesterday" },
                       { dot: "green", text: `Free plan activated · 5 questions added`, time: "2 days ago" },
                       { dot: "",      text: `Account created. Welcome to Intellixy.`, time: "2 days ago" },

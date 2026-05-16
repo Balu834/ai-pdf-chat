@@ -128,10 +128,11 @@ function ViewerContent() {
   const rawUrl = useMemo(() => searchParams.get("url") ?? "", [searchParams]);
 
   /* PDF URL state */
-  const [signedUrl,  setSignedUrl]  = useState<string>("");
-  const [urlLoading, setUrlLoading] = useState(true);
-  const [fileName,   setFileName]   = useState("Document");
-  const [pageInfo,   setPageInfo]   = useState({ current: 1, total: 0 });
+  const [signedUrl,    setSignedUrl]    = useState<string>("");
+  const [urlLoading,   setUrlLoading]   = useState(true);
+  const [fileName,     setFileName]     = useState("Document");
+  const [pageInfo,     setPageInfo]     = useState({ current: 1, total: 0 });
+  const [showPreview,  setShowPreview]  = useState(false);
 
   /* Chat state */
   const [messages,  setMessages]  = useState<Message[]>([]);
@@ -304,11 +305,22 @@ function ViewerContent() {
         <div className="vw-topbar-title">{fileName}</div>
 
         <div className="vw-topbar-actions">
-          {pageInfo.total > 0 && (
+          {showPreview && pageInfo.total > 0 && (
             <span style={{ fontSize: 12, color: "var(--text-3)", marginRight: 4 }}>
               p.{pageInfo.current}/{pageInfo.total}
             </span>
           )}
+          <button
+            className={`vw-topbar-btn vw-preview-toggle${showPreview ? " active" : ""}`}
+            onClick={() => setShowPreview((v) => !v)}
+            title={showPreview ? "Hide PDF preview" : "Show PDF preview"}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="9" y1="3" x2="9" y2="21"/>
+            </svg>
+            <span>{showPreview ? "Hide Preview" : "View PDF"}</span>
+          </button>
           <a
             className="vw-topbar-btn"
             href={rawUrl}
@@ -326,25 +338,27 @@ function ViewerContent() {
       </div>
 
       {/* ── SPLIT PANELS ─────────────────────────────────────────────────── */}
-      <div className="vw-panels">
+      <div className={`vw-panels${showPreview ? "" : " vw-panels-chat-only"}`}>
 
         {/* ── LEFT: PDF VIEWER ───────────────────────────────────────────── */}
-        <div className="vw-pdf-panel">
-          {urlLoading ? (
-            <div className="vw-url-loading">
-              <div className="vw-url-spinner" />
-              <span>Preparing document…</span>
-            </div>
-          ) : (
-            <PdfViewer
-              url={signedUrl || rawUrl}
-              onPageChange={(cur, tot) => setPageInfo({ current: cur, total: tot })}
-            />
-          )}
-        </div>
+        {showPreview && (
+          <div className="vw-pdf-panel">
+            {urlLoading ? (
+              <div className="vw-url-loading">
+                <div className="vw-url-spinner" />
+                <span>Preparing document…</span>
+              </div>
+            ) : (
+              <PdfViewer
+                url={signedUrl || rawUrl}
+                onPageChange={(cur, tot) => setPageInfo({ current: cur, total: tot })}
+              />
+            )}
+          </div>
+        )}
 
         {/* ── RIGHT: CHAT PANEL ──────────────────────────────────────────── */}
-        <div className="vw-chat-panel">
+        <div className={`vw-chat-panel${showPreview ? "" : " vw-chat-full"}`}>
 
           {/* Header */}
           <div className="ch-header">

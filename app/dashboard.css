@@ -1,10 +1,44 @@
 /* ══════════════════════════════════════════════════════════════════════════
    INTELLIXY — Dashboard
-   AI-native workspace. Green (#10A37F) accent, white sidebar.
+   AI-native workspace. Amber (#F59E0B) accent, dark theme.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── ROOT SHELL ──────────────────────────────────────────────────────────── */
 .ds-dash {
+  /* ── Dark theme: scoped to dashboard only ───────────────────────────── */
+  --bg:             #030810;
+  --bg-secondary:   #060F1A;
+  --bg-hover:       rgba(255,255,255,0.06);
+  --border:         rgba(255,255,255,0.08);
+  --border-strong:  rgba(255,255,255,0.14);
+  --text:           #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary:  #64748B;
+  --accent:         #F59E0B;
+  --accent-dark:    #D97706;
+  --accent-fg:      #FFFFFF;
+  --accent-pale:    rgba(245,158,11,0.12);
+  --accent-glow:    rgba(245,158,11,0.18);
+  --green:          #F59E0B;
+  --green-pale:     rgba(245,158,11,0.12);
+  --brand:          #F59E0B;
+  --brand-dark:     #D97706;
+  --brand-bg:       rgba(245,158,11,0.12);
+  --brand-ring:     rgba(245,158,11,0.28);
+  --brand-glow:     rgba(245,158,11,0.18);
+  --blue:           #60A5FA;
+  --blue-pale:      rgba(96,165,250,0.12);
+  --orange:         #F97316;
+  --orange-pale:    rgba(249,115,22,0.12);
+  --red:            #F87171;
+  --red-pale:       rgba(248,113,113,0.12);
+  --purple:         #A78BFA;
+  --purple-pale:    rgba(167,139,250,0.12);
+  --citation-bg:    rgba(245,158,11,0.15);
+  --sh-sm:          0 2px 8px  rgba(0,0,0,0.5);
+  --sh-md:          0 4px 20px rgba(0,0,0,0.6);
+  --sh-lg:          0 8px 40px rgba(0,0,0,0.7);
+  /* ── Layout ─────────────────────────────────────────────────────────── */
   height: 100vh; height: 100dvh;
   display: flex; flex-direction: column;
   background: var(--bg); color: var(--text);
@@ -96,7 +130,7 @@
   border-radius: 999px; padding: 1px 6px;
 }
 .ds-nav-item.is-active .ds-nav-badge {
-  background: rgba(16,163,127,.15); color: var(--accent);
+  background: rgba(245,158,11,.15); color: var(--accent);
 }
 
 /* Sidebar footer */
@@ -210,7 +244,7 @@
   font-size: 12.5px; font-weight: 600; cursor: pointer;
   transition: background var(--ease-base);
 }
-.ds-ai-btn:hover { background: rgba(16,163,127,.15); }
+.ds-ai-btn:hover { background: rgba(245,158,11,.15); }
 .ds-bell {
   position: relative; width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
@@ -517,12 +551,12 @@
 }
 .ix-pro-glow {
   position: absolute; width: 200px; height: 200px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(16,163,127,.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245,158,11,.25) 0%, transparent 70%);
   pointer-events: none;
 }
 .ix-pro-eyebrow {
   font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
-  color: rgba(16,163,127,.8);
+  color: rgba(245,158,11,.9);
 }
 .ix-pro-title {
   font-size: 18px; font-weight: 800; letter-spacing: -.3px; color: #fff; line-height: 1.2;
@@ -582,7 +616,7 @@
   transition: height .65s cubic-bezier(.22,1,.36,1);
 }
 .ix-bar.today { background: var(--accent); }
-.ix-bar.accent { background: rgba(16,163,127,.4); }
+.ix-bar.accent { background: rgba(245,158,11,.4); }
 .ix-bar.base   { background: var(--border-strong); }
 .ix-bar-day { font-size: 10px; color: var(--text-tertiary); }
 .ix-chart-meta {
@@ -649,7 +683,7 @@
   font-size: 12.5px; color: var(--text); line-height: 1.6;
 }
 .ix-conv-bubble mark {
-  background: rgba(16,163,127,.18); color: var(--accent);
+  background: rgba(245,158,11,.18); color: var(--accent);
   border-radius: 3px; padding: 0 2px;
 }
 .ix-conv-cite {
@@ -727,7 +761,7 @@
 .ix-banner-glow {
   position: absolute; right: -60px; top: -60px;
   width: 200px; height: 200px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(16,163,127,.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245,158,11,.14) 0%, transparent 70%);
   pointer-events: none;
 }
 .ix-banner-left { display: flex; align-items: center; gap: 14px; }
@@ -748,3 +782,110 @@
 }
 .ix-banner-cta:hover { background: var(--brand-dark); }
 .ix-banner-cta.copied { background: var(--green); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DARK THEME ENHANCEMENTS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Atmospheric content background */
+.ds-dash .ds-content {
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(245,158,11,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 35% at 80% 80%, rgba(96,165,250,0.05) 0%, transparent 60%),
+    var(--bg);
+}
+
+/* Sidebar glass */
+.ds-dash .ds-sidebar {
+  background: rgba(6,15,26,0.95);
+  backdrop-filter: blur(12px);
+  border-right-color: rgba(255,255,255,0.07);
+}
+
+/* Topbar glass */
+.ds-dash .ds-topbar {
+  background: rgba(3,8,16,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+
+/* Gradient primary buttons */
+.ds-dash .ix-btn-primary,
+.ds-dash .ds-upload-btn,
+.ds-dash .ix-pro-cta,
+.ds-dash .ix-banner-cta,
+.ds-dash .ix-doc-open-btn {
+  background: linear-gradient(135deg, #F59E0B 0%, #0EA5E9 100%);
+  box-shadow: 0 0 18px rgba(245,158,11,0.25);
+}
+.ds-dash .ix-btn-primary:hover,
+.ds-dash .ds-upload-btn:hover,
+.ds-dash .ix-pro-cta:hover,
+.ds-dash .ix-banner-cta:hover,
+.ds-dash .ix-doc-open-btn:hover {
+  background: linear-gradient(135deg, #D97706 0%, #0284C7 100%);
+  box-shadow: 0 0 24px rgba(245,158,11,0.35);
+  transform: translateY(-1px);
+}
+
+/* Card hover glow */
+.ds-dash .ix-stat-card:hover,
+.ds-dash .ix-doc-card:hover,
+.ds-dash .ix-insight-card:hover,
+.ds-dash .ix-template-card:hover {
+  box-shadow: 0 0 0 1px rgba(245,158,11,0.2), 0 8px 32px rgba(0,0,0,0.6);
+  border-color: rgba(245,158,11,0.2);
+}
+
+/* Hero welcome banner accent */
+.ds-dash .ix-hero {
+  background: linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(6,15,26,0.9) 100%);
+  border-color: rgba(245,158,11,0.14);
+}
+
+/* Active sidebar item stronger glow */
+.ds-dash .ds-nav-item.is-active {
+  background: rgba(245,158,11,0.12);
+  box-shadow: inset 0 0 0 1px rgba(245,158,11,0.15);
+}
+
+/* Logo mark gradient */
+.ds-dash .ds-logo-mark {
+  background: linear-gradient(135deg, #F59E0B 0%, #0EA5E9 100%);
+  box-shadow: 0 0 12px rgba(245,158,11,0.3);
+}
+
+/* Scroll bar for dark bg */
+.ds-dash .ds-content::-webkit-scrollbar { width: 6px; }
+.ds-dash .ds-content::-webkit-scrollbar-track { background: transparent; }
+.ds-dash .ds-content::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12); border-radius: 999px;
+}
+.ds-dash .ds-content::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Pro card dark glass */
+.ds-dash .ix-pro-card {
+  background: linear-gradient(135deg, #0D1B2A 0%, #060F1A 100%);
+  border: 1px solid rgba(245,158,11,0.2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Analytics chart accent bar stronger */
+.ds-dash .ix-bar.today {
+  background: linear-gradient(to top, #F59E0B, #0EA5E9);
+  box-shadow: 0 0 8px rgba(245,158,11,0.4);
+}
+
+/* Metric card slight left border accent */
+.ds-dash .ix-metric-card {
+  border-left: 2px solid rgba(245,158,11,0.25);
+}
+
+/* Search bar subtle */
+.ds-dash .ds-search {
+  background: rgba(255,255,255,0.04);
+}
+.ds-dash .ds-search:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(245,158,11,0.25);
+}

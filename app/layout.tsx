@@ -22,6 +22,7 @@ const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
   display: "swap",
+  preload: false,
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -29,6 +30,7 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   display: "swap",
   weight: ["400", "500"],
+  preload: false,
 });
 
 

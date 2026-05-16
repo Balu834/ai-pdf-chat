@@ -1,106 +1,125 @@
 "use client";
 import { motion } from "framer-motion";
-import {
-  FileSearch, Zap, FileText, Globe, Shield, ScanLine
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-const CARDS = [
-  {
-    icon: FileSearch,
-    title: "Cited answers, every time",
-    desc: "Every response links to the exact page and section. Every claim is verifiable — no black-box outputs.",
-    featured: true,
-    demo: {
-      text: "Q3 revenue was",
-      highlight: "₹423.7 crore",
-      rest: ", up 23.4% YoY.",
-      cites: ["p.14", "§3.2"],
-    },
-  },
-  {
-    icon: Zap,
-    title: "Answer in 3.4 seconds",
-    desc: "Streaming output so you see answers as they form. Average full response in under 3.4 seconds.",
-  },
-  {
-    icon: FileText,
-    title: "PDF, DOCX, scans + OCR",
-    desc: "Handles scanned documents, handwritten notes, and academic LaTeX. If it's a document, we read it.",
-  },
-  {
-    icon: Globe,
-    title: "Cross-lingual retrieval",
-    desc: "Ask in English, get answers from a French contract. No manual translation needed.",
-  },
-  {
-    icon: Shield,
-    title: "End-to-end encrypted",
-    desc: "Encrypted at rest and in transit. SOC 2 Type II. We never train on your data.",
-  },
-  {
-    icon: ScanLine,
-    title: "Automatic risk extraction",
-    desc: "Flags legal exposure, client concentration, and compliance gaps in contracts and reports.",
-  },
+const PDF_SM = (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/>
+    <polyline points="15 3 15 9 21 9"/>
+  </svg>
+);
+
+const CHECK_SVG = (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const RELATED = [
+  { section: "7.1 Confidentiality",   page: "p.18" },
+  { section: "9.4 Termination",       page: "p.33" },
+  { section: "11.2 Indemnification",  page: "p.41" },
 ];
 
-const card = {
+const panel = {
   hidden: { opacity: 0, y: 16 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const } },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
 export default function Features() {
   return (
     <section className="lp-features-section" id="features">
       <div className="lp-features-inner">
-        <motion.div
-          className="lp-section-head"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <p className="lp-section-eyebrow">Features</p>
-          <h2 className="lp-section-title">Everything you need to read smarter</h2>
-          <p className="lp-section-sub">
-            Built for professionals who can&apos;t afford to miss a detail.
-          </p>
-        </motion.div>
+        <div className="lp-feat-two-col">
 
-        <motion.div
-          className="lp-feat-grid"
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-60px" }}
-        >
-          {CARDS.map((c, i) => {
-            const Icon = c.icon;
-            return (
-              <motion.div
-                key={i}
-                className={`lp-feat-card${c.featured ? " featured" : ""}`}
-                variants={card}
-              >
-                <div className="lp-feat-icon">
-                  <Icon size={16} strokeWidth={1.75} />
+          {/* Left: text */}
+          <motion.div
+            className="lp-feat-copy"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="lp-feat-eyebrow">Built for professionals</p>
+            <h2 className="lp-feat-title">AI that understands complex documents</h2>
+            <p className="lp-feat-desc">
+              From financial reports to legal contracts, research papers to policy docs — Intellixy understands it all.
+            </p>
+            <a href="#demo" className="lp-feat-cta">
+              Explore use cases <ArrowRight size={14} strokeWidth={2.5} />
+            </a>
+          </motion.div>
+
+          {/* Right: 3 document analysis panels */}
+          <motion.div
+            className="lp-feat-panels-wrap"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+          >
+
+            {/* Panel 1: Contract Review */}
+            <motion.div className="lp-feat-doc-card" variants={panel}>
+              <div className="lp-feat-contract-hdr">Contract Review</div>
+              <div className="lp-feat-risk-row">
+                <div className="lp-feat-risk-icon">{CHECK_SVG}</div>
+                <span className="lp-feat-risk-label">Low Risk</span>
+                <span className="lp-feat-risk-score">16 / 100</span>
+              </div>
+              <div className="lp-feat-stat-row">
+                <div className="lp-feat-stat-item">
+                  <span className="lp-feat-stat-label">Clauses Analyzed</span>
+                  <strong className="lp-feat-stat-val">128</strong>
                 </div>
-                <div className="lp-feat-title">{c.title}</div>
-                <div className="lp-feat-desc">{c.desc}</div>
-                {c.demo && (
-                  <div className="lp-feat-demo">
-                    {c.demo.text}{" "}
-                    <strong>{c.demo.highlight}</strong>
-                    {c.demo.rest}
-                    {c.demo.cites.map(cite => (
-                      <span key={cite} className="lp-feat-demo-pill">{cite}</span>
-                    ))}
+                <div className="lp-feat-stat-item">
+                  <span className="lp-feat-stat-label">Issues Found</span>
+                  <strong className="lp-feat-stat-val">3</strong>
+                </div>
+              </div>
+              <button className="lp-feat-view-btn">View full report →</button>
+            </motion.div>
+
+            {/* Panel 2: Document Viewer */}
+            <motion.div className="lp-feat-doc-card" variants={panel}>
+              <div className="lp-feat-viewer-filename">
+                {PDF_SM}
+                <span>Master Services Agreement.pdf</span>
+              </div>
+              <div className="lp-feat-viewer-meta">Page 24 of 58</div>
+              <div className="lp-feat-viewer-body">
+                <div className="lp-feat-clause-hdr">8.2 Limitation of Liability</div>
+                <p className="lp-feat-clause-text">Neither party shall be liable for any indirect, special, consequential, or punitive damages, including loss of profits or data...</p>
+                <span className="lp-feat-tag lp-feat-tag-low">LOW RISK</span>
+                <div className="lp-feat-clause-divider" />
+                <div className="lp-feat-clause-hdr">8.3 Data Protection</div>
+                <p className="lp-feat-clause-text">Parties must comply with applicable data protection laws and regulations...</p>
+                <span className="lp-feat-tag lp-feat-tag-low">LOW RISK</span>
+              </div>
+            </motion.div>
+
+            {/* Panel 3: AI Suggestion */}
+            <motion.div className="lp-feat-doc-card" variants={panel}>
+              <div className="lp-feat-ai-hdr">AI Suggestion</div>
+              <p className="lp-feat-ai-text">
+                Consider adding a cap on liability to reduce potential financial exposure.
+              </p>
+              <button className="lp-feat-apply-btn">
+                Apply suggestion <ArrowRight size={11} strokeWidth={2.5} />
+              </button>
+              <div className="lp-feat-related-hdr">Related Sections</div>
+              <div>
+                {RELATED.map((r, i) => (
+                  <div key={i} className="lp-feat-related-item">
+                    <span>{r.section}</span>
+                    <span className="lp-feat-related-page">{r.page}</span>
                   </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+          </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -1,31 +1,38 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, FileText, MessageSquare, Plus } from "lucide-react";
+import { ArrowRight, Shield, Zap, CreditCard } from "lucide-react";
 
 const ease = [0.22, 1, 0.36, 1] as const;
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 18 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.55, delay, ease },
-});
 
-/* Files in the sidebar mockup */
-const FILES = [
-  { name: "Q3_Report.pdf",      active: true  },
-  { name: "Contract_2024.pdf",  active: false },
-  { name: "Research_AI.pdf",    active: false },
-  { name: "Annual_Review.pdf",  active: false },
+const LOGO_SVG = (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+    <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
+    <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
+    <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
+    <rect x="3"  y="16" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".4"/>
+  </svg>
+);
+
+const PDF_SM = (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/>
+    <polyline points="15 3 15 9 21 9"/>
+  </svg>
+);
+
+const BAR_HEIGHTS = [5, 8, 6, 11, 7, 9, 13, 8, 11, 7];
+
+const SOURCES = [
+  { name: "Q3 Financial Report.pdf",        pages: "24 pages" },
+  { name: "Earnings Call Transcript.pdf",   pages: "18 pages" },
+  { name: "Investor Presentation.pdf",      pages: "32 pages" },
 ];
 
-/* PDF line widths, hl = green highlight */
-const PDF_LINES = [
-  { w: "100%", hl: false }, { w: "86%",  hl: false },
-  { w: "100%", hl: true  }, { w: "93%",  hl: true  },
-  { w: "70%",  hl: true  }, { w: "100%", hl: false },
-  { w: "82%",  hl: false }, { w: "100%", hl: false },
-  { w: "55%",  hl: false }, { w: "100%", hl: true  },
-  { w: "88%",  hl: true  }, { w: "100%", hl: false },
+const FINDINGS = [
+  { text: "Revenue grew 23.4% YoY",         page: "p.14" },
+  { text: "Operating expenses down 8.7%",   page: "p.22" },
+  { text: "Strong cash flow increase",      page: "p.31" },
 ];
 
 export default function Hero() {
@@ -33,138 +40,215 @@ export default function Hero() {
     <section className="lp-hero">
       <div className="lp-hero-inner">
 
-        {/* ── Left: Compact copy ───────────────────────────────────────────── */}
-        <div className="lp-hero-copy">
-          <motion.div {...fadeUp(0)}>
-            <div className="lp-hero-eyebrow">
-              <span className="lp-hero-eyebrow-dot" />
-              AI Document Intelligence
-            </div>
-          </motion.div>
-
-          <motion.h1 className="lp-hero-h1" {...fadeUp(0.07)}>
-            Understand PDFs<br />with AI.
-          </motion.h1>
-
-          <motion.p className="lp-hero-sub" {...fadeUp(0.13)}>
-            Upload documents, ask questions, generate summaries,
-            and extract insights — instantly.
-          </motion.p>
-
-          <motion.div
-            className="lp-hero-input-box"
-            {...fadeUp(0.18)}
-            role="button"
-            tabIndex={0}
-          >
-            <Sparkles size={14} className="lp-hero-input-icon" strokeWidth={1.75} />
-            <span className="lp-hero-input-placeholder">
-              Ask anything about your document…
-            </span>
-            <div className="lp-hero-input-send" aria-hidden>
-              <ArrowRight size={13} strokeWidth={2.5} />
-            </div>
-          </motion.div>
-
-          <motion.div className="lp-hero-actions" {...fadeUp(0.23)}>
-            <Link href="/login" className="lp-hero-cta">
-              Start Free <ArrowRight size={13} strokeWidth={2.5} />
-            </Link>
-            <a href="#demo" className="lp-hero-cta-outline">
-              Watch demo
-            </a>
-          </motion.div>
-
-          <motion.p className="lp-hero-microtrust" {...fadeUp(0.28)}>
-            No credit card · Free plan · Cancel anytime
-          </motion.p>
-        </div>
-
-        {/* ── Right: AI Workspace ──────────────────────────────────────────── */}
+        {/* ── LEFT: Copy ─────────────────────────────────────────────── */}
         <motion.div
-          className="lp-hero-workspace"
-          initial={{ opacity: 0, scale: 0.97, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.75, delay: 0.15, ease }}
+          className="lp-hero-copy"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease }}
         >
-          <div className="lp-ws">
-            {/* Browser chrome */}
-            <div className="lp-ws-chrome">
-              <div className="lp-ws-dots">
-                <div className="lp-ws-dot" style={{ background: "#FF5F57" }} />
-                <div className="lp-ws-dot" style={{ background: "#FEBC2E" }} />
-                <div className="lp-ws-dot" style={{ background: "#28C840" }} />
-              </div>
-              <div className="lp-ws-url">app.intellixy.com/viewer</div>
+          <div className="lp-hero-eyebrow">
+            <span className="lp-hero-eyebrow-dot" />
+            AI Document Intelligence
+          </div>
+
+          <h1 className="lp-hero-h1">
+            Stop reading.<br />
+            <span className="lp-hero-h1-accent">Start knowing.</span>
+          </h1>
+
+          <p className="lp-hero-sub">
+            Upload any document. Ask in plain English. Intellixy returns exact, cited answers in seconds — with page and section references you can verify instantly. No hallucinations. No guessing.
+          </p>
+
+          <div className="lp-hero-actions">
+            <Link href="/login" className="lp-hero-cta-primary">
+              Start for free <ArrowRight size={14} strokeWidth={2.5} />
+            </Link>
+            <a href="#demo" className="lp-hero-cta-ghost">
+              See live demo
+            </a>
+          </div>
+
+          <div className="lp-hero-trust">
+            <div className="lp-hero-trust-item">
+              <Zap size={13} strokeWidth={2} />
+              Answers in 3.4s avg
             </div>
+            <div className="lp-hero-trust-sep" />
+            <div className="lp-hero-trust-item">
+              <Shield size={13} strokeWidth={2} />
+              End-to-end encrypted
+            </div>
+            <div className="lp-hero-trust-sep" />
+            <div className="lp-hero-trust-item">
+              <CreditCard size={13} strokeWidth={2} />
+              No credit card required
+            </div>
+          </div>
+        </motion.div>
 
-            {/* 3-panel body */}
-            <div className="lp-ws-body">
+        {/* ── RIGHT: Multi-panel AI mockup ─────────────────────────── */}
+        <motion.div
+          className="lp-hero-preview"
+          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.65, delay: 0.12, ease }}
+        >
+          <div className="lp-mp-wrap">
 
-              {/* Sidebar */}
-              <div className="lp-ws-sidebar">
-                <div className="lp-ws-sidebar-head">Docs</div>
-                {FILES.map(f => (
-                  <div key={f.name} className={`lp-ws-file${f.active ? " active" : ""}`}>
-                    <FileText size={9} strokeWidth={2} />
-                    {f.name}
-                  </div>
+            {/* Document Insights (top-left, small, dark) */}
+            <motion.div
+              className="lp-mp-panel lp-mp-dark lp-mp-insights"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5, duration: 0.4, ease }}
+            >
+              <div className="lp-mp-insights-hdr">Document Insights</div>
+              <div className="lp-mp-insights-val">2.4M+</div>
+              <div className="lp-mp-insights-sub">Docs analyzed</div>
+              <div className="lp-mp-insights-bars">
+                {BAR_HEIGHTS.map((h, i) => (
+                  <div
+                    key={i}
+                    className={`lp-mp-insights-bar ${i >= 5 ? "hi" : "lo"}`}
+                    style={{ height: `${h}px` }}
+                  />
                 ))}
-                <hr className="lp-ws-sidebar-sep" />
-                <div className="lp-ws-upload">
-                  <Plus size={9} strokeWidth={2.5} /> Upload
-                </div>
+              </div>
+            </motion.div>
+
+            {/* Intellixy AI Chat (center, large, dark) */}
+            <motion.div
+              className="lp-mp-panel lp-mp-dark lp-mp-chat"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28, duration: 0.55, ease }}
+            >
+              <div className="lp-mp-chat-hdr">
+                <div className="lp-mp-chat-logo">{LOGO_SVG}</div>
+                <span className="lp-mp-chat-title">Intellixy AI</span>
+                <span className="lp-mp-chat-badge">PDF Pro</span>
               </div>
 
-              {/* PDF panel */}
-              <div className="lp-ws-pdf">
-                <div className="lp-ws-pdf-title">Q3_Report · Page 14 · §3.2</div>
-                <div className="lp-ws-pdf-lines">
-                  {PDF_LINES.map((l, i) => (
-                    <div
-                      key={i}
-                      className={`lp-ws-pdf-line${l.hl ? " hl" : ""}`}
-                      style={{ width: l.w }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Chat panel */}
-              <div className="lp-ws-chat">
-                <div className="lp-ws-chat-head">
-                  <MessageSquare size={8} strokeWidth={2} style={{ display: "inline", marginRight: 3 }} />
-                  AI Assistant
-                </div>
-
-                <div className="lp-ws-msg-user">
+              <div className="lp-mp-msgs">
+                <motion.div
+                  className="lp-mp-msg-user"
+                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.62, duration: 0.28, ease }}
+                >
                   What drove Q3 revenue growth?
-                </div>
+                </motion.div>
 
-                <div className="lp-ws-msg-ai">
-                  Revenue reached <mark>₹423.7 Cr</mark>, a{" "}
-                  <mark>23.4% YoY</mark> increase. Enterprise drove 68%.
-                  <div className="lp-ws-cite">
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/>
-                    </svg>
-                    p.14 · §3.2
+                <motion.div
+                  className="lp-mp-msg-ai"
+                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.74, duration: 0.28, ease }}
+                >
+                  <div className="lp-mp-ai-icon">{LOGO_SVG}</div>
+                  <div className="lp-mp-msg-ai-body">
+                    <p>Revenue reached ₹423.7 Cr (+23.4% YoY), beating consensus by 4.2pp. Enterprise contributed 68%, led by BFSI and healthcare verticals.</p>
+                    <span className="lp-mp-cite">{PDF_SM} p.14 · §3.2 · chart 3.2.1</span>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  className="lp-mp-msg-user"
+                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.86, duration: 0.28, ease }}
+                >
+                  What are the main risks?
+                </motion.div>
+
+                <motion.div
+                  className="lp-mp-msg-ai"
+                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.98, duration: 0.28, ease }}
+                >
+                  <div className="lp-mp-ai-icon">{LOGO_SVG}</div>
+                  <div className="lp-mp-msg-ai-body">
+                    <p>Three key risks: margin pressure (R&D ₹42 Cr), client concentration (top 5 = 34%), and 22% USD exposure.</p>
+                    <span className="lp-mp-cite">{PDF_SM} p.42 · §7.1 · Annex B</span>
+                  </div>
+                </motion.div>
+              </div>
+
+              <div className="lp-mp-chat-input">
+                <span className="lp-mp-chat-placeholder">Ask about this document…</span>
+                <button className="lp-mp-send" aria-label="Send">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <line x1="12" y1="19" x2="12" y2="5"/>
+                    <polyline points="5 12 12 5 19 12"/>
+                  </svg>
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Sources (top-right, white) */}
+            <motion.div
+              className="lp-mp-panel lp-mp-light lp-mp-sources"
+              initial={{ opacity: 0, x: 14 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.68, duration: 0.38, ease }}
+            >
+              <div className="lp-mp-sources-hdr">
+                <span>Sources</span>
+                <span className="lp-mp-sources-close" aria-hidden>×</span>
+              </div>
+              {SOURCES.map((s, i) => (
+                <div key={i} className="lp-mp-source-item">
+                  <div className="lp-mp-source-icon">{PDF_SM}</div>
+                  <div>
+                    <div className="lp-mp-source-name">{s.name}</div>
+                    <div className="lp-mp-source-meta">{s.pages}</div>
                   </div>
                 </div>
+              ))}
+              <button className="lp-mp-upload-btn">+ Upload more</button>
+            </motion.div>
 
-                <div className="lp-ws-typing">
-                  <span /><span /><span />
+            {/* Key Findings (bottom-left, white) */}
+            <motion.div
+              className="lp-mp-panel lp-mp-light lp-mp-findings"
+              initial={{ opacity: 0, x: -14 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.9, duration: 0.38, ease }}
+            >
+              <div className="lp-mp-findings-hdr">Key findings</div>
+              {FINDINGS.map((f, i) => (
+                <div key={i} className="lp-mp-finding-item">
+                  <span className="lp-mp-finding-dot" />
+                  <span>
+                    {f.text}{" "}
+                    <span className="lp-mp-finding-page">· {f.page}</span>
+                  </span>
                 </div>
+              ))}
+              <a href="#demo" className="lp-mp-findings-link">View all insights →</a>
+            </motion.div>
 
-                <div className="lp-ws-input-bar">
-                  <span className="lp-ws-input-text">Ask a follow-up…</span>
-                  <div className="lp-ws-send" aria-hidden>
-                    <ArrowRight size={10} strokeWidth={2.5} />
+            {/* Confidence Score (bottom-right, white) */}
+            <motion.div
+              className="lp-mp-panel lp-mp-light lp-mp-confidence"
+              initial={{ opacity: 0, x: 14 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.02, duration: 0.38, ease }}
+            >
+              <div className="lp-mp-confidence-hdr">Confidence Score</div>
+              <div className="lp-mp-gauge">
+                <div className="lp-mp-gauge-ring">
+                  <div className="lp-mp-gauge-inner">
+                    <span className="lp-mp-gauge-val">98%</span>
                   </div>
                 </div>
               </div>
+              <div className="lp-mp-confidence-label">High confidence</div>
+              <span className="lp-mp-confidence-badge">Verified</span>
+            </motion.div>
 
-            </div>
+            {/* Holographic glow line */}
+            <div className="lp-mp-platform" aria-hidden />
+
           </div>
         </motion.div>
 

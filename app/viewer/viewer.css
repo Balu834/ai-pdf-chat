@@ -207,6 +207,31 @@
 }
 .pvw-retry-btn:hover { background: var(--accent-dark); }
 
+/* ── Preview toggle button ───────────────────────────────────────────────── */
+.vw-preview-toggle {
+  border-color: var(--border-md);
+}
+.vw-preview-toggle.active {
+  background: var(--accent-pale);
+  border-color: var(--accent-ring);
+  color: var(--accent);
+}
+.vw-preview-toggle.active:hover {
+  background: var(--accent-pale);
+  color: var(--accent-dark);
+}
+
+/* Chat-only layout (no PDF panel) */
+.vw-panels-chat-only {
+  justify-content: center;
+}
+.vw-chat-full {
+  width: 100% !important;
+  max-width: 720px;
+  margin: 0 auto;
+  border-left: none !important;
+}
+
 /* ── CHAT PANEL ──────────────────────────────────────────────────────────── */
 .vw-chat-panel {
   width: 420px; flex-shrink: 0;
