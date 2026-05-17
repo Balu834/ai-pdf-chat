@@ -11,11 +11,11 @@
   --bg:          #FFFDF7;
   --bg-2:        #FFF8EE;
   --bg-3:        #FFF2DC;
-  --text:        #111827;
-  --text-2:      #4B4535;
-  --text-3:      #7D7060;
-  --border:      rgba(245,185,66,0.14);
-  --border-md:   rgba(245,185,66,0.26);
+  --text:        #0A0806;
+  --text-2:      #2C221A;
+  --text-3:      #6B5B45;
+  --border:      rgba(180,140,60,0.20);
+  --border-md:   rgba(180,140,60,0.35);
   --shadow-sm:   0 1px 3px rgba(180,130,0,0.07);
   --shadow:      0 4px 16px rgba(180,130,0,0.09);
   --shadow-lg:   0 16px 48px rgba(180,130,0,0.13);
