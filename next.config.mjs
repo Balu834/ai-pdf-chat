@@ -7,7 +7,6 @@ const nextConfig = {
       "framer-motion",
       "@supabase/supabase-js",
       "@tanstack/react-query",
-      "react-pdf",
     ],
   },
   webpack(config, { isServer }) {
