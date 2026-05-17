@@ -178,6 +178,24 @@
 }
 
 /* Profile */
+.ds-profile-wrap { position: relative; }
+.ds-profile-menu {
+  position: absolute; bottom: calc(100% + 6px); left: 0; right: 0;
+  background: var(--bg-card, #ffffff); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  overflow: hidden; z-index: 50;
+}
+.ds-profile-menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 9px 12px; font-size: 13px; font-weight: 500;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  color: var(--text); transition: background 0.12s;
+  text-align: left;
+}
+.ds-profile-menu-item:hover { background: var(--bg-hover); }
+.ds-profile-menu-logout { color: #EF4444; }
+.ds-profile-menu-logout:hover { background: rgba(239,68,68,0.06); }
+
 .ds-profile {
   display: flex; align-items: center; gap: 8px;
   padding: 8px; border-radius: 10px; cursor: pointer;

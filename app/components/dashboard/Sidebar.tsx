@@ -1,11 +1,14 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, FileText, MessageCircle, BarChart2,
-  Users, Bookmark, Settings, CreditCard, Upload,
+  Users, Bookmark, Settings, CreditCard, Upload, LogOut,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 interface Usage {
@@ -65,12 +68,34 @@ export default function Sidebar({
   uploadError,
   onUpload,
 }: SidebarProps) {
+  const router       = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef      = useRef<HTMLDivElement>(null);
+
   const userName     = user?.user_metadata?.full_name?.split(" ")[0]
                     || user?.email?.split("@")[0]
                     || "Scholar";
   const avatarLetter = userName[0]?.toUpperCase() ?? "S";
   const pdfPct       = usage.maxPdfs === Infinity ? 0 : Math.min(100, Math.round((usage.pdfs / (usage.maxPdfs || 3)) * 100));
   const qPct         = usage.maxQuestions === Infinity ? 0 : Math.min(100, Math.round((usage.questions / (usage.maxQuestions || 5)) * 100));
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  const handleLogout = async () => {
+    setMenuOpen(false);
+    await supabase.auth.signOut();
+    router.push("/");
+  };
 
   return (
     <aside className="ds-sidebar">
@@ -164,14 +189,30 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Profile */}
-        <div className="ds-profile" role="button" tabIndex={0}>
-          <div className="ds-avatar">{avatarLetter}</div>
-          <div className="ds-profile-info">
-            <div className="ds-profile-name">{userName}</div>
-            <div className="ds-profile-email">{user?.email}</div>
+        {/* Profile + logout menu */}
+        <div className="ds-profile-wrap" ref={menuRef}>
+          {menuOpen && (
+            <div className="ds-profile-menu">
+              <button className="ds-profile-menu-item ds-profile-menu-logout" onClick={handleLogout} type="button">
+                <LogOut size={13} aria-hidden />
+                Sign out
+              </button>
+            </div>
+          )}
+          <div
+            className="ds-profile"
+            role="button"
+            tabIndex={0}
+            onClick={() => setMenuOpen(o => !o)}
+            onKeyDown={(e) => e.key === "Enter" && setMenuOpen(o => !o)}
+          >
+            <div className="ds-avatar">{avatarLetter}</div>
+            <div className="ds-profile-info">
+              <div className="ds-profile-name">{userName}</div>
+              <div className="ds-profile-email">{user?.email}</div>
+            </div>
+            <Settings size={13} aria-hidden className="ds-profile-gear" />
           </div>
-          <Settings size={13} aria-hidden className="ds-profile-gear" />
         </div>
 
       </div>
