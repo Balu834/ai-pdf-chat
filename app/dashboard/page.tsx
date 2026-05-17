@@ -107,7 +107,7 @@ const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transi
 function TabContent({
   tab, user, docs, displayDocs, plan, usage, uploading, deleting,
   menuOpenId, setMenuOpenId, handleOpenDoc, handleDeleteDoc, onUpload,
-  inviteCopied, handleCopyInvite, onTabChange,
+  inviteCopied, handleCopyInvite, onTabChange, onUpgrade,
 }: {
   tab: import("@/app/components/dashboard/Sidebar").DashTab;
   user: User | null;
@@ -125,6 +125,7 @@ function TabContent({
   inviteCopied: boolean;
   handleCopyInvite: () => void;
   onTabChange: (tab: import("@/app/components/dashboard/Sidebar").DashTab) => void;
+  onUpgrade: () => void;
 }) {
   function timeAgoLocal(iso: string) {
     const diff = Date.now() - new Date(iso).getTime();
@@ -226,7 +227,7 @@ function TabContent({
             Detailed analytics are available on the Pro plan.
           </div>
           {plan === "free" && (
-            <button className="ix-btn-primary" style={{ width: "fit-content" }} onClick={() => onTabChange("billing")}>
+            <button className="ix-btn-primary" style={{ width: "fit-content" }} onClick={onUpgrade}>
               <ArrowUpRight size={14} /> Upgrade to Pro
             </button>
           )}
@@ -255,9 +256,9 @@ function TabContent({
             </div>
           </div>
           {plan === "free" && (
-            <a href="#" className="ix-banner-cta" style={{ textDecoration: "none" }}>
+            <button className="ix-banner-cta" onClick={onUpgrade} style={{ border: "none", cursor: "pointer" }}>
               <ArrowUpRight size={14} /> Upgrade to Pro — ₹299/month
-            </a>
+            </button>
           )}
         </div>
       </motion.div>
@@ -328,7 +329,7 @@ function TabContent({
 
   /* ── Settings tab ───────────────────────────────────────────── */
   if (tab === "settings") {
-    return <SettingsPanel user={user} plan={plan} />;
+    return <SettingsPanel user={user} plan={plan} onUpgrade={onUpgrade} />;
   }
 
   return null;
@@ -337,7 +338,7 @@ function TabContent({
 /* ════════════════════════════════════════════════════════════════════════════
    SETTINGS PANEL
    ════════════════════════════════════════════════════════════════════════════ */
-function SettingsPanel({ user, plan }: { user: User | null; plan: "free" | "pro" }) {
+function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "free" | "pro"; onUpgrade: () => void }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(user?.user_metadata?.full_name ?? "");
   const [saving,      setSaving]      = useState(false);
@@ -453,9 +454,9 @@ function SettingsPanel({ user, plan }: { user: User | null; plan: "free" | "pro"
             </p>
           </div>
           {plan === "free" && (
-            <a href="#" className="ix-btn-primary" style={{ textDecoration: "none", fontSize: 13, padding: "8px 16px" }}>
+            <button className="ix-btn-primary" style={{ fontSize: 13, padding: "8px 16px", cursor: "pointer" }} onClick={onUpgrade}>
               <ArrowUpRight size={13} /> Upgrade to Pro
-            </a>
+            </button>
           )}
         </div>
       </div>
@@ -809,6 +810,72 @@ export default function DashboardPage() {
   function handleCmdAction(action?: string) {
     setCmdOpen(false);
     if (action === "upload") fileInputRef.current?.click();
+    if (action === "pro") handleUpgrade();
+    if (action === "billing") setActiveTab("billing");
+    if (action === "settings") setActiveTab("settings");
+  }
+
+  async function handleUpgrade() {
+    if (plan === "pro") { setActiveTab("billing"); return; }
+    try {
+      // 1. Create Razorpay subscription on the server
+      const res = await fetch("/api/create-subscription", { method: "POST", credentials: "include" });
+      const data = await res.json();
+      if (!res.ok || !data.subscription_id) throw new Error(data.error ?? "Failed to create subscription");
+
+      // 2. Load Razorpay checkout.js if not already loaded
+      if (!document.getElementById("rzp-checkout-js")) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.id  = "rzp-checkout-js";
+          s.src = "https://checkout.razorpay.com/v1/checkout.js";
+          s.onload  = () => resolve();
+          s.onerror = () => reject(new Error("Failed to load Razorpay"));
+          document.head.appendChild(s);
+        });
+      }
+
+      // 3. Open Razorpay checkout modal
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rzp = new (window as any).Razorpay({
+        key:             process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        subscription_id: data.subscription_id,
+        name:            "Intellixy",
+        description:     "Pro Plan — ₹299/month",
+        image:           "/logo.png",
+        prefill: {
+          name:  user?.user_metadata?.full_name ?? "",
+          email: user?.email ?? "",
+        },
+        theme: { color: "#F5B942" },
+        handler: async (response: { razorpay_payment_id: string; razorpay_subscription_id: string; razorpay_signature: string }) => {
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify-subscription", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id:      response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature:       response.razorpay_signature,
+                user_id:                  user?.id,
+              }),
+              credentials: "include",
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok || !verifyData.success) throw new Error(verifyData.error ?? "Verification failed");
+            setPlan("pro");
+            setUsage(p => ({ ...p, maxPdfs: Infinity, maxQuestions: Infinity }));
+            showToast("Welcome to Pro! Unlimited reading unlocked.");
+            setActiveTab("billing");
+          } catch (e: unknown) {
+            showToast((e as Error).message ?? "Payment verification failed. Contact support.", "err");
+          }
+        },
+      });
+      rzp.open();
+    } catch (e: unknown) {
+      showToast((e as Error).message ?? "Could not start checkout. Try again.", "err");
+    }
   }
 
   /* ── Loading ────────────────────────────────────────────────────────────── */
@@ -993,6 +1060,7 @@ export default function DashboardPage() {
                 inviteCopied={inviteCopied}
                 handleCopyInvite={handleCopyInvite}
                 onTabChange={setActiveTab}
+                onUpgrade={handleUpgrade}
               />
             )}
 
@@ -1203,7 +1271,7 @@ export default function DashboardPage() {
                           <div key={f} className="ix-pro-feat">{f}</div>
                         ))}
                       </div>
-                      <a href="#" className="ix-pro-cta">Go Pro — ₹299/month <ArrowUpRight size={13} /></a>
+                      <button className="ix-pro-cta" onClick={handleUpgrade} style={{ border: "none", cursor: "pointer" }}>Go Pro — ₹299/month <ArrowUpRight size={13} /></button>
                     </div>
                   </motion.div>
                 )}

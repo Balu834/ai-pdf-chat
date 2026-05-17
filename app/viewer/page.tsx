@@ -172,6 +172,11 @@ function ViewerContent() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
 
+  /* Copy + TTS */
+  const [copiedId,  setCopiedId]  = useState<number | null>(null);
+  const [playingId, setPlayingId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const endRef      = useRef<HTMLDivElement>(null);
   const abortRef    = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -309,6 +314,43 @@ function ViewerContent() {
     rec.start();
     setListening(true);
   }, [listening]);
+
+  const copyMessage = useCallback((id: number, text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }).catch(() => {});
+  }, []);
+
+  const playTTS = useCallback(async (id: number, text: string) => {
+    if (playingId === id) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setPlayingId(null);
+      return;
+    }
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setPlayingId(id);
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice: "nova", model: "tts-1-hd" }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("TTS failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => { setPlayingId(null); URL.revokeObjectURL(url); };
+      audio.onerror = () => { setPlayingId(null); URL.revokeObjectURL(url); };
+      await audio.play();
+    } catch {
+      setPlayingId(null);
+    }
+  }, [playingId]);
 
   const send = useCallback(async (question?: string) => {
     const q = (question ?? input).trim();
@@ -602,6 +644,48 @@ function ViewerContent() {
                             </svg>
                           </span>
                           <span>Cited from {cite}</span>
+                        </div>
+                      )}
+                      {msg.done && body && (
+                        <div className="ch-msg-actions">
+                          <button
+                            className={`ch-action-btn${copiedId === msg.id ? " ch-action-copied" : ""}`}
+                            onClick={() => copyMessage(msg.id, body)}
+                            title="Copy response"
+                            aria-label="Copy response"
+                          >
+                            {copiedId === msg.id ? (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            ) : (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                              </svg>
+                            )}
+                            <span>{copiedId === msg.id ? "Copied!" : "Copy"}</span>
+                          </button>
+                          <button
+                            className={`ch-action-btn${playingId === msg.id ? " ch-action-playing" : ""}`}
+                            onClick={() => playTTS(msg.id, body)}
+                            title={playingId === msg.id ? "Stop playback" : "Play HD voice"}
+                            aria-label={playingId === msg.id ? "Stop playback" : "Play HD voice"}
+                          >
+                            {playingId === msg.id ? (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="4" width="4" height="16" rx="1"/>
+                                <rect x="14" y="4" width="4" height="16" rx="1"/>
+                              </svg>
+                            ) : (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                              </svg>
+                            )}
+                            <span>{playingId === msg.id ? "Stop" : "HD Voice"}</span>
+                          </button>
                         </div>
                       )}
                     </div>
