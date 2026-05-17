@@ -164,15 +164,15 @@ export default function LoginPage() {
     <div style={{
       minHeight: "100vh",
       display: "flex",
-      background: "#07071a",
+      background: "#FFFDF7",
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Background ambient orbs */}
+      {/* Background ambient orbs — golden, matching landing page */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "10%", left: "5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%)", filter: "blur(60px)" }} />
-        <div style={{ position: "absolute", bottom: "10%", right: "10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)", filter: "blur(50px)" }} />
-        <div style={{ position: "absolute", top: "50%", left: "40%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,70,229,0.1) 0%, transparent 70%)", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", top: "8%", left: "3%", width: 480, height: 480, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,185,66,0.20) 0%, transparent 70%)", filter: "blur(72px)" }} />
+        <div style={{ position: "absolute", bottom: "8%", right: "8%", width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,214,107,0.16) 0%, transparent 70%)", filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", top: "50%", left: "42%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,185,66,0.10) 0%, transparent 70%)", filter: "blur(48px)" }} />
       </div>
 
       {/* ── Left Brand Panel ─────────────────────────────────────── */}
@@ -192,21 +192,26 @@ export default function LoginPage() {
         <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 56 }}>
           <div style={{
             width: 40, height: 40, borderRadius: 12,
-            background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
+            background: "linear-gradient(135deg, #F5B942, #D4891A)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 0 1px rgba(124,58,237,0.35), 0 8px 32px rgba(124,58,237,0.5)",
+            boxShadow: "0 0 0 1px rgba(245,185,66,0.35), 0 8px 32px rgba(245,185,66,0.45)",
           }}>
-            <span style={{ fontSize: 18, fontWeight: 900, color: "white" }}>I</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="white" opacity=".9"/>
+              <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="white" opacity=".5"/>
+              <rect x="13" y="10" width="8" height="11" rx="1.5" fill="white" opacity=".75"/>
+              <rect x="3"  y="16" width="8" height="5"  rx="1.5" fill="white" opacity=".4"/>
+            </svg>
           </div>
-          <span style={{ fontSize: 20, fontWeight: 800, color: "#f0f0f8", letterSpacing: "-0.4px" }}>Intellixy</span>
+          <span style={{ fontSize: 20, fontWeight: 800, color: "#111827", letterSpacing: "-0.4px" }}>Intellixy</span>
         </a>
 
         {/* Headline */}
         <div style={{ marginBottom: 40 }}>
-          <h1 style={{ fontSize: 38, fontWeight: 900, color: "#f0f0f8", letterSpacing: "-1px", lineHeight: 1.15, margin: "0 0 16px" }}>
+          <h1 style={{ fontSize: 38, fontWeight: 900, color: "#111827", letterSpacing: "-1px", lineHeight: 1.15, margin: "0 0 16px" }}>
             Your documents,{" "}
             <span style={{
-              background: "linear-gradient(135deg, #a78bfa, #818cf8, #67e8f9)",
+              background: "linear-gradient(135deg, #F5B942, #FFD66B, #D4891A)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -214,7 +219,7 @@ export default function LoginPage() {
               supercharged
             </span>
           </h1>
-          <p style={{ fontSize: 16, color: "rgba(240,240,248,0.55)", lineHeight: 1.6, margin: 0 }}>
+          <p style={{ fontSize: 16, color: "#6B7280", lineHeight: 1.6, margin: 0 }}>
             The AI platform that turns PDFs into conversations. Ask questions, get instant answers, automate analysis.
           </p>
         </div>
@@ -231,16 +236,16 @@ export default function LoginPage() {
             >
               <div style={{
                 width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                background: "rgba(124,58,237,0.12)",
-                border: "1px solid rgba(124,58,237,0.22)",
+                background: "rgba(245,185,66,0.12)",
+                border: "1px solid rgba(245,185,66,0.25)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#a78bfa",
+                color: "#D4891A",
               }}>
                 {f.icon}
               </div>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: "#f0f0f8", margin: "0 0 3px" }}>{f.title}</p>
-                <p style={{ fontSize: 13, color: "rgba(240,240,248,0.45)", margin: 0, lineHeight: 1.5 }}>{f.desc}</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 3px" }}>{f.title}</p>
+                <p style={{ fontSize: 13, color: "#6B7280", margin: 0, lineHeight: 1.5 }}>{f.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -255,8 +260,8 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + i * 0.08 }}
             >
-              <p style={{ fontSize: 22, fontWeight: 800, color: "#a78bfa", margin: "0 0 2px", letterSpacing: "-0.5px" }}>{s.value}</p>
-              <p style={{ fontSize: 12, color: "rgba(240,240,248,0.4)", margin: 0 }}>{s.label}</p>
+              <p style={{ fontSize: 22, fontWeight: 800, color: "#F5B942", margin: "0 0 2px", letterSpacing: "-0.5px" }}>{s.value}</p>
+              <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0 }}>{s.label}</p>
             </motion.div>
           ))}
         </div>
@@ -279,25 +284,30 @@ export default function LoginPage() {
           style={{
             width: "100%",
             maxWidth: 420,
-            background: "rgba(255,255,255,0.04)",
+            background: "rgba(255,255,255,0.97)",
             backdropFilter: "blur(24px)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid rgba(245,185,66,0.20)",
             borderRadius: 24,
             padding: "36px 32px",
-            boxShadow: "0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.08)",
+            boxShadow: "0 8px 48px rgba(0,0,0,0.09), 0 0 0 1px rgba(245,185,66,0.07)",
           }}
         >
           {/* Mobile logo */}
           <div className="mobile-logo" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 28, justifyContent: "center" }}>
             <div style={{
               width: 32, height: 32, borderRadius: 10,
-              background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
+              background: "linear-gradient(135deg, #F5B942, #D4891A)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 16px rgba(124,58,237,0.45)",
+              boxShadow: "0 4px 16px rgba(245,185,66,0.45)",
             }}>
-              <span style={{ fontSize: 14, fontWeight: 900, color: "white" }}>I</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="white" opacity=".9"/>
+                <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="white" opacity=".5"/>
+                <rect x="13" y="10" width="8" height="11" rx="1.5" fill="white" opacity=".75"/>
+                <rect x="3"  y="16" width="8" height="5"  rx="1.5" fill="white" opacity=".4"/>
+              </svg>
             </div>
-            <span style={{ fontSize: 17, fontWeight: 800, color: "#f0f0f8" }}>Intellixy</span>
+            <span style={{ fontSize: 17, fontWeight: 800, color: "#111827" }}>Intellixy</span>
           </div>
 
           {/* Mode heading */}
@@ -310,10 +320,10 @@ export default function LoginPage() {
               transition={{ duration: 0.2 }}
               style={{ marginBottom: 24 }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 800, color: "#f0f0f8", margin: "0 0 6px", letterSpacing: "-0.4px" }}>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: "#111827", margin: "0 0 6px", letterSpacing: "-0.4px" }}>
                 {isLogin ? "Welcome back" : isSignup ? "Create your account" : "Reset password"}
               </h2>
-              <p style={{ fontSize: 13.5, color: "rgba(240,240,248,0.45)", margin: 0 }}>
+              <p style={{ fontSize: 13.5, color: "#6B7280", margin: 0 }}>
                 {isLogin  ? "Sign in to continue to Intellixy"
                 : isSignup ? "Start for free — no credit card needed"
                 :            "We'll send a reset link to your email"}
@@ -330,8 +340,8 @@ export default function LoginPage() {
                 exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                 style={{
                   padding: "10px 14px",
-                  background: "rgba(124,58,237,0.1)",
-                  border: "1px solid rgba(124,58,237,0.25)",
+                  background: "rgba(245,185,66,0.10)",
+                  border: "1px solid rgba(245,185,66,0.25)",
                   borderRadius: 12,
                   display: "flex", alignItems: "center", gap: 8,
                   fontSize: 13,
@@ -339,8 +349,8 @@ export default function LoginPage() {
                 }}
               >
                 <span style={{ fontSize: 16 }}>🎁</span>
-                <span style={{ color: "rgba(240,240,248,0.7)" }}>
-                  <strong style={{ color: "#f0f0f8" }}>+20 free credits</strong> waiting — create your account to claim!
+                <span style={{ color: "#6B7280" }}>
+                  <strong style={{ color: "#111827" }}>+20 free credits</strong> waiting — create your account to claim!
                 </span>
               </motion.div>
             )}
@@ -387,18 +397,19 @@ export default function LoginPage() {
                       width: "100%",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                       padding: "11px 16px",
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      background: "#FFFFFF",
+                      border: "1px solid #E2E8F0",
                       borderRadius: 12,
-                      color: "#f0f0f8",
+                      color: "#111827",
                       fontSize: 14, fontWeight: 600,
                       cursor: loading ? "not-allowed" : "pointer",
                       opacity: loading ? 0.6 : 1,
                       marginBottom: 16,
                       transition: "background 0.15s, border-color 0.15s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
                     }}
-                    onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; } }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
+                    onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.background = "#F8FAFC"; e.currentTarget.style.borderColor = "rgba(245,185,66,0.35)"; } }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.borderColor = "#E2E8F0"; }}
                   >
                     <svg width="18" height="18" viewBox="0 0 48 48">
                       <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
@@ -411,9 +422,9 @@ export default function LoginPage() {
 
                   {/* Divider */}
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
-                    <span style={{ fontSize: 12, color: "rgba(240,240,248,0.3)", fontWeight: 500 }}>or continue with email</span>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+                    <div style={{ flex: 1, height: 1, background: "#E2E8F0" }} />
+                    <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>or continue with email</span>
+                    <div style={{ flex: 1, height: 1, background: "#E2E8F0" }} />
                   </div>
                 </>
               )}
@@ -438,17 +449,17 @@ export default function LoginPage() {
                   style={{
                     width: "100%",
                     padding: "11px 14px 11px 40px",
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "#F8FAFC",
+                    border: "1px solid #E2E8F0",
                     borderRadius: 12,
-                    color: "#f0f0f8",
+                    color: "#111827",
                     fontSize: 14,
                     outline: "none",
                     transition: "border-color 0.15s",
                     boxSizing: "border-box",
                   }}
-                  onFocus={(e) => e.target.style.borderColor = "rgba(124,58,237,0.6)"}
-                  onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                  onFocus={(e) => e.target.style.borderColor = "rgba(245,185,66,0.7)"}
+                  onBlur={(e) => e.target.style.borderColor = "#E2E8F0"}
                 />
               </div>
 
@@ -457,7 +468,7 @@ export default function LoginPage() {
                 <div style={{ marginBottom: 20, position: "relative" }}>
                   <div style={{
                     position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
-                    color: "rgba(240,240,248,0.3)", pointerEvents: "none",
+                    color: "#9CA3AF", pointerEvents: "none",
                   }}>
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -491,7 +502,7 @@ export default function LoginPage() {
                     style={{
                       position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
                       background: "none", border: "none", cursor: "pointer",
-                      color: "rgba(240,240,248,0.35)", padding: 4,
+                      color: "#9CA3AF", padding: 4,
                     }}
                   >
                     {showPass ? (
@@ -518,15 +529,15 @@ export default function LoginPage() {
                   width: "100%",
                   padding: "12px 16px",
                   background: loading
-                    ? "rgba(124,58,237,0.4)"
-                    : "linear-gradient(135deg, #7c3aed, #4f46e5)",
+                    ? "rgba(245,185,66,0.45)"
+                    : "linear-gradient(135deg, #F5B942 0%, #FFD66B 55%, #F5B942 100%)",
                   border: "none",
                   borderRadius: 12,
-                  color: "white",
+                  color: "#0B0B0F",
                   fontSize: 14, fontWeight: 700,
                   cursor: loading ? "not-allowed" : "pointer",
                   marginBottom: 20,
-                  boxShadow: loading ? "none" : "0 4px 24px rgba(124,58,237,0.4)",
+                  boxShadow: loading ? "none" : "0 0 28px rgba(245,185,66,0.45), 0 4px 16px rgba(245,185,66,0.28)",
                   transition: "box-shadow 0.15s",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 }}
@@ -542,15 +553,15 @@ export default function LoginPage() {
               </motion.button>
 
               {/* Mode switcher */}
-              <div style={{ textAlign: "center", fontSize: 13, color: "rgba(240,240,248,0.45)" }}>
+              <div style={{ textAlign: "center", fontSize: 13, color: "#6B7280" }}>
                 {isLogin && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    <button onClick={() => { setMode("forgot"); setStatus(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#a78bfa", fontSize: 13, fontWeight: 500, padding: 0 }}>
+                    <button onClick={() => { setMode("forgot"); setStatus(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#D4891A", fontSize: 13, fontWeight: 500, padding: 0 }}>
                       Forgot password?
                     </button>
                     <span>
                       Don&apos;t have an account?{" "}
-                      <button onClick={() => { setMode("signup"); setStatus(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#a78bfa", fontSize: 13, fontWeight: 600, padding: 0 }}>
+                      <button onClick={() => { setMode("signup"); setStatus(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#D4891A", fontSize: 13, fontWeight: 600, padding: 0 }}>
                         Sign up free
                       </button>
                     </span>
@@ -559,13 +570,13 @@ export default function LoginPage() {
                 {isSignup && (
                   <span>
                     Already have an account?{" "}
-                    <button onClick={() => { setMode("login"); setStatus(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#a78bfa", fontSize: 13, fontWeight: 600, padding: 0 }}>
+                    <button onClick={() => { setMode("login"); setStatus(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#D4891A", fontSize: 13, fontWeight: 600, padding: 0 }}>
                       Sign in
                     </button>
                   </span>
                 )}
                 {isForgot && (
-                  <button onClick={() => { setMode("login"); setStatus(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#a78bfa", fontSize: 13, fontWeight: 500, padding: 0 }}>
+                  <button onClick={() => { setMode("login"); setStatus(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#D4891A", fontSize: 13, fontWeight: 500, padding: 0 }}>
                     ← Back to sign in
                   </button>
                 )}
@@ -580,13 +591,13 @@ export default function LoginPage() {
           .brand-panel { display: flex !important; }
           .mobile-logo { display: none !important; }
         }
-        input::placeholder { color: rgba(240,240,248,0.25); }
+        input::placeholder { color: #9CA3AF; }
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus {
-          -webkit-box-shadow: 0 0 0 100px rgba(30,20,60,0.9) inset;
-          -webkit-text-fill-color: #f0f0f8;
-          caret-color: #f0f0f8;
+          -webkit-box-shadow: 0 0 0 100px #F8FAFC inset;
+          -webkit-text-fill-color: #111827;
+          caret-color: #111827;
         }
       `}</style>
     </div>
