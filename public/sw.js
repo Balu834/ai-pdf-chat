@@ -1,4 +1,4 @@
-const CACHE_NAME = "intellixy-v4";
+const CACHE_NAME = "intellixy-v5";
 
 // Only pre-cache truly static resources that never change URL.
 const PRECACHE_URLS = ["/manifest.json"];
@@ -42,14 +42,14 @@ function isNavigationRequest(request) {
 }
 
 function shouldSkip(request, url) {
+  // Skip non-same-origin requests — let the browser handle all third-party
+  // fetches directly so CSP rules apply in the document context, not the SW.
+  if (url.origin !== self.location.origin) return true;
+
   return (
     request.method !== "GET" ||
     url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/auth/") ||
-    url.hostname.includes("supabase.co") ||
-    url.hostname.includes("razorpay.com") ||
-    url.hostname.includes("vercel.com") ||
-    url.hostname.includes("vercel-insights.com")
+    url.pathname.startsWith("/auth/")
   );
 }
 
