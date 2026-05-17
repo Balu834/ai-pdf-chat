@@ -2,7 +2,13 @@
 const nextConfig = {
   turbopack: {},
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "@supabase/supabase-js",
+      "@tanstack/react-query",
+      "react-pdf",
+    ],
   },
   webpack(config, { isServer }) {
     // pdf.js needs canvas — alias to false to avoid SSR errors
