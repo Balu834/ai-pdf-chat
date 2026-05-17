@@ -19,6 +19,10 @@ interface Usage {
   loading: boolean;
 }
 
+export type DashTab =
+  | "overview" | "documents" | "conversations" | "analytics"
+  | "saved" | "members" | "billing" | "settings";
+
 export interface SidebarProps {
   user: User | null;
   plan: "free" | "pro";
@@ -27,31 +31,33 @@ export interface SidebarProps {
   uploading: boolean;
   uploadError: string | null;
   onUpload: () => void;
+  activeTab: DashTab;
+  onTabChange: (tab: DashTab) => void;
 }
 
 /* ── Nav data ────────────────────────────────────────────────────────────── */
-const NAV = [
+const NAV: { label: string; items: { icon: React.ElementType; text: string; tab: DashTab; badge: string | null }[] }[] = [
   {
     label: "Workspace",
     items: [
-      { icon: LayoutDashboard, text: "Overview",      badge: null,     active: true  },
-      { icon: FileText,        text: "Documents",     badge: "count",  active: false },
-      { icon: MessageCircle,   text: "Conversations", badge: null,     active: false },
-      { icon: BarChart2,       text: "Analytics",     badge: null,     active: false },
-      { icon: Bookmark,        text: "Saved",         badge: null,     active: false },
+      { icon: LayoutDashboard, text: "Overview",      tab: "overview",       badge: null    },
+      { icon: FileText,        text: "Documents",     tab: "documents",      badge: "count" },
+      { icon: MessageCircle,   text: "Conversations", tab: "conversations",  badge: null    },
+      { icon: BarChart2,       text: "Analytics",     tab: "analytics",      badge: null    },
+      { icon: Bookmark,        text: "Saved",         tab: "saved",          badge: null    },
     ],
   },
   {
     label: "Team",
     items: [
-      { icon: Users,     text: "Members", badge: null, active: false },
+      { icon: Users, text: "Members", tab: "members", badge: null },
     ],
   },
   {
     label: "Account",
     items: [
-      { icon: CreditCard, text: "Billing",  badge: null, active: false },
-      { icon: Settings,   text: "Settings", badge: null, active: false },
+      { icon: CreditCard, text: "Billing",  tab: "billing",  badge: null },
+      { icon: Settings,   text: "Settings", tab: "settings", badge: null },
     ],
   },
 ];
@@ -67,6 +73,8 @@ export default function Sidebar({
   uploading,
   uploadError,
   onUpload,
+  activeTab,
+  onTabChange,
 }: SidebarProps) {
   const router       = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -121,18 +129,19 @@ export default function Sidebar({
             <p className="ds-nav-label">{section.label}</p>
             {section.items.map((item) => {
               const Icon = item.icon;
-              const showBadge = item.badge === "count";
+              const isActive = activeTab === item.tab;
               return (
                 <button
                   key={item.text}
-                  className={`ds-nav-item${item.active ? " is-active" : ""}`}
+                  className={`ds-nav-item${isActive ? " is-active" : ""}`}
                   type="button"
-                  aria-current={item.active ? "page" : undefined}
+                  aria-current={isActive ? "page" : undefined}
+                  onClick={() => onTabChange(item.tab)}
                 >
                   <Icon size={15} aria-hidden />
                   <span>{item.text}</span>
-                  {showBadge && (
-                    <span className="ds-nav-badge">{docsCount || 2}</span>
+                  {item.badge === "count" && (
+                    <span className="ds-nav-badge">{docsCount || 0}</span>
                   )}
                 </button>
               );

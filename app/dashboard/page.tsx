@@ -10,11 +10,12 @@ import {
   ChevronRight, MoreHorizontal, ExternalLink, Trash2, Download,
   ArrowUpRight, Zap, Shield, Clock, TrendingUp, BookOpen,
   FileSearch, Lightbulb, AlertCircle, CheckCircle2, Upload, Users,
+  CreditCard, Bookmark, Settings,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import OAuthSignupTracker from "@/app/components/OAuthSignupTracker";
-import Sidebar from "@/app/components/dashboard/Sidebar";
+import Sidebar, { type DashTab } from "@/app/components/dashboard/Sidebar";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 interface Doc {
@@ -100,6 +101,232 @@ const staggerContainer = { hidden: {}, show: { transition: { staggerChildren: 0.
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } } };
 
 /* ════════════════════════════════════════════════════════════════════════════
+   TAB CONTENT — rendered for every tab except "overview"
+   ════════════════════════════════════════════════════════════════════════════ */
+function TabContent({
+  tab, docs, displayDocs, plan, usage, uploading, deleting,
+  menuOpenId, setMenuOpenId, handleOpenDoc, handleDeleteDoc, onUpload,
+  inviteCopied, handleCopyInvite, onTabChange,
+}: {
+  tab: import("@/app/components/dashboard/Sidebar").DashTab;
+  docs: { id: string; file_name: string; file_url: string; created_at: string }[];
+  displayDocs: { id: string; file_name: string; file_url: string; created_at: string; pages: number; questions: number; isNew: boolean; timeLabel?: string }[];
+  plan: "free" | "pro";
+  usage: { pdfs: number; questions: number; maxPdfs: number; maxQuestions: number; loading: boolean };
+  uploading: boolean;
+  deleting: string | null;
+  menuOpenId: string | null;
+  setMenuOpenId: (id: string | null) => void;
+  handleOpenDoc: (url: string) => void;
+  handleDeleteDoc: (id: string, url: string) => void;
+  onUpload: () => void;
+  inviteCopied: boolean;
+  handleCopyInvite: () => void;
+  onTabChange: (tab: import("@/app/components/dashboard/Sidebar").DashTab) => void;
+}) {
+  function timeAgoLocal(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const h = Math.floor(diff / 3600000);
+    if (h < 1) return "Just now";
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d === 1) return "Yesterday";
+    return `${d}d ago`;
+  }
+
+  const allDocs = docs.length > 0 ? docs : displayDocs;
+
+  /* ── Documents tab ─────────────────────────────────────────── */
+  if (tab === "documents") {
+    return (
+      <motion.div variants={staggerContainer} initial="hidden" animate="show" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="ix-doc-section-head">
+          <div className="ix-section-title"><FileText size={16} /> All Documents ({allDocs.length})</div>
+          <button className="ix-btn-primary" onClick={onUpload} disabled={uploading} style={{ padding: "7px 14px", fontSize: 12 }}>
+            <Upload size={13} /> {uploading ? "Uploading…" : "Upload PDF"}
+          </button>
+        </div>
+        {allDocs.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "48px 0", color: "var(--text-tertiary)", fontSize: 14 }}>
+            <FileText size={36} style={{ opacity: 0.3, marginBottom: 12 }} />
+            <p>No documents yet. Upload your first PDF to get started.</p>
+          </div>
+        ) : (
+          <motion.div className="ix-doc-grid" variants={staggerContainer}>
+            {allDocs.map((doc, i) => {
+              const d = doc as typeof displayDocs[number];
+              const cleanName = doc.file_name.replace(/\.pdf$/i, "");
+              return (
+                <motion.div key={doc.id} variants={fadeUp}>
+                  <div className="ix-doc-card">
+                    <div className="ix-doc-thumb" style={{ height: 80 }}>
+                      <div className="ix-doc-thumb-icon"><FileText size={20} /></div>
+                      <span className={`ix-doc-badge ${d.isNew ? "new" : "read"}`}>{d.isNew ? "New" : "Read"}</span>
+                    </div>
+                    <div className="ix-doc-body">
+                      <div className="ix-doc-name" title={cleanName}>{cleanName}</div>
+                      <div className="ix-doc-meta">
+                        <span>{d.timeLabel ?? timeAgoLocal(doc.created_at)}</span>
+                      </div>
+                    </div>
+                    <div className="ix-doc-footer">
+                      <div className="ix-doc-actions">
+                        <button className="ix-doc-open-btn" onClick={() => doc.file_url && handleOpenDoc(doc.file_url)} disabled={!doc.file_url || deleting === doc.id}>
+                          <ExternalLink size={11} /> {deleting === doc.id ? "…" : "Open"}
+                        </button>
+                        {doc.file_url && (
+                          <div className="ix-doc-more-btn" onClick={e => { e.stopPropagation(); setMenuOpenId(menuOpenId === doc.id ? null : doc.id); }}>
+                            <MoreHorizontal size={14} />
+                            {menuOpenId === doc.id && (
+                              <div className="ix-doc-menu" onClick={e => e.stopPropagation()}>
+                                <button className="ix-doc-menu-item" onClick={() => { setMenuOpenId(null); handleOpenDoc(doc.file_url); }}><ExternalLink size={13} /> Open</button>
+                                <a className="ix-doc-menu-item" href={doc.file_url} target="_blank" rel="noreferrer" onClick={() => setMenuOpenId(null)}><Download size={13} /> Download</a>
+                                <button className={`ix-doc-menu-item danger${plan !== "pro" ? " locked" : ""}`} onClick={() => handleDeleteDoc(doc.id, doc.file_url)}><Trash2 size={13} /> Delete</button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </motion.div>
+    );
+  }
+
+  /* ── Analytics tab ─────────────────────────────────────────── */
+  if (tab === "analytics") {
+    return (
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="ix-doc-section-head">
+          <div className="ix-section-title"><BarChart2 size={16} /> Analytics</div>
+        </div>
+        <div className="ix-stats-row">
+          {[
+            { label: "Documents", val: String(docs.length || 0).padStart(2,"0"), sub: "Total uploaded" },
+            { label: "Questions", val: String(usage.questions).padStart(2,"0"), sub: "Asked this month" },
+            { label: "Remaining", val: Math.max(0, (usage.maxQuestions||5) - usage.questions) === Infinity ? "∞" : String(Math.max(0,(usage.maxQuestions||5)-usage.questions)).padStart(2,"0"), sub: "Questions left" },
+            { label: "Plan",      val: plan === "pro" ? "Pro" : "Free", sub: usage.maxPdfs === Infinity ? "Unlimited" : `${usage.maxPdfs} PDF limit` },
+          ].map(s => (
+            <div key={s.label} className="ix-stat-card">
+              <div className="ix-stat-val">{s.val}</div>
+              <div className="ix-stat-label">{s.label}</div>
+              <div className="ix-stat-sub">{s.sub}</div>
+            </div>
+          ))}
+        </div>
+        <div className="ix-chart-card">
+          <div style={{ padding: "16px 0 8px", color: "var(--text-secondary)", fontSize: 13 }}>
+            Detailed analytics are available on the Pro plan.
+          </div>
+          {plan === "free" && (
+            <button className="ix-btn-primary" style={{ width: "fit-content" }} onClick={() => onTabChange("billing")}>
+              <ArrowUpRight size={14} /> Upgrade to Pro
+            </button>
+          )}
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ── Billing tab ───────────────────────────────────────────── */
+  if (tab === "billing") {
+    return (
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="ix-doc-section-head">
+          <div className="ix-section-title"><CreditCard size={16} /> Billing</div>
+        </div>
+        <div className="ix-banner" style={{ flexDirection: "column", alignItems: "flex-start", gap: 16 }}>
+          <div className="ix-banner-left">
+            <div className="ix-banner-icon"><Shield size={20} /></div>
+            <div>
+              <div className="ix-banner-title">Current plan: {plan === "pro" ? "Pro" : "Free"}</div>
+              <div className="ix-banner-sub">
+                {plan === "pro"
+                  ? "You have unlimited documents and questions."
+                  : `${usage.pdfs}/${usage.maxPdfs} PDFs used · ${usage.questions}/${usage.maxQuestions} questions used this month.`}
+              </div>
+            </div>
+          </div>
+          {plan === "free" && (
+            <a href="#" className="ix-banner-cta" style={{ textDecoration: "none" }}>
+              <ArrowUpRight size={14} /> Upgrade to Pro — ₹299/month
+            </a>
+          )}
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ── Members tab ───────────────────────────────────────────── */
+  if (tab === "members") {
+    return (
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="ix-doc-section-head">
+          <div className="ix-section-title"><Users size={16} /> Team Members</div>
+        </div>
+        <div className="ix-banner">
+          <div className="ix-banner-glow" />
+          <div className="ix-banner-left">
+            <div className="ix-banner-icon"><Users size={20} /></div>
+            <div>
+              <div className="ix-banner-title">Invite your team</div>
+              <div className="ix-banner-sub">Share Intellixy with colleagues and analyse documents together.</div>
+            </div>
+          </div>
+          <button className={`ix-banner-cta${inviteCopied ? " copied" : ""}`} onClick={handleCopyInvite}>
+            {inviteCopied ? <><CheckCircle2 size={14} /> Copied!</> : <><Upload size={14} /> Copy invite link</>}
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ── Conversations tab ─────────────────────────────────────── */
+  if (tab === "conversations") {
+    return (
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="ix-doc-section-head">
+          <div className="ix-section-title"><MessageCircle size={16} /> Conversations</div>
+        </div>
+        <div className="ix-card">
+          <div style={{ padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: 14 }}>
+            <MessageCircle size={36} style={{ opacity: 0.3, marginBottom: 12 }} />
+            <p style={{ marginBottom: 12 }}>Open a document to start a conversation with your PDF.</p>
+            <button className="ix-btn-primary" onClick={() => onTabChange("documents")}>
+              <FileText size={14} /> Go to Documents
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ── Saved / Settings tabs ─────────────────────────────────── */
+  const tabMeta: Record<string, { icon: React.ReactNode; title: string; body: string }> = {
+    saved:    { icon: <Bookmark size={36} style={{ opacity: 0.3, marginBottom: 12 }} />, title: "No saved items yet", body: "Bookmark responses and citations from your conversations to find them here." },
+    settings: { icon: <Settings size={36} style={{ opacity: 0.3, marginBottom: 12 }} />, title: "Settings", body: "Account settings and preferences will appear here." },
+  };
+  const meta = tabMeta[tab] ?? tabMeta.settings;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="ix-card">
+        <div style={{ padding: "48px 32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: 14 }}>
+          {meta.icon}
+          <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>{meta.title}</p>
+          <p>{meta.body}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    DASHBOARD PAGE
    ════════════════════════════════════════════════════════════════════════════ */
 export default function DashboardPage() {
@@ -119,6 +346,7 @@ export default function DashboardPage() {
   });
 
   /* ── UI state ───────────────────────────────────────────────────────────── */
+  const [activeTab,    setActiveTab]    = useState<DashTab>("overview");
   const [cmdOpen,      setCmdOpen]      = useState(false);
   const [cmdQuery,     setCmdQuery]     = useState("");
   const [cmdIdx,       setCmdIdx]       = useState(0);
@@ -551,6 +779,8 @@ export default function DashboardPage() {
           uploading={uploading}
           uploadError={uploadError}
           onUpload={() => { setUploadError(null); fileInputRef.current?.click(); }}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
 
         {/* ── MAIN ────────────────────────────────────────────────────── */}
@@ -562,7 +792,7 @@ export default function DashboardPage() {
               <div className="ds-breadcrumb">
                 <Link href="/">Intellixy</Link>
                 <ChevronRight size={12} className="ds-breadcrumb-sep" />
-                <span className="ds-breadcrumb-cur">Overview</span>
+                <span className="ds-breadcrumb-cur" style={{ textTransform: "capitalize" }}>{activeTab}</span>
               </div>
             </div>
             <div className="ds-topbar-right">
@@ -588,6 +818,30 @@ export default function DashboardPage() {
 
           {/* ── CONTENT ─────────────────────────────────────────────── */}
           <main className="ds-content">
+
+            {/* ── NON-OVERVIEW TABS ────────────────────────────────── */}
+            {activeTab !== "overview" && (
+              <TabContent
+                tab={activeTab}
+                docs={docs}
+                displayDocs={displayDocs}
+                plan={plan}
+                usage={usage}
+                uploading={uploading}
+                deleting={deleting}
+                menuOpenId={menuOpenId}
+                setMenuOpenId={setMenuOpenId}
+                handleOpenDoc={handleOpenDoc}
+                handleDeleteDoc={handleDeleteDoc}
+                onUpload={() => { setUploadError(null); fileInputRef.current?.click(); }}
+                inviteCopied={inviteCopied}
+                handleCopyInvite={handleCopyInvite}
+                onTabChange={setActiveTab}
+              />
+            )}
+
+            {/* ── OVERVIEW SECTIONS (1-8) ───────────────────────────── */}
+            {activeTab === "overview" && (<>
 
             {/* ── 1. WELCOME HERO ───────────────────────────────────── */}
             <motion.div
@@ -1034,6 +1288,8 @@ export default function DashboardPage() {
                 {inviteCopied ? <><CheckCircle2 size={14} /> Copied!</> : <><Upload size={14} /> Copy invite link</>}
               </button>
             </motion.div>
+
+            </>)}
 
           </main>
         </div>
