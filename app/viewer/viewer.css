@@ -430,20 +430,46 @@
 .ch-textarea::placeholder { color: var(--text-3); }
 .ch-textarea:disabled { cursor: not-allowed; opacity: .7; }
 
+/* ── MIC BUTTON ──────────────────────────────────────────────────────────── */
+.ch-mic-btn {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: var(--bg-3); color: var(--text-2);
+  border: 1.5px solid var(--border-md); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+}
+.ch-mic-btn:hover:not(:disabled) {
+  background: var(--bg-2); color: var(--text); border-color: var(--accent);
+}
+.ch-mic-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ch-mic-active {
+  background: rgba(239,68,68,.10) !important;
+  border-color: rgba(239,68,68,.40) !important;
+  color: #DC2626 !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.08);
+  animation: mic-pulse 1.4s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(239,68,68,.08); }
+  50%      { box-shadow: 0 0 0 6px rgba(239,68,68,.04); }
+}
+
 /* ── SEND BUTTON ─────────────────────────────────────────────────────────── */
 .ch-send-btn {
-  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-  background: var(--accent); color: #fff;
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, #F5B942 0%, #D4891A 100%);
+  color: #111827;
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background .15s, transform .12s, box-shadow .15s;
+  box-shadow: 0 2px 8px rgba(245,185,66,.45);
+  transition: opacity .15s, transform .12s, box-shadow .15s;
 }
 .ch-send-btn:hover:not(:disabled) {
-  background: var(--accent-dark);
+  opacity: 0.88;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245,185,66,.3);
+  box-shadow: 0 4px 14px rgba(245,185,66,.55);
 }
-.ch-send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.ch-send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    3-PANEL LAYOUT — Files · Center · Right

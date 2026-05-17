@@ -167,6 +167,11 @@ function ViewerContent() {
   const [compareLoad,   setCompareLoad]   = useState(false);
   const [compareErr,    setCompareErr]    = useState<string | null>(null);
 
+  /* Mic / voice input */
+  const [listening, setListening] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
+
   const endRef      = useRef<HTMLDivElement>(null);
   const abortRef    = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -275,6 +280,36 @@ function ViewerContent() {
   }, [currentDoc, compareDocId, compareQ]);
 
   /* Send chat message */
+  const toggleMic = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    const SR = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!SR) { alert("Voice input is not supported in this browser."); return; }
+
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const rec = new SR();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    recognitionRef.current = rec;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rec.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript as string;
+      setInput(prev => prev ? `${prev} ${transcript}` : transcript);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+
+    rec.start();
+    setListening(true);
+  }, [listening]);
+
   const send = useCallback(async (question?: string) => {
     const q = (question ?? input).trim();
     if (!q || streaming || !rawUrl) return;
@@ -612,16 +647,40 @@ function ViewerContent() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={onKeyDown}
-                  placeholder="Ask about this document…"
+                  placeholder={listening ? "Listening…" : "Ask about this document…"}
                   disabled={streaming}
                   autoComplete="off"
                 />
+                {/* Mic button */}
+                <button
+                  className={`ch-mic-btn${listening ? " ch-mic-active" : ""}`}
+                  onClick={toggleMic}
+                  disabled={streaming}
+                  aria-label={listening ? "Stop recording" : "Voice input"}
+                  title={listening ? "Stop recording" : "Voice input"}
+                >
+                  {listening ? (
+                    /* Stop / wave animation */
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="6" y="6" width="12" height="12" rx="2"/>
+                    </svg>
+                  ) : (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="2" width="6" height="12" rx="3"/>
+                      <path d="M5 10a7 7 0 0 0 14 0"/>
+                      <line x1="12" y1="19" x2="12" y2="22"/>
+                      <line x1="9" y1="22" x2="15" y2="22"/>
+                    </svg>
+                  )}
+                </button>
+                {/* Send button */}
                 <button className="ch-send-btn" onClick={() => send()} disabled={streaming || !input.trim()} aria-label="Send">
                   {streaming ? (
-                    <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "pvw-spin .7s linear infinite" }} />
+                    <div style={{ width: 14, height: 14, border: "2.5px solid rgba(255,255,255,.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "pvw-spin .7s linear infinite" }} />
                   ) : (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M13 1L1 7l4 2m8-8L7 13l-2-4m8-8L5 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                     </svg>
                   )}
                 </button>
