@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -104,11 +105,12 @@ const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transi
    TAB CONTENT — rendered for every tab except "overview"
    ════════════════════════════════════════════════════════════════════════════ */
 function TabContent({
-  tab, docs, displayDocs, plan, usage, uploading, deleting,
+  tab, user, docs, displayDocs, plan, usage, uploading, deleting,
   menuOpenId, setMenuOpenId, handleOpenDoc, handleDeleteDoc, onUpload,
   inviteCopied, handleCopyInvite, onTabChange,
 }: {
   tab: import("@/app/components/dashboard/Sidebar").DashTab;
+  user: User | null;
   docs: { id: string; file_name: string; file_url: string; created_at: string }[];
   displayDocs: { id: string; file_name: string; file_url: string; created_at: string; pages: number; questions: number; isNew: boolean; timeLabel?: string }[];
   plan: "free" | "pro";
@@ -306,20 +308,173 @@ function TabContent({
     );
   }
 
-  /* ── Saved / Settings tabs ─────────────────────────────────── */
-  const tabMeta: Record<string, { icon: React.ReactNode; title: string; body: string }> = {
-    saved:    { icon: <Bookmark size={36} style={{ opacity: 0.3, marginBottom: 12 }} />, title: "No saved items yet", body: "Bookmark responses and citations from your conversations to find them here." },
-    settings: { icon: <Settings size={36} style={{ opacity: 0.3, marginBottom: 12 }} />, title: "Settings", body: "Account settings and preferences will appear here." },
+  /* ── Saved tab ─────────────────────────────────────────────── */
+  if (tab === "saved") {
+    return (
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="ix-doc-section-head">
+          <div className="ix-section-title"><Bookmark size={16} /> Saved Items</div>
+        </div>
+        <div className="ix-card">
+          <div style={{ padding: "48px 32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: 14 }}>
+            <Bookmark size={36} style={{ opacity: 0.25, marginBottom: 12 }} />
+            <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>No saved items yet</p>
+            <p>Bookmark responses and citations from your conversations to find them here.</p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ── Settings tab ───────────────────────────────────────────── */
+  if (tab === "settings") {
+    return <SettingsPanel user={user} plan={plan} />;
+  }
+
+  return null;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SETTINGS PANEL
+   ════════════════════════════════════════════════════════════════════════════ */
+function SettingsPanel({ user, plan }: { user: User | null; plan: "free" | "pro" }) {
+  const router = useRouter();
+  const [displayName, setDisplayName] = useState(user?.user_metadata?.full_name ?? "");
+  const [saving,      setSaving]      = useState(false);
+  const [saveMsg,     setSaveMsg]     = useState<{ ok: boolean; text: string } | null>(null);
+  const [pwdSent,     setPwdSent]     = useState(false);
+  const [pwdSending,  setPwdSending]  = useState(false);
+
+  const email = user?.email ?? "";
+
+  const handleSaveProfile = async () => {
+    setSaving(true); setSaveMsg(null);
+    const { error } = await supabase.auth.updateUser({ data: { full_name: displayName } });
+    setSaving(false);
+    setSaveMsg(error ? { ok: false, text: error.message } : { ok: true, text: "Profile updated." });
   };
-  const meta = tabMeta[tab] ?? tabMeta.settings;
+
+  const handlePasswordReset = async () => {
+    if (!email) return;
+    setPwdSending(true);
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setPwdSending(false);
+    setPwdSent(true);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+  };
+
+  const row: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 6 };
+  const label: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" };
+  const input: React.CSSProperties = {
+    padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)",
+    background: "var(--bg)", color: "var(--text)", fontSize: 14, outline: "none",
+    fontFamily: "inherit", transition: "border-color .15s",
+  };
+  const section: React.CSSProperties = {
+    background: "var(--bg-secondary)", border: "1px solid var(--border)",
+    borderRadius: 14, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16,
+  };
+  const sectionTitle: React.CSSProperties = {
+    fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 4,
+    display: "flex", alignItems: "center", gap: 7,
+  };
+  const divider: React.CSSProperties = { border: "none", borderTop: "1px solid var(--border)", margin: "4px 0" };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div className="ix-card">
-        <div style={{ padding: "48px 32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: 14 }}>
-          {meta.icon}
-          <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>{meta.title}</p>
-          <p>{meta.body}</p>
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+      style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 640 }}>
+
+      {/* ── Profile ───────────────────────────────────────────── */}
+      <div style={section}>
+        <div style={sectionTitle}><Settings size={15} color="var(--accent)" /> Profile</div>
+        <hr style={divider} />
+        <div style={row}>
+          <label style={label}>Display name</label>
+          <input
+            style={input}
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+            placeholder="Your name"
+            onFocus={e => (e.target.style.borderColor = "rgba(245,185,66,0.6)")}
+            onBlur={e => (e.target.style.borderColor = "var(--border)")}
+          />
+        </div>
+        <div style={row}>
+          <label style={label}>Email address</label>
+          <input style={{ ...input, background: "var(--bg-hover)", color: "var(--text-tertiary)", cursor: "not-allowed" }} value={email} readOnly />
+          <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Email cannot be changed here.</span>
+        </div>
+        {saveMsg && (
+          <p style={{ fontSize: 12, color: saveMsg.ok ? "var(--accent)" : "var(--red)", margin: 0 }}>{saveMsg.text}</p>
+        )}
+        <button className="ix-btn-primary" style={{ width: "fit-content", padding: "8px 18px", fontSize: 13 }}
+          onClick={handleSaveProfile} disabled={saving}>
+          {saving ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+
+      {/* ── Security ──────────────────────────────────────────── */}
+      <div style={section}>
+        <div style={sectionTitle}><Shield size={15} color="var(--accent)" /> Security</div>
+        <hr style={divider} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>Password</p>
+            <p style={{ fontSize: 12, color: "var(--text-tertiary)", margin: "3px 0 0" }}>We'll send a reset link to {email}.</p>
+          </div>
+          {pwdSent ? (
+            <p style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>✓ Reset link sent — check your email.</p>
+          ) : (
+            <button className="ix-btn-secondary" style={{ fontSize: 13, padding: "8px 16px" }}
+              onClick={handlePasswordReset} disabled={pwdSending}>
+              {pwdSending ? "Sending…" : "Send reset link"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Plan ──────────────────────────────────────────────── */}
+      <div style={section}>
+        <div style={sectionTitle}><CreditCard size={15} color="var(--accent)" /> Plan &amp; Billing</div>
+        <hr style={divider} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>
+              {plan === "pro" ? "Pro plan" : "Free plan"}
+            </p>
+            <p style={{ fontSize: 12, color: "var(--text-tertiary)", margin: "3px 0 0" }}>
+              {plan === "pro" ? "Unlimited documents and questions." : "3 PDFs · 5 questions per month."}
+            </p>
+          </div>
+          {plan === "free" && (
+            <a href="#" className="ix-btn-primary" style={{ textDecoration: "none", fontSize: 13, padding: "8px 16px" }}>
+              <ArrowUpRight size={13} /> Upgrade to Pro
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* ── Danger zone ───────────────────────────────────────── */}
+      <div style={{ ...section, borderColor: "rgba(239,68,68,0.18)", background: "rgba(239,68,68,0.03)" }}>
+        <div style={{ ...sectionTitle, color: "var(--red)" }}>Danger zone</div>
+        <hr style={{ ...divider, borderColor: "rgba(239,68,68,0.12)" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>Sign out</p>
+            <p style={{ fontSize: 12, color: "var(--text-tertiary)", margin: "3px 0 0" }}>Sign out of your account on this device.</p>
+          </div>
+          <button
+            style={{ padding: "8px 16px", borderRadius: 9, border: "1px solid rgba(239,68,68,0.3)", background: "none",
+              color: "var(--red)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+            onClick={handleSignOut}>
+            Sign out
+          </button>
         </div>
       </div>
     </motion.div>
@@ -823,6 +978,7 @@ export default function DashboardPage() {
             {activeTab !== "overview" && (
               <TabContent
                 tab={activeTab}
+                user={user}
                 docs={docs}
                 displayDocs={displayDocs}
                 plan={plan}
