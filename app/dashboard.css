@@ -1,31 +1,31 @@
 /* ══════════════════════════════════════════════════════════════════════════
    INTELLIXY — Dashboard
-   AI-native workspace. Amber (#F59E0B) accent, dark theme.
+   AI-native workspace. Gold (#F5B942) accent, warm cream theme.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── ROOT SHELL ──────────────────────────────────────────────────────────── */
 .ds-dash {
-  /* ── Light theme: white background ─────────────────────────────────── */
-  --bg:             #FFFFFF;
-  --bg-secondary:   #F9F9F9;
-  --bg-hover:       #F0F0F0;
-  --border:         #E5E5E5;
-  --border-strong:  #D4D4D4;
-  --text:           #0D0D0D;
-  --text-secondary: #5D5D5D;
-  --text-tertiary:  #8E8E8E;
-  --accent:         #F59E0B;
-  --accent-dark:    #D97706;
+  /* ── Warm cream theme — matches landing page palette ────────────────── */
+  --bg:             #FFFDF7;
+  --bg-secondary:   #FFF8EE;
+  --bg-hover:       #FFF2DC;
+  --border:         #EDE8DC;
+  --border-strong:  #D8CFBF;
+  --text:           #111827;
+  --text-secondary: #4B4535;
+  --text-tertiary:  #7D7060;
+  --accent:         #F5B942;
+  --accent-dark:    #D4891A;
   --accent-fg:      #FFFFFF;
-  --accent-pale:    rgba(245,158,11,0.10);
-  --accent-glow:    rgba(245,158,11,0.15);
-  --green:          #F59E0B;
-  --green-pale:     rgba(245,158,11,0.10);
-  --brand:          #F59E0B;
-  --brand-dark:     #D97706;
-  --brand-bg:       rgba(245,158,11,0.10);
-  --brand-ring:     rgba(245,158,11,0.25);
-  --brand-glow:     rgba(245,158,11,0.15);
+  --accent-pale:    rgba(245,185,66,0.12);
+  --accent-glow:    rgba(245,185,66,0.20);
+  --green:          #F5B942;
+  --green-pale:     rgba(245,185,66,0.12);
+  --brand:          #F5B942;
+  --brand-dark:     #D4891A;
+  --brand-bg:       rgba(245,185,66,0.10);
+  --brand-ring:     rgba(245,185,66,0.28);
+  --brand-glow:     rgba(245,185,66,0.20);
   --blue:           #3B82F6;
   --blue-pale:      rgba(59,130,246,0.10);
   --orange:         #F97316;
@@ -34,10 +34,10 @@
   --red-pale:       rgba(239,68,68,0.10);
   --purple:         #8B5CF6;
   --purple-pale:    rgba(139,92,246,0.10);
-  --citation-bg:    rgba(245,158,11,0.12);
-  --sh-sm:          0 2px 8px  rgba(0,0,0,0.06);
-  --sh-md:          0 4px 20px rgba(0,0,0,0.08);
-  --sh-lg:          0 8px 40px rgba(0,0,0,0.10);
+  --citation-bg:    rgba(245,185,66,0.14);
+  --sh-sm:          0 2px 8px  rgba(180,130,0,0.08);
+  --sh-md:          0 4px 20px rgba(180,130,0,0.10);
+  --sh-lg:          0 8px 40px rgba(180,130,0,0.14);
   /* ── Layout ─────────────────────────────────────────────────────────── */
   height: 100vh; height: 100dvh;
   display: flex; flex-direction: column;
@@ -130,7 +130,7 @@
   border-radius: 999px; padding: 1px 6px;
 }
 .ds-nav-item.is-active .ds-nav-badge {
-  background: rgba(245,158,11,.15); color: var(--accent);
+  background: rgba(245,185,66,.15); color: var(--accent);
 }
 
 /* Sidebar footer */
@@ -262,7 +262,7 @@
   font-size: 12.5px; font-weight: 600; cursor: pointer;
   transition: background var(--ease-base);
 }
-.ds-ai-btn:hover { background: rgba(245,158,11,.15); }
+.ds-ai-btn:hover { background: rgba(245,185,66,.15); }
 .ds-bell {
   position: relative; width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
@@ -569,12 +569,12 @@
 }
 .ix-pro-glow {
   position: absolute; width: 200px; height: 200px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(245,158,11,.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245,185,66,.25) 0%, transparent 70%);
   pointer-events: none;
 }
 .ix-pro-eyebrow {
   font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
-  color: rgba(245,158,11,.9);
+  color: rgba(245,185,66,.9);
 }
 .ix-pro-title {
   font-size: 18px; font-weight: 800; letter-spacing: -.3px; color: #fff; line-height: 1.2;
@@ -634,7 +634,7 @@
   transition: height .65s cubic-bezier(.22,1,.36,1);
 }
 .ix-bar.today { background: var(--accent); }
-.ix-bar.accent { background: rgba(245,158,11,.4); }
+.ix-bar.accent { background: rgba(245,185,66,.4); }
 .ix-bar.base   { background: var(--border-strong); }
 .ix-bar-day { font-size: 10px; color: var(--text-tertiary); }
 .ix-chart-meta {
@@ -701,7 +701,7 @@
   font-size: 12.5px; color: var(--text); line-height: 1.6;
 }
 .ix-conv-bubble mark {
-  background: rgba(245,158,11,.18); color: var(--accent);
+  background: rgba(245,185,66,.18); color: var(--accent);
   border-radius: 3px; padding: 0 2px;
 }
 .ix-conv-cite {
@@ -779,7 +779,7 @@
 .ix-banner-glow {
   position: absolute; right: -60px; top: -60px;
   width: 200px; height: 200px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(245,158,11,.14) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245,185,66,.14) 0%, transparent 70%);
   pointer-events: none;
 }
 .ix-banner-left { display: flex; align-items: center; gap: 14px; }
@@ -802,108 +802,111 @@
 .ix-banner-cta.copied { background: var(--green); }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   DARK THEME ENHANCEMENTS
+   GOLD THEME ENHANCEMENTS — matches landing page warm cream + gold palette
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Atmospheric content background */
+/* Atmospheric content background — warm cream with golden ambient glow */
 .ds-dash .ds-content {
   background:
-    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(245,158,11,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 35% at 80% 80%, rgba(96,165,250,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 38% at 15% 8%,  rgba(245,185,66,0.09) 0%, transparent 62%),
+    radial-gradient(ellipse 45% 32% at 85% 85%,  rgba(245,185,66,0.06) 0%, transparent 62%),
+    radial-gradient(ellipse 40% 28% at 60% 40%,  rgba(255,214,107,0.04) 0%, transparent 60%),
     var(--bg);
 }
 
-/* Sidebar glass */
+/* Sidebar — warm cream glass matching landing page nav */
 .ds-dash .ds-sidebar {
-  background: rgba(6,15,26,0.95);
+  background: rgba(255,253,247,0.97);
   backdrop-filter: blur(12px);
-  border-right-color: rgba(255,255,255,0.07);
+  border-right: 1px solid rgba(245,185,66,0.18);
 }
 
-/* Topbar glass */
+/* Topbar — warm cream glass */
 .ds-dash .ds-topbar {
-  background: rgba(3,8,16,0.85);
+  background: rgba(255,253,247,0.95);
   backdrop-filter: blur(16px);
-  border-bottom-color: rgba(255,255,255,0.07);
+  border-bottom: 1px solid rgba(245,185,66,0.16);
 }
 
-/* Gradient primary buttons */
+/* Primary buttons — pure gold gradient matching landing CTA */
 .ds-dash .ix-btn-primary,
 .ds-dash .ds-upload-btn,
 .ds-dash .ix-pro-cta,
 .ds-dash .ix-banner-cta,
 .ds-dash .ix-doc-open-btn {
-  background: linear-gradient(135deg, #F59E0B 0%, #0EA5E9 100%);
-  box-shadow: 0 0 18px rgba(245,158,11,0.25);
+  background: linear-gradient(135deg, #F5B942 0%, #FFD66B 55%, #F5B942 100%);
+  box-shadow: 0 2px 14px rgba(245,185,66,0.35);
+  color: #111827;
 }
 .ds-dash .ix-btn-primary:hover,
 .ds-dash .ds-upload-btn:hover,
 .ds-dash .ix-pro-cta:hover,
 .ds-dash .ix-banner-cta:hover,
 .ds-dash .ix-doc-open-btn:hover {
-  background: linear-gradient(135deg, #D97706 0%, #0284C7 100%);
-  box-shadow: 0 0 24px rgba(245,158,11,0.35);
+  background: linear-gradient(135deg, #D4891A 0%, #F5B942 60%, #D4891A 100%);
+  box-shadow: 0 4px 22px rgba(245,185,66,0.45);
   transform: translateY(-1px);
+  color: #fff;
 }
 
-/* Card hover glow */
+/* Card hover — light gold border glow */
 .ds-dash .ix-stat-card:hover,
 .ds-dash .ix-doc-card:hover,
 .ds-dash .ix-insight-card:hover,
 .ds-dash .ix-template-card:hover {
-  box-shadow: 0 0 0 1px rgba(245,158,11,0.2), 0 8px 32px rgba(0,0,0,0.6);
-  border-color: rgba(245,158,11,0.2);
+  box-shadow: 0 0 0 1px rgba(245,185,66,0.28), 0 6px 24px rgba(180,130,0,0.12);
+  border-color: rgba(245,185,66,0.28);
 }
 
-/* Hero welcome banner accent */
+/* Hero welcome banner — warm gold on cream */
 .ds-dash .ix-hero {
-  background: linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(6,15,26,0.9) 100%);
-  border-color: rgba(245,158,11,0.14);
+  background: linear-gradient(135deg, rgba(245,185,66,0.08) 0%, rgba(255,248,238,0.95) 100%);
+  border-color: rgba(245,185,66,0.20);
 }
 
-/* Active sidebar item stronger glow */
+/* Active sidebar item */
 .ds-dash .ds-nav-item.is-active {
-  background: rgba(245,158,11,0.12);
-  box-shadow: inset 0 0 0 1px rgba(245,158,11,0.15);
+  background: rgba(245,185,66,0.12);
+  box-shadow: inset 0 0 0 1px rgba(245,185,66,0.18);
 }
 
-/* Logo mark gradient */
+/* Logo mark — pure gold gradient */
 .ds-dash .ds-logo-mark {
-  background: linear-gradient(135deg, #F59E0B 0%, #0EA5E9 100%);
-  box-shadow: 0 0 12px rgba(245,158,11,0.3);
+  background: linear-gradient(135deg, #F5B942 0%, #D4891A 100%);
+  box-shadow: 0 0 10px rgba(245,185,66,0.30);
 }
 
-/* Scroll bar for dark bg */
+/* Scrollbar — light track, gold thumb */
 .ds-dash .ds-content::-webkit-scrollbar { width: 6px; }
 .ds-dash .ds-content::-webkit-scrollbar-track { background: transparent; }
 .ds-dash .ds-content::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.12); border-radius: 999px;
+  background: rgba(245,185,66,0.28); border-radius: 999px;
 }
-.ds-dash .ds-content::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+.ds-dash .ds-content::-webkit-scrollbar-thumb:hover { background: rgba(245,185,66,0.45); }
 
-/* Pro card dark glass */
+/* Pro card — dark gold glass (keeps contrast for upsell card) */
 .ds-dash .ix-pro-card {
-  background: linear-gradient(135deg, #0D1B2A 0%, #060F1A 100%);
-  border: 1px solid rgba(245,158,11,0.2);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  background: linear-gradient(135deg, #1A1000 0%, #0D0800 100%);
+  border: 1px solid rgba(245,185,66,0.25);
+  box-shadow: inset 0 1px 0 rgba(255,214,107,0.08);
 }
 
-/* Analytics chart accent bar stronger */
+/* Analytics chart accent bar — solid gold */
 .ds-dash .ix-bar.today {
-  background: linear-gradient(to top, #F59E0B, #0EA5E9);
-  box-shadow: 0 0 8px rgba(245,158,11,0.4);
+  background: linear-gradient(to top, #D4891A, #F5B942);
+  box-shadow: 0 0 8px rgba(245,185,66,0.40);
 }
 
-/* Metric card slight left border accent */
+/* Metric card left border accent */
 .ds-dash .ix-metric-card {
-  border-left: 2px solid rgba(245,158,11,0.25);
+  border-left: 2px solid rgba(245,185,66,0.32);
 }
 
-/* Search bar subtle */
+/* Search bar — warm on cream */
 .ds-dash .ds-search {
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,253,247,0.80);
 }
 .ds-dash .ds-search:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(245,158,11,0.25);
+  background: rgba(255,253,247,1.00);
+  border-color: rgba(245,185,66,0.30);
 }
