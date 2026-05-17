@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import OAuthSignupTracker from "@/app/components/OAuthSignupTracker";
 import Sidebar, { type DashTab } from "@/app/components/dashboard/Sidebar";
+import { Events } from "@/lib/analytics";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 interface Doc {
@@ -817,6 +818,8 @@ export default function DashboardPage() {
 
   async function handleUpgrade() {
     if (plan === "pro") { setActiveTab("billing"); return; }
+    Events.upgradeClick();
+    Events.paymentStart();
     try {
       // 1. Create Razorpay subscription on the server
       const res = await fetch("/api/create-subscription", { method: "POST", credentials: "include" });
@@ -863,6 +866,7 @@ export default function DashboardPage() {
             });
             const verifyData = await verifyRes.json();
             if (!verifyRes.ok || !verifyData.success) throw new Error(verifyData.error ?? "Verification failed");
+            Events.paymentSuccess(response.razorpay_payment_id, 29900);
             setPlan("pro");
             setUsage(p => ({ ...p, maxPdfs: Infinity, maxQuestions: Infinity }));
             showToast("Welcome to Pro! Unlimited reading unlocked.");
