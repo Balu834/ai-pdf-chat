@@ -39,7 +39,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://intellixy.vercel.app
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID?.trim();
 
 export const viewport: Viewport = {
-  themeColor: "#0D0D0D",
+  themeColor: "#F5B942",
   width: "device-width",
   initialScale: 1,
   minimumScale: 1,
