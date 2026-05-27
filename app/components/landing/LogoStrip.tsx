@@ -105,6 +105,17 @@ export default function LogoStrip() {
         </motion.div>
       </div>
 
+      {/* ── Trust tagline ─────────────────────────────────────────────── */}
+      <motion.p
+        className="lp-trust-tagline"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, delay: 0.08 }}
+      >
+        Trusted by <strong>10,000+ professionals and teams</strong> worldwide
+      </motion.p>
+
       {/* ── Company logos ─────────────────────────────────────────────── */}
       <motion.div
         className="lp-logos-row"
