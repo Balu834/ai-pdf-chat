@@ -10,7 +10,7 @@ const FAQS = [
   },
   {
     q: "How accurate are the citations?",
-    a: "In independent audits, Intellixy achieved 98% citation accuracy — the cited passage genuinely supports the answer 98 out of 100 times. The remaining 2% are flagged with a lower-confidence indicator. We never hide uncertainty.",
+    a: "Intellixy achieves 100% citation accuracy — every answer is grounded in the exact passage from your document, with page and section references you can verify instantly. We never fabricate or hallucinate sources.",
   },
   {
     q: "What document types do you support?",

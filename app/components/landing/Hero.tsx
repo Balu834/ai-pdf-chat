@@ -48,15 +48,16 @@ export default function Hero() {
           transition={{ duration: 0.55, ease }}
         >
           <div className="lp-hero-eyebrow">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
-            </svg>
+            <span className="lp-hero-eyebrow-live" aria-hidden />
             AI Document Intelligence
           </div>
 
           <h1 className="lp-hero-h1">
-            Stop reading.<br />
-            <span className="lp-hero-h1-accent">Start understanding.</span>
+            Stop Searching Through PDFs.<br />
+            <span className="lp-hero-h1-accent">
+              Just Ask.
+              <span className="lp-hero-h1-glow" aria-hidden />
+            </span>
           </h1>
 
           <p className="lp-hero-sub">
@@ -103,6 +104,16 @@ export default function Hero() {
         >
           <div className="lp-mp-wrap">
 
+            {/* Orbit rings */}
+            <div className="lp-orbit-wrap" aria-hidden>
+              <div className="lp-orbit-ring lp-orbit-1" />
+              <div className="lp-orbit-ring lp-orbit-2" />
+              <div className="lp-orbit-ring lp-orbit-3" />
+            </div>
+
+            {/* Golden glow orb */}
+            <div className="lp-mp-glow-orb" aria-hidden />
+
             {/* Document Insights (top-left, white panel) */}
             <motion.div
               className="lp-mp-panel lp-mp-light lp-mp-insights"
@@ -116,11 +127,11 @@ export default function Hero() {
               <svg width="108" height="32" viewBox="0 0 108 32" fill="none" style={{marginTop: '6px', display: 'block'}}>
                 <defs>
                   <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F5B942" stopOpacity="0.28"/>
-                    <stop offset="100%" stopColor="#F5B942" stopOpacity="0"/>
+                    <stop offset="0%" stopColor="#0A0A0A" stopOpacity="0.14"/>
+                    <stop offset="100%" stopColor="#0A0A0A" stopOpacity="0"/>
                   </linearGradient>
                 </defs>
-                <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1" stroke="#F5B942" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1" stroke="#0A0A0A" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
                 <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1 L108 32 L0 32Z" fill="url(#spark-grad)"/>
               </svg>
             </motion.div>
@@ -245,7 +256,7 @@ export default function Hero() {
               <div className="lp-mp-gauge">
                 <div className="lp-mp-gauge-ring">
                   <div className="lp-mp-gauge-inner">
-                    <span className="lp-mp-gauge-val">98%</span>
+                    <span className="lp-mp-gauge-val">100%</span>
                   </div>
                 </div>
               </div>

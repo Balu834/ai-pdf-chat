@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { IntellixyBrainIcon } from "@/app/components/IntellixyBrainIcon";
 
 const COLS = [
   {
@@ -37,12 +38,7 @@ export default function Footer() {
         <div>
           <Link href="/" className="lp-footer-logo">
             <span className="lp-footer-logo-mark" aria-hidden>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
-                <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
-                <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
-                <rect x="3"  y="16" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".4"/>
-              </svg>
+              <IntellixyBrainIcon size={24} />
             </span>
             Intellixy
           </Link>

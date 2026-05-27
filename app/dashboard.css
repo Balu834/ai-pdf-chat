@@ -1,43 +1,43 @@
 /* ══════════════════════════════════════════════════════════════════════════
    INTELLIXY — Dashboard
-   AI-native workspace. Gold (#F5B942) accent, warm cream theme.
+   Premium white SaaS workspace. Black (#0A0A0A) primary, clean borders.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── ROOT SHELL ──────────────────────────────────────────────────────────── */
 .ds-dash {
-  /* ── Warm cream theme — matches landing page palette ────────────────── */
-  --bg:             #FFFDF7;
-  --bg-secondary:   #FFF8EE;
-  --bg-hover:       #FFF2DC;
-  --border:         #EDE8DC;
-  --border-strong:  #D8CFBF;
-  --text:           #111827;
-  --text-secondary: #4B4535;
-  --text-tertiary:  #7D7060;
-  --accent:         #F5B942;
-  --accent-dark:    #D4891A;
+  /* ── Premium white theme ────────────────────────────────────────────── */
+  --bg:             #FFFFFF;
+  --bg-secondary:   #F9F9F9;
+  --bg-hover:       #F0F0F0;
+  --border:         #EAEAEA;
+  --border-strong:  #D4D4D8;
+  --text:           #0A0A0A;
+  --text-secondary: #5F6368;
+  --text-tertiary:  #9AA0A6;
+  --accent:         #0A0A0A;
+  --accent-dark:    #1A1A1A;
   --accent-fg:      #FFFFFF;
-  --accent-pale:    rgba(245,185,66,0.12);
-  --accent-glow:    rgba(245,185,66,0.20);
-  --green:          #F5B942;
-  --green-pale:     rgba(245,185,66,0.12);
-  --brand:          #F5B942;
-  --brand-dark:     #D4891A;
-  --brand-bg:       rgba(245,185,66,0.10);
-  --brand-ring:     rgba(245,185,66,0.28);
-  --brand-glow:     rgba(245,185,66,0.20);
+  --accent-pale:    rgba(0,0,0,0.06);
+  --accent-glow:    rgba(0,0,0,0.10);
+  --green:          #0A0A0A;
+  --green-pale:     rgba(0,0,0,0.05);
+  --brand:          #0A0A0A;
+  --brand-dark:     #1A1A1A;
+  --brand-bg:       rgba(0,0,0,0.05);
+  --brand-ring:     rgba(0,0,0,0.12);
+  --brand-glow:     rgba(0,0,0,0.08);
   --blue:           #3B82F6;
-  --blue-pale:      rgba(59,130,246,0.10);
+  --blue-pale:      rgba(59,130,246,0.08);
   --orange:         #F97316;
-  --orange-pale:    rgba(249,115,22,0.10);
+  --orange-pale:    rgba(249,115,22,0.08);
   --red:            #EF4444;
-  --red-pale:       rgba(239,68,68,0.10);
+  --red-pale:       rgba(239,68,68,0.08);
   --purple:         #8B5CF6;
-  --purple-pale:    rgba(139,92,246,0.10);
-  --citation-bg:    rgba(245,185,66,0.14);
-  --sh-sm:          0 2px 8px  rgba(180,130,0,0.08);
-  --sh-md:          0 4px 20px rgba(180,130,0,0.10);
-  --sh-lg:          0 8px 40px rgba(180,130,0,0.14);
+  --purple-pale:    rgba(139,92,246,0.08);
+  --citation-bg:    rgba(0,0,0,0.05);
+  --sh-sm:          0 2px 8px  rgba(0,0,0,0.04);
+  --sh-md:          0 4px 20px rgba(0,0,0,0.06);
+  --sh-lg:          0 8px 40px rgba(0,0,0,0.08);
   /* ── Layout ─────────────────────────────────────────────────────────── */
   height: 100vh; height: 100dvh;
   display: flex; flex-direction: column;
@@ -80,8 +80,6 @@
   border-bottom: 1px solid var(--border);
 }
 .ds-logo-mark {
-  width: 28px; height: 28px; border-radius: 8px;
-  background: var(--accent); color: #fff;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; text-decoration: none;
 }
@@ -130,7 +128,7 @@
   border-radius: 999px; padding: 1px 6px;
 }
 .ds-nav-item.is-active .ds-nav-badge {
-  background: rgba(245,185,66,.15); color: var(--accent);
+  background: rgba(0,0,0,.15); color: var(--accent);
 }
 
 /* Sidebar footer */
@@ -262,7 +260,7 @@
   font-size: 12.5px; font-weight: 600; cursor: pointer;
   transition: background var(--ease-base);
 }
-.ds-ai-btn:hover { background: rgba(245,185,66,.15); }
+.ds-ai-btn:hover { background: rgba(0,0,0,.15); }
 .ds-bell {
   position: relative; width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
@@ -284,7 +282,7 @@
 
 /* ── CONTENT ─────────────────────────────────────────────────────────────── */
 .ds-content {
-  flex: 1; overflow-y: auto; padding: 24px;
+  flex: 1; overflow-y: auto; padding: 24px 24px 48px;
   display: flex; flex-direction: column; gap: 24px;
 }
 
@@ -569,12 +567,12 @@
 }
 .ix-pro-glow {
   position: absolute; width: 200px; height: 200px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(245,185,66,.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0,0,0,.25) 0%, transparent 70%);
   pointer-events: none;
 }
 .ix-pro-eyebrow {
   font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
-  color: rgba(245,185,66,.9);
+  color: rgba(0,0,0,.9);
 }
 .ix-pro-title {
   font-size: 18px; font-weight: 800; letter-spacing: -.3px; color: #fff; line-height: 1.2;
@@ -634,7 +632,7 @@
   transition: height .65s cubic-bezier(.22,1,.36,1);
 }
 .ix-bar.today { background: var(--accent); }
-.ix-bar.accent { background: rgba(245,185,66,.4); }
+.ix-bar.accent { background: rgba(0,0,0,.4); }
 .ix-bar.base   { background: var(--border-strong); }
 .ix-bar-day { font-size: 10px; color: var(--text-tertiary); }
 .ix-chart-meta {
@@ -701,7 +699,7 @@
   font-size: 12.5px; color: var(--text); line-height: 1.6;
 }
 .ix-conv-bubble mark {
-  background: rgba(245,185,66,.18); color: var(--accent);
+  background: rgba(0,0,0,.18); color: var(--accent);
   border-radius: 3px; padding: 0 2px;
 }
 .ix-conv-cite {
@@ -770,7 +768,7 @@
 
 /* ── INVITE/UPGRADE BANNER ───────────────────────────────────────────────── */
 .ix-banner {
-  position: relative; overflow: hidden;
+  position: relative;
   background: var(--bg-secondary); border: 1px solid var(--border);
   border-radius: 14px; padding: 20px 24px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
@@ -779,7 +777,7 @@
 .ix-banner-glow {
   position: absolute; right: -60px; top: -60px;
   width: 200px; height: 200px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(245,185,66,.14) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0,0,0,.14) 0%, transparent 70%);
   pointer-events: none;
 }
 .ix-banner-left { display: flex; align-items: center; gap: 14px; }
@@ -802,111 +800,327 @@
 .ix-banner-cta.copied { background: var(--green); }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   GOLD THEME ENHANCEMENTS — matches landing page warm cream + gold palette
+   PREMIUM WHITE THEME ENHANCEMENTS
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Atmospheric content background — warm cream with golden ambient glow */
+/* Clean white content background */
 .ds-dash .ds-content {
-  background:
-    radial-gradient(ellipse 55% 38% at 15% 8%,  rgba(245,185,66,0.09) 0%, transparent 62%),
-    radial-gradient(ellipse 45% 32% at 85% 85%,  rgba(245,185,66,0.06) 0%, transparent 62%),
-    radial-gradient(ellipse 40% 28% at 60% 40%,  rgba(255,214,107,0.04) 0%, transparent 60%),
-    var(--bg);
+  background: var(--bg);
 }
 
-/* Sidebar — warm cream glass matching landing page nav */
+/* Sidebar — pure white glass */
 .ds-dash .ds-sidebar {
-  background: rgba(255,253,247,0.97);
+  background: rgba(255,255,255,0.98);
   backdrop-filter: blur(12px);
-  border-right: 1px solid rgba(245,185,66,0.18);
+  border-right: 1px solid #EAEAEA;
 }
 
-/* Topbar — warm cream glass */
+/* Topbar — pure white glass */
 .ds-dash .ds-topbar {
-  background: rgba(255,253,247,0.95);
+  background: rgba(255,255,255,0.96);
   backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(245,185,66,0.16);
+  border-bottom: 1px solid #EAEAEA;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
 }
 
-/* Primary buttons — pure gold gradient matching landing CTA */
+/* Primary buttons — premium black */
 .ds-dash .ix-btn-primary,
 .ds-dash .ds-upload-btn,
 .ds-dash .ix-pro-cta,
 .ds-dash .ix-banner-cta,
 .ds-dash .ix-doc-open-btn {
-  background: linear-gradient(135deg, #F5B942 0%, #FFD66B 55%, #F5B942 100%);
-  box-shadow: 0 2px 14px rgba(245,185,66,0.35);
-  color: #111827;
+  background: #0A0A0A;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+  color: #FFFFFF;
 }
 .ds-dash .ix-btn-primary:hover,
 .ds-dash .ds-upload-btn:hover,
 .ds-dash .ix-pro-cta:hover,
 .ds-dash .ix-banner-cta:hover,
 .ds-dash .ix-doc-open-btn:hover {
-  background: linear-gradient(135deg, #D4891A 0%, #F5B942 60%, #D4891A 100%);
-  box-shadow: 0 4px 22px rgba(245,185,66,0.45);
+  background: #1A1A1A;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
   transform: translateY(-1px);
   color: #fff;
 }
 
-/* Card hover — light gold border glow */
+/* Card hover — clean shadow */
 .ds-dash .ix-stat-card:hover,
 .ds-dash .ix-doc-card:hover,
 .ds-dash .ix-insight-card:hover,
 .ds-dash .ix-template-card:hover {
-  box-shadow: 0 0 0 1px rgba(245,185,66,0.28), 0 6px 24px rgba(180,130,0,0.12);
-  border-color: rgba(245,185,66,0.28);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border-color: #D4D4D8;
 }
 
-/* Hero welcome banner — warm gold on cream */
+/* Hero welcome banner — clean white */
 .ds-dash .ix-hero {
-  background: linear-gradient(135deg, rgba(245,185,66,0.08) 0%, rgba(255,248,238,0.95) 100%);
-  border-color: rgba(245,185,66,0.20);
+  background: #FFFFFF;
+  border: 1px solid #EAEAEA;
+  border-color: #EAEAEA;
 }
 
 /* Active sidebar item */
 .ds-dash .ds-nav-item.is-active {
-  background: rgba(245,185,66,0.12);
-  box-shadow: inset 0 0 0 1px rgba(245,185,66,0.18);
+  background: rgba(0,0,0,0.06);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
 }
 
-/* Logo mark — pure gold gradient */
+/* Logo mark — solid black */
 .ds-dash .ds-logo-mark {
-  background: linear-gradient(135deg, #F5B942 0%, #D4891A 100%);
-  box-shadow: 0 0 10px rgba(245,185,66,0.30);
+  background: #0A0A0A;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
 }
 
-/* Scrollbar — light track, gold thumb */
-.ds-dash .ds-content::-webkit-scrollbar { width: 6px; }
+/* Scrollbar — clean */
+.ds-dash .ds-content::-webkit-scrollbar { width: 5px; }
 .ds-dash .ds-content::-webkit-scrollbar-track { background: transparent; }
 .ds-dash .ds-content::-webkit-scrollbar-thumb {
-  background: rgba(245,185,66,0.28); border-radius: 999px;
+  background: #D4D4D8; border-radius: 999px;
 }
-.ds-dash .ds-content::-webkit-scrollbar-thumb:hover { background: rgba(245,185,66,0.45); }
+.ds-dash .ds-content::-webkit-scrollbar-thumb:hover { background: #9AA0A6; }
 
-/* Pro card — dark gold glass (keeps contrast for upsell card) */
+/* Pro card — premium dark for upsell contrast */
 .ds-dash .ix-pro-card {
-  background: linear-gradient(135deg, #1A1000 0%, #0D0800 100%);
-  border: 1px solid rgba(245,185,66,0.25);
-  box-shadow: inset 0 1px 0 rgba(255,214,107,0.08);
+  background: #0A0A0A;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
-/* Analytics chart accent bar — solid gold */
+/* Analytics chart accent bar */
 .ds-dash .ix-bar.today {
-  background: linear-gradient(to top, #D4891A, #F5B942);
-  box-shadow: 0 0 8px rgba(245,185,66,0.40);
+  background: #0A0A0A;
+  box-shadow: 0 0 6px rgba(0,0,0,0.25);
 }
 
 /* Metric card left border accent */
 .ds-dash .ix-metric-card {
-  border-left: 2px solid rgba(245,185,66,0.32);
+  border-left: 2px solid rgba(0,0,0,0.32);
 }
 
-/* Search bar — warm on cream */
+/* Search bar — clean white */
 .ds-dash .ds-search {
-  background: rgba(255,253,247,0.80);
+  background: #FFFFFF;
 }
 .ds-dash .ds-search:hover {
-  background: rgba(255,253,247,1.00);
-  border-color: rgba(245,185,66,0.30);
+  background: #F9F9F9;
+  border-color: #D4D4D8;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DARK MODE
+   ══════════════════════════════════════════════════════════════════════════ */
+.ds-dash.dark {
+  --bg:             #0D0D10;
+  --bg-secondary:   #111116;
+  --bg-hover:       #17171E;
+  --border:         rgba(255,255,255,0.08);
+  --border-strong:  rgba(255,255,255,0.14);
+  --text:           #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-tertiary:  #64748B;
+  --sh-sm:          0 2px 8px  rgba(0,0,0,0.4);
+  --sh-md:          0 4px 20px rgba(0,0,0,0.5);
+  --sh-lg:          0 8px 40px rgba(0,0,0,0.6);
+}
+.ds-dash.dark .ds-search { background: rgba(255,255,255,0.05); }
+.ds-dash.dark .ds-search:hover { background: rgba(255,255,255,0.08); border-color: rgba(0,0,0,0.3); }
+.ds-dash.dark .ds-topbar { background: var(--bg); border-bottom-color: var(--border); }
+.ds-dash.dark .ds-sidebar { background: var(--bg); border-right-color: var(--border); }
+.ds-dash.dark .ds-logo-name { color: var(--text); }
+.ds-dash.dark .ds-nav-item { color: var(--text-tertiary); }
+.ds-dash.dark .ds-nav-item:hover { background: var(--bg-hover); color: var(--text); }
+.ds-dash.dark .ds-nav-item.is-active { background: var(--accent-pale); color: var(--accent); }
+.ds-dash.dark .ds-nav-label { color: var(--text-tertiary); }
+.ds-dash.dark .ds-upload-btn { background: var(--accent); color: #000; }
+.ds-dash.dark .ds-profile { background: var(--bg-secondary); border-color: var(--border); }
+.ds-dash.dark .ds-profile-name { color: var(--text); }
+.ds-dash.dark .ds-profile-email { color: var(--text-tertiary); }
+.ds-dash.dark .ds-main { background: var(--bg-secondary); }
+.ds-dash.dark .ds-topbar-search-wrap input { color: var(--text); }
+.ds-dash.dark .ix-stat-card { background: var(--bg); border-color: var(--border); }
+.ds-dash.dark .ix-stat-label { color: var(--text-tertiary); }
+.ds-dash.dark .ix-stat-val { color: var(--text); }
+.ds-dash.dark .ix-doc-card { background: var(--bg); border-color: var(--border); }
+.ds-dash.dark .ix-doc-name { color: var(--text); }
+.ds-dash.dark .ix-doc-meta { color: var(--text-tertiary); }
+.ds-dash.dark .ix-section-title { color: var(--text-secondary); }
+.ds-dash.dark .ix-welcome-title { color: var(--text); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STUDY PLANNER TAB
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* New plan form */
+.ix-planner-form {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px 24px; display: flex; flex-direction: column; gap: 18px;
+}
+.ix-planner-form-head {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ix-planner-form-title {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.ix-planner-field { display: flex; flex-direction: column; gap: 6px; }
+.ix-planner-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.ix-planner-input {
+  padding: 9px 12px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-size: 13.5px;
+  font-family: inherit; outline: none; transition: border-color .15s;
+}
+.ix-planner-input:focus { border-color: rgba(0,0,0,.5); }
+.ix-planner-input::placeholder { color: var(--text-tertiary, #94a3b8); }
+.ix-planner-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* Subjects list */
+.ix-planner-subjects { display: flex; flex-direction: column; gap: 8px; }
+.ix-planner-subject-row { display: flex; gap: 8px; align-items: center; }
+.ix-planner-subject-name { flex: 2; }
+.ix-planner-subject-ch   { flex: 1; }
+.ix-planner-subject-rm {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2);
+  color: #ef4444; cursor: pointer; font-size: 15px; font-weight: 700;
+  transition: background .15s;
+}
+.ix-planner-subject-rm:hover { background: rgba(239,68,68,.2); }
+.ix-planner-add-subject {
+  padding: 6px 12px; border-radius: 9px; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; border: 1.5px dashed var(--border); background: transparent;
+  color: var(--text-secondary); transition: border-color .15s, color .15s; align-self: flex-start;
+}
+.ix-planner-add-subject:hover { border-color: var(--accent, #0A0A0A); color: var(--accent, #0A0A0A); }
+
+/* Generate button */
+.ix-planner-generate-btn {
+  padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  cursor: pointer; border: none; background: var(--accent, #0A0A0A); color: #000;
+  display: flex; align-items: center; gap: 7px; justify-content: center;
+  transition: opacity .15s, transform .1s;
+}
+.ix-planner-generate-btn:disabled { opacity: .5; cursor: default; }
+.ix-planner-generate-btn:not(:disabled):hover { opacity: .88; }
+.ix-planner-generate-btn:not(:disabled):active { transform: scale(.98); }
+.ix-planner-gen-spinner {
+  width: 14px; height: 14px; border: 2px solid rgba(0,0,0,.25); border-top-color: #000;
+  border-radius: 50%; animation: ix-spin .7s linear infinite;
+}
+@keyframes ix-spin { to { transform: rotate(360deg); } }
+
+/* Empty state (no plans) */
+.ix-planner-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 48px 24px; text-align: center;
+}
+.ix-planner-empty-icon { font-size: 40px; opacity: .45; }
+.ix-planner-empty-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.ix-planner-empty-sub   { font-size: 13px; color: var(--text-tertiary, #94a3b8); max-width: 320px; line-height: 1.55; }
+
+/* Plan cards */
+.ix-planner-card {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+}
+.ix-planner-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; cursor: pointer; gap: 10px;
+  transition: background .15s;
+}
+.ix-planner-card-head:hover { background: rgba(0,0,0,.04); }
+.ix-planner-card-info { flex: 1; min-width: 0; }
+.ix-planner-card-title {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ix-planner-card-meta {
+  display: flex; gap: 12px; margin-top: 3px;
+}
+.ix-planner-meta-pill {
+  font-size: 11.5px; color: var(--text-secondary);
+  background: var(--bg); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+}
+.ix-planner-card-actions { display: flex; gap: 6px; align-items: center; }
+.ix-planner-del-btn {
+  padding: 5px 7px; border-radius: 8px; cursor: pointer;
+  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.18);
+  color: #ef4444; font-size: 12px; transition: background .15s;
+}
+.ix-planner-del-btn:hover { background: rgba(239,68,68,.18); }
+.ix-planner-expand-btn {
+  padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 12px;
+  background: var(--bg); border: 1px solid var(--border); color: var(--text-secondary);
+  transition: background .15s; font-weight: 600;
+}
+.ix-planner-expand-btn:hover { background: var(--bg-tertiary, #f1f5f9); color: var(--text); }
+
+/* Schedule */
+.ix-planner-schedule {
+  border-top: 1px solid var(--border); padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.ix-planner-week { display: flex; flex-direction: column; gap: 6px; }
+.ix-planner-week-label {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  color: var(--accent, #0A0A0A); margin-bottom: 2px;
+}
+.ix-planner-day-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px;
+  border-radius: 9px; border: 1px solid var(--border); background: var(--bg);
+  transition: background .12s;
+}
+.ix-planner-day-row:hover { background: var(--bg-secondary); }
+.ix-planner-day-row.done { opacity: .55; }
+.ix-planner-day-check {
+  width: 16px; height: 16px; accent-color: var(--accent, #0A0A0A);
+  cursor: pointer; flex-shrink: 0; margin-top: 2px;
+}
+.ix-planner-day-info { flex: 1; min-width: 0; }
+.ix-planner-day-header {
+  display: flex; align-items: center; gap: 8px;
+}
+.ix-planner-day-name {
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: .3px; min-width: 28px;
+}
+.ix-planner-day-subject {
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+}
+.ix-planner-day-hours {
+  font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+  background: rgba(0,0,0,.12); color: #ca8a04; border: 1px solid rgba(0,0,0,.2);
+  margin-left: auto;
+}
+.ix-planner-day-topic {
+  font-size: 12px; color: var(--text-secondary); margin-top: 2px; line-height: 1.45;
+}
+
+/* Progress bar inside plan card */
+.ix-planner-progress-bar {
+  height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 4px;
+}
+.ix-planner-progress-fill {
+  height: 100%; background: var(--accent, #0A0A0A); border-radius: 99px; transition: width .4s;
+}
+
+/* Tips section */
+.ix-planner-tips {
+  background: rgba(0,0,0,.07); border: 1px solid rgba(0,0,0,.18);
+  border-radius: 10px; padding: 12px 14px; margin-top: 4px;
+}
+.ix-planner-tips-title { font-size: 11.5px; font-weight: 700; color: #ca8a04; margin-bottom: 7px; }
+.ix-planner-tips-list  { display: flex; flex-direction: column; gap: 4px; }
+.ix-planner-tip { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+
+/* ── Dark overrides ────────────────────────────────────────────────────── */
+.ds-dash.dark .ix-planner-form      { background: var(--bg); border-color: var(--border); }
+.ds-dash.dark .ix-planner-input     { background: var(--bg-secondary); color: var(--text); border-color: var(--border); }
+.ds-dash.dark .ix-planner-card      { background: var(--bg); border-color: var(--border); }
+.ds-dash.dark .ix-planner-day-row   { background: var(--bg-secondary); border-color: var(--border); }
+.ds-dash.dark .ix-planner-day-row:hover { background: var(--bg-hover); }
+.ds-dash.dark .ix-planner-meta-pill { background: var(--bg-secondary); border-color: var(--border); }
+.ds-dash.dark .ix-planner-day-hours { color: #0A0A0A; }
+.ds-dash.dark .ix-welcome-sub { color: var(--text-tertiary); }

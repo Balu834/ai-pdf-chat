@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, ChevronDown, Sun } from "lucide-react";
+import { Menu, X, ChevronDown, Sun, Moon } from "lucide-react";
+import { IntellixyBrainIcon } from "@/app/components/IntellixyBrainIcon";
 
 const LINKS = [
   { label: "Features",  href: "#features", dropdown: true  },
@@ -13,18 +14,30 @@ const LINKS = [
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("lp-theme");
+    if (saved === "dark") {
+      setDark(true);
+      document.querySelector(".lp-page")?.classList.add("dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    document.querySelector(".lp-page")?.classList.toggle("dark", next);
+    localStorage.setItem("lp-theme", next ? "dark" : "light");
+  };
+
   return (
     <>
       <nav className="lp-nav" role="navigation">
         <div className="lp-nav-inner">
           <Link href="/" className="lp-nav-brand">
             <span className="lp-nav-mark" aria-hidden>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
-                <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
-                <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
-                <rect x="3"  y="16" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".4"/>
-              </svg>
+              <IntellixyBrainIcon size={26} />
             </span>
             Intellixy
           </Link>
@@ -43,8 +56,8 @@ export default function Nav() {
           </ul>
 
           <div className="lp-nav-actions">
-            <button className="lp-nav-icon-btn" aria-label="Toggle theme">
-              <Sun size={15} strokeWidth={1.75} />
+            <button className="lp-nav-icon-btn" aria-label="Toggle theme" onClick={toggleTheme}>
+              {dark ? <Sun size={15} strokeWidth={1.75} /> : <Moon size={15} strokeWidth={1.75} />}
             </button>
             <Link href="/login" className="lp-btn-ghost">Sign in</Link>
             <Link href="/login" className="lp-btn-green">Start free →</Link>

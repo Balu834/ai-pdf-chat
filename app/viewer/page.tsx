@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useRef, useCallback, useMemo } from "rea
 import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import "./viewer.css";
+import { reportError } from "@/lib/reportError";
 
 const PdfViewer = dynamic(() => import("@/app/components/PdfViewer"), {
   ssr: false,
@@ -38,6 +39,25 @@ interface CompareResult {
   doc1: { id: string; name: string };
   doc2: { id: string; name: string };
 }
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  answer: string;
+  explanation: string;
+  topic: string;
+}
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  next_review: string;
+  interval_days: number;
+  ease_factor: number;
+  reps: number;
+  doc_name?: string;
+}
+interface TutorMsg { role: "user" | "lexi"; text: string; }
+type TutorMode = "normal" | "simple" | "eli5" | "exam" | "hinglish";
 
 /* ── Constants ──────────────────────────────────────────────────────────── */
 const CHIPS = [
@@ -45,6 +65,13 @@ const CHIPS = [
   "What are the key numbers?",
   "Any risks mentioned?",
   "Suggest follow-up questions",
+];
+const EXPLAIN_PRESETS = [
+  { label: "Explain simply",  prompt: "Explain the main concept of this document in simple terms a beginner would understand." },
+  { label: "Give examples",   prompt: "Explain the key topics from this document with 3 real-world examples." },
+  { label: "Exam answer",     prompt: "Write a model exam answer covering the most important points from this document." },
+  { label: "Step by step",    prompt: "Break down the main topic from this document step by step." },
+  { label: "In Hinglish",     prompt: "Explain the main topic of this document in Hinglish (mix of Hindi and English)." },
 ];
 
 /* ── Markdown-lite renderer ─────────────────────────────────────────────── */
@@ -152,12 +179,17 @@ function ViewerContent() {
   const [streaming, setStreaming] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
 
+  /* Theme */
+  const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => { if (localStorage.getItem("lp-theme") === "dark") setDarkMode(true); }, []);
+  const toggleDark = () => { const n = !darkMode; setDarkMode(n); localStorage.setItem("lp-theme", n ? "dark" : "light"); };
+
   /* Files sidebar */
   const [allDocs,   setAllDocs]   = useState<DocItem[]>([]);
   const [showFiles, setShowFiles] = useState(true);
 
-  /* Right panel: insights / compare */
-  const [rightTab,      setRightTab]      = useState<"insights" | "compare" | null>(null);
+  /* Right panel: insights / compare / quiz / cards / tutor */
+  const [rightTab,      setRightTab]      = useState<"insights" | "compare" | "quiz" | "cards" | "tutor" | null>(null);
   const [insights,      setInsights]      = useState<Insights | null>(null);
   const [insightsLoad,  setInsightsLoad]  = useState(false);
   const [insightsErr,   setInsightsErr]   = useState<string | null>(null);
@@ -167,15 +199,56 @@ function ViewerContent() {
   const [compareLoad,   setCompareLoad]   = useState(false);
   const [compareErr,    setCompareErr]    = useState<string | null>(null);
 
+  /* Quiz state */
+  const [quizQuestions,  setQuizQuestions]  = useState<QuizQuestion[]>([]);
+  const [quizLoading,    setQuizLoading]    = useState(false);
+  const [quizErr,        setQuizErr]        = useState<string | null>(null);
+  const [quizDifficulty, setQuizDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [quizCount,      setQuizCount]      = useState(10);
+  const [quizAnswers,    setQuizAnswers]    = useState<Record<number, string>>({});
+  const [quizSubmitted,  setQuizSubmitted]  = useState(false);
+
+  /* Tutor state */
+  const [tutorMsgs,    setTutorMsgs]    = useState<TutorMsg[]>([]);
+  const [tutorInput,   setTutorInput]   = useState("");
+  const [tutorMode,    setTutorMode]    = useState<TutorMode>("normal");
+  const [tutorLoading, setTutorLoading] = useState(false);
+  const [tutorAutoTTS, setTutorAutoTTS] = useState(true);
+  const tutorEndRef = useRef<HTMLDivElement>(null);
+
+  /* Flashcard state */
+  const [fcCards,       setFcCards]       = useState<Flashcard[]>([]);
+  const [fcLoading,     setFcLoading]     = useState(false);
+  const [fcErr,         setFcErr]         = useState<string | null>(null);
+  const [fcCount,       setFcCount]       = useState(15);
+  const [fcMode,        setFcMode]        = useState<"generate" | "review">("generate");
+  /* review session state */
+  const [fcSession,     setFcSession]     = useState<Flashcard[]>([]); // due cards queue
+  const [fcIdx,         setFcIdx]         = useState(0);               // current card index
+  const [fcFlipped,     setFcFlipped]     = useState(false);           // is card flipped?
+  const [fcDone,        setFcDone]        = useState(false);           // session complete
+
   /* Mic / voice input */
   const [listening, setListening] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
 
-  /* Copy + TTS */
+  /* Copy + TTS + Share */
   const [copiedId,  setCopiedId]  = useState<number | null>(null);
   const [playingId, setPlayingId] = useState<number | null>(null);
+  const [sharedId,  setSharedId]  = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const shareMessage = async (id: number, text: string) => {
+    const shareText = `${text}\n\n— via Intellixy AI (intellixy.vercel.app)`;
+    if (navigator.share) {
+      try { await navigator.share({ text: shareText }); } catch {}
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      setSharedId(id);
+      setTimeout(() => setSharedId(null), 2000);
+    }
+  };
 
   const endRef      = useRef<HTMLDivElement>(null);
   const abortRef    = useRef<AbortController | null>(null);
@@ -283,6 +356,141 @@ function ViewerContent() {
       setCompareLoad(false);
     }
   }, [currentDoc, compareDocId, compareQ]);
+
+  /* Tutor: send message and get AI response with auto-TTS */
+  const sendToTutor = useCallback(async (overrideMsg?: string) => {
+    const msg = (overrideMsg ?? tutorInput).trim();
+    if (!msg || tutorLoading) return;
+    setTutorInput("");
+    const userMsg: TutorMsg = { role: "user", text: msg };
+    setTutorMsgs(prev => [...prev, userMsg]);
+    setTutorLoading(true);
+    try {
+      // Build history for context (last 8 messages as OpenAI format)
+      const history = tutorMsgs.slice(-8).map(m => ({
+        role: m.role === "lexi" ? "assistant" : "user",
+        content: m.text,
+      }));
+      const res = await fetch("/api/tutor/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg, fileUrl: rawUrl, documentId: currentDoc?.id, history, mode: tutorMode }),
+        credentials: "include",
+      });
+      const data = await res.json() as { text?: string; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "Failed");
+      const lexiMsg: TutorMsg = { role: "lexi", text: data.text ?? "" };
+      setTutorMsgs(prev => [...prev, lexiMsg]);
+      // Auto-TTS
+      if (tutorAutoTTS && data.text) {
+        fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: data.text, voice: "nova", model: "tts-1" }),
+          credentials: "include",
+        }).then(async r => {
+          if (!r.ok) return;
+          const blob = await r.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => URL.revokeObjectURL(url);
+          audio.play().catch(() => {});
+        }).catch(() => {});
+      }
+    } catch {
+      setTutorMsgs(prev => [...prev, { role: "lexi", text: "Sorry, I couldn't respond. Please try again." }]);
+    } finally {
+      setTutorLoading(false);
+    }
+  }, [tutorInput, tutorLoading, tutorMsgs, rawUrl, currentDoc, tutorMode, tutorAutoTTS]);
+
+  /* Auto-scroll tutor chat */
+  useEffect(() => {
+    tutorEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [tutorMsgs]);
+
+  /* Flashcard: generate from current doc */
+  const generateCards = useCallback(async () => {
+    if (!currentDoc) { setFcErr("Document not found in your library."); return; }
+    setFcLoading(true); setFcErr(null); setFcCards([]);
+    try {
+      const res = await fetch("/api/flashcards/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: currentDoc.id, fileUrl: rawUrl, count: fcCount }),
+        credentials: "include",
+      });
+      const data = await res.json() as { flashcards?: Flashcard[]; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "Failed");
+      setFcCards(data.flashcards ?? []);
+    } catch (e: unknown) {
+      setFcErr((e as Error).message ?? "Generation failed.");
+    } finally {
+      setFcLoading(false);
+    }
+  }, [currentDoc, rawUrl, fcCount]);
+
+  /* Flashcard: load due cards for review */
+  const loadDueCards = useCallback(async () => {
+    setFcLoading(true); setFcErr(null);
+    try {
+      const res = await fetch("/api/flashcards?due=true", { credentials: "include" });
+      const data = await res.json() as { flashcards?: Flashcard[]; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "Failed");
+      const due = data.flashcards ?? [];
+      setFcSession(due);
+      setFcIdx(0); setFcFlipped(false); setFcDone(due.length === 0);
+    } catch (e: unknown) {
+      setFcErr((e as Error).message ?? "Could not load cards.");
+    } finally {
+      setFcLoading(false);
+    }
+  }, []);
+
+  /* Flashcard: submit review rating and advance to next card */
+  const reviewCard = useCallback(async (quality: 0 | 2 | 4 | 5) => {
+    const card = fcSession[fcIdx];
+    if (!card) return;
+    // Fire-and-forget — don't block UI
+    fetch("/api/flashcards/review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: card.id, quality }),
+      credentials: "include",
+    }).catch(() => {});
+    const next = fcIdx + 1;
+    if (next >= fcSession.length) {
+      setFcDone(true);
+    } else {
+      setFcIdx(next);
+      setFcFlipped(false);
+    }
+  }, [fcSession, fcIdx]);
+
+  /* Generate quiz */
+  const loadQuiz = useCallback(async () => {
+    if (!currentDoc) { setQuizErr("Document not found in your library."); return; }
+    setQuizLoading(true);
+    setQuizErr(null);
+    setQuizQuestions([]);
+    setQuizAnswers({});
+    setQuizSubmitted(false);
+    try {
+      const res = await fetch("/api/quiz/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: currentDoc.id, fileUrl: rawUrl, difficulty: quizDifficulty, count: quizCount }),
+        credentials: "include",
+      });
+      const data = await res.json() as { questions?: QuizQuestion[]; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "Failed");
+      setQuizQuestions(data.questions ?? []);
+    } catch (e: unknown) {
+      setQuizErr((e as Error).message ?? "Quiz generation failed.");
+    } finally {
+      setQuizLoading(false);
+    }
+  }, [currentDoc, rawUrl, quizDifficulty, quizCount]);
 
   /* Send chat message */
   const toggleMic = useCallback(() => {
@@ -405,6 +613,7 @@ function ViewerContent() {
       const msg = (err as Error)?.message ?? "Unknown error";
       if (msg === "AbortError" || (err as Error)?.name === "AbortError") return;
       setChatError(msg);
+      reportError({ type: "chat", message: msg, page: "/viewer" });
       setMessages(m => m.filter(msg => msg.id !== aiId));
     } finally {
       setStreaming(false);
@@ -416,7 +625,7 @@ function ViewerContent() {
   }, [send]);
 
   /* Open right tab and auto-load insights */
-  const openRightTab = useCallback((tab: "insights" | "compare") => {
+  const openRightTab = useCallback((tab: "insights" | "compare" | "quiz" | "cards" | "tutor") => {
     setRightTab(prev => prev === tab ? null : tab);
     if (tab === "insights" && !insights && !insightsLoad) {
       loadInsights();
@@ -441,7 +650,7 @@ function ViewerContent() {
 
   /* ── Main viewer ─────────────────────────────────────────────────────────── */
   return (
-    <div className="vw-root">
+    <div className={`vw-root${darkMode ? " dark" : ""}`}>
 
       {/* ── TOP BAR ────────────────────────────────────────────────────────── */}
       <div className="vw-topbar">
@@ -513,6 +722,48 @@ function ViewerContent() {
             Compare
           </button>
 
+          {/* Quiz button */}
+          <button
+            className={`vw-topbar-btn vw-quiz-btn${rightTab === "quiz" ? " vw-topbar-btn-active" : ""}`}
+            onClick={() => openRightTab("quiz")}
+            title="Generate AI Quiz"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Quiz
+          </button>
+
+          {/* Flashcards button */}
+          <button
+            className={`vw-topbar-btn vw-cards-btn${rightTab === "cards" ? " vw-topbar-btn-active" : ""}`}
+            onClick={() => openRightTab("cards")}
+            title="AI Flashcards"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            Cards
+          </button>
+
+          {/* Voice Tutor button */}
+          <button
+            className={`vw-topbar-btn vw-tutor-btn${rightTab === "tutor" ? " vw-topbar-btn-active" : ""}`}
+            onClick={() => openRightTab("tutor")}
+            title="AI Voice Tutor"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+            Tutor
+          </button>
+
           <a className="vw-topbar-btn" href={rawUrl} target="_blank" rel="noreferrer" download>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
               <path d="M6.5 1v8M3.5 6l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -520,6 +771,12 @@ function ViewerContent() {
             </svg>
             Download
           </a>
+          <button className="vw-topbar-btn" onClick={toggleDark} aria-label="Toggle theme" style={{ color: darkMode ? "var(--accent)" : undefined }}>
+            {darkMode
+              ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            }
+          </button>
         </div>
       </div>
 
@@ -686,6 +943,24 @@ function ViewerContent() {
                             )}
                             <span>{playingId === msg.id ? "Stop" : "HD Voice"}</span>
                           </button>
+                          <button
+                            className={`ch-action-btn${sharedId === msg.id ? " ch-action-copied" : ""}`}
+                            onClick={() => shareMessage(msg.id, body)}
+                            title="Share response"
+                            aria-label="Share response"
+                          >
+                            {sharedId === msg.id ? (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            ) : (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                              </svg>
+                            )}
+                            <span>{sharedId === msg.id ? "Shared!" : "Share"}</span>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -721,6 +996,22 @@ function ViewerContent() {
                 ))}
               </div>
             )}
+
+            {/* Explain Like preset buttons */}
+            <div className="ch-explain-row">
+              <span className="ch-explain-label">Explain as:</span>
+              {EXPLAIN_PRESETS.map(p => (
+                <button
+                  key={p.label}
+                  className="ch-explain-btn"
+                  onClick={() => send(p.prompt)}
+                  disabled={streaming}
+                  title={p.prompt}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
 
             <div className="ch-input-area">
               <div className="ch-input-row">
@@ -774,7 +1065,7 @@ function ViewerContent() {
 
         </div>{/* end vw-center */}
 
-        {/* ── RIGHT: INSIGHTS / COMPARE ────────────────────────────────────── */}
+        {/* ── RIGHT: INSIGHTS / COMPARE / QUIZ ─────────────────────────────── */}
         {rightTab && (
           <div className="vw-right-panel">
             {/* Tabs */}
@@ -796,6 +1087,33 @@ function ViewerContent() {
                   <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/>
                 </svg>
                 Compare
+              </button>
+              <button
+                className={`vw-right-tab${rightTab === "quiz" ? " active" : ""}`}
+                onClick={() => setRightTab("quiz")}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Quiz
+              </button>
+              <button
+                className={`vw-right-tab${rightTab === "cards" ? " active" : ""}`}
+                onClick={() => setRightTab("cards")}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                Cards
+              </button>
+              <button
+                className={`vw-right-tab${rightTab === "tutor" ? " active" : ""}`}
+                onClick={() => setRightTab("tutor")}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                </svg>
+                Tutor
               </button>
               <button className="vw-right-close" onClick={() => setRightTab(null)} title="Close">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -932,6 +1250,419 @@ function ViewerContent() {
                     </div>
                     <div className="vw-compare-result">
                       {renderMarkdown(compareResult.result)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Tutor tab ────────────────────────────────────── */}
+            {rightTab === "tutor" && (
+              <div className="vw-right-body tutor-panel">
+                {/* Mode selector */}
+                <div className="tutor-modes">
+                  {([
+                    { key: "normal",   label: "Lexi",     emoji: "🎓" },
+                    { key: "simple",   label: "Simple",   emoji: "💡" },
+                    { key: "eli5",     label: "ELI-5",    emoji: "🎈" },
+                    { key: "exam",     label: "Exam",     emoji: "📝" },
+                    { key: "hinglish", label: "Hinglish", emoji: "🇮🇳" },
+                  ] as { key: TutorMode; label: string; emoji: string }[]).map(m => (
+                    <button
+                      key={m.key}
+                      className={`tutor-mode-pill${tutorMode === m.key ? " active" : ""}`}
+                      onClick={() => setTutorMode(m.key)}
+                    >{m.emoji} {m.label}</button>
+                  ))}
+                </div>
+
+                {/* Auto-TTS toggle */}
+                <div className="tutor-tts-row">
+                  <span className="tutor-tts-label">🔊 Auto-speak</span>
+                  <button
+                    className={`tutor-tts-toggle${tutorAutoTTS ? " on" : ""}`}
+                    onClick={() => setTutorAutoTTS(v => !v)}
+                  >{tutorAutoTTS ? "On" : "Off"}</button>
+                </div>
+
+                {/* Chat messages */}
+                <div className="tutor-messages">
+                  {tutorMsgs.length === 0 && (
+                    <div className="tutor-empty">
+                      <div className="tutor-avatar">🎓</div>
+                      <div className="tutor-empty-title">Hi, I&apos;m Lexi!</div>
+                      <div className="tutor-empty-sub">Your AI study tutor. Ask me anything about this document and I&apos;ll explain it clearly.</div>
+                      <div className="tutor-starters">
+                        {["Explain the main concept", "What are the key points?", "Give me an example", "What might be asked in exams?"].map(s => (
+                          <button key={s} className="tutor-starter" onClick={() => sendToTutor(s)}>{s}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {tutorMsgs.map((m, i) => (
+                    <div key={i} className={`tutor-msg tutor-msg-${m.role}`}>
+                      {m.role === "lexi" && <div className="tutor-msg-avatar">🎓</div>}
+                      <div className="tutor-msg-bubble">{m.text}</div>
+                    </div>
+                  ))}
+                  {tutorLoading && (
+                    <div className="tutor-msg tutor-msg-lexi">
+                      <div className="tutor-msg-avatar">🎓</div>
+                      <div className="tutor-msg-bubble tutor-typing">
+                        <span className="ch-dot"/><span className="ch-dot"/><span className="ch-dot"/>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={tutorEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="tutor-input-area">
+                  <input
+                    className="tutor-input"
+                    value={tutorInput}
+                    onChange={e => setTutorInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendToTutor(); }}}
+                    placeholder="Ask Lexi anything…"
+                    disabled={tutorLoading}
+                  />
+                  <button
+                    className="tutor-send-btn"
+                    onClick={() => sendToTutor()}
+                    disabled={tutorLoading || !tutorInput.trim()}
+                  >
+                    {tutorLoading
+                      ? <div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "pvw-spin .7s linear infinite" }}/>
+                      : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    }
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── Cards tab ────────────────────────────────────── */}
+            {rightTab === "cards" && (
+              <div className="vw-right-body">
+                {/* Sub-mode toggle */}
+                <div className="fc-mode-toggle">
+                  <button
+                    className={`fc-mode-btn${fcMode === "generate" ? " active" : ""}`}
+                    onClick={() => { setFcMode("generate"); setFcErr(null); }}
+                  >Generate</button>
+                  <button
+                    className={`fc-mode-btn${fcMode === "review" ? " active" : ""}`}
+                    onClick={() => { setFcMode("review"); setFcErr(null); if (!fcLoading) loadDueCards(); }}
+                  >Review</button>
+                </div>
+
+                {/* ── GENERATE MODE ── */}
+                {fcMode === "generate" && (
+                  <>
+                    {fcCards.length === 0 && !fcLoading && (
+                      <div className="vw-quiz-config">
+                        <div className="vw-quiz-config-title">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                          </svg>
+                          AI Flashcards
+                        </div>
+                        <p className="vw-quiz-config-sub">Generate memorisation cards from this document</p>
+
+                        <div className="vw-quiz-field">
+                          <div className="vw-quiz-field-label">Number of cards</div>
+                          <div className="vw-quiz-count-row">
+                            {[10, 15, 20].map(n => (
+                              <button
+                                key={n}
+                                className={`vw-quiz-count-btn${fcCount === n ? " active" : ""}`}
+                                onClick={() => setFcCount(n)}
+                              >{n}</button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {fcErr && <div className="vw-right-err" style={{ marginBottom: 12 }}>{fcErr}</div>}
+
+                        <button className="vw-quiz-generate-btn" onClick={generateCards}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                          </svg>
+                          Generate Flashcards
+                        </button>
+                      </div>
+                    )}
+
+                    {fcLoading && (
+                      <div className="vw-right-loading">
+                        <div className="vw-url-spinner" />
+                        <span>Creating {fcCount} flashcards…</span>
+                      </div>
+                    )}
+
+                    {fcCards.length > 0 && !fcLoading && (
+                      <div className="fc-browse">
+                        <div className="fc-browse-header">
+                          <span className="fc-browse-count">{fcCards.length} cards generated</span>
+                          <button className="fc-regen-btn" onClick={() => setFcCards([])}>New set</button>
+                        </div>
+                        {fcCards.map((card, i) => (
+                          <div key={card.id} className="fc-browse-card">
+                            <div className="fc-browse-num">#{i + 1}</div>
+                            <div className="fc-browse-front">{card.front}</div>
+                            <div className="fc-browse-sep" />
+                            <div className="fc-browse-back">{card.back}</div>
+                          </div>
+                        ))}
+                        <button
+                          className="vw-quiz-generate-btn"
+                          style={{ marginTop: 8 }}
+                          onClick={() => { setFcMode("review"); loadDueCards(); }}
+                        >
+                          Start Review Session →
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── REVIEW MODE ── */}
+                {fcMode === "review" && (
+                  <>
+                    {fcLoading && (
+                      <div className="vw-right-loading">
+                        <div className="vw-url-spinner" />
+                        <span>Loading due cards…</span>
+                      </div>
+                    )}
+
+                    {fcErr && !fcLoading && (
+                      <div className="vw-right-err">{fcErr}<button className="vw-right-retry" onClick={loadDueCards}>Retry</button></div>
+                    )}
+
+                    {/* No cards due */}
+                    {!fcLoading && !fcErr && fcDone && fcSession.length === 0 && (
+                      <div className="fc-done-state">
+                        <div className="fc-done-icon">🎉</div>
+                        <div className="fc-done-title">All caught up!</div>
+                        <div className="fc-done-sub">No cards due right now. Come back tomorrow to keep your streak.</div>
+                        <button className="fc-mode-btn active" style={{ marginTop: 16 }} onClick={() => setFcMode("generate")}>
+                          Generate more cards
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Session complete */}
+                    {!fcLoading && !fcErr && fcDone && fcSession.length > 0 && (
+                      <div className="fc-done-state">
+                        <div className="fc-done-icon">✅</div>
+                        <div className="fc-done-title">Session complete!</div>
+                        <div className="fc-done-sub">You reviewed {fcSession.length} card{fcSession.length !== 1 ? "s" : ""}. Cards will reappear based on how well you knew them.</div>
+                        <button className="vw-quiz-generate-btn" style={{ marginTop: 16 }} onClick={loadDueCards}>
+                          Review again
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Active review card */}
+                    {!fcLoading && !fcErr && !fcDone && fcSession.length > 0 && (
+                      <div className="fc-session">
+                        {/* Progress bar */}
+                        <div className="fc-progress-bar">
+                          <div className="fc-progress-fill" style={{ width: `${(fcIdx / fcSession.length) * 100}%` }} />
+                        </div>
+                        <div className="fc-progress-label">{fcIdx + 1} / {fcSession.length}</div>
+
+                        {/* Flip card */}
+                        <div
+                          className={`fc-card${fcFlipped ? " flipped" : ""}`}
+                          onClick={() => !fcFlipped && setFcFlipped(true)}
+                        >
+                          <div className="fc-card-inner">
+                            <div className="fc-card-front">
+                              <div className="fc-card-label">Question</div>
+                              <div className="fc-card-text">{fcSession[fcIdx].front}</div>
+                              <div className="fc-card-hint">Tap to reveal answer</div>
+                            </div>
+                            <div className="fc-card-back">
+                              <div className="fc-card-label">Answer</div>
+                              <div className="fc-card-text">{fcSession[fcIdx].back}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Rating buttons — only after flip */}
+                        {fcFlipped && (
+                          <div className="fc-ratings">
+                            <div className="fc-ratings-label">How well did you know this?</div>
+                            <div className="fc-ratings-row">
+                              <button className="fc-rate-btn fc-rate-again" onClick={() => reviewCard(0)}>
+                                <span>Again</span><span className="fc-rate-sub">≤1d</span>
+                              </button>
+                              <button className="fc-rate-btn fc-rate-hard" onClick={() => reviewCard(2)}>
+                                <span>Hard</span><span className="fc-rate-sub">~1d</span>
+                              </button>
+                              <button className="fc-rate-btn fc-rate-good" onClick={() => reviewCard(4)}>
+                                <span>Good</span><span className="fc-rate-sub">~{Math.round((fcSession[fcIdx].interval_days || 1) * 2.5)}d</span>
+                              </button>
+                              <button className="fc-rate-btn fc-rate-easy" onClick={() => reviewCard(5)}>
+                                <span>Easy</span><span className="fc-rate-sub">~{Math.round((fcSession[fcIdx].interval_days || 1) * 3.5)}d</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── Quiz tab ─────────────────────────────────────── */}
+            {rightTab === "quiz" && (
+              <div className="vw-right-body">
+                {/* Config panel — shown when no questions yet */}
+                {quizQuestions.length === 0 && !quizLoading && (
+                  <div className="vw-quiz-config">
+                    <div className="vw-quiz-config-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                      AI Quiz Generator
+                    </div>
+                    <p className="vw-quiz-config-sub">Generate exam-ready questions from this document</p>
+
+                    <div className="vw-quiz-field">
+                      <div className="vw-quiz-field-label">Difficulty</div>
+                      <div className="vw-quiz-diff-row">
+                        {(["easy", "medium", "hard"] as const).map(d => (
+                          <button
+                            key={d}
+                            className={`vw-quiz-diff-btn${quizDifficulty === d ? " active" : ""} vw-quiz-diff-${d}`}
+                            onClick={() => setQuizDifficulty(d)}
+                          >
+                            {d.charAt(0).toUpperCase() + d.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="vw-quiz-field">
+                      <div className="vw-quiz-field-label">Number of questions</div>
+                      <div className="vw-quiz-count-row">
+                        {[5, 10, 15].map(n => (
+                          <button
+                            key={n}
+                            className={`vw-quiz-count-btn${quizCount === n ? " active" : ""}`}
+                            onClick={() => setQuizCount(n)}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {quizErr && <div className="vw-right-err" style={{ marginBottom: 12 }}>{quizErr}</div>}
+
+                    <button className="vw-quiz-generate-btn" onClick={loadQuiz}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                      </svg>
+                      Generate Quiz
+                    </button>
+                  </div>
+                )}
+
+                {/* Loading */}
+                {quizLoading && (
+                  <div className="vw-right-loading">
+                    <div className="vw-url-spinner" />
+                    <span>Generating {quizCount} questions…</span>
+                  </div>
+                )}
+
+                {/* Quiz questions */}
+                {quizQuestions.length > 0 && (
+                  <div className="vw-quiz-questions">
+                    {/* Header */}
+                    <div className="vw-quiz-header">
+                      <div className="vw-quiz-header-info">
+                        <span className={`vw-quiz-badge vw-quiz-badge-${quizDifficulty}`}>
+                          {quizDifficulty.charAt(0).toUpperCase() + quizDifficulty.slice(1)}
+                        </span>
+                        <span className="vw-quiz-header-count">{quizQuestions.length} questions</span>
+                      </div>
+                      {quizSubmitted && (
+                        <div className="vw-quiz-score">
+                          {quizQuestions.filter((q, i) => quizAnswers[i] === q.answer).length}
+                          <span>/{quizQuestions.length}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {quizQuestions.map((q, qi) => {
+                      const selected = quizAnswers[qi];
+                      const isCorrect = selected === q.answer;
+                      return (
+                        <div key={qi} className={`vw-quiz-card${quizSubmitted ? (isCorrect ? " correct" : " wrong") : ""}`}>
+                          <div className="vw-quiz-q-num">Q{qi + 1} · <span className="vw-quiz-topic">{q.topic}</span></div>
+                          <div className="vw-quiz-q-text">{q.question}</div>
+                          <div className="vw-quiz-options">
+                            {q.options.map((opt, oi) => {
+                              const isSelected = selected === opt;
+                              const isAnswer = opt === q.answer;
+                              let cls = "vw-quiz-option";
+                              if (quizSubmitted) {
+                                if (isAnswer) cls += " vw-quiz-option-correct";
+                                else if (isSelected) cls += " vw-quiz-option-wrong";
+                              } else if (isSelected) {
+                                cls += " vw-quiz-option-selected";
+                              }
+                              return (
+                                <button
+                                  key={oi}
+                                  className={cls}
+                                  onClick={() => !quizSubmitted && setQuizAnswers(prev => ({ ...prev, [qi]: opt }))}
+                                  disabled={quizSubmitted}
+                                >
+                                  <span className="vw-quiz-option-letter">{String.fromCharCode(65 + oi)}</span>
+                                  <span>{opt.replace(/^[A-D]\)\s*/, "")}</span>
+                                  {quizSubmitted && isAnswer && (
+                                    <svg className="vw-quiz-option-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                  )}
+                                  {quizSubmitted && isSelected && !isAnswer && (
+                                    <svg className="vw-quiz-option-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {quizSubmitted && (
+                            <div className="vw-quiz-explanation">
+                              <span className="vw-quiz-explanation-label">Explanation:</span> {q.explanation}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Actions */}
+                    <div className="vw-quiz-actions">
+                      {!quizSubmitted ? (
+                        <button
+                          className="vw-quiz-submit-btn"
+                          onClick={() => setQuizSubmitted(true)}
+                          disabled={Object.keys(quizAnswers).length < quizQuestions.length}
+                        >
+                          Submit Quiz ({Object.keys(quizAnswers).length}/{quizQuestions.length} answered)
+                        </button>
+                      ) : (
+                        <button
+                          className="vw-quiz-retry-btn"
+                          onClick={() => { setQuizQuestions([]); setQuizAnswers({}); setQuizSubmitted(false); setQuizErr(null); }}
+                        >
+                          Generate New Quiz
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

@@ -45,11 +45,11 @@ export default function InstallPopup() {
             width: "calc(100% - 32px)",
             maxWidth: 420,
             zIndex: 9999,
-            background: "rgba(15,15,30,0.96)",
-            border: "1px solid rgba(124,58,237,0.35)",
+            background: "rgba(255,255,255,0.96)",
+            border: "1px solid #EAEAEA",
             borderRadius: 20,
             padding: "18px 20px",
-            boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.1)",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
           }}
@@ -58,9 +58,9 @@ export default function InstallPopup() {
             {/* Icon */}
             <div style={{
               width: 46, height: 46, borderRadius: 12, flexShrink: 0,
-              background: "linear-gradient(135deg,#7c3aed,#4f46e5)",
+              background: "#0A0A0A",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 6px 20px rgba(124,58,237,0.45)",
+              boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
               fontSize: 22,
             }}>
               📄
@@ -68,10 +68,10 @@ export default function InstallPopup() {
 
             {/* Text */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 14.5, fontWeight: 800, color: "#f1f5f9", letterSpacing: "-0.2px" }}>
+              <p style={{ margin: 0, fontSize: 14.5, fontWeight: 800, color: "#0A0A0A", letterSpacing: "-0.2px" }}>
                 Install Intellixy
               </p>
-              <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "rgba(241,245,249,0.55)", lineHeight: 1.5 }}>
+              <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "#5F6368", lineHeight: 1.5 }}>
                 Get faster access — chat with PDFs right from your home screen.
               </p>
             </div>
@@ -82,7 +82,7 @@ export default function InstallPopup() {
               aria-label="Dismiss"
               style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: "rgba(241,245,249,0.35)", fontSize: 18, padding: "0 0 0 4px",
+                color: "#9AA0A6", fontSize: 18, padding: "0 0 0 4px",
                 lineHeight: 1, flexShrink: 0,
               }}
             >
@@ -96,8 +96,8 @@ export default function InstallPopup() {
               onClick={dismiss}
               style={{
                 flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600,
-                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 12, color: "rgba(241,245,249,0.6)", cursor: "pointer",
+                background: "transparent", border: "1px solid #EAEAEA",
+                borderRadius: 12, color: "#5F6368", cursor: "pointer",
               }}
             >
               Not now
@@ -106,9 +106,9 @@ export default function InstallPopup() {
               onClick={handleInstall}
               style={{
                 flex: 2, padding: "10px 0", fontSize: 13, fontWeight: 800,
-                background: "linear-gradient(135deg,#7c3aed,#4f46e5)",
-                border: "none", borderRadius: 12, color: "white", cursor: "pointer",
-                boxShadow: "0 6px 20px rgba(124,58,237,0.45)",
+                background: "#0A0A0A",
+                border: "none", borderRadius: 12, color: "#FFFFFF", cursor: "pointer",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
                 letterSpacing: "-0.1px",
               }}
             >

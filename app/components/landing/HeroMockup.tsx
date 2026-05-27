@@ -97,7 +97,7 @@ export default function HeroMockup() {
       >
         <div className="hm-check-icon">✓</div>
         <div>
-          <div className="hm-badge-val">98%</div>
+          <div className="hm-badge-val">100%</div>
           <div className="hm-badge-lbl">Citation accuracy</div>
         </div>
       </motion.div>

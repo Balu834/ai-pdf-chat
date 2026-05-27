@@ -13,7 +13,7 @@ import FinalCTA        from "@/app/components/landing/FinalCTA";
 import Footer          from "@/app/components/landing/Footer";
 
 export const metadata: Metadata = {
-  title: "Intellixy — Chat with any PDF instantly",
+  title: { absolute: "Intellixy – AI Study Companion" },
   description:
     "Upload any PDF and get instant answers, summaries, and insights using AI. Free plan available — no credit card needed.",
 };

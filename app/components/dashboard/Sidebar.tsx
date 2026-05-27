@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IntellixyBrainIcon } from "@/app/components/IntellixyBrainIcon";
 import {
   LayoutDashboard, FileText, MessageCircle, BarChart2,
-  Users, Bookmark, Settings, CreditCard, Upload, LogOut,
+  Users, Bookmark, Settings, CreditCard, Upload, LogOut, BookOpen,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
@@ -21,7 +22,7 @@ interface Usage {
 
 export type DashTab =
   | "overview" | "documents" | "conversations" | "analytics"
-  | "saved" | "members" | "billing" | "settings";
+  | "saved" | "planner" | "members" | "billing" | "settings";
 
 export interface SidebarProps {
   user: User | null;
@@ -45,6 +46,7 @@ const NAV: { label: string; items: { icon: React.ElementType; text: string; tab:
       { icon: MessageCircle,   text: "Conversations", tab: "conversations",  badge: null    },
       { icon: BarChart2,       text: "Analytics",     tab: "analytics",      badge: null    },
       { icon: Bookmark,        text: "Saved",         tab: "saved",          badge: null    },
+      { icon: BookOpen,        text: "Study Planner", tab: "planner",        badge: null    },
     ],
   },
   {
@@ -111,12 +113,7 @@ export default function Sidebar({
       {/* ── Logo ──────────────────────────────────────────────────────── */}
       <div className="ds-logo">
         <Link href="/" className="ds-logo-mark" aria-label="Intellixy home">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
-            <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
-            <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
-            <rect x="3"  y="16" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".4"/>
-          </svg>
+          <IntellixyBrainIcon size={28} />
         </Link>
         <span className="ds-logo-name">Intellixy</span>
         <span className={`ds-plan-badge ${plan}`}>{plan === "pro" ? "Pro" : "Free"}</span>

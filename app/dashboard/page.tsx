@@ -7,14 +7,15 @@ import { Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, MessageCircle, BarChart2,
-  Search, Bell, Sparkles,
+  Search, Bell, Sparkles, Sun, Moon,
   ChevronRight, MoreHorizontal, ExternalLink, Trash2, Download,
   ArrowUpRight, Zap, Shield, Clock, TrendingUp, BookOpen,
-  FileSearch, Lightbulb, AlertCircle, CheckCircle2, Upload, Users,
+  FileSearch, CheckCircle2, Upload, Users,
   CreditCard, Bookmark, Settings,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
+import { reportError } from "@/lib/reportError";
 import OAuthSignupTracker from "@/app/components/OAuthSignupTracker";
 import Sidebar, { type DashTab } from "@/app/components/dashboard/Sidebar";
 import { Events } from "@/lib/analytics";
@@ -75,12 +76,6 @@ const DOC_SUMMARIES: Record<string, string> = {
   "Q3 Financial Report.pdf":  "Revenue reached ₹423.7 Cr (+23.4% YoY). Enterprise segment drove 68.2% of total revenue.",
   "Research Notes — May.pdf": "Key research findings on RAG pipeline optimization and embedding model comparisons.",
 };
-
-const INSIGHTS = [
-  { icon: <TrendingUp size={16} />, color: "orange", label: "Trend", title: "Revenue up 23%",     body: "Q3 revenue consistently outpacing analyst consensus across all your finance docs." },
-  { icon: <AlertCircle size={16}/>, color: "blue",   label: "Risk",  title: "3 risks flagged",    body: "Currency exposure, client concentration, and DPDPA compliance found in Q3 Report." },
-  { icon: <Lightbulb size={16} />,  color: "purple", label: "Tip",   title: "Try multi-doc chat", body: "Compare Q3 and Q2 reports simultaneously to surface quarter-over-quarter changes." },
-];
 
 const TEMPLATES = [
   { n: "01", title: "Analyse a contract",        body: "Key clauses, renewal terms, and risk flags extracted in seconds." },
@@ -328,12 +323,257 @@ function TabContent({
     );
   }
 
+  /* ── Planner tab ───────────────────────────────────────────── */
+  if (tab === "planner") {
+    return <PlannerTab />;
+  }
+
   /* ── Settings tab ───────────────────────────────────────────── */
   if (tab === "settings") {
     return <SettingsPanel user={user} plan={plan} onUpgrade={onUpgrade} />;
   }
 
   return null;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PLANNER TAB
+   ════════════════════════════════════════════════════════════════════════════ */
+interface StudyPlan {
+  id: string;
+  title: string;
+  exam_date: string;
+  hours_per_day: number;
+  subjects: { name: string; chapters?: number }[];
+  schedule: { week: number; label: string; days: { day: string; subject: string; topic: string; hours: number; completed: boolean }[] }[];
+  created_at: string;
+}
+
+function PlannerTab() {
+  const [plans,       setPlans]       = useState<StudyPlan[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [showForm,    setShowForm]    = useState(false);
+  const [generating,  setGenerating]  = useState(false);
+  const [expandedId,  setExpandedId]  = useState<string | null>(null);
+  const [genError,    setGenError]    = useState<string | null>(null);
+
+  /* form state */
+  const [title,       setTitle]       = useState("");
+  const [examDate,    setExamDate]    = useState("");
+  const [hoursPerDay, setHoursPerDay] = useState(2);
+  const [subjects,    setSubjects]    = useState([{ name: "", chapters: "" }]);
+
+  useEffect(() => {
+    fetch("/api/planner", { credentials: "include" })
+      .then(r => r.json())
+      .then(d => { setPlans(d.plans ?? []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const addSubject    = () => setSubjects(prev => [...prev, { name: "", chapters: "" }]);
+  const removeSubject = (i: number) => setSubjects(prev => prev.filter((_, idx) => idx !== i));
+  const updateSubject = (i: number, field: "name" | "chapters", value: string) =>
+    setSubjects(prev => prev.map((s, idx) => idx === i ? { ...s, [field]: value } : s));
+
+  const handleGenerate = async () => {
+    const valid = subjects.filter(s => s.name.trim());
+    if (!valid.length || !examDate || !hoursPerDay) {
+      setGenError("Please fill exam date and at least one subject."); return;
+    }
+    setGenError(null);
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/planner/generate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim() || "My Study Plan",
+          subjects: valid.map(s => ({ name: s.name.trim(), chapters: s.chapters ? parseInt(s.chapters) : undefined })),
+          examDate, hoursPerDay,
+        }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      const r2 = await fetch("/api/planner", { credentials: "include" });
+      const d2 = await r2.json();
+      setPlans(d2.plans ?? []);
+      setExpandedId(data.id);
+      setShowForm(false);
+      setTitle(""); setExamDate(""); setHoursPerDay(2); setSubjects([{ name: "", chapters: "" }]);
+    } catch (e: unknown) {
+      setGenError(e instanceof Error ? e.message : "Generation failed");
+    } finally { setGenerating(false); }
+  };
+
+  const handleToggleDay = async (planId: string, weekIdx: number, dayIdx: number, completed: boolean) => {
+    setPlans(prev => prev.map(p => {
+      if (p.id !== planId) return p;
+      const schedule = JSON.parse(JSON.stringify(p.schedule));
+      if (schedule[weekIdx]?.days?.[dayIdx]) schedule[weekIdx].days[dayIdx].completed = completed;
+      return { ...p, schedule };
+    }));
+    await fetch("/api/planner", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: planId, weekIdx, dayIdx, completed }),
+      credentials: "include",
+    }).catch(() => {});
+  };
+
+  const handleDeletePlan = async (id: string) => {
+    if (!confirm("Delete this study plan?")) return;
+    await fetch(`/api/planner?id=${id}`, { method: "DELETE", credentials: "include" });
+    setPlans(prev => prev.filter(p => p.id !== id));
+    if (expandedId === id) setExpandedId(null);
+  };
+
+  const doneCount = (plan: StudyPlan) => plan.schedule.flatMap(w => w.days).filter(d => d.completed).length;
+  const totalDays = (plan: StudyPlan) => plan.schedule.flatMap(w => w.days).length;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+      style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* Header row */}
+      <div className="ix-doc-section-head">
+        <div className="ix-section-title"><BookOpen size={16} /> Study Planner</div>
+        <button className="ix-btn-primary" onClick={() => setShowForm(v => !v)} style={{ padding: "7px 14px", fontSize: 12 }}>
+          {showForm ? "Cancel" : "+ New Plan"}
+        </button>
+      </div>
+
+      {/* Create plan form */}
+      {showForm && (
+        <div className="ix-planner-form">
+          <div className="ix-planner-form-head">
+            <span className="ix-planner-form-title"><BookOpen size={15} /> Create Study Plan</span>
+          </div>
+
+          <div className="ix-planner-field">
+            <label className="ix-planner-label">Plan Title (optional)</label>
+            <input className="ix-planner-input" value={title} onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. JEE Mains 2025" />
+          </div>
+
+          <div className="ix-planner-row-2">
+            <div className="ix-planner-field">
+              <label className="ix-planner-label">Exam Date</label>
+              <input className="ix-planner-input" type="date" value={examDate}
+                onChange={e => setExamDate(e.target.value)} />
+            </div>
+            <div className="ix-planner-field">
+              <label className="ix-planner-label">Study Hours / Day</label>
+              <select className="ix-planner-input" value={hoursPerDay}
+                onChange={e => setHoursPerDay(parseInt(e.target.value))}>
+                {[1,2,3,4,5,6,7,8].map(h => (
+                  <option key={h} value={h}>{h}h per day</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="ix-planner-field">
+            <label className="ix-planner-label">Subjects</label>
+            <div className="ix-planner-subjects">
+              {subjects.map((s, i) => (
+                <div key={i} className="ix-planner-subject-row">
+                  <input className="ix-planner-input ix-planner-subject-name"
+                    value={s.name} onChange={e => updateSubject(i, "name", e.target.value)}
+                    placeholder={`Subject ${i + 1} (e.g. Physics)`} />
+                  <input className="ix-planner-input ix-planner-subject-ch"
+                    value={s.chapters} onChange={e => updateSubject(i, "chapters", e.target.value)}
+                    placeholder="Chapters" type="number" min={1} />
+                  {subjects.length > 1 && (
+                    <button className="ix-planner-subject-rm" onClick={() => removeSubject(i)}>×</button>
+                  )}
+                </div>
+              ))}
+              <button className="ix-planner-add-subject" onClick={addSubject}>+ Add Subject</button>
+            </div>
+          </div>
+
+          {genError && <p style={{ fontSize: 12, color: "#ef4444" }}>{genError}</p>}
+
+          <button className="ix-planner-generate-btn" onClick={handleGenerate} disabled={generating}>
+            {generating ? <><div className="ix-planner-gen-spinner" /> Generating…</> : <><Sparkles size={14} /> Generate Plan</>}
+          </button>
+        </div>
+      )}
+
+      {/* Plans list */}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--text-tertiary)", fontSize: 14 }}>
+          <div style={{ width: 24, height: 24, border: "3px solid var(--border)", borderTopColor: "var(--accent, #F5B942)", borderRadius: "50%", animation: "ix-spin .7s linear infinite", margin: "0 auto 12px" }} />
+          Loading plans…
+        </div>
+      ) : plans.length === 0 ? (
+        <div className="ix-card">
+          <div className="ix-planner-empty">
+            <div className="ix-planner-empty-icon">📅</div>
+            <div className="ix-planner-empty-title">No study plans yet</div>
+            <div className="ix-planner-empty-sub">Create your first AI-powered study plan. Add your subjects, exam date, and daily hours — Lexi will build a week-by-week schedule.</div>
+            <button className="ix-btn-primary" onClick={() => setShowForm(true)} style={{ marginTop: 8 }}>
+              <Sparkles size={13} /> Create Plan
+            </button>
+          </div>
+        </div>
+      ) : (
+        plans.map(plan => {
+          const done  = doneCount(plan);
+          const total = totalDays(plan);
+          const pct   = total ? Math.round((done / total) * 100) : 0;
+          const isExpanded = expandedId === plan.id;
+          return (
+            <div key={plan.id} className="ix-planner-card">
+              <div className="ix-planner-card-head" onClick={() => setExpandedId(isExpanded ? null : plan.id)}>
+                <div className="ix-planner-card-info">
+                  <div className="ix-planner-card-title">{plan.title}</div>
+                  <div className="ix-planner-card-meta">
+                    <span className="ix-planner-meta-pill">📅 {new Date(plan.exam_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                    <span className="ix-planner-meta-pill">⏱ {plan.hours_per_day}h/day</span>
+                    <span className="ix-planner-meta-pill">✅ {done}/{total} days</span>
+                  </div>
+                  <div className="ix-planner-progress-bar" style={{ marginTop: 6 }}>
+                    <div className="ix-planner-progress-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+                <div className="ix-planner-card-actions">
+                  <button className="ix-planner-del-btn" onClick={e => { e.stopPropagation(); handleDeletePlan(plan.id); }}>🗑</button>
+                  <button className="ix-planner-expand-btn">{isExpanded ? "▲" : "▼"}</button>
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className="ix-planner-schedule">
+                  {plan.schedule.map((week, wIdx) => (
+                    <div key={wIdx} className="ix-planner-week">
+                      <div className="ix-planner-week-label">{week.label || `Week ${week.week}`}</div>
+                      {week.days.map((day, dIdx) => (
+                        <div key={dIdx} className={`ix-planner-day-row${day.completed ? " done" : ""}`}>
+                          <input
+                            type="checkbox" className="ix-planner-day-check"
+                            checked={!!day.completed}
+                            onChange={e => handleToggleDay(plan.id, wIdx, dIdx, e.target.checked)}
+                          />
+                          <div className="ix-planner-day-info">
+                            <div className="ix-planner-day-header">
+                              <span className="ix-planner-day-name">{day.day}</span>
+                              <span className="ix-planner-day-subject">{day.subject}</span>
+                              <span className="ix-planner-day-hours">{day.hours}h</span>
+                            </div>
+                            <div className="ix-planner-day-topic">{day.topic}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
+    </motion.div>
+  );
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -503,6 +743,7 @@ export default function DashboardPage() {
   });
 
   /* ── UI state ───────────────────────────────────────────────────────────── */
+  const [darkMode,     setDarkMode]     = useState(false);
   const [activeTab,    setActiveTab]    = useState<DashTab>("overview");
   const [cmdOpen,      setCmdOpen]      = useState(false);
   const [cmdQuery,     setCmdQuery]     = useState("");
@@ -522,6 +763,7 @@ export default function DashboardPage() {
   const [uploadError,  setUploadError]  = useState<string | null>(null);
   const [menuOpenId,   setMenuOpenId]   = useState<string | null>(null);
   const [deleting,     setDeleting]     = useState<string | null>(null);
+  const [dueCards,     setDueCards]     = useState<number>(0);
 
   const proCardRef   = useRef<HTMLDivElement>(null);
   const cmdInputRef  = useRef<HTMLInputElement>(null);
@@ -554,6 +796,16 @@ export default function DashboardPage() {
 
   /* ── Effects ────────────────────────────────────────────────────────────── */
 
+  useEffect(() => {
+    if (localStorage.getItem("lp-theme") === "dark") setDarkMode(true);
+  }, []);
+
+  const toggleDark = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    localStorage.setItem("lp-theme", next ? "dark" : "light");
+  };
+
   /* Date/greeting — client-only to avoid SSR/hydration mismatch */
   useEffect(() => {
     const h = new Date().getHours();
@@ -570,6 +822,8 @@ export default function DashboardPage() {
       fetchDocs(user.id);
       fetchPlan(user.id);
       fetchUsage();
+      fetch("/api/flashcards?dueCount=true", { credentials: "include" })
+        .then(r => r.json()).then(d => { if (typeof d.count === "number") setDueCards(d.count); }).catch(() => {});
       try {
         const pendingRef = sessionStorage.getItem("pendingRefCode");
         if (pendingRef) {
@@ -770,12 +1024,19 @@ export default function DashboardPage() {
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData, credentials: "include" });
       const data = await res.json();
-      if (!res.ok) { setUploadError(data.error || "Upload failed. Please try again."); return; }
+      if (!res.ok) {
+        const msg = data.error || "Upload failed. Please try again.";
+        setUploadError(msg);
+        reportError({ type: "upload", message: msg, page: "/dashboard", userEmail: user?.email });
+        return;
+      }
       if (user) await fetchDocs(user.id);
       await fetchUsage();
       showToast(`${file.name} uploaded · ready to chat`);
     } catch {
-      setUploadError("Upload failed. Please check your connection.");
+      const msg = "Upload failed. Please check your connection.";
+      setUploadError(msg);
+      reportError({ type: "upload", message: msg, page: "/dashboard", userEmail: user?.email });
     } finally {
       setUploading(false);
     }
@@ -872,13 +1133,17 @@ export default function DashboardPage() {
             showToast("Welcome to Pro! Unlimited reading unlocked.");
             setActiveTab("billing");
           } catch (e: unknown) {
-            showToast((e as Error).message ?? "Payment verification failed. Contact support.", "err");
+            const msg = (e as Error).message ?? "Payment verification failed. Contact support.";
+            showToast(msg, "err");
+            reportError({ type: "payment", message: msg, page: "/dashboard", userEmail: user?.email });
           }
         },
       });
       rzp.open();
     } catch (e: unknown) {
-      showToast((e as Error).message ?? "Could not start checkout. Try again.", "err");
+      const msg = (e as Error).message ?? "Could not start checkout. Try again.";
+      showToast(msg, "err");
+      reportError({ type: "payment", message: msg, page: "/dashboard", userEmail: user?.email });
     }
   }
 
@@ -905,7 +1170,7 @@ export default function DashboardPage() {
      RENDER
   ════════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="ds-dash">
+    <div className={`ds-dash${darkMode ? " dark" : ""}`}>
       <Suspense fallback={null}><OAuthSignupTracker /></Suspense>
 
       {/* Hidden file input */}
@@ -1034,6 +1299,9 @@ export default function DashboardPage() {
                 <Sparkles size={13} />
                 AI Assistant
               </button>
+              <button className="ds-bell" aria-label="Toggle theme" onClick={toggleDark} style={{ color: darkMode ? "#F5B942" : undefined }}>
+                {darkMode ? <Sun size={15} /> : <Moon size={15} />}
+              </button>
               <button className="ds-bell" aria-label="Notifications">
                 <Bell size={15} />
                 <span className="ds-bell-dot" />
@@ -1143,14 +1411,22 @@ export default function DashboardPage() {
                 <div className="ix-stat-sub">Across all documents</div>
               </motion.div>
 
-              <motion.div className="ix-stat-card" variants={fadeUp}>
+              <motion.div
+                className="ix-stat-card"
+                variants={fadeUp}
+                style={{ cursor: dueCards > 0 ? "pointer" : "default" }}
+                onClick={() => dueCards > 0 && docs[0] && (window.location.href = `/viewer?url=${encodeURIComponent(docs[0].file_url)}`)}
+                title={dueCards > 0 ? "Go review your flashcards" : "No flashcards due"}
+              >
                 <div className="ix-stat-icon-row">
                   <div className="ix-stat-icon green"><Zap size={16} /></div>
-                  <span className="ix-stat-delta up">Fast</span>
+                  {dueCards > 0
+                    ? <span className="ix-stat-delta up">{dueCards} due</span>
+                    : <span className="ix-stat-delta up">All done</span>}
                 </div>
-                <div className="ix-stat-val">3.4<span>s</span></div>
-                <div className="ix-stat-label">Avg. answer time</div>
-                <div className="ix-stat-sub">98% citation accuracy</div>
+                <div className="ix-stat-val">{String(dueCards).padStart(2, "0")}</div>
+                <div className="ix-stat-label">Flashcards due</div>
+                <div className="ix-stat-sub">{dueCards > 0 ? "Tap to start review session" : "All cards reviewed!"}</div>
               </motion.div>
 
               <motion.div className="ix-stat-card" variants={fadeUp}>
@@ -1339,7 +1615,7 @@ export default function DashboardPage() {
                     <div className="ix-chart-meta-lbl">Avg. answer</div>
                   </div>
                   <div className="ix-chart-meta-item">
-                    <div className="ix-chart-meta-val">98%</div>
+                    <div className="ix-chart-meta-val">100%</div>
                     <div className="ix-chart-meta-lbl">Citation accuracy</div>
                   </div>
                 </div>
@@ -1356,7 +1632,7 @@ export default function DashboardPage() {
                   { icon: <Clock size={18} />,       color:"orange", bg:"var(--accent-pale)", val:"0.3s",  label:"Fastest answer",   sub:"This session" },
                   { icon: <TrendingUp size={18} />,   color:"green",  bg:"var(--green-pale)",  val:"23%",  label:"Revenue growth",   sub:"Found in Q3 report" },
                   { icon: <FileSearch size={18} />,   color:"blue",   bg:"var(--blue-pale)",   val:"127",  label:"Passages cited",   sub:"Across all docs" },
-                  { icon: <CheckCircle2 size={18} />, color:"purple", bg:"#f3e8ff",             val:"98%",  label:"AI accuracy",      sub:"Independently audited" },
+                  { icon: <CheckCircle2 size={18} />, color:"purple", bg:"#f3e8ff",             val:"100%", label:"AI accuracy",      sub:"Independently audited" },
                 ].map((m, i) => (
                   <div key={i} className="ix-metric-card">
                     <div className="ix-metric-icon" style={{ background: m.bg, color: `var(--${m.color})` }}>
@@ -1435,33 +1711,6 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 </div>
-              </motion.div>
-            </div>
-
-            {/* ── 6. AI INSIGHTS ────────────────────────────────────── */}
-            <div>
-              <div className="ix-doc-section-head">
-                <div className="ix-section-title"><Lightbulb size={16} /> AI Insights</div>
-                <button className="ix-section-action">Refresh →</button>
-              </div>
-              <motion.div
-                className="ix-insights-grid"
-                variants={staggerContainer}
-                initial="hidden"
-                animate="show"
-              >
-                {INSIGHTS.map((ins, i) => (
-                  <motion.div key={i} variants={fadeUp}>
-                    <div className="ix-insight-card">
-                      <div className={`ix-insight-icon`} style={{ background: `var(--${ins.color === "orange" ? "accent-pale" : ins.color + "-pale"})`, color: `var(--${ins.color === "orange" ? "accent" : ins.color})` }}>
-                        {ins.icon}
-                      </div>
-                      <div className="ix-insight-label">{ins.label}</div>
-                      <div className="ix-insight-title">{ins.title}</div>
-                      <div className="ix-insight-body">{ins.body}</div>
-                    </div>
-                  </motion.div>
-                ))}
               </motion.div>
             </div>
 
