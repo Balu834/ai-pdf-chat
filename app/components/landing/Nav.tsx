@@ -2,7 +2,32 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X, ChevronDown, Sun, Moon } from "lucide-react";
-import { IntellixyBrainIcon } from "@/app/components/IntellixyBrainIcon";
+
+const NAV_BRAIN = (
+  <svg width="26" height="22" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <defs>
+      <linearGradient id="nav-ilx-g" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+        <stop offset="0%"   stopColor="#F59E0B"/>
+        <stop offset="25%"  stopColor="#F97316"/>
+        <stop offset="52%"  stopColor="#EC4899"/>
+        <stop offset="78%"  stopColor="#8B5CF6"/>
+        <stop offset="100%" stopColor="#3B82F6"/>
+      </linearGradient>
+    </defs>
+    <path d="M27 7 C22 7 15 8 11 13 C7 18 6 25 8 31 C10 37 15 41 20 43 C23 44 27 43 27 43" stroke="url(#nav-ilx-g)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M27 7 C32 7 38 9 41 14 C44 20 43 28 40 33 C38 37 34 41 27 43" stroke="url(#nav-ilx-g)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M20 43 C18 46 19 48 22 48 C25 48 28 46 27 43" stroke="url(#nav-ilx-g)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M15 17 L27 11 L39 18" stroke="url(#nav-ilx-g)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M15 17 L23 27 L39 18" stroke="url(#nav-ilx-g)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M15 17 L17 32" stroke="url(#nav-ilx-g)" strokeWidth="2.4" strokeLinecap="round"/>
+    <path d="M17 32 L23 27" stroke="url(#nav-ilx-g)" strokeWidth="2.4" strokeLinecap="round"/>
+    <circle cx="27" cy="11" r="3.2" stroke="url(#nav-ilx-g)" strokeWidth="2.2" fill="white"/>
+    <circle cx="15" cy="17" r="3.2" stroke="url(#nav-ilx-g)" strokeWidth="2.2" fill="white"/>
+    <circle cx="39" cy="18" r="3.2" stroke="url(#nav-ilx-g)" strokeWidth="2.2" fill="white"/>
+    <circle cx="23" cy="27" r="3.2" stroke="url(#nav-ilx-g)" strokeWidth="2.2" fill="white"/>
+    <circle cx="17" cy="32" r="2.8" stroke="url(#nav-ilx-g)" strokeWidth="2.2" fill="white"/>
+  </svg>
+);
 
 const LINKS = [
   { label: "Features",  href: "#features", dropdown: true  },
@@ -15,8 +40,10 @@ const LINKS = [
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const saved = localStorage.getItem("lp-theme");
     if (saved === "dark") {
       setDark(true);
@@ -36,8 +63,8 @@ export default function Nav() {
       <nav className="lp-nav" role="navigation">
         <div className="lp-nav-inner">
           <Link href="/" className="lp-nav-brand">
-            <span className="lp-nav-mark" aria-hidden>
-              <IntellixyBrainIcon size={26} />
+            <span className="lp-nav-mark" aria-hidden style={{ width: 26, height: 22, display: "inline-flex" }}>
+              {mounted ? NAV_BRAIN : null}
             </span>
             Intellixy
           </Link>
