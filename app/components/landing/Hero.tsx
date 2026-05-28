@@ -127,11 +127,15 @@ export default function Hero() {
               <svg width="108" height="32" viewBox="0 0 108 32" fill="none" style={{marginTop: '6px', display: 'block'}}>
                 <defs>
                   <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0A0A0A" stopOpacity="0.14"/>
-                    <stop offset="100%" stopColor="#0A0A0A" stopOpacity="0"/>
+                    <stop offset="0%" stopColor="#F7B500" stopOpacity="0.28"/>
+                    <stop offset="100%" stopColor="#F7B500" stopOpacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="spark-stroke" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#FFB347" stopOpacity="0.5"/>
+                    <stop offset="100%" stopColor="#F7B500" stopOpacity="0.9"/>
                   </linearGradient>
                 </defs>
-                <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1" stroke="#0A0A0A" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
+                <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1" stroke="url(#spark-stroke)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1 L108 32 L0 32Z" fill="url(#spark-grad)"/>
               </svg>
             </motion.div>
