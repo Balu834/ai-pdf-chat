@@ -72,12 +72,6 @@ export async function POST(req) {
       logger.error({ ...ctx, route: "api/upload", message: `Subscription check failed: ${limitErr.message}`, userId: user.id, adminClient }).catch(() => {});
       return NextResponse.json({ error: "Could not verify subscription. Please try again." }, { status: 500 });
     }
-    // Debug log — visible in Vercel function logs and local dev console.
-    // Shows plan/usage for every upload attempt; remove once stable.
-    console.log(
-      `[UPLOAD] user=${user.id} plan=${limitCheck.isPro ? "pro" : "free"} ` +
-      `used=${limitCheck.used}/${limitCheck.limit ?? "∞"} allowed=${limitCheck.allowed}`
-    );
 
     if (!limitCheck.allowed) {
       return NextResponse.json(
