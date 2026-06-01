@@ -40,10 +40,8 @@ const LINKS = [
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const saved = localStorage.getItem("lp-theme");
     if (saved === "dark") {
       setDark(true);
@@ -64,7 +62,7 @@ export default function Nav() {
         <div className="lp-nav-inner">
           <Link href="/" className="lp-nav-brand">
             <span className="lp-nav-mark" aria-hidden style={{ width: 26, height: 22, display: "inline-flex" }}>
-              {mounted ? NAV_BRAIN : null}
+              {NAV_BRAIN}
             </span>
             Intellixy
           </Link>
