@@ -5,39 +5,39 @@
 
 /* ── ROOT SHELL ──────────────────────────────────────────────────────────── */
 .ds-dash {
-  /* ── Premium white theme ────────────────────────────────────────────── */
-  --bg:             #FFFFFF;
-  --bg-secondary:   #F9F9F9;
-  --bg-hover:       #F0F0F0;
-  --border:         #EAEAEA;
-  --border-strong:  #D4D4D8;
-  --text:           #0A0A0A;
-  --text-secondary: #5F6368;
-  --text-tertiary:  #717880;
-  --accent:         #0A0A0A;
-  --accent-dark:    #1A1A1A;
-  --accent-fg:      #FFFFFF;
-  --accent-pale:    rgba(0,0,0,0.06);
-  --accent-glow:    rgba(0,0,0,0.10);
-  --green:          #16a34a;
-  --green-pale:     rgba(22,163,74,0.10);
-  --brand:          #0A0A0A;
-  --brand-dark:     #1A1A1A;
-  --brand-bg:       rgba(0,0,0,0.05);
-  --brand-ring:     rgba(0,0,0,0.12);
-  --brand-glow:     rgba(0,0,0,0.08);
-  --blue:           #3B82F6;
-  --blue-pale:      rgba(59,130,246,0.08);
-  --orange:         #F97316;
-  --orange-pale:    rgba(249,115,22,0.08);
-  --red:            #EF4444;
-  --red-pale:       rgba(239,68,68,0.08);
-  --purple:         #8B5CF6;
-  --purple-pale:    rgba(139,92,246,0.08);
-  --citation-bg:    rgba(0,0,0,0.05);
-  --sh-sm:          0 2px 8px  rgba(0,0,0,0.04);
-  --sh-md:          0 4px 20px rgba(0,0,0,0.06);
-  --sh-lg:          0 8px 40px rgba(0,0,0,0.08);
+  /* ── Dark theme with color accents ─────────────────────────────────── */
+  --bg:             #0A0A0A;
+  --bg-secondary:   #111116;
+  --bg-hover:       #1C1C24;
+  --border:         rgba(255,255,255,0.09);
+  --border-strong:  rgba(255,255,255,0.16);
+  --text:           #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary:  #64748B;
+  --accent:         #F5B942;
+  --accent-dark:    #E0A830;
+  --accent-fg:      #0A0A0A;
+  --accent-pale:    rgba(245,185,66,0.13);
+  --accent-glow:    rgba(245,185,66,0.08);
+  --green:          #34d399;
+  --green-pale:     rgba(52,211,153,0.13);
+  --brand:          #F5B942;
+  --brand-dark:     #E0A830;
+  --brand-bg:       rgba(245,185,66,0.12);
+  --brand-ring:     rgba(245,185,66,0.25);
+  --brand-glow:     rgba(245,185,66,0.08);
+  --blue:           #60a5fa;
+  --blue-pale:      rgba(96,165,250,0.13);
+  --orange:         #fb923c;
+  --orange-pale:    rgba(251,146,60,0.13);
+  --red:            #f87171;
+  --red-pale:       rgba(248,113,113,0.12);
+  --purple:         #a78bfa;
+  --purple-pale:    rgba(167,139,250,0.12);
+  --citation-bg:    rgba(255,255,255,0.07);
+  --sh-sm:          0 2px 8px  rgba(0,0,0,0.4);
+  --sh-md:          0 4px 20px rgba(0,0,0,0.5);
+  --sh-lg:          0 8px 40px rgba(0,0,0,0.6);
   /* ── Layout ─────────────────────────────────────────────────────────── */
   height: 100vh; height: 100dvh;
   display: flex; flex-direction: column;
@@ -800,112 +800,121 @@
 .ix-banner-cta.copied { background: var(--green); }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   PREMIUM WHITE THEME ENHANCEMENTS
+   DARK + COLOR THEME ENHANCEMENTS
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Clean white content background */
-.ds-dash .ds-content {
-  background: var(--bg);
-}
+.ds-dash .ds-content  { background: var(--bg-secondary); }
+.ds-dash .ds-sidebar  { background: rgba(10,10,10,0.98); backdrop-filter: blur(12px); border-right: 1px solid var(--border); }
+.ds-dash .ds-topbar   { background: rgba(10,10,10,0.96); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); box-shadow: 0 1px 0 rgba(255,255,255,0.04); }
 
-/* Sidebar — pure white glass */
-.ds-dash .ds-sidebar {
-  background: rgba(255,255,255,0.98);
-  backdrop-filter: blur(12px);
-  border-right: 1px solid #EAEAEA;
-}
-
-/* Topbar — pure white glass */
-.ds-dash .ds-topbar {
-  background: rgba(255,255,255,0.96);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid #EAEAEA;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
-}
-
-/* Primary buttons — premium black */
+/* Primary buttons — golden accent */
 .ds-dash .ix-btn-primary,
 .ds-dash .ds-upload-btn,
 .ds-dash .ix-pro-cta,
 .ds-dash .ix-banner-cta,
 .ds-dash .ix-doc-open-btn {
-  background: #0A0A0A;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
-  color: #FFFFFF;
+  background: #F5B942; color: #0A0A0A;
+  box-shadow: 0 1px 3px rgba(245,185,66,0.25), 0 2px 10px rgba(245,185,66,0.12);
 }
 .ds-dash .ix-btn-primary:hover,
 .ds-dash .ds-upload-btn:hover,
 .ds-dash .ix-pro-cta:hover,
 .ds-dash .ix-banner-cta:hover,
 .ds-dash .ix-doc-open-btn:hover {
-  background: #1A1A1A;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-  transform: translateY(-1px);
-  color: #fff;
+  background: #E0A830; color: #0A0A0A;
+  box-shadow: 0 4px 20px rgba(245,185,66,0.30); transform: translateY(-1px);
 }
 
-/* Card hover — clean shadow */
+/* Card hover */
 .ds-dash .ix-stat-card:hover,
 .ds-dash .ix-doc-card:hover,
 .ds-dash .ix-insight-card:hover,
 .ds-dash .ix-template-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border-color: #D4D4D8;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.16);
 }
 
-/* Hero welcome banner — clean white */
-.ds-dash .ix-hero {
-  background: #FFFFFF;
-  border: 1px solid #EAEAEA;
-  border-color: #EAEAEA;
-}
+/* Hero welcome banner */
+.ds-dash .ix-hero { background: #111116; border-color: rgba(255,255,255,0.09); }
+.ds-dash .ix-hero-live-dot { background: var(--accent); }
+.ds-dash .ix-hero-greeting em { color: var(--accent); }
 
 /* Active sidebar item */
 .ds-dash .ds-nav-item.is-active {
-  background: rgba(0,0,0,0.06);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+  background: var(--accent-pale); color: var(--accent);
+  box-shadow: none;
 }
+.ds-dash .ds-nav-item.is-active::before { background: var(--accent); }
+.ds-dash .ds-nav-item.is-active .ds-nav-badge { background: rgba(245,185,66,0.18); color: var(--accent); }
 
-/* Logo mark — solid black */
-.ds-dash .ds-logo-mark {
-  background: #0A0A0A;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
-}
+/* Logo mark */
+.ds-dash .ds-logo-mark { background: transparent; box-shadow: none; }
 
-/* Scrollbar — clean */
+/* Scrollbar */
 .ds-dash .ds-content::-webkit-scrollbar { width: 5px; }
 .ds-dash .ds-content::-webkit-scrollbar-track { background: transparent; }
-.ds-dash .ds-content::-webkit-scrollbar-thumb {
-  background: #D4D4D8; border-radius: 999px;
-}
-.ds-dash .ds-content::-webkit-scrollbar-thumb:hover { background: #9AA0A6; }
+.ds-dash .ds-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+.ds-dash .ds-content::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
-/* Pro card — premium dark for upsell contrast */
-.ds-dash .ix-pro-card {
-  background: #0A0A0A;
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
+/* Pro card */
+.ds-dash .ix-pro-card { background: #1A1A22; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
 
-/* Analytics chart accent bar */
-.ds-dash .ix-bar.today {
-  background: #0A0A0A;
-  box-shadow: 0 0 6px rgba(0,0,0,0.25);
-}
+/* Analytics chart */
+.ds-dash .ix-bar.today  { background: var(--accent); box-shadow: 0 0 8px rgba(245,185,66,0.35); }
+.ds-dash .ix-bar.accent { background: rgba(245,185,66,0.35); }
+.ds-dash .ix-bar.base   { background: rgba(255,255,255,0.12); }
 
-/* Metric card left border accent */
-.ds-dash .ix-metric-card {
-  border-left: 2px solid rgba(0,0,0,0.32);
-}
+/* Metric card left border */
+.ds-dash .ix-metric-card { border-left: 2px solid var(--accent-pale); }
+.ds-dash .ix-metric-icon { background: var(--accent-pale); color: var(--accent); }
 
-/* Search bar — clean white */
-.ds-dash .ds-search {
-  background: #FFFFFF;
-}
-.ds-dash .ds-search:hover {
-  background: #F9F9F9;
-  border-color: #D4D4D8;
-}
+/* Search bar */
+.ds-dash .ds-search { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.09); color: var(--text-secondary); }
+.ds-dash .ds-search:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.18); }
+
+/* Stat cards — colorful icons */
+.ds-dash .ix-stat-card { background: #0D0D10; border-color: rgba(255,255,255,0.09); }
+.ds-dash .ix-stat-icon.orange { background: var(--orange-pale); color: var(--orange); }
+.ds-dash .ix-stat-icon.blue   { background: var(--blue-pale);   color: var(--blue);   }
+.ds-dash .ix-stat-icon.green  { background: var(--green-pale);  color: var(--green);  }
+.ds-dash .ix-stat-icon.purple { background: var(--purple-pale); color: var(--purple); }
+
+/* Doc cards */
+.ds-dash .ix-doc-card { background: #0D0D10; border-color: rgba(255,255,255,0.09); }
+.ds-dash .ix-doc-thumb { background: linear-gradient(135deg, #1C1C24 0%, #111116 100%); border-bottom-color: rgba(255,255,255,0.08); }
+.ds-dash .ix-doc-thumb-icon { color: var(--accent); }
+.ds-dash .ix-doc-badge.new { background: var(--accent-pale); color: var(--accent); }
+
+/* Generic cards */
+.ds-dash .ix-card,
+.ds-dash .ix-chart-card,
+.ds-dash .ix-insight-card,
+.ds-dash .ix-template-card,
+.ds-dash .ix-banner { background: #111116; border-color: rgba(255,255,255,0.09); }
+
+/* Avatar */
+.ds-dash .ds-avatar { background: var(--accent-pale); color: var(--accent); }
+.ds-dash .ds-topbar-av { background: var(--accent-pale); color: var(--accent); }
+.ds-dash .ds-plan-badge.free { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
+.ds-dash .ds-plan-badge.pro  { background: var(--accent-pale); color: var(--accent); }
+.ds-dash .ds-profile:hover { background: var(--bg-hover); }
+.ds-dash .ds-profile-menu { background: #1A1A22; border-color: rgba(255,255,255,0.12); }
+.ds-dash .ds-profile-menu-item { color: var(--text); }
+.ds-dash .ds-profile-menu-item:hover { background: var(--bg-hover); }
+
+/* AI button */
+.ds-dash .ds-ai-btn { background: var(--brand-bg); color: var(--accent); }
+.ds-dash .ds-ai-btn:hover { background: rgba(245,185,66,0.20); }
+
+/* Usage bar */
+.ds-dash .ds-usage-fill { background: var(--accent); }
+.ds-dash .ds-usage-upgrade { color: var(--accent); }
+.ds-dash .ds-usage-track { background: rgba(255,255,255,0.08); }
+
+/* Command palette */
+.ds-dash .ix-cmd { background: #1A1A22; border-color: rgba(255,255,255,0.12); }
+.ds-dash .ix-cmd-input { color: var(--text); }
+.ds-dash .ix-cmd-item:hover, .ds-dash .ix-cmd-item.sel { background: rgba(255,255,255,0.07); }
+.ds-dash .ix-cmd-footer { background: rgba(255,255,255,0.03); border-top-color: rgba(255,255,255,0.09); }
 
 /* ══════════════════════════════════════════════════════════════════════════
    DARK MODE
