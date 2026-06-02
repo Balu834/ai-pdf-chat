@@ -1392,7 +1392,7 @@
 /* ══════════════════════════════════════════════════════════════════════════
    FOOTER
    ══════════════════════════════════════════════════════════════════════════ */
-.lp-footer { background: #FFFFFF; border-top: 1px solid rgba(0,0,0,0.06); }
+.lp-footer { background: #0A0A0A; border-top: none; }
 .lp-footer-inner {
   max-width: 1100px; margin: 0 auto; padding: 60px 24px 44px;
   display: grid; grid-template-columns: 200px repeat(3, 1fr); gap: 40px;
@@ -1402,26 +1402,26 @@
 
 .lp-footer-logo {
   display: flex; align-items: center; gap: 8px;
-  font-size: 14px; font-weight: 700; color: #0A0A0A;
+  font-size: 14px; font-weight: 700; color: #FFFFFF;
   text-decoration: none; margin-bottom: 8px;
 }
 .lp-footer-logo-mark { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.lp-footer-tagline   { font-size: 13px; color: #6B7280; line-height: 1.6; }
+.lp-footer-tagline   { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
 .lp-footer-col-head  {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.1em; color: #9AA0A6; margin-bottom: 14px;
+  letter-spacing: 0.1em; color: rgba(255,255,255,0.30); margin-bottom: 14px;
 }
 .lp-footer-links     { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.lp-footer-links a   { font-size: 13.5px; color: #5F6368; transition: color 0.14s; text-decoration: none; }
-.lp-footer-links a:hover { color: #0A0A0A; }
+.lp-footer-links a   { font-size: 13.5px; color: rgba(255,255,255,0.52); transition: color 0.14s; text-decoration: none; }
+.lp-footer-links a:hover { color: #FFFFFF; }
 .lp-footer-bottom {
   max-width: 1100px; margin: 0 auto; padding: 18px 24px;
-  border-top: 1px solid rgba(0,0,0,0.06);
+  border-top: 1px solid rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 8px; font-size: 12px; color: #9AA0A6;
+  flex-wrap: wrap; gap: 8px; font-size: 12px; color: rgba(255,255,255,0.32);
 }
-.lp-footer-bottom a { color: #6B7280; transition: color 0.14s; text-decoration: none; }
-.lp-footer-bottom a:hover { color: #0A0A0A; }
+.lp-footer-bottom a { color: rgba(255,255,255,0.42); transition: color 0.14s; text-decoration: none; }
+.lp-footer-bottom a:hover { color: #FFFFFF; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    ANIMATIONS
