@@ -823,89 +823,91 @@
   box-shadow: 0 1px 0 rgba(0,0,0,0.04);
 }
 
-/* Primary buttons — premium black */
+/* Primary buttons — golden gradient */
 .ds-dash .ix-btn-primary,
 .ds-dash .ds-upload-btn,
-.ds-dash .ix-pro-cta,
 .ds-dash .ix-banner-cta,
 .ds-dash .ix-doc-open-btn {
-  background: #0A0A0A;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%);
+  color: #0A0A0A; font-weight: 700;
+  box-shadow: 0 1px 3px rgba(245,158,11,0.30), 0 2px 10px rgba(245,158,11,0.15);
 }
 .ds-dash .ix-btn-primary:hover,
 .ds-dash .ds-upload-btn:hover,
-.ds-dash .ix-pro-cta:hover,
 .ds-dash .ix-banner-cta:hover,
 .ds-dash .ix-doc-open-btn:hover {
-  background: #1A1A1A;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-  transform: translateY(-1px);
-  color: #fff;
+  background: linear-gradient(135deg, #FBBF24 0%, #FB923C 100%);
+  box-shadow: 0 4px 18px rgba(245,158,11,0.40);
+  transform: translateY(-1px); color: #0A0A0A;
 }
+.ds-dash .ix-pro-cta { background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%); color: #0A0A0A; }
+.ds-dash .ix-pro-cta:hover { background: linear-gradient(135deg, #FBBF24 0%, #FB923C 100%); color: #0A0A0A; }
 
-/* Card hover — clean shadow */
+/* Card hover */
 .ds-dash .ix-stat-card:hover,
 .ds-dash .ix-doc-card:hover,
 .ds-dash .ix-insight-card:hover,
 .ds-dash .ix-template-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border-color: #D4D4D8;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-color: #D4D4D8;
 }
 
-/* Hero welcome banner — clean white */
+/* Stat cards — colored top border per type */
+.ds-dash .ix-stat-card:nth-child(1) { border-top: 2px solid #F97316; }
+.ds-dash .ix-stat-card:nth-child(2) { border-top: 2px solid #3B82F6; }
+.ds-dash .ix-stat-card:nth-child(3) { border-top: 2px solid #16a34a; }
+.ds-dash .ix-stat-card:nth-child(4) { border-top: 2px solid #8B5CF6; }
+
+/* Hero welcome banner — subtle warm tint */
 .ds-dash .ix-hero {
-  background: #FFFFFF;
-  border: 1px solid #EAEAEA;
-  border-color: #EAEAEA;
+  background: linear-gradient(135deg, #FFFBF0 0%, #FFFFFF 60%);
+  border: 1px solid rgba(245,158,11,0.18);
 }
+.ds-dash .ix-hero-greeting em { color: #F59E0B; }
+.ds-dash .ix-hero-live-dot { background: #F59E0B; box-shadow: 0 0 0 2px rgba(245,158,11,0.18), 0 0 8px rgba(245,158,11,0.4); }
 
-/* Active sidebar item */
+/* Active sidebar item — amber accent */
 .ds-dash .ds-nav-item.is-active {
-  background: rgba(0,0,0,0.06);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+  background: rgba(245,158,11,0.08); color: #B45309;
+  box-shadow: none;
 }
+.ds-dash .ds-nav-item.is-active::before { background: #F59E0B; }
 
-/* Logo mark — solid black */
-.ds-dash .ds-logo-mark {
-  background: #0A0A0A;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+/* AI Assistant button — colorful */
+.ds-dash .ds-ai-btn {
+  background: rgba(139,92,246,0.08); color: #7C3AED;
 }
+.ds-dash .ds-ai-btn:hover { background: rgba(139,92,246,0.14); }
 
-/* Scrollbar — clean */
+/* Logo mark */
+.ds-dash .ds-logo-mark { background: #0A0A0A; box-shadow: 0 2px 8px rgba(0,0,0,0.20); }
+
+/* Scrollbar */
 .ds-dash .ds-content::-webkit-scrollbar { width: 5px; }
 .ds-dash .ds-content::-webkit-scrollbar-track { background: transparent; }
-.ds-dash .ds-content::-webkit-scrollbar-thumb {
-  background: #D4D4D8; border-radius: 999px;
-}
+.ds-dash .ds-content::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 999px; }
 .ds-dash .ds-content::-webkit-scrollbar-thumb:hover { background: #9AA0A6; }
 
-/* Pro card — premium dark for upsell contrast */
-.ds-dash .ix-pro-card {
-  background: #0A0A0A;
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
+/* Pro card */
+.ds-dash .ix-pro-card { background: #0A0A0A; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
 
 /* Analytics chart accent bar */
-.ds-dash .ix-bar.today {
-  background: #0A0A0A;
-  box-shadow: 0 0 6px rgba(0,0,0,0.25);
-}
+.ds-dash .ix-bar.today { background: #F59E0B; box-shadow: 0 0 6px rgba(245,158,11,0.35); }
+.ds-dash .ix-bar.accent { background: rgba(245,158,11,0.35); }
 
-/* Metric card left border accent */
-.ds-dash .ix-metric-card {
-  border-left: 2px solid rgba(0,0,0,0.32);
-}
+/* Metric card left border */
+.ds-dash .ix-metric-card { border-left: 2px solid #F59E0B; }
 
-/* Search bar — clean white */
-.ds-dash .ds-search {
-  background: #FFFFFF;
-}
-.ds-dash .ds-search:hover {
-  background: #F9F9F9;
-  border-color: #D4D4D8;
-}
+/* Usage bar — amber */
+.ds-dash .ds-usage-fill { background: linear-gradient(90deg, #F59E0B, #F97316); }
+.ds-dash .ds-usage-upgrade { color: #F59E0B; }
+
+/* Section links */
+.ds-dash .ix-section-action,
+.ds-dash .ix-card-link { color: #F59E0B; }
+
+/* Search bar */
+.ds-dash .ds-search { background: #FFFFFF; }
+.ds-dash .ds-search:hover { background: #F9F9F9; border-color: #D4D4D8; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    DARK MODE
