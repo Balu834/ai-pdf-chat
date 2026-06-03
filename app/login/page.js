@@ -433,7 +433,7 @@ export default function LoginPage() {
               <div style={{ marginBottom: 12, position: "relative" }}>
                 <div style={{
                   position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
-                  color: "rgba(240,240,248,0.3)", pointerEvents: "none",
+                  color: "#9CA3AF", pointerEvents: "none",
                 }}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -484,17 +484,17 @@ export default function LoginPage() {
                     style={{
                       width: "100%",
                       padding: "11px 44px 11px 40px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "#F8FAFC",
+                      border: "1px solid #E2E8F0",
                       borderRadius: 12,
-                      color: "#f0f0f8",
+                      color: "#111827",
                       fontSize: 14,
                       outline: "none",
                       transition: "border-color 0.15s",
                       boxSizing: "border-box",
                     }}
-                    onFocus={(e) => e.target.style.borderColor = "rgba(124,58,237,0.6)"}
-                    onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                    onFocus={(e) => e.target.style.borderColor = "rgba(245,185,66,0.7)"}
+                    onBlur={(e) => e.target.style.borderColor = "#E2E8F0"}
                   />
                   <button
                     type="button"
