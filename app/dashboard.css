@@ -1203,12 +1203,15 @@
 /* Generate button */
 .ix-planner-generate-btn {
   padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 700;
-  cursor: pointer; border: none; background: var(--accent, #0A0A0A); color: #000;
+  cursor: pointer; border: none;
+  background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%);
+  color: #0A0A0A;
+  box-shadow: 0 2px 10px rgba(245,158,11,0.35);
   display: flex; align-items: center; gap: 7px; justify-content: center;
-  transition: opacity .15s, transform .1s;
+  transition: opacity .15s, transform .1s, box-shadow .15s;
 }
 .ix-planner-generate-btn:disabled { opacity: .5; cursor: default; }
-.ix-planner-generate-btn:not(:disabled):hover { opacity: .88; }
+.ix-planner-generate-btn:not(:disabled):hover { opacity: .92; box-shadow: 0 4px 18px rgba(245,158,11,0.45); }
 .ix-planner-generate-btn:not(:disabled):active { transform: scale(.98); }
 .ix-planner-gen-spinner {
   width: 14px; height: 14px; border: 2px solid rgba(0,0,0,.25); border-top-color: #000;
