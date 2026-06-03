@@ -321,10 +321,10 @@ export default function LoginPage() {
               style={{ marginBottom: 24 }}
             >
               <h2 style={{ fontSize: 22, fontWeight: 800, color: "#111827", margin: "0 0 6px", letterSpacing: "-0.4px" }}>
-                {isLogin ? "Welcome back" : isSignup ? "Create your account" : "Reset password"}
+                {isLogin ? "Sign in to Intellixy" : isSignup ? "Create your account" : "Reset password"}
               </h2>
               <p style={{ fontSize: 13.5, color: "#6B7280", margin: 0 }}>
-                {isLogin  ? "Sign in to continue to Intellixy"
+                {isLogin  ? "Enter your email and password to continue"
                 : isSignup ? "Start for free — no credit card needed"
                 :            "We'll send a reset link to your email"}
               </p>
