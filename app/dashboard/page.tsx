@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import { reportError } from "@/lib/reportError";
 import OAuthSignupTracker from "@/app/components/OAuthSignupTracker";
+import ErrorBoundary from "@/app/components/ErrorBoundary";
 import Sidebar, { type DashTab } from "@/app/components/dashboard/Sidebar";
 import { Events } from "@/lib/analytics";
 
@@ -146,9 +147,24 @@ function TabContent({
           </button>
         </div>
         {allDocs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 0", color: "var(--text-tertiary)", fontSize: 14 }}>
-            <FileText size={36} style={{ opacity: 0.3, marginBottom: 12 }} />
-            <p>No documents yet. Upload your first PDF to get started.</p>
+          <div style={{ textAlign: "center", padding: "52px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: "linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.10))", border: "1.5px solid rgba(245,158,11,0.22)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <FileText size={32} style={{ color: "#F59E0B" }} />
+            </div>
+            <div>
+              <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 700, color: "var(--text)" }}>Upload your first PDF</p>
+              <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: 280 }}>Ask questions, get instant answers, and extract insights from any document.</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", maxWidth: 280 }}>
+              {[{ icon: "💬", text: "Ask questions in plain English" }, { icon: "📌", text: "Get cited, page-accurate answers" }, { icon: "⚡", text: "Summarize in seconds" }].map((f, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: "var(--bg-hover)", fontSize: 12.5, color: "var(--text-secondary)" }}>
+                  <span>{f.icon}</span><span>{f.text}</span>
+                </div>
+              ))}
+            </div>
+            <button className="ix-btn-primary" onClick={onUpload} disabled={uploading} style={{ padding: "10px 24px", fontSize: 13.5 }}>
+              <Upload size={14} /> {uploading ? "Uploading…" : "Upload your first PDF"}
+            </button>
           </div>
         ) : (
           <motion.div className="ix-doc-grid" variants={staggerContainer}>
@@ -756,6 +772,8 @@ export default function DashboardPage() {
   const [toastVariant, setToastVariant] = useState<"ok"|"err">("ok");
   const [inviteCopied, setInviteCopied] = useState(false);
   const [barsReady,    setBarsReady]    = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardStep,    setOnboardStep]    = useState(0);
   const [uploading,    setUploading]    = useState(false);
   const [greeting,     setGreeting]     = useState<string>("Good morning");
   const [todayLabel,   setTodayLabel]   = useState<string>("");
@@ -821,6 +839,7 @@ export default function DashboardPage() {
       setLoading(false);
       fetchDocs(user.id);
       fetchPlan(user.id);
+      try { if (!localStorage.getItem("ix_onboarded")) { setShowOnboarding(true); } } catch {}
       fetchUsage();
       fetch("/api/flashcards?dueCount=true", { credentials: "include" })
         .then(r => r.json()).then(d => { if (typeof d.count === "number") setDueCards(d.count); }).catch(() => {});
@@ -1169,9 +1188,48 @@ export default function DashboardPage() {
   /* ════════════════════════════════════════════════════════════════════════
      RENDER
   ════════════════════════════════════════════════════════════════════════ */
+  const ONBOARD_STEPS = [
+    { icon: "📄", title: "Upload a PDF", desc: "Click 'Upload PDF' to add any document — research papers, contracts, textbooks, anything." },
+    { icon: "💬", title: "Ask questions", desc: "Type any question about your document. Get instant, cited answers from the exact pages." },
+    { icon: "🚀", title: "Explore more", desc: "Use Flashcards, Quiz, Insights and Tutor to go deeper. All powered by AI." },
+  ];
+
   return (
     <div className={`ds-dash${darkMode ? " dark" : ""}`}>
       <Suspense fallback={null}><OAuthSignupTracker /></Suspense>
+
+      {/* ── ONBOARDING MODAL ─────────────────────────────────────────────── */}
+      {showOnboarding && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#FFFFFF", borderRadius: 20, padding: "32px 28px", maxWidth: 420, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.18)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#F59E0B" }}>Getting Started</span>
+              <span style={{ fontSize: 12, color: "#9AA0A6" }}>{onboardStep + 1} / {ONBOARD_STEPS.length}</span>
+            </div>
+            <div style={{ textAlign: "center", padding: "8px 0 24px" }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>{ONBOARD_STEPS[onboardStep].icon}</div>
+              <h3 style={{ margin: "0 0 10px", fontSize: 20, fontWeight: 800, color: "#0A0A0A", letterSpacing: "-0.3px" }}>{ONBOARD_STEPS[onboardStep].title}</h3>
+              <p style={{ margin: 0, fontSize: 14, color: "#5F6368", lineHeight: 1.65 }}>{ONBOARD_STEPS[onboardStep].desc}</p>
+            </div>
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
+              {ONBOARD_STEPS.map((_, i) => (
+                <div key={i} style={{ width: i === onboardStep ? 20 : 6, height: 6, borderRadius: 999, background: i === onboardStep ? "#F59E0B" : "#EAEAEA", transition: "all 0.2s" }} />
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {onboardStep > 0 && (
+                <button onClick={() => setOnboardStep(s => s - 1)} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #EAEAEA", background: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#5F6368" }}>Back</button>
+              )}
+              <button onClick={() => {
+                if (onboardStep < ONBOARD_STEPS.length - 1) { setOnboardStep(s => s + 1); }
+                else { try { localStorage.setItem("ix_onboarded", "1"); } catch {} setShowOnboarding(false); }
+              }} style={{ flex: 2, padding: "10px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#F59E0B,#F97316)", fontSize: 13, fontWeight: 700, cursor: "pointer", color: "#0A0A0A" }}>
+                {onboardStep < ONBOARD_STEPS.length - 1 ? "Next →" : "Get Started 🚀"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hidden file input */}
       <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display: "none" }} onChange={handleFileSelect} />

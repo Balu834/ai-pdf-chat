@@ -592,6 +592,17 @@
   to   { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
+/* Typing cursor on hero AI response */
+.lp-mp-cursor {
+  display: inline-block; width: 2px; height: 11px;
+  background: #F7B500; border-radius: 1px;
+  margin-left: 2px; vertical-align: text-bottom;
+  animation: lp-blink 1s step-end infinite;
+}
+@keyframes lp-blink {
+  0%, 100% { opacity: 1; } 50% { opacity: 0; }
+}
+
 /* ── Glow orb ────────────────────────────────────────────────────────────────── */
 .lp-mp-glow-orb {
   position: absolute; width: 400px; height: 400px;
@@ -1200,10 +1211,11 @@
 }
 .lp-plan:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(0,0,0,0.10); }
 
-/* Free plan — white card, black text */
+/* Free plan — white card, amber top accent */
 .lp-plan:first-child {
   background: #FFFFFF;
   border-color: rgba(0,0,0,0.10);
+  border-top: 3px solid #F59E0B;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06);
 }
 .lp-plan:first-child:hover {
@@ -1251,9 +1263,10 @@
 .lp-plan.featured .lp-plan-divider  { border-color: rgba(245,158,11,0.18); }
 .lp-plan.featured .lp-plan-feat     { color: #0A0A0A; }
 
-/* Team plan — white card, black text */
+/* Team plan — white card, purple top accent */
 .lp-plan:last-child {
   border-color: rgba(0,0,0,0.10);
+  border-top: 3px solid #8B5CF6;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06);
 }
 .lp-plan:last-child:hover {

@@ -169,7 +169,7 @@ export default function Hero() {
                 >
                   <div className="lp-mp-ai-icon">{LOGO_SVG}</div>
                   <div className="lp-mp-msg-ai-body">
-                    <p>Revenue reached ₹423.7 Cr (+23.4% YoY), beating consensus by 4.2pp. Enterprise contributed 68%, led by BFSI and healthcare verticals.</p>
+                    <p>Revenue reached ₹423.7 Cr (+23.4% YoY), beating consensus by 4.2pp. Enterprise contributed 68%, led by BFSI and healthcare verticals.<span className="lp-mp-cursor" aria-hidden /></p>
                     <span className="lp-mp-cite">{PDF_SM} p.14 · §3.2 · chart 3.2.1</span>
                   </div>
                 </motion.div>

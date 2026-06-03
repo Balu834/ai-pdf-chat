@@ -58,9 +58,9 @@ export default function InstallPopup() {
             {/* Icon */}
             <div style={{
               width: 46, height: 46, borderRadius: 12, flexShrink: 0,
-              background: "#0A0A0A",
+              background: "linear-gradient(135deg,#F59E0B,#F97316)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+              boxShadow: "0 4px 14px rgba(245,158,11,0.35)",
               fontSize: 22,
             }}>
               📄
@@ -106,9 +106,9 @@ export default function InstallPopup() {
               onClick={handleInstall}
               style={{
                 flex: 2, padding: "10px 0", fontSize: 13, fontWeight: 800,
-                background: "#0A0A0A",
-                border: "none", borderRadius: 12, color: "#FFFFFF", cursor: "pointer",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                background: "linear-gradient(135deg,#F59E0B,#F97316)",
+                border: "none", borderRadius: 12, color: "#0A0A0A", cursor: "pointer",
+                boxShadow: "0 4px 14px rgba(245,158,11,0.35)",
                 letterSpacing: "-0.1px",
               }}
             >

@@ -689,14 +689,31 @@
 
 /* ── MOBILE ──────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  /* Hide PDF panel on mobile — chat-only mode */
+  .vw-pdf-panel { display: none; }
+  .vw-files-panel { display: none; }
+  .vw-right-panel { display: none; }
+
+  /* Chat takes full screen */
   .vw-chat-panel {
-    position: fixed; right: 0; top: 52px; bottom: 0;
-    transform: translateX(100%);
-    transition: transform .3s cubic-bezier(0.22,1,0.36,1);
-    z-index: 50; box-shadow: var(--shadow-lg);
-    width: 100%; max-width: 420px;
+    width: 100% !important; max-width: 100% !important;
+    position: static; transform: none;
+    border-left: none;
   }
-  .vw-pdf-panel { border-right: none; }
+  .vw-center { flex-direction: column; }
+
+  /* Topbar — hide non-essential buttons, keep title */
+  .vw-topbar { padding: 0 12px; gap: 6px; }
+  .vw-topbar-actions { gap: 4px; }
+  .vw-topbar-btn { padding: 0 8px; height: 28px; font-size: 11px; }
+
+  /* Input area — full width comfortable */
+  .ch-input-area { padding: 8px 12px 14px; }
+  .ch-explain-row { padding: 4px 12px 2px; gap: 5px; }
+  .ch-chips { padding: 4px 12px 8px; }
+
+  /* Messages — more breathing room */
+  .ch-messages { padding: 14px 12px 6px; }
 }
 
 /* ── EXPLAIN LIKE BUTTONS ────────────────────────────────────────────────── */

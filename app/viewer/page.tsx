@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import "./viewer.css";
 import { reportError } from "@/lib/reportError";
+import ErrorBoundary from "@/app/components/ErrorBoundary";
 
 const PdfViewer = dynamic(() => import("@/app/components/PdfViewer"), {
   ssr: false,
@@ -178,6 +179,7 @@ function ViewerContent() {
   const [input,     setInput]     = useState("");
   const [streaming, setStreaming] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [limitExceeded, setLimitExceeded] = useState(false);
 
   /* Theme */
   const [darkMode, setDarkMode] = useState(false);
@@ -563,7 +565,7 @@ function ViewerContent() {
   const send = useCallback(async (question?: string) => {
     const q = (question ?? input).trim();
     if (!q || streaming || !rawUrl) return;
-    setInput(""); setChatError(null);
+    setInput(""); setChatError(null); setLimitExceeded(false);
     const uid = Date.now();
     setMessages(m => [...m, { id: uid, role: "user", text: q, done: true }]);
     setStreaming(true);
@@ -579,7 +581,8 @@ function ViewerContent() {
         signal: abortRef.current.signal,
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({})) as { error?: string };
+        const data = await res.json().catch(() => ({})) as { error?: string; limitExceeded?: boolean };
+        if (data.limitExceeded) { setLimitExceeded(true); setStreaming(false); setMessages(m => m.filter(msg => msg.id !== uid)); return; }
         throw new Error(data.error ?? `Server error ${res.status}`);
       }
       const reader = res.body!.getReader();
@@ -971,6 +974,26 @@ function ViewerContent() {
               {streaming && messages[messages.length - 1]?.role !== "ai" && (
                 <div className="ch-typing">
                   <span className="ch-dot" /><span className="ch-dot" /><span className="ch-dot" />
+                </div>
+              )}
+
+              {limitExceeded && (
+                <div style={{ margin: "4px 0", padding: "16px", borderRadius: 14, background: "linear-gradient(135deg,#FFFBF0,#FFF3DC)", border: "1.5px solid rgba(245,158,11,0.35)", display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 20 }}>🚀</span>
+                    <div>
+                      <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: "#92400E" }}>You&apos;ve used all your free questions</p>
+                      <p style={{ margin: 0, fontSize: 12, color: "#B45309", marginTop: 2 }}>Upgrade to Pro for unlimited AI questions, OCR &amp; more.</p>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <a href="/login?upgrade=1" style={{ flex: 1, padding: "9px 14px", borderRadius: 9, background: "linear-gradient(135deg,#F59E0B,#F97316)", color: "#0A0A0A", fontSize: 13, fontWeight: 700, textDecoration: "none", textAlign: "center" }}>
+                      Upgrade to Pro →
+                    </a>
+                    <button onClick={() => setLimitExceeded(false)} style={{ padding: "9px 12px", borderRadius: 9, background: "none", border: "1px solid rgba(245,158,11,0.30)", color: "#B45309", fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1679,17 +1702,19 @@ function ViewerContent() {
 
 export default function ViewerPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="vw-root" style={{ alignItems: "center", justifyContent: "center" }}>
-          <div className="vw-url-loading">
-            <div className="vw-url-spinner" />
-            <span>Opening document…</span>
+    <ErrorBoundary route="viewer">
+      <Suspense
+        fallback={
+          <div className="vw-root" style={{ alignItems: "center", justifyContent: "center" }}>
+            <div className="vw-url-loading">
+              <div className="vw-url-spinner" />
+              <span>Opening document…</span>
+            </div>
           </div>
-        </div>
-      }
-    >
-      <ViewerContent />
-    </Suspense>
+        }
+      >
+        <ViewerContent />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
