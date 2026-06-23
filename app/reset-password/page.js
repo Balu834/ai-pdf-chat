@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState(null);
@@ -83,7 +85,7 @@ export default function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       setPageState("success");
-      setTimeout(() => { window.location.href = "/login"; }, 2500);
+      setTimeout(() => { router.push("/login"); }, 2500);
     } catch (err) {
       setStatus({ type: "error", msg: err.message });
     } finally {
@@ -160,7 +162,7 @@ export default function ResetPasswordPage() {
               <button type="submit" disabled={resendLoading} style={{ ...s.btn, opacity: resendLoading ? 0.7 : 1 }}>
                 {resendLoading ? "Sending…" : "Send New Reset Email"}
               </button>
-              <button type="button" style={s.backLink} onClick={() => { window.location.href = "/login"; }}>
+              <button type="button" style={s.backLink} onClick={() => { router.push("/login"); }}>
                 ← Back to Sign In
               </button>
             </form>
@@ -207,7 +209,7 @@ export default function ResetPasswordPage() {
               <button type="submit" disabled={loading} style={{ ...s.btn, opacity: loading ? 0.7 : 1 }}>
                 {loading ? "Updating…" : "Update Password"}
               </button>
-              <button type="button" style={s.backLink} onClick={() => { window.location.href = "/login"; }}>
+              <button type="button" style={s.backLink} onClick={() => { router.push("/login"); }}>
                 ← Back to Sign In
               </button>
             </form>

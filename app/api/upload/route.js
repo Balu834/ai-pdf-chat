@@ -10,30 +10,47 @@ import { logger, reqCtx } from "@/lib/logger";
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
 
-function chunkText(text) {
-  // Split on sentence boundaries so chunks don't cut mid-sentence
-  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [text];
+// Split a single page's text into overlapping chunks, keeping page_number
+function splitPageIntoChunks(pageText, pageNumber) {
+  const sentences = pageText.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [pageText];
   const chunks = [];
   let current = "";
 
   for (const sentence of sentences) {
     if ((current + sentence).length > CHUNK_SIZE && current.length > 50) {
-      chunks.push(current.trim());
-      // Overlap: keep last portion of previous chunk
+      chunks.push({ content: current.trim(), page_number: pageNumber });
       const words = current.split(" ");
       current = words.slice(-Math.floor(CHUNK_OVERLAP / 5)).join(" ") + " " + sentence;
     } else {
       current += sentence;
     }
   }
-  if (current.trim().length > 50) chunks.push(current.trim());
+  if (current.trim().length > 50) chunks.push({ content: current.trim(), page_number: pageNumber });
   return chunks;
 }
 
-async function embedChunks(openai, chunks) {
+// pdf-parse uses \f (form feed, char 12) as page separator
+function chunkByPage(pdfData) {
+  const pageChunks = [];
+  const pages = pdfData.text.split("\f");
+  pages.forEach((pageText, idx) => {
+    const pageNumber = idx + 1;
+    const cleaned = pageText.replace(/\s+/g, " ").trim();
+    if (cleaned.length < 30) return; // skip blank/near-blank pages
+    pageChunks.push(...splitPageIntoChunks(cleaned, pageNumber));
+  });
+  // Fallback: if all pages came back as one block (no \f separators), chunk without page numbers
+  if (pageChunks.length === 0 && pdfData.text.trim().length > 30) {
+    const cleaned = pdfData.text.replace(/\s+/g, " ").trim();
+    pageChunks.push(...splitPageIntoChunks(cleaned, 1));
+  }
+  return pageChunks;
+}
+
+async function embedChunks(openai, contents) {
   const response = await openai.embeddings.create({
     model: "text-embedding-3-small",
-    input: chunks,
+    input: contents,
   });
   return response.data.map((d) => d.embedding);
 }
@@ -152,22 +169,22 @@ export async function POST(req) {
         const openai = getOpenAI();
         const buffer = Buffer.from(await file.arrayBuffer());
         const pdfData = await pdf(buffer);
-        const rawText = pdfData.text.replace(/\s+/g, " ").trim();
-        console.log("[UPLOAD] Extracted text length:", rawText.length);
+        console.log("[UPLOAD] Extracted text length:", pdfData.text.length, "pages:", pdfData.numpages);
 
-        if (rawText) {
-          const chunks = chunkText(rawText);
-          console.log("[UPLOAD] Chunks created:", chunks.length);
+        if (pdfData.text.trim()) {
+          const pageChunks = chunkByPage(pdfData);
+          console.log("[UPLOAD] Chunks created:", pageChunks.length, "across", pdfData.numpages, "pages");
           const allEmbeddings = [];
-          for (let i = 0; i < chunks.length; i += 100) {
-            const batch = chunks.slice(i, i + 100);
+          for (let i = 0; i < pageChunks.length; i += 100) {
+            const batch = pageChunks.slice(i, i + 100).map(c => c.content);
             const embeddings = await embedChunks(openai, batch);
             allEmbeddings.push(...embeddings);
           }
-          const rows = chunks.map((content, i) => ({
+          const rows = pageChunks.map((chunk, i) => ({
             document_id: docRecord.id,
-            content,
-            embedding: allEmbeddings[i],
+            content:     chunk.content,
+            page_number: chunk.page_number,
+            embedding:   allEmbeddings[i],
           }));
           const { error: chunkError } = await supabase.from("document_chunks").insert(rows);
           if (chunkError) {

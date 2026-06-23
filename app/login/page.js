@@ -369,9 +369,9 @@ export default function LoginPage() {
                   padding: "10px 14px",
                   borderRadius: 10,
                   fontSize: 13,
-                  background: status.type === "error" ? "rgba(239,68,68,0.1)" : "rgba(74,222,128,0.1)",
-                  border: `1px solid ${status.type === "error" ? "rgba(239,68,68,0.3)" : "rgba(74,222,128,0.3)"}`,
-                  color: status.type === "error" ? "#fca5a5" : "#86efac",
+                  background: status.type === "error" ? "rgba(239,68,68,0.08)" : "rgba(22,163,74,0.08)",
+                  border: `1px solid ${status.type === "error" ? "rgba(239,68,68,0.3)" : "rgba(22,163,74,0.3)"}`,
+                  color: status.type === "error" ? "#b91c1c" : "#15803d",
                 }}
               >
                 {status.msg}

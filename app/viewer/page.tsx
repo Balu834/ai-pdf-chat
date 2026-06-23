@@ -18,11 +18,15 @@ const PdfViewer = dynamic(() => import("@/app/components/PdfViewer"), {
 });
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
+interface Source { page: number; }
+interface MultiSource { docId: string; fileName: string; page: number | null; }
 interface Message {
   id: number;
   role: "user" | "ai";
   text: string;
   done?: boolean;
+  sources?: Source[];
+  multiSources?: MultiSource[];
 }
 interface DocItem {
   id: string;
@@ -181,6 +185,20 @@ function ViewerContent() {
   const [chatError, setChatError] = useState<string | null>(null);
   const [limitExceeded, setLimitExceeded] = useState(false);
 
+  /* Source citations */
+  const [targetPage, setTargetPage] = useState<number | undefined>(undefined);
+
+  /* AI Summary */
+  const [summaryOpen,    setSummaryOpen]    = useState(false);
+  const [summaryType,    setSummaryType]    = useState<"executive"|"insights"|"actions"|"simple">("executive");
+  const [summaryText,    setSummaryText]    = useState("");
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError,   setSummaryError]   = useState<string | null>(null);
+
+  /* Multi-PDF Chat */
+  const [multiMode,      setMultiMode]      = useState(false);
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
+
   /* Theme */
   const [darkMode, setDarkMode] = useState(false);
   useEffect(() => { if (localStorage.getItem("lp-theme") === "dark") setDarkMode(true); }, []);
@@ -242,7 +260,7 @@ function ViewerContent() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const shareMessage = async (id: number, text: string) => {
-    const shareText = `${text}\n\n— via Intellixy AI (intellixy.vercel.app)`;
+    const shareText = `${text}\n\n— via Intellixy AI (${window.location.host})`;
     if (navigator.share) {
       try { await navigator.share({ text: shareText }); } catch {}
     } else {
@@ -573,10 +591,15 @@ function ViewerContent() {
     abortRef.current = new AbortController();
     const aiId = uid + 1;
     try {
-      const res = await fetch("/api/chat", {
+      const isMulti = multiMode && selectedDocIds.length > 0;
+      const res = await fetch(isMulti ? "/api/multi-chat" : "/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: q, fileUrl: rawUrl }),
+        body: JSON.stringify(
+          isMulti
+            ? { message: q, documentIds: selectedDocIds }
+            : { message: q, fileUrl: rawUrl }
+        ),
         credentials: "include",
         signal: abortRef.current.signal,
       });
@@ -588,30 +611,63 @@ function ViewerContent() {
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let full = "";
+      let doneSignal = false;
       setMessages(m => [...m, { id: aiId, role: "ai", text: "", done: false }]);
-      outer: while (true) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
         for (const line of chunk.split("\n")) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6);
-          if (payload === "[DONE]") break outer;
-          full += payload.replace(/\\n/g, "\n");
-          setMessages(m => {
-            const copy = [...m];
-            const idx = copy.findLastIndex(msg => msg.id === aiId);
-            if (idx >= 0) copy[idx] = { ...copy[idx], text: full };
-            return copy;
-          });
+          if (payload === "[DONE]") {
+            doneSignal = true;
+            setMessages(m => {
+              const copy = [...m];
+              const idx = copy.findLastIndex(msg => msg.id === aiId);
+              if (idx >= 0) copy[idx] = { ...copy[idx], done: true };
+              return copy;
+            });
+            continue;
+          }
+          if (doneSignal && payload.startsWith("[SOURCES]")) {
+            try {
+              const raw = JSON.parse(payload.slice(9));
+              if (Array.isArray(raw) && raw.length > 0) {
+                if (typeof raw[0] === "number") {
+                  // Single-PDF: array of page numbers
+                  const sources: Source[] = (raw as number[]).map(p => ({ page: p }));
+                  setMessages(m => {
+                    const copy = [...m];
+                    const idx = copy.findLastIndex(msg => msg.id === aiId);
+                    if (idx >= 0) copy[idx] = { ...copy[idx], sources };
+                    return copy;
+                  });
+                } else {
+                  // Multi-PDF: array of { docId, fileName, page }
+                  const multiSources = raw as MultiSource[];
+                  setMessages(m => {
+                    const copy = [...m];
+                    const idx = copy.findLastIndex(msg => msg.id === aiId);
+                    if (idx >= 0) copy[idx] = { ...copy[idx], multiSources };
+                    return copy;
+                  });
+                }
+              }
+            } catch { /* malformed — ignore */ }
+            continue;
+          }
+          if (!doneSignal) {
+            full += payload.replace(/\\n/g, "\n");
+            setMessages(m => {
+              const copy = [...m];
+              const idx = copy.findLastIndex(msg => msg.id === aiId);
+              if (idx >= 0) copy[idx] = { ...copy[idx], text: full };
+              return copy;
+            });
+          }
         }
       }
-      setMessages(m => {
-        const copy = [...m];
-        const idx = copy.findLastIndex(msg => msg.id === aiId);
-        if (idx >= 0) copy[idx] = { ...copy[idx], done: true };
-        return copy;
-      });
     } catch (err: unknown) {
       const msg = (err as Error)?.message ?? "Unknown error";
       if (msg === "AbortError" || (err as Error)?.name === "AbortError") return;
@@ -696,6 +752,24 @@ function ViewerContent() {
               <line x1="9" y1="3" x2="9" y2="21"/>
             </svg>
             <span>{showPreview ? "Hide PDF" : "View PDF"}</span>
+          </button>
+
+          {/* Multi-PDF button */}
+          <button
+            className={`vw-topbar-btn${multiMode ? " vw-topbar-btn-active" : ""}`}
+            onClick={() => {
+              setMultiMode(m => !m);
+              if (!multiMode) setSelectedDocIds([]);
+            }}
+            title="Chat across multiple PDFs"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="12" x2="12" y2="18"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            Multi-PDF
           </button>
 
           {/* Insights button */}
@@ -832,6 +906,7 @@ function ViewerContent() {
                 <PdfViewer
                   url={signedUrl || rawUrl}
                   onPageChange={(cur, tot) => setPageInfo({ current: cur, total: tot })}
+                  targetPage={targetPage}
                 />
               )}
             </div>
@@ -904,6 +979,52 @@ function ViewerContent() {
                             </svg>
                           </span>
                           <span>Cited from {cite}</span>
+                        </div>
+                      )}
+                      {msg.done && msg.sources && msg.sources.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                          <span style={{ fontSize: 11, color: "var(--text-3)", alignSelf: "center" }}>Sources:</span>
+                          {msg.sources.map(s => (
+                            <button
+                              key={s.page}
+                              onClick={() => { setTargetPage(s.page); if (!showPreview) setShowPreview(true); }}
+                              style={{
+                                display: "inline-flex", alignItems: "center", gap: 4,
+                                padding: "3px 9px", borderRadius: 99, border: "1px solid rgba(99,102,241,0.4)",
+                                background: "rgba(99,102,241,0.1)", color: "rgba(165,180,252,0.9)",
+                                fontSize: 11, fontWeight: 600, cursor: "pointer",
+                              }}
+                              title={`Jump to page ${s.page}`}
+                            >
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/>
+                                <polyline points="15 3 15 9 21 9"/>
+                              </svg>
+                              p.{s.page}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {msg.done && msg.multiSources && msg.multiSources.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                          <span style={{ fontSize: 11, color: "var(--text-3)", alignSelf: "center" }}>Sources:</span>
+                          {msg.multiSources.map((s, i) => (
+                            <span
+                              key={i}
+                              style={{
+                                display: "inline-flex", alignItems: "center", gap: 4,
+                                padding: "3px 9px", borderRadius: 99, border: "1px solid rgba(99,102,241,0.35)",
+                                background: "rgba(99,102,241,0.08)", color: "rgba(165,180,252,0.85)",
+                                fontSize: 11, fontWeight: 600,
+                              }}
+                            >
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/>
+                                <polyline points="15 3 15 9 21 9"/>
+                              </svg>
+                              {s.fileName}{s.page ? ` · p.${s.page}` : ""}
+                            </span>
+                          ))}
                         </div>
                       )}
                       {msg.done && body && (
@@ -1020,6 +1141,139 @@ function ViewerContent() {
               </div>
             )}
 
+            {/* ── Quick Actions: AI Summary ─────────────────────────────── */}
+            <div style={{ padding: "6px 16px 0", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 500 }}>Quick:</span>
+              {([
+                { key: "executive", label: "Summary" },
+                { key: "insights",  label: "Key Insights" },
+                { key: "actions",   label: "Action Items" },
+                { key: "simple",    label: "Explain Simply" },
+              ] as const).map(({ key, label }) => (
+                <button
+                  key={key}
+                  disabled={summaryLoading}
+                  onClick={async () => {
+                    setSummaryOpen(true);
+                    setSummaryType(key);
+                    setSummaryText("");
+                    setSummaryError(null);
+                    setSummaryLoading(true);
+                    try {
+                      const res = await fetch("/api/summarize", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ fileUrl: rawUrl, type: key }),
+                        credentials: "include",
+                      });
+                      if (!res.ok) {
+                        const d = await res.json().catch(() => ({})) as { error?: string };
+                        throw new Error(d.error ?? "Failed");
+                      }
+                      const reader2 = res.body!.getReader();
+                      const dec2 = new TextDecoder();
+                      let txt = "";
+                      while (true) {
+                        const { done: d2, value: v2 } = await reader2.read();
+                        if (d2) break;
+                        const ch2 = dec2.decode(v2, { stream: true });
+                        for (const ln of ch2.split("\n")) {
+                          if (!ln.startsWith("data: ")) continue;
+                          const p2 = ln.slice(6);
+                          if (p2 === "[DONE]") break;
+                          if (p2 === "[ERROR]") throw new Error("Summarization failed");
+                          txt += p2.replace(/\\n/g, "\n");
+                          setSummaryText(txt);
+                        }
+                      }
+                    } catch (e: unknown) {
+                      setSummaryError((e as Error).message ?? "Failed");
+                    } finally {
+                      setSummaryLoading(false);
+                    }
+                  }}
+                  style={{
+                    padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                    border: "1px solid rgba(99,102,241,0.35)", background: "rgba(99,102,241,0.08)",
+                    color: "rgba(165,180,252,0.85)", transition: "all 0.15s",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Summary panel */}
+            {summaryOpen && (
+              <div style={{
+                margin: "8px 16px", borderRadius: 10, padding: "12px 14px",
+                background: "var(--surface-2, rgba(255,255,255,0.04))",
+                border: "1px solid rgba(99,102,241,0.2)", maxHeight: 320, overflowY: "auto",
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(165,180,252,0.9)" }}>
+                    {summaryType === "executive" ? "Executive Summary" : summaryType === "insights" ? "Key Insights" : summaryType === "actions" ? "Action Items" : "Simple Explanation"}
+                  </span>
+                  <button onClick={() => setSummaryOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", fontSize: 16, lineHeight: 1 }}>×</button>
+                </div>
+                {summaryLoading && !summaryText && (
+                  <div style={{ color: "var(--text-3)", fontSize: 12, fontStyle: "italic" }}>Generating…</div>
+                )}
+                {summaryError && (
+                  <div style={{ color: "#f87171", fontSize: 12 }}>{summaryError}</div>
+                )}
+                {summaryText && (
+                  <div style={{ fontSize: 13, color: "var(--text-1)", lineHeight: 1.65 }}>
+                    {renderMarkdown(summaryText)}
+                    {summaryLoading && <span className="ch-cursor" />}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Multi-PDF selector ───────────────────────────────────── */}
+            {multiMode && (
+              <div style={{
+                margin: "6px 16px 2px", padding: "10px 12px", borderRadius: 10,
+                border: "1px solid rgba(99,102,241,0.3)", background: "rgba(99,102,241,0.06)",
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(165,180,252,0.9)", marginBottom: 8 }}>
+                  Select documents to query ({selectedDocIds.length} selected)
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {allDocs.map(doc => {
+                    const selected = selectedDocIds.includes(doc.id);
+                    return (
+                      <button
+                        key={doc.id}
+                        onClick={() => setSelectedDocIds(prev =>
+                          selected ? prev.filter(id => id !== doc.id) : [...prev, doc.id]
+                        )}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 500, cursor: "pointer",
+                          border: selected ? "1px solid rgba(99,102,241,0.7)" : "1px solid rgba(255,255,255,0.1)",
+                          background: selected ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
+                          color: selected ? "rgba(165,180,252,1)" : "var(--text-2)",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {selected && (
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        )}
+                        {doc.file_name?.replace(/\.pdf$/i, "").slice(0, 28) ?? "Untitled"}
+                      </button>
+                    );
+                  })}
+                </div>
+                {allDocs.length === 0 && (
+                  <div style={{ fontSize: 11, color: "var(--text-3)" }}>No other documents found. Upload more PDFs from the dashboard.</div>
+                )}
+              </div>
+            )}
+
             {/* Explain Like preset buttons */}
             <div className="ch-explain-row">
               <span className="ch-explain-label">Explain as:</span>
@@ -1045,7 +1299,7 @@ function ViewerContent() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={onKeyDown}
-                  placeholder={listening ? "Listening…" : "Ask about this document…"}
+                  placeholder={listening ? "Listening…" : multiMode ? `Ask across ${selectedDocIds.length || "selected"} documents…` : "Ask about this document…"}
                   disabled={streaming}
                   autoComplete="off"
                 />

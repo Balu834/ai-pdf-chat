@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -366,6 +367,7 @@ const RANGES = [
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
+  const router = useRouter();
   const [user,    setUser]    = useState(null);
   const [stats,   setStats]   = useState(null);
   const [loading, setLoading] = useState(true);
@@ -390,7 +392,7 @@ export default function AdminDashboard() {
   // Auth + initial load
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { window.location.href = "/login"; return; }
+      if (!user) { router.push("/login"); return; }
       setUser(user);
       loadStats(range);
     });

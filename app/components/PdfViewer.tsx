@@ -17,13 +17,20 @@ export interface PdfViewerHandle {
 interface Props {
   url: string;
   onPageChange?: (page: number, total: number) => void;
+  targetPage?: number;
 }
 
 type PDFDocumentProxy = { numPages: number };
 
-export default function PdfViewer({ url, onPageChange }: Props) {
+export default function PdfViewer({ url, onPageChange, targetPage }: Props) {
   const [numPages, setNumPages]     = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
+
+  useEffect(() => {
+    if (targetPage && targetPage >= 1 && targetPage <= (numPages || Infinity)) {
+      setPageNumber(targetPage);
+    }
+  }, [targetPage, numPages]);
   const [scale, setScale]           = useState(1.0);
   const [fitWidth, setFitWidth]     = useState(600);
   const [loadError, setLoadError]   = useState<string | null>(null);

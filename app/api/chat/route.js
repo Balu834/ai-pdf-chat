@@ -143,7 +143,7 @@ Always structure your response using these emoji section headers. Include only t
 };
 
 async function streamOpenAI(context, message, {
-  supabase, userId, documentId, sessionId, previousMessages = [], memory = null,
+  supabase, userId, documentId, sessionId, previousMessages = [], memory = null, sourcePages = [],
 } = {}) {
   const lower = message.toLowerCase();
   const intent = classifyIntent(message);
@@ -186,6 +186,11 @@ async function streamOpenAI(context, message, {
           }
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        if (sourcePages.length > 0) {
+          controller.enqueue(
+            encoder.encode(`data: [SOURCES]${JSON.stringify(sourcePages)}\n\n`)
+          );
+        }
       } catch (err) {
         console.error("[CHAT] Stream error:", err);
         controller.enqueue(encoder.encode("data: [ERROR]\n\n"));
@@ -273,6 +278,7 @@ export async function POST(req) {
     // ── RAG path: vector search ───────────────────────────────────
     let ragContext = null;
     let ragDocId = null;
+    let ragSourcePages = [];
     try {
       const { data: doc, error: docError } = await supabase
         .from("documents")
@@ -301,11 +307,20 @@ export async function POST(req) {
 
         if (!searchError && chunks?.length > 0) {
           let ctx = "";
-          chunks.slice(0, 3).forEach((chunk, i) => {
+          const pages = [];
+          chunks.forEach((chunk, i) => {
             const entry = `[${i + 1}] ${chunk.content}\n\n`;
-            if ((ctx + entry).length <= MAX_CONTEXT) ctx += entry;
+            if ((ctx + entry).length <= MAX_CONTEXT) {
+              ctx += entry;
+              if (chunk.page_number && !pages.includes(chunk.page_number)) {
+                pages.push(chunk.page_number);
+              }
+            }
           });
-          if (ctx.trim()) ragContext = ctx;
+          if (ctx.trim()) {
+            ragContext = ctx;
+            ragSourcePages = pages.sort((a, b) => a - b);
+          }
         }
       }
     } catch (ragErr) {
@@ -341,7 +356,7 @@ export async function POST(req) {
     if (ragContext) {
       if (isExtractionRequest(message)) return extractStructured(ragContext, message);
       return streamOpenAI(ragContext, message, {
-        supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory,
+        supabase, userId: user.id, documentId: ragDocId, sessionId, previousMessages, memory, sourcePages: ragSourcePages,
       });
     }
 

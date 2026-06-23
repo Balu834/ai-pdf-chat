@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 const C = {
@@ -60,6 +61,7 @@ function StatusBadge({ status }) {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [user, setUser]     = useState(null);
   const [stats, setStats]   = useState(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export default function AdminPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
-      if (!user) { window.location.href = "/login"; return; }
+      if (!user) { router.push("/login"); return; }
       fetch("/api/admin/stats")
         .then((r) => r.json())
         .then((d) => {

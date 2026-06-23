@@ -597,6 +597,7 @@ function PlannerTab() {
    ════════════════════════════════════════════════════════════════════════════ */
 function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "free" | "pro"; onUpgrade: () => void }) {
   const router = useRouter();
+
   const [displayName, setDisplayName] = useState(user?.user_metadata?.full_name ?? "");
   const [saving,      setSaving]      = useState(false);
   const [saveMsg,     setSaveMsg]     = useState<{ ok: boolean; text: string } | null>(null);
@@ -743,6 +744,8 @@ function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "fr
    DASHBOARD PAGE
    ════════════════════════════════════════════════════════════════════════════ */
 export default function DashboardPage() {
+  const router = useRouter();
+
   /* ── Auth + data state ──────────────────────────────────────────────────── */
   const [user,                  setUser]                 = useState<User | null>(null);
   const [loading,               setLoading]              = useState(true);
@@ -782,6 +785,7 @@ export default function DashboardPage() {
   const [menuOpenId,   setMenuOpenId]   = useState<string | null>(null);
   const [deleting,     setDeleting]     = useState<string | null>(null);
   const [dueCards,     setDueCards]     = useState<number>(0);
+  const [lastSync,     setLastSync]     = useState<Date | null>(null);
 
   const proCardRef   = useRef<HTMLDivElement>(null);
   const cmdInputRef  = useRef<HTMLInputElement>(null);
@@ -834,13 +838,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { window.location.href = "/login"; return; }
+      if (!user) { router.push("/login"); return; }
       setUser(user);
       setLoading(false);
       fetchDocs(user.id);
       fetchPlan(user.id);
       try { if (!localStorage.getItem("ix_onboarded")) { setShowOnboarding(true); } } catch {}
-      fetchUsage();
+      fetchUsage().then(() => setLastSync(new Date()));
       fetch("/api/flashcards?dueCount=true", { credentials: "include" })
         .then(r => r.json()).then(d => { if (typeof d.count === "number") setDueCards(d.count); }).catch(() => {});
       try {
@@ -1062,7 +1066,7 @@ export default function DashboardPage() {
   }
 
   function handleOpenDoc(fileUrl: string) {
-    window.location.href = `/viewer?url=${encodeURIComponent(fileUrl)}`;
+    router.push(`/viewer?url=${encodeURIComponent(fileUrl)}`);
   }
 
   async function handleDeleteDoc(docId: string, fileUrl: string) {
@@ -1353,7 +1357,7 @@ export default function DashboardPage() {
                 <span>Search or run a command…</span>
                 <kbd className="ds-search-kbd">⌘K</kbd>
               </button>
-              <button className="ds-ai-btn">
+              <button className="ds-ai-btn" onClick={() => { setCmdOpen(true); setCmdQuery(""); setCmdIdx(0); }}>
                 <Sparkles size={13} />
                 AI Assistant
               </button>
@@ -1438,7 +1442,9 @@ export default function DashboardPage() {
               </div>
               <div className="ix-hero-right">
                 <div className="ix-hero-date">{heroDate}</div>
-                <div className="ix-hero-sync">Last sync: 4 mins ago</div>
+                <div className="ix-hero-sync">
+                  {lastSync ? `Last sync: ${timeAgo(lastSync.toISOString())}` : "Syncing…"}
+                </div>
               </div>
             </motion.div>
 
@@ -1473,7 +1479,7 @@ export default function DashboardPage() {
                 className="ix-stat-card"
                 variants={fadeUp}
                 style={{ cursor: dueCards > 0 ? "pointer" : "default" }}
-                onClick={() => dueCards > 0 && docs[0] && (window.location.href = `/viewer?url=${encodeURIComponent(docs[0].file_url)}`)}
+                onClick={() => dueCards > 0 && docs[0] && router.push(`/viewer?url=${encodeURIComponent(docs[0].file_url)}`)}
                 title={dueCards > 0 ? "Go review your flashcards" : "No flashcards due"}
               >
                 <div className="ix-stat-icon-row">
@@ -1502,7 +1508,7 @@ export default function DashboardPage() {
             <div>
               <div className="ix-doc-section-head">
                 <div className="ix-section-title"><BookOpen size={16} /> Recent Documents</div>
-                <button className="ix-section-action">View all →</button>
+                <button className="ix-section-action" onClick={() => setActiveTab("documents")}>View all →</button>
               </div>
 
               <motion.div
@@ -1717,7 +1723,7 @@ export default function DashboardPage() {
               >
                 <div className="ix-card-hdr">
                   <div className="ix-card-title"><MessageCircle size={15} /> Recent Conversations</div>
-                  <button className="ix-card-link">View all →</button>
+                  <button className="ix-card-link" onClick={() => setActiveTab("conversations")}>View all →</button>
                 </div>
                 <div className="ix-conv-list">
                   {[
@@ -1789,7 +1795,7 @@ export default function DashboardPage() {
                       <div className="ix-template-num">Template {t.n}</div>
                       <div className="ix-template-title">{t.title}</div>
                       <div className="ix-template-body">{t.body}</div>
-                      <div className="ix-template-cta">Use template <ChevronRight size={12} /></div>
+                      <div className="ix-template-cta" onClick={() => { setUploadError(null); fileInputRef.current?.click(); }} style={{ cursor: "pointer" }}>Use template <ChevronRight size={12} /></div>
                     </div>
                   </motion.div>
                 ))}
@@ -1830,8 +1836,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Suppress unused-var warnings */}
-      {(proExpiresAt || graceUntil || isTrial || trialEnd || subscriptionSource || subscriptionCancelled) && null}
     </div>
   );
 }
