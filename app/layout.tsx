@@ -11,6 +11,7 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import InstallPopup from "@/components/InstallPopup";
 import GlobalErrorHandler from "@/app/components/GlobalErrorHandler";
+import MotionProvider from "@/components/MotionProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -130,7 +131,9 @@ export default function RootLayout({
 
         <GlobalErrorHandler />
         <AnimatedBackground />
-        {children}
+        <MotionProvider>
+          {children}
+        </MotionProvider>
 
         {/* ── Google Analytics 4, Microsoft Clarity ───────────────────── */}
         <Analytics />
