@@ -6,7 +6,6 @@ const nextConfig = {
       "lucide-react",
       "framer-motion",
       "@supabase/supabase-js",
-      "@tanstack/react-query",
     ],
   },
   webpack(config, { isServer }) {
