@@ -115,6 +115,16 @@ export async function POST(req) {
       if (!isPro) {
         return NextResponse.json({ error: "Pro required for summarization without embeddings." }, { status: 403 });
       }
+      // SSRF guard: only allow Supabase storage URLs
+      let parsedUrl;
+      try { parsedUrl = new URL(fileUrl); } catch { parsedUrl = null; }
+      const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+        : null;
+      const allowedHost = supabaseHost && parsedUrl?.hostname === supabaseHost;
+      if (!allowedHost) {
+        return NextResponse.json({ error: "Invalid file URL." }, { status: 400 });
+      }
       try {
         const res = await fetch(fileUrl);
         if (res.ok) {

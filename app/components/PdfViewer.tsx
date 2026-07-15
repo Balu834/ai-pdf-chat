@@ -29,6 +29,7 @@ export default function PdfViewer({ url, onPageChange, targetPage }: Props) {
   useEffect(() => {
     if (targetPage && targetPage >= 1 && targetPage <= (numPages || Infinity)) {
       setPageNumber(targetPage);
+      onPageChange?.(targetPage, numPages);
     }
   }, [targetPage, numPages]);
   const [scale, setScale]           = useState(1.0);

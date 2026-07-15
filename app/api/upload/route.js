@@ -33,14 +33,15 @@ function splitPageIntoChunks(pageText, pageNumber) {
 function chunkByPage(pdfData) {
   const pageChunks = [];
   const pages = pdfData.text.split("\f");
+  const hasPageSeparators = pages.length > 1;
   pages.forEach((pageText, idx) => {
     const pageNumber = idx + 1;
     const cleaned = pageText.replace(/\s+/g, " ").trim();
     if (cleaned.length < 30) return; // skip blank/near-blank pages
     pageChunks.push(...splitPageIntoChunks(cleaned, pageNumber));
   });
-  // Fallback: if all pages came back as one block (no \f separators), chunk without page numbers
-  if (pageChunks.length === 0 && pdfData.text.trim().length > 30) {
+  // Fallback ONLY when no \f separators were present — not when pages are all short (image-heavy)
+  if (!hasPageSeparators && pageChunks.length === 0 && pdfData.text.trim().length > 30) {
     const cleaned = pdfData.text.replace(/\s+/g, " ").trim();
     pageChunks.push(...splitPageIntoChunks(cleaned, 1));
   }

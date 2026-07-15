@@ -323,13 +323,16 @@ function ViewerContent() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages, streaming]);
 
-  /* Reset insights when doc changes */
+  /* Reset insights + citation state when doc changes */
   useEffect(() => {
     setInsights(null);
     setInsightsErr(null);
     setCompareResult(null);
     setCompareErr(null);
     setCompareDocId("");
+    setTargetPage(undefined);
+    setSummaryOpen(false);
+    setSummaryText("");
   }, [rawUrl]);
 
   /* Load insights */
@@ -612,12 +615,16 @@ function ViewerContent() {
       const decoder = new TextDecoder();
       let full = "";
       let doneSignal = false;
+      let sseBuffer = "";
       setMessages(m => [...m, { id: aiId, role: "ai", text: "", done: false }]);
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n")) {
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split("\n");
+        // Keep the last (potentially incomplete) line in the buffer
+        sseBuffer = lines.pop() ?? "";
+        for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6);
           if (payload === "[DONE]") {
@@ -677,7 +684,7 @@ function ViewerContent() {
     } finally {
       setStreaming(false);
     }
-  }, [input, streaming, rawUrl]);
+  }, [input, streaming, rawUrl, multiMode, selectedDocIds, showPreview]);
 
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }

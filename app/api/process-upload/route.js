@@ -36,25 +36,43 @@ function withTimeout(promise, ms, label) {
 }
 
 /**
- * Split text into overlapping chunks on sentence boundaries.
- * Chunks that are too short (< 50 chars) are dropped — they carry no signal.
+ * Split one page's text into overlapping chunks, preserving page_number.
  */
-function chunkText(text) {
-  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [text];
+function splitPageIntoChunks(pageText, pageNumber) {
+  const sentences = pageText.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [pageText];
   const chunks = [];
   let current = "";
-
   for (const sentence of sentences) {
     if ((current + sentence).length > CHUNK_SIZE && current.length > 50) {
-      chunks.push(current.trim());
+      chunks.push({ content: current.trim(), page_number: pageNumber });
       const words = current.split(" ");
       current = words.slice(-Math.floor(CHUNK_OVERLAP / 5)).join(" ") + " " + sentence;
     } else {
       current += sentence;
     }
   }
-  if (current.trim().length > 50) chunks.push(current.trim());
+  if (current.trim().length > 50) chunks.push({ content: current.trim(), page_number: pageNumber });
   return chunks;
+}
+
+/**
+ * Split parsed PDF text into page-aware chunks using \f (form-feed) separators.
+ * Falls back to single-block chunking when no separators are present.
+ */
+function chunkByPage(parsedText) {
+  const pageChunks = [];
+  const pages = parsedText.split("\f");
+  const hasPageSeparators = pages.length > 1;
+  pages.forEach((pageText, idx) => {
+    const cleaned = pageText.replace(/\s+/g, " ").trim();
+    if (cleaned.length < 30) return;
+    pageChunks.push(...splitPageIntoChunks(cleaned, idx + 1));
+  });
+  if (!hasPageSeparators && pageChunks.length === 0 && parsedText.trim().length > 30) {
+    const cleaned = parsedText.replace(/\s+/g, " ").trim();
+    pageChunks.push(...splitPageIntoChunks(cleaned, 1));
+  }
+  return pageChunks;
 }
 
 /**
@@ -80,9 +98,10 @@ async function embedBatch(chunks, attempt = 0) {
 }
 
 async function embedAllChunks(chunks) {
+  const contents = chunks.map(c => c.content);
   const batches = [];
-  for (let i = 0; i < chunks.length; i += EMBED_BATCH_SIZE) {
-    batches.push(chunks.slice(i, i + EMBED_BATCH_SIZE));
+  for (let i = 0; i < contents.length; i += EMBED_BATCH_SIZE) {
+    batches.push(contents.slice(i, i + EMBED_BATCH_SIZE));
   }
   const allEmbeddings = [];
   for (let i = 0; i < batches.length; i += EMBED_CONCURRENCY) {
@@ -278,8 +297,8 @@ export async function POST(req) {
           PDF_PARSE_TIMEOUT,
           "pdf-parse"
         );
-        rawText = parsed.text.replace(/\s+/g, " ").trim();
-        console.log(`[PROCESS-UPLOAD] Extracted text: ${rawText.length} chars`);
+        rawText = parsed.text; // keep \f page separators for page-aware chunking
+        console.log(`[PROCESS-UPLOAD] Extracted text: ${rawText.length} chars, pages: ${parsed.numpages}`);
       } catch (parseErr) {
         const reason = parseErr.code === "TIMEOUT"
           ? "parsing timed out"
@@ -290,7 +309,7 @@ export async function POST(req) {
       }
 
       // Step C: text quality check — scanned PDFs produce near-empty text
-      if (!rawText || rawText.length < 50) {
+      if (!rawText || rawText.trim().length < 50) {
         console.warn("[PROCESS-UPLOAD] Too little text extracted — likely a scanned PDF (image-only)");
         await safeRecordUpload(user.id);
         return NextResponse.json({
@@ -311,12 +330,12 @@ export async function POST(req) {
         console.warn(`[PROCESS-UPLOAD] Text truncated from ${rawText.length} to ${MAX_TEXT_CHARS} chars`);
       }
 
-      // Step E: chunk
-      const chunks = chunkText(processedText);
+      // Step E: chunk with page awareness
+      const chunks = chunkByPage(processedText);
       console.log(`[PROCESS-UPLOAD] Created ${chunks.length} chunks${truncated ? " (truncated)" : ""}`);
 
       if (chunks.length === 0) {
-        console.warn("[PROCESS-UPLOAD] chunkText produced 0 chunks — skipping embeddings");
+        console.warn("[PROCESS-UPLOAD] chunkByPage produced 0 chunks — skipping embeddings");
         await safeRecordUpload(user.id);
         return NextResponse.json({ success: true, id: docId, fileUrl, embedded: false });
       }
@@ -331,10 +350,11 @@ export async function POST(req) {
         return NextResponse.json({ success: true, id: docId, fileUrl, embedded: false });
       }
 
-      // Step G: persist chunks
-      const rows = chunks.map((content, i) => ({
+      // Step G: persist chunks with page_number
+      const rows = chunks.map((chunk, i) => ({
         document_id: docId,
-        content,
+        content:     chunk.content,
+        page_number: chunk.page_number,
         embedding:   allEmbeddings[i],
       }));
 

@@ -71,8 +71,6 @@ export async function POST(req) {
     const docMap = Object.fromEntries(userDocs.map(d => [d.id, d.file_name]));
     const validIds = userDocs.map(d => d.id);
 
-    await recordQuestion(supabase, user.id);
-
     // Vector search across all selected documents
     const openai = getOpenAI();
     const embeddingRes = await openai.embeddings.create({
@@ -116,6 +114,9 @@ export async function POST(req) {
       return NextResponse.json({ error: "No relevant content found in the selected documents." }, { status: 400 });
     }
 
+    // Record question only after confirming we have content to answer with
+    await recordQuestion(supabase, user.id);
+
     // Fetch recent history for this session
     let previousMessages = [];
     try {
@@ -149,6 +150,7 @@ export async function POST(req) {
     const readable = new ReadableStream({
       async start(controller) {
         let fullResponse = "";
+        let streamOk = false;
         try {
           for await (const chunk of stream) {
             const token = chunk.choices[0]?.delta?.content;
@@ -159,8 +161,8 @@ export async function POST(req) {
               );
             }
           }
+          streamOk = true;
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-          // Emit sources as structured JSON for the frontend
           if (sources.length > 0) {
             controller.enqueue(
               encoder.encode(`data: [SOURCES]${JSON.stringify(sources)}\n\n`)
@@ -170,8 +172,8 @@ export async function POST(req) {
           controller.enqueue(encoder.encode("data: [ERROR]\n\n"));
         } finally {
           controller.close();
-          // Persist to messages table
-          if (fullResponse) {
+          // Only persist complete responses — never save partial tokens from a mid-stream error
+          if (streamOk && fullResponse) {
             try {
               await supabase.from("messages").insert([
                 { user_id: user.id, role: "user",      message,            chat_session_id: sessionId ?? null, document_id: validIds[0] },
