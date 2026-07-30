@@ -192,14 +192,18 @@ drop policy if exists "messages_select_own" on messages;
 create policy "messages_select_own" on messages
   for select using (auth.uid() = user_id);
 
--- Allow anonymous read of messages that belong to a publicly shared document
+-- Allow anonymous read of messages that belong to a publicly shared chat session
 drop policy if exists "messages_select_public_share" on messages;
+drop policy if exists "Anon can read messages for public shares" on messages;
 create policy "messages_select_public_share" on messages
   for select using (
     exists (
       select 1 from shared_chats sc
-      where sc.document_id = document_id
-        and sc.is_public = true
+      where sc.is_public = true
+        and (
+          (sc.document_id = messages.document_id and messages.chat_session_id is null) or
+          (sc.chat_session_id = messages.chat_session_id)
+        )
     )
   );
 
@@ -475,20 +479,9 @@ $$;
 -- trigger existed.
 -- ─────────────────────────────────────────────
 
-create or replace function handle_new_user()
-returns trigger language plpgsql security definer as $$
-begin
-  insert into public.user_plans (user_id, plan, subscription_status, updated_at)
-  values (new.id, 'free', 'inactive', now())
-  on conflict (user_id) do nothing;
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure handle_new_user();
+-- SKIPPED: handle_new_user trigger is managed by supabase-auth-fix.sql
+-- (better version with profiles, user_credits, user_stats, and EXCEPTION block)
+-- do NOT overwrite it here.
 
 -- One-time backfill: create free-plan rows for every existing user who has none.
 -- Safe to run multiple times (ON CONFLICT DO NOTHING).
@@ -503,7 +496,10 @@ on conflict (user_id) do nothing;
 --     Run once in Supabase SQL editor.
 -- ─────────────────────────────────────────────
 
-alter publication supabase_realtime add table user_plans;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE user_plans;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────
 -- 8b. Grace period column on user_plans

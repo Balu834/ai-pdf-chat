@@ -18,6 +18,7 @@ const LINKS = [
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("lp-theme");
@@ -25,6 +26,12 @@ export default function Nav() {
       setDark(true);
       document.querySelector(".lp-page")?.classList.add("dark");
     }
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const toggleTheme = () => {
@@ -36,7 +43,7 @@ export default function Nav() {
 
   return (
     <>
-      <nav className="lp-nav" role="navigation">
+      <nav className={`lp-nav${scrolled ? " lp-nav-scrolled" : ""}`} role="navigation">
         <div className="lp-nav-inner">
           <Link href="/" className="lp-nav-brand">
             <span

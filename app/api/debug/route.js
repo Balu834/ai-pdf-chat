@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
 import { getAdminClient } from "@/lib/admin-client";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function GET(request) {
   // Gate behind CRON_SECRET so this is never publicly accessible.
@@ -38,10 +37,6 @@ export async function GET(request) {
   // 3. Subscription row (service-role bypasses RLS)
   if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
-      const admin = createAdminClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      );
       const { data, error } = await getAdminClient()
         .from("user_plans")
         .select("plan, subscription_status, pro_expires_at, grace_until")
@@ -60,14 +55,10 @@ export async function GET(request) {
   // 4. Usage stats + live upload gate diagnosis
   if (userId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
-      const admin = createAdminClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      );
-
+      const adminDb = getAdminClient();
       const [statsRes, docCountRes] = await Promise.all([
-        admin.from("user_stats").select("total_pdfs, total_questions").eq("user_id", userId).maybeSingle(),
-        admin.from("documents").select("id", { count: "exact", head: true }).eq("user_id", userId),
+        adminDb.from("user_stats").select("total_pdfs, total_questions").eq("user_id", userId).maybeSingle(),
+        adminDb.from("documents").select("id", { count: "exact", head: true }).eq("user_id", userId),
       ]);
 
       // Replicate the three-signal isPro logic from subscription.ts

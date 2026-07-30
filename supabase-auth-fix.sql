@@ -270,9 +270,13 @@ $$;
 
 -- ── VERIFY: Run this last to confirm everything was created ──
 
-SELECT 'trigger' AS type, trigger_name AS name
-FROM information_schema.triggers
-WHERE event_object_schema = 'auth' AND event_object_table = 'users'
+-- Trigger (must use pg_trigger — information_schema cannot see auth.users triggers)
+SELECT 'trigger' AS type, t.tgname AS name
+FROM pg_trigger t
+JOIN pg_class c ON c.oid = t.tgrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'auth' AND c.relname = 'users'
+  AND t.tgname = 'on_auth_user_created'
 UNION ALL
 SELECT 'table', table_name
 FROM information_schema.tables

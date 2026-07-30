@@ -7,7 +7,7 @@ export async function GET(req) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json([], { status: 401 });
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
     const sessionId  = searchParams.get("sessionId");
@@ -30,13 +30,13 @@ export async function GET(req) {
 
     const { data, error } = await query;
     if (error) {
-      console.warn("[messages GET]", error.message);
-      return NextResponse.json([]);
+      console.error("[messages GET]", error.message);
+      return NextResponse.json({ error: "Failed to load messages" }, { status: 500 });
     }
     return NextResponse.json(data || []);
   } catch (err) {
     console.error("[messages GET]", err.message);
-    return NextResponse.json([]);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

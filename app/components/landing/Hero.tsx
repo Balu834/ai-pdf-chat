@@ -114,32 +114,6 @@ export default function Hero() {
             {/* Golden glow orb */}
             <div className="lp-mp-glow-orb" aria-hidden />
 
-            {/* Document Insights (top-left, white panel) */}
-            <motion.div
-              className="lp-mp-panel lp-mp-light lp-mp-insights"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5, duration: 0.4, ease }}
-            >
-              <div className="lp-mp-insights-hdr">Document Insights</div>
-              <div className="lp-mp-insights-val">2.4M+</div>
-              <div className="lp-mp-insights-sub">Docs analyzed</div>
-              <svg width="108" height="32" viewBox="0 0 108 32" fill="none" style={{marginTop: '6px', display: 'block'}}>
-                <defs>
-                  <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F7B500" stopOpacity="0.28"/>
-                    <stop offset="100%" stopColor="#F7B500" stopOpacity="0"/>
-                  </linearGradient>
-                  <linearGradient id="spark-stroke" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#FFB347" stopOpacity="0.5"/>
-                    <stop offset="100%" stopColor="#F7B500" stopOpacity="0.9"/>
-                  </linearGradient>
-                </defs>
-                <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1" stroke="url(#spark-stroke)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M0 30 L12 26 L24 22 L36 17 L48 13 L60 9 L72 6 L84 4 L96 2 L108 1 L108 32 L0 32Z" fill="url(#spark-grad)"/>
-              </svg>
-            </motion.div>
-
             {/* Intellixy AI Chat (center, large, dark) */}
             <motion.div
               className="lp-mp-panel lp-mp-dark lp-mp-chat"
@@ -247,25 +221,6 @@ export default function Hero() {
                 </div>
               ))}
               <a href="#demo" className="lp-mp-findings-link">View all insights →</a>
-            </motion.div>
-
-            {/* Confidence Score (bottom-right, white) */}
-            <motion.div
-              className="lp-mp-panel lp-mp-light lp-mp-confidence"
-              initial={{ opacity: 0, x: 14 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.02, duration: 0.38, ease }}
-            >
-              <div className="lp-mp-confidence-hdr">Confidence Score</div>
-              <div className="lp-mp-gauge">
-                <div className="lp-mp-gauge-ring">
-                  <div className="lp-mp-gauge-inner">
-                    <span className="lp-mp-gauge-val">100%</span>
-                  </div>
-                </div>
-              </div>
-              <div className="lp-mp-confidence-label">High confidence</div>
-              <span className="lp-mp-confidence-badge">Verified</span>
             </motion.div>
 
             {/* Holographic glow line */}

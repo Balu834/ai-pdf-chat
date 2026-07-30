@@ -44,7 +44,7 @@ const nextConfig = {
 
               // Scripts: explicit script-src-elem required — browsers don't
               // always fall back to script-src for <script src="..."> elements
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'" +
+              "script-src 'self' 'unsafe-inline'" +
                 " https://checkout.razorpay.com" +
                 " https://www.googletagmanager.com" +
                 " https://www.google-analytics.com" +
@@ -91,7 +91,7 @@ const nextConfig = {
         ],
       },
       {
-        source: "/((?!api).*)",
+        source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },

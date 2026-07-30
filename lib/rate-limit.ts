@@ -85,3 +85,9 @@ export const chatLimiter     = rateLimit({ windowMs: 60_000,  max: 30  });
 
 /** Auth/payment: 5 attempts per 10 minutes per IP. */
 export const paymentLimiter  = rateLimit({ windowMs: 600_000, max: 5   });
+
+/** Error reporting: 20 per minute per IP. */
+export const logErrorLimiter = rateLimit({ windowMs: 60_000,  max: 20  });
+
+/** Coupon validation: 10 per minute per user (brute-force guard). */
+export const couponLimiter   = rateLimit({ windowMs: 60_000,  max: 10  });

@@ -1418,8 +1418,12 @@ export default function DashboardPage() {
                 </div>
                 <p className="ix-hero-sub">
                   Your library has <strong>{docs.length || 2} document{(docs.length || 2) !== 1 ? "s" : ""}</strong> ready for
-                  inspection. You have <strong>{qLeft === Infinity ? "unlimited" : qLeft} question{qLeft !== 1 ? "s" : ""}</strong> remaining
-                  this month.
+                  inspection.{" "}
+                  {qLeft === 0 ? (
+                    <>No questions left this month — <button className="ix-hero-upgrade-link" onClick={handleUpgrade}>upgrade to continue →</button></>
+                  ) : (
+                    <>You have <strong>{qLeft === Infinity ? "unlimited" : qLeft} question{qLeft !== 1 ? "s" : ""}</strong> remaining this month.</>
+                  )}
                 </p>
                 <div className="ix-hero-btns">
                   <button
@@ -1460,9 +1464,14 @@ export default function DashboardPage() {
                   <div className="ix-stat-icon orange"><FileText size={16} /></div>
                   <span className="ix-stat-delta up">+{docs.length || 2}</span>
                 </div>
-                <div className="ix-stat-val">{String(docs.length || 2).padStart(2, "0")}<span>/{usage.maxPdfs === Infinity ? "∞" : usage.maxPdfs}</span></div>
+                <div className="ix-stat-val">{docs.length || 2}</div>
                 <div className="ix-stat-label">Documents</div>
-                <div className="ix-stat-sub">PDFs uploaded this month</div>
+                <div className="ix-stat-sub">{usage.maxPdfs === Infinity ? "Unlimited plan" : `of ${usage.maxPdfs} max · this month`}</div>
+                {usage.maxPdfs !== Infinity && (
+                  <div className="ix-stat-bar-wrap">
+                    <div className="ix-stat-bar-fill" style={{ width: `${pdfPct}%`, background: "var(--orange)" }} />
+                  </div>
+                )}
               </motion.div>
 
               <motion.div className="ix-stat-card" variants={fadeUp}>
@@ -1470,9 +1479,14 @@ export default function DashboardPage() {
                   <div className="ix-stat-icon blue"><MessageCircle size={16} /></div>
                   <span className="ix-stat-delta up">+14</span>
                 </div>
-                <div className="ix-stat-val">{String(usage.questions).padStart(2, "0")}</div>
+                <div className="ix-stat-val">{usage.questions}</div>
                 <div className="ix-stat-label">Questions asked</div>
-                <div className="ix-stat-sub">Across all documents</div>
+                <div className="ix-stat-sub">{usage.maxQuestions === Infinity ? "Unlimited plan" : `of ${usage.maxQuestions} monthly limit`}</div>
+                {usage.maxQuestions !== Infinity && (
+                  <div className="ix-stat-bar-wrap">
+                    <div className="ix-stat-bar-fill" style={{ width: `${qPct}%`, background: "var(--blue)" }} />
+                  </div>
+                )}
               </motion.div>
 
               <motion.div
@@ -1488,7 +1502,7 @@ export default function DashboardPage() {
                     ? <span className="ix-stat-delta up">{dueCards} due</span>
                     : <span className="ix-stat-delta up">All done</span>}
                 </div>
-                <div className="ix-stat-val">{String(dueCards).padStart(2, "0")}</div>
+                <div className="ix-stat-val">{dueCards}</div>
                 <div className="ix-stat-label">Flashcards due</div>
                 <div className="ix-stat-sub">{dueCards > 0 ? "Tap to start review session" : "All cards reviewed!"}</div>
               </motion.div>
@@ -1498,9 +1512,14 @@ export default function DashboardPage() {
                   <div className="ix-stat-icon purple"><Shield size={16} /></div>
                   <span className="ix-stat-delta up">{plan === "pro" ? "Pro" : "Free"}</span>
                 </div>
-                <div className="ix-stat-val">{qLeft === Infinity ? "∞" : String(qLeft).padStart(2, "0")}</div>
+                <div className="ix-stat-val">{qLeft === Infinity ? "∞" : qLeft}</div>
                 <div className="ix-stat-label">Questions left</div>
-                <div className="ix-stat-sub">{plan === "pro" ? "Unlimited plan active" : "This month"}</div>
+                <div className="ix-stat-sub">{plan === "pro" ? "Unlimited plan active" : `${usage.questions} of ${usage.maxQuestions} used`}</div>
+                {plan === "free" && (
+                  <div className="ix-stat-bar-wrap">
+                    <div className="ix-stat-bar-fill" style={{ width: `${qPct}%`, background: "var(--purple)" }} />
+                  </div>
+                )}
               </motion.div>
             </motion.div>
 
@@ -1525,12 +1544,7 @@ export default function DashboardPage() {
                       <div className="ix-doc-card">
                         <div className="ix-doc-thumb">
                           <div className="ix-doc-thumb-icon">
-                            <FileText size={24} />
-                          </div>
-                          <div className="ix-doc-thumb-lines">
-                            {[90,75,85,60,80].map((w, j) => (
-                              <div key={j} className="ix-doc-thumb-line" style={{ width: `${w}%`, opacity: 0.4 + j * 0.1 }} />
-                            ))}
+                            <FileText size={28} />
                           </div>
                           <span className={`ix-doc-badge ${doc.isNew ? "new" : "read"}`}>
                             {doc.isNew ? "New" : "Read"}
@@ -1594,19 +1608,20 @@ export default function DashboardPage() {
                   );
                 })}
 
-                {/* Pro upgrade card — only for free users */}
-                {plan === "free" && (
-                  <motion.div variants={fadeUp}>
+              </motion.div>
+
+              {plan === "free" && (
+                <motion.div variants={fadeUp} initial="hidden" animate="show" style={{ marginTop: 14 }}>
+                  <div
+                    className="ix-pro-card ix-pro-card-row"
+                    ref={proCardRef}
+                    onMouseMove={handleProMouseMove}
+                  >
                     <div
-                      className="ix-pro-card"
-                      ref={proCardRef}
-                      onMouseMove={handleProMouseMove}
-                      style={{ height: "100%" }}
-                    >
-                      <div
-                        className="ix-pro-glow"
-                        style={{ transform: `translate(${glowPos.x - 100}px, ${glowPos.y - 100}px)` }}
-                      />
+                      className="ix-pro-glow"
+                      style={{ transform: `translate(${glowPos.x - 100}px, ${glowPos.y - 100}px)` }}
+                    />
+                    <div className="ix-pro-main">
                       <div className="ix-pro-eyebrow">Upgrade available</div>
                       <div className="ix-pro-title">Unlock <em>unlimited</em> reading</div>
                       <p className="ix-pro-sub">No caps. Just you and your documents.</p>
@@ -1615,11 +1630,11 @@ export default function DashboardPage() {
                           <div key={f} className="ix-pro-feat">{f}</div>
                         ))}
                       </div>
-                      <button className="ix-pro-cta" onClick={handleUpgrade} style={{ border: "none", cursor: "pointer" }}>Go Pro — ₹299/month <ArrowUpRight size={13} /></button>
                     </div>
-                  </motion.div>
-                )}
-              </motion.div>
+                    <button className="ix-pro-cta ix-pro-cta-row" onClick={handleUpgrade} style={{ border: "none", cursor: "pointer" }}>Go Pro — ₹299/month <ArrowUpRight size={13} /></button>
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* ── 4. ANALYTICS ROW ──────────────────────────────────── */}

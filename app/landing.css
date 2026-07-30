@@ -39,6 +39,16 @@
   display: flex; align-items: center;
   pointer-events: all;
 }
+/* Deepen the nav pill shadow once the user scrolls past the hero */
+.lp-nav-scrolled .lp-nav-inner {
+  border-color: rgba(0,0,0,0.11);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 6px 24px rgba(0,0,0,0.11),
+    0 0 0 0.5px rgba(255,255,255,0.9) inset;
+  transition: box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
 .lp-nav-brand {
   display: flex; align-items: center; gap: 9px;
   font-size: 14.5px; font-weight: 700; letter-spacing: -0.5px;
@@ -232,7 +242,7 @@
 }
 
 .lp-hero-sub {
-  font-size: 16.5px; color: #6B7280; line-height: 1.82;
+  font-size: 16.5px; color: #4B5563; line-height: 1.82;
   margin-bottom: 40px; max-width: 440px; font-weight: 400;
   letter-spacing: -0.1px;
 }
@@ -330,13 +340,15 @@
   border-radius: 26px 26px 0 0; pointer-events: none; z-index: 0;
 }
 
-/* White card */
+/* White card — unified elevation system */
 .lp-mp-light {
   background: #FFFFFF;
   border: 1px solid rgba(0,0,0,0.07);
   box-shadow:
-    0 1px 2px rgba(0,0,0,0.04),
-    0 6px 28px rgba(0,0,0,0.08),
+    0 0 0 1px rgba(0,0,0,0.03),
+    0 2px 4px rgba(0,0,0,0.04),
+    0 8px 24px rgba(0,0,0,0.09),
+    0 24px 40px rgba(0,0,0,0.05),
     0 0 0 0.5px rgba(255,255,255,0.95) inset;
 }
 
@@ -365,9 +377,9 @@
 .lp-mp-insights-sub { font-size: 10px; color: #9AA0A6; margin-top: 2px; }
 .lp-mp-insights-bars { display: none; }
 
-/* Chat card — center */
+/* Chat card — center (shifted left now that the Insights card is removed) */
 .lp-mp-chat {
-  top: 0; left: 106px; width: 276px; z-index: 12;
+  top: 0; left: 30px; width: 276px; z-index: 12;
   display: flex; flex-direction: column;
 }
 .lp-mp-chat-hdr {

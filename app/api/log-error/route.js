@@ -24,9 +24,9 @@ const _ipCounts = new Map();
 setInterval(() => _ipCounts.clear(), 60_000);
 
 export async function POST(req) {
-  // Rate limit
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-           ?? req.headers.get("x-real-ip")
+  // Rate limit — prefer x-real-ip (Vercel infra, unspooofable) over x-forwarded-for
+  const ip = req.headers.get("x-real-ip")
+           ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
            ?? "unknown";
 
   const count = (_ipCounts.get(ip) ?? 0) + 1;

@@ -19,7 +19,6 @@ export async function POST(request) {
       original_amount_paise,
       discount_paise,
       final_amount_paise,
-      user_id: bodyUserId,
       plan: bodyPlan,
     } = body;
 
@@ -43,39 +42,20 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
     }
 
-    // 3. Resolve the user who paid.
-    //
-    //    Primary:  session cookie (getUser() calls Supabase server to verify JWT)
-    //    Fallback: user_id from request body
-    //
-    //    WHY fallback is safe here: HMAC is already verified above, proving the
-    //    payment came from Razorpay. Session can fail if the access token expired
-    //    while the Razorpay modal was open.
+    // 3. Resolve the authenticated user — session cookie only (no body fallback).
+    //    HMAC above proves payment validity; session proves identity.
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    let userId    = user?.id    ?? null;
-    let userEmail = user?.email ?? null;
-
-    if (!userId && bodyUserId) {
-      console.warn(
-        `[verify-payment] Session auth failed (${authError?.message ?? "no session"}). ` +
-        `Falling back to body user_id: ${bodyUserId}`
-      );
-      const { data: adminUser } = await getAdminClient().auth.admin.getUserById(bodyUserId);
-      userId    = adminUser?.user?.id    ?? null;
-      userEmail = adminUser?.user?.email ?? null;
-    }
-
-    if (user?.id && bodyUserId && user.id !== bodyUserId) {
-      console.error(
-        `[verify-payment] user_id MISMATCH: session=${user.id} body=${bodyUserId}. ` +
-        "Using session user_id."
-      );
-    }
+    const userId    = user?.id    ?? null;
+    const userEmail = user?.email ?? null;
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized — could not identify user" }, { status: 401 });
+      console.warn("[verify-payment] No active session — HMAC verified but user unidentifiable");
+      return NextResponse.json(
+        { error: "Session expired. Please refresh the page and complete the payment again." },
+        { status: 401 }
+      );
     }
 
     console.log(`[verify-payment] Resolved user: ${userId}`);

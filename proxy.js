@@ -103,6 +103,11 @@ export async function proxy(request) {
     return NextResponse.next({ request });
   }
 
+  // Prevent browsers/CDNs from caching authenticated API responses.
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    supabaseResponse.headers.set("Cache-Control", "no-store, private");
+  }
+
   return supabaseResponse;
 }
 

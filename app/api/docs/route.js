@@ -17,14 +17,13 @@ export async function GET() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.warn("[/api/docs] DB error:", error.message);
-      // Return empty array instead of 500 — table may not exist yet
-      return NextResponse.json([]);
+      console.error("[/api/docs] DB error:", error.message);
+      return NextResponse.json({ error: "Failed to load documents" }, { status: 500 });
     }
 
     return NextResponse.json(data || []);
   } catch (err) {
     console.error("[/api/docs] Unhandled error:", err);
-    return NextResponse.json([]);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -54,10 +54,13 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Confirm trigger and function exist
-SELECT 'trigger' AS type, trigger_name AS name
-FROM information_schema.triggers
-WHERE event_object_schema = 'auth' AND event_object_table = 'users'
-UNION ALL
-SELECT 'function', routine_name
+SELECT t.tgname AS trigger_name, p.proname AS function_name
+FROM pg_trigger t
+JOIN pg_proc p ON p.oid = t.tgfoid
+JOIN pg_class c ON c.oid = t.tgrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'auth' AND c.relname = 'users';
+
+SELECT routine_name AS function_name
 FROM information_schema.routines
 WHERE routine_schema = 'public' AND routine_name = 'handle_new_user';

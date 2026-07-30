@@ -5,8 +5,17 @@
 import { NextResponse } from "next/server";
 import { logger, reqCtx } from "@/lib/logger";
 import { getAdminClient } from "@/lib/admin-client";
+import { logErrorLimiter } from "@/lib/rate-limit";
 
 export async function POST(req) {
+  const ip = req.headers.get("x-real-ip")
+           ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+           ?? "unknown";
+  const rl = logErrorLimiter.check(ip);
+  if (!rl.ok) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   let body;
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });

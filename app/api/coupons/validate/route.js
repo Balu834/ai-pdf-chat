@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-client";
 import { createClient } from "@/lib/supabase-server-client";
-
+import { couponLimiter } from "@/lib/rate-limit";
 
 const BASE_AMOUNT_PAISE = 29900; // ₹299 in paise
 
@@ -18,6 +18,11 @@ export async function POST(request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const rl = couponLimiter.check(user.id);
+    if (!rl.ok) {
+      return NextResponse.json({ valid: false, error: "Too many requests. Try again later." }, { status: 429 });
+    }
 
     const { code } = await request.json();
     if (!code?.trim()) {

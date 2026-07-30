@@ -248,16 +248,19 @@ WHERE NOT EXISTS (SELECT 1 FROM public.user_stats s WHERE s.user_id = u.id);
 
 -- ── 8. VERIFY ───────────────────────────────────────────────────────────────
 --
--- After running, this query should return rows showing the trigger is set up.
--- If it returns nothing, re-run this file.
+-- After running, both queries should return 1 row each.
+-- If either returns 0 rows, re-run this file.
 
-SELECT
-  t.trigger_name,
-  t.event_manipulation,
-  t.action_timing,
-  p.security_type
-FROM information_schema.triggers t
-JOIN information_schema.routines p
-  ON p.routine_schema = 'public'
- AND p.routine_name   = 'handle_new_user'
-WHERE t.trigger_name = 'on_auth_user_created';
+-- Confirm trigger exists on auth.users
+SELECT t.tgname AS trigger_name, p.proname AS function_name
+FROM pg_trigger t
+JOIN pg_proc p ON p.oid = t.tgfoid
+JOIN pg_class c ON c.oid = t.tgrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'auth' AND c.relname = 'users'
+  AND t.tgname = 'on_auth_user_created';
+
+-- Confirm function exists
+SELECT routine_name AS function_name
+FROM information_schema.routines
+WHERE routine_schema = 'public' AND routine_name = 'handle_new_user';

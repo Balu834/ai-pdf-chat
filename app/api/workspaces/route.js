@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json([], { status: 401 });
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { data, error } = await supabase
       .from("workspace_members")
@@ -22,8 +22,8 @@ export async function GET() {
       .order("joined_at", { ascending: false });
 
     if (error) {
-      console.warn("[workspaces GET]", error.message);
-      return NextResponse.json([]);
+      console.error("[workspaces GET]", error.message);
+      return NextResponse.json({ error: "Failed to load workspaces" }, { status: 500 });
     }
 
     const workspaces = (data || [])
@@ -33,7 +33,7 @@ export async function GET() {
     return NextResponse.json(workspaces);
   } catch (err) {
     console.error("[workspaces GET]", err.message);
-    return NextResponse.json([]);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
