@@ -687,10 +687,10 @@
   background: #FFFFFF;
   border-top: 1px solid #F0F0F0;
   border-bottom: 1px solid #F0F0F0;
-  padding: 56px 24px;
+  padding: 80px 32px;
 }
 .lp-strip-inner {
-  max-width: 1600px; margin: 0 auto;
+  max-width: 1800px; margin: 0 auto;
 }
 
 /* ── Stat cards ─────────────────────────────────────────────────────────── */
@@ -702,37 +702,31 @@
 
 .lp-stat-card {
   background: #FFFFFF;
-  border: 1.5px solid #E5E7EB;
-  border-radius: 22px;
+  border: 1px solid #E5E7EB;
+  border-radius: 24px;
   padding: 40px;
+  min-height: 300px;
   display: flex; flex-direction: column; align-items: flex-start; gap: 0;
-  box-shadow:
-    0 2px 4px rgba(0,0,0,0.04),
-    0 8px 24px rgba(0,0,0,0.06),
-    0 0 0 0.5px rgba(0,0,0,0.02);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
   transition: transform 0.30s ease, box-shadow 0.30s ease, border-color 0.30s ease;
   cursor: default;
 }
 .lp-stat-card:hover {
-  border-color: rgba(245,158,11,0.55);
-  box-shadow:
-    0 8px 16px rgba(0,0,0,0.08),
-    0 28px 64px rgba(0,0,0,0.13),
-    0 0 0 1px rgba(245,158,11,0.22),
-    0 0 48px rgba(245,158,11,0.08);
+  border-color: #F59E0B;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.12), 0 0 0 1px rgba(245,158,11,0.25);
   transform: translateY(-8px) scale(1.02);
 }
 .lp-stat-card:hover .lp-stat-card-icon {
-  transform: scale(1.07);
+  transform: scale(1.07) rotate(6deg);
 }
 .lp-stat-card:hover .lp-stat-card-val {
   color: #FBBF24;
 }
 
 .lp-stat-card-icon {
-  width: 80px; height: 80px; border-radius: 20px;
-  background: rgba(245,158,11,0.07);
-  border: 1.5px solid rgba(245,158,11,0.18);
+  width: 92px; height: 92px; border-radius: 24px;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
   color: #F59E0B;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.30s ease;
@@ -741,15 +735,21 @@
 }
 
 .lp-stat-card-val {
-  font-size: 68px; font-weight: 800; letter-spacing: -2.5px;
+  font-size: 72px; font-weight: 800; letter-spacing: -2px;
   color: #F59E0B; line-height: 1;
   transition: color 0.30s ease;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .lp-stat-card-label {
-  font-size: 26px; font-weight: 700; color: #111827;
-  letter-spacing: -0.4px; line-height: 1.25;
+  font-size: 28px; font-weight: 700; color: #111827;
+  letter-spacing: -0.4px; line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.lp-stat-card-desc {
+  font-size: 16px; font-weight: 500; color: #6B7280;
+  line-height: 1.5; margin: 0;
 }
 
 /* ── Trust headline ─────────────────────────────────────────────────────── */
@@ -794,11 +794,12 @@
   .lp-logos-divider { width: 44px; height: 1px; }
   .lp-logos-list { gap: 16px 28px; }
   .lp-trust-headline { font-size: 26px; margin: 40px 0 28px; }
-  .lp-stat-card { padding: 32px; }
-  .lp-stat-card-icon { width: 64px; height: 64px; margin-bottom: 22px; }
-  .lp-stat-card-val { font-size: 52px; margin-bottom: 14px; }
-  .lp-stat-card-label { font-size: 20px; }
-  .lp-strip-section { padding: 40px 16px; }
+  .lp-stat-card { padding: 28px; min-height: 260px; }
+  .lp-stat-card-icon { width: 72px; height: 72px; border-radius: 20px; margin-bottom: 22px; }
+  .lp-stat-card-val { font-size: 56px; margin-bottom: 12px; }
+  .lp-stat-card-label { font-size: 22px; }
+  .lp-stat-card-desc { font-size: 14px; }
+  .lp-strip-section { padding: 56px 16px; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1618,12 +1619,14 @@
 .lp-page.dark .lp-strip-section { background: #09090E; border-color: rgba(255,255,255,0.07); }
 .lp-page.dark .lp-stat-card {
   background: #111118; border-color: rgba(255,255,255,0.09);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.40);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
 }
 .lp-page.dark .lp-stat-card:hover {
-  border-color: rgba(245,158,11,0.45);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.7), 0 28px 64px rgba(0,0,0,0.65);
+  border-color: #F59E0B;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(245,158,11,0.35);
 }
+.lp-page.dark .lp-stat-card-icon { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.25); }
+.lp-page.dark .lp-stat-card-desc { color: rgba(255,255,255,0.50); }
 .lp-page.dark .lp-stat-card-icon { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.22); color: #F59E0B; }
 .lp-page.dark .lp-stat-card-val { color: #F59E0B; }
 .lp-page.dark .lp-stat-card:hover .lp-stat-card-val { color: #FCD34D; }

@@ -4,10 +4,10 @@ import { ShieldCheck, FileText, Users, Globe2 } from "lucide-react";
 
 /* ── Data ─────────────────────────────────────────────────────────────────── */
 const STATS = [
-  { icon: ShieldCheck, val: "100%",    label: "Citation Accuracy"     },
-  { icon: FileText,    val: "2.4M+",   label: "Documents Analyzed"    },
-  { icon: Users,       val: "12,000+", label: "Teams Trust Intellixy" },
-  { icon: Globe2,      val: "50+",     label: "Countries Worldwide"   },
+  { icon: ShieldCheck, val: "100%",    label: "Citation Accuracy",      desc: "Reliable AI citations, every time"         },
+  { icon: FileText,    val: "2.4M+",   label: "Documents Analyzed",     desc: "Millions of documents processed"           },
+  { icon: Users,       val: "12,000+", label: "Teams Trust Intellixy",  desc: "Trusted by startups & enterprises"         },
+  { icon: Globe2,      val: "50+",     label: "Countries Worldwide",    desc: "Available across the globe"                },
 ];
 
 const LOGOS: { name: string; nameColor: string; icon: React.ReactNode }[] = [
@@ -84,23 +84,24 @@ const LOGOS: { name: string; nameColor: string; icon: React.ReactNode }[] = [
 /* ── Animations ───────────────────────────────────────────────────────────── */
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.10 } } };
 const cardVariant = {
-  hidden: { opacity: 0, y: 20 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.50, ease: [0.22, 1, 0.36, 1] as const } },
+  hidden: { opacity: 0, y: 30 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.70, ease: [0.22, 1, 0.36, 1] as const } },
 };
 const fadeIn = {
   hidden: { opacity: 0, y: 12 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.50, ease: [0.22, 1, 0.36, 1] as const } },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.60, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
 /* ── Stat card ────────────────────────────────────────────────────────────── */
-function StatCard({ icon: Icon, val, label }: typeof STATS[number]) {
+function StatCard({ icon: Icon, val, label, desc }: typeof STATS[number]) {
   return (
     <motion.div className="lp-stat-card" variants={cardVariant}>
       <div className="lp-stat-card-icon">
-        <Icon size={36} strokeWidth={1.5} />
+        <Icon size={40} strokeWidth={1.5} />
       </div>
       <div className="lp-stat-card-val">{val}</div>
       <div className="lp-stat-card-label">{label}</div>
+      <p className="lp-stat-card-desc">{desc}</p>
     </motion.div>
   );
 }
