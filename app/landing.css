@@ -680,78 +680,120 @@
 /* ══════════════════════════════════════════════════════════════════════════
    STATS + LOGOS STRIP
    ══════════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════
+   STATS + TRUST SECTION
+   ══════════════════════════════════════════════════════════════════════════ */
 .lp-strip-section {
-  background: #FAFAFA;
-  border-top: 1px solid rgba(0,0,0,0.06);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: #FFFFFF;
+  border-top: 1px solid #F0F0F0;
+  border-bottom: 1px solid #F0F0F0;
+  padding: 120px 24px;
 }
 .lp-strip-inner {
-  max-width: 1120px; margin: 0 auto; padding: 60px 24px 48px;
+  max-width: 1400px; margin: 0 auto;
 }
+
+/* ── Stat cards ─────────────────────────────────────────────────────────── */
 .lp-stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
 }
-@media (max-width: 680px) { .lp-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .lp-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+@media (max-width: 480px) { .lp-stats-grid { grid-template-columns: 1fr; gap: 16px; } }
+
 .lp-stat-card {
-  background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07);
-  border-radius: 20px; padding: 22px 22px;
-  display: flex; flex-direction: row; align-items: center; gap: 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  transition: all 0.20s;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 18px;
+  padding: 32px 28px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 16px;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.04),
+    0 4px 16px rgba(0,0,0,0.04),
+    0 0 0 0.5px rgba(0,0,0,0.02);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: default;
 }
 .lp-stat-card:hover {
-  border-color: rgba(247,181,0,0.20);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.08), 0 0 20px rgba(247,181,0,0.07);
-  transform: translateY(-2px);
+  border-color: rgba(245,158,11,0.5);
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.06),
+    0 20px 56px rgba(0,0,0,0.10),
+    0 0 0 0.5px rgba(245,158,11,0.2);
+  transform: translateY(-6px);
 }
+.lp-stat-card:hover .lp-stat-card-icon {
+  transform: scale(1.05);
+}
+.lp-stat-card:hover .lp-stat-card-val {
+  color: #FBBF24;
+}
+
 .lp-stat-card-icon {
-  width: 46px; height: 46px; border-radius: 14px;
-  background: linear-gradient(135deg, rgba(247,181,0,0.09), rgba(255,179,71,0.05));
-  border: 1px solid rgba(247,181,0,0.13); color: #D97706;
+  width: 64px; height: 64px; border-radius: 16px;
+  background: rgba(245,158,11,0.08);
+  border: 1.5px solid rgba(245,158,11,0.20);
+  color: #F59E0B;
   display: flex; align-items: center; justify-content: center;
+  transition: transform 0.25s ease;
   flex-shrink: 0;
 }
-.lp-stat-card-body { display: flex; flex-direction: column; gap: 2px; }
+
 .lp-stat-card-val {
-  font-size: 24px; font-weight: 800; letter-spacing: -1px;
-  background: linear-gradient(135deg, #F59E0B, #F97316);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text; line-height: 1;
+  font-size: 56px; font-weight: 800; letter-spacing: -2px;
+  color: #F59E0B; line-height: 1;
+  transition: color 0.25s ease;
 }
+
 .lp-stat-card-label {
-  font-size: 12px; color: #6B7280; font-weight: 500; line-height: 1.4;
+  font-size: 20px; font-weight: 600; color: #111827;
+  letter-spacing: -0.3px; line-height: 1.3;
 }
 
-/* Trust tagline */
-.lp-trust-tagline {
-  text-align: center; padding: 36px 24px 0;
-  font-size: 13.5px; color: #9AA0A6; font-weight: 500; letter-spacing: -0.1px;
+/* ── Trust headline ─────────────────────────────────────────────────────── */
+.lp-trust-headline {
+  text-align: center;
+  margin: 80px 0 48px;
+  font-size: 36px; font-weight: 700; color: #111827;
+  letter-spacing: -0.8px; line-height: 1.2;
 }
-.lp-trust-tagline strong { color: #5F6368; font-weight: 700; }
+.lp-trust-headline em {
+  font-style: normal; color: #F59E0B;
+}
 
-/* Company logos */
+/* ── Logo row ───────────────────────────────────────────────────────────── */
 .lp-logos-row {
-  max-width: 1120px; margin: 0 auto;
-  padding: 0 24px 60px;
   display: flex; flex-direction: row; align-items: center;
-  gap: 28px; flex-wrap: wrap;
+  gap: 32px; flex-wrap: wrap;
 }
 .lp-logos-eyebrow {
-  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.14em; color: #D4D4D8;
-  white-space: nowrap; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 1px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.14em; color: #9CA3AF;
+  white-space: nowrap; flex-shrink: 0; line-height: 1.6;
+}
+.lp-logos-divider {
+  width: 1px; height: 44px; background: #E5E7EB; flex-shrink: 0;
 }
 .lp-logos-list {
   display: flex; align-items: center; flex-wrap: wrap;
-  gap: 4px 28px; flex: 1;
+  gap: 8px 36px; flex: 1;
 }
 .lp-logo-item {
-  display: flex; align-items: center; gap: 6px;
-  color: #C4C8CC; transition: color 0.18s, transform 0.16s; cursor: default;
+  display: flex; align-items: center; gap: 8px;
+  transition: opacity 0.20s ease, transform 0.20s ease; cursor: default;
 }
-.lp-logo-item:hover { color: #6B7280; transform: translateY(-1px); }
-.lp-logo-icon { display: flex; align-items: center; }
-.lp-logo-name { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
+.lp-logo-item:hover { opacity: 0.65; transform: translateY(-2px); }
+.lp-logo-icon { display: flex; align-items: center; flex-shrink: 0; }
+.lp-logo-name { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+
+@media (max-width: 760px) {
+  .lp-logos-row { flex-direction: column; align-items: flex-start; }
+  .lp-logos-divider { width: 44px; height: 1px; }
+  .lp-logos-list { gap: 16px 28px; }
+  .lp-trust-headline { font-size: 28px; margin: 60px 0 36px; }
+  .lp-stat-card-val { font-size: 44px; }
+  .lp-stat-card-label { font-size: 17px; }
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    HOW IT WORKS
@@ -1566,14 +1608,27 @@
 }
 
 /* Strip */
-.lp-page.dark .lp-strip-section { background: #0C0C0F; border-color: rgba(255,255,255,0.06); }
-.lp-page.dark .lp-stat-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
-.lp-page.dark .lp-stat-card:hover { border-color: rgba(255,255,255,0.16); box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
-.lp-page.dark .lp-stat-card-val { color: #F1F5F9; }
-.lp-page.dark .lp-stat-card-icon { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.48); border-color: rgba(255,255,255,0.09); }
-.lp-page.dark .lp-stat-card-label { color: rgba(255,255,255,0.38); }
-.lp-page.dark .lp-logo-item { color: rgba(255,255,255,0.18); }
-.lp-page.dark .lp-logo-item:hover { color: rgba(255,255,255,0.52); }
+.lp-page.dark .lp-strip-section { background: #09090E; border-color: rgba(255,255,255,0.07); }
+.lp-page.dark .lp-stat-card {
+  background: #111118; border-color: rgba(255,255,255,0.09);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.35);
+}
+.lp-page.dark .lp-stat-card:hover {
+  border-color: rgba(245,158,11,0.4);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.6), 0 20px 56px rgba(0,0,0,0.55);
+}
+.lp-page.dark .lp-stat-card-icon { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.22); color: #F59E0B; }
+.lp-page.dark .lp-stat-card-val { color: #F59E0B; }
+.lp-page.dark .lp-stat-card:hover .lp-stat-card-val { color: #FCD34D; }
+.lp-page.dark .lp-stat-card-label { color: #F1F5F9; }
+.lp-page.dark .lp-trust-headline { color: #F1F5F9; }
+.lp-page.dark .lp-logos-divider { background: rgba(255,255,255,0.12); }
+.lp-page.dark .lp-logos-eyebrow { color: #6B7280; }
+.lp-page.dark .lp-logo-name { color: #D1D5DB; }
+.lp-page.dark .lp-logo-item { filter: brightness(1.15) invert(0); }
+/* Vercel triangle is black — needs to invert to white in dark mode */
+.lp-page.dark .lp-logo-item:last-child svg path { fill: #E5E7EB; }
+.lp-page.dark .lp-logo-item:hover { opacity: 0.55; }
 
 /* How it works */
 .lp-page.dark .lp-how-section { background: #0C0C0F; border-color: rgba(255,255,255,0.06); }
