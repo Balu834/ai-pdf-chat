@@ -63,7 +63,7 @@ export default function HowItWorks() {
                   {i < STEPS.length - 1 && <div className="lp-how-line" aria-hidden />}
                 </div>
                 <div className="lp-how-icon-wrap">
-                  <Icon size={18} strokeWidth={1.75} />
+                  <Icon size={22} strokeWidth={1.75} />
                 </div>
                 <h3 className="lp-how-title">{s.title}</h3>
                 <p className="lp-how-desc">{s.desc}</p>

@@ -79,17 +79,17 @@ export default function Hero() {
 
           <div className="lp-hero-trust">
             <div className="lp-hero-trust-item">
-              <Zap size={13} strokeWidth={2} />
+              <Zap size={18} strokeWidth={2} />
               Answers in 3.4s avg
             </div>
             <div className="lp-hero-trust-sep" />
             <div className="lp-hero-trust-item">
-              <Shield size={13} strokeWidth={2} />
+              <Shield size={18} strokeWidth={2} />
               End-to-end encrypted
             </div>
             <div className="lp-hero-trust-sep" />
             <div className="lp-hero-trust-item">
-              <CreditCard size={13} strokeWidth={2} />
+              <CreditCard size={18} strokeWidth={2} />
               No credit card required
             </div>
           </div>

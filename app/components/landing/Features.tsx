@@ -46,7 +46,7 @@ export default function Features() {
               From financial reports to legal contracts, research papers to policy docs — Intellixy understands it all.
             </p>
             <a href="#demo" className="lp-feat-cta">
-              Explore use cases <ArrowRight size={14} strokeWidth={2.5} />
+              Explore use cases <ArrowRight size={17} strokeWidth={2.5} />
             </a>
           </motion.div>
 
