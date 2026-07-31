@@ -151,7 +151,7 @@
    HERO
    ══════════════════════════════════════════════════════════════════════════ */
 .lp-hero {
-  padding: calc(16px + 58px + 96px) 32px 120px;
+  padding: calc(16px + 58px + 96px) 32px 48px;
   position: relative; overflow: hidden;
   background: #FFFFFF;
 }
@@ -650,7 +650,7 @@
 /* ══════════════════════════════════════════════════════════════════════════
    SECTION COMMON
    ══════════════════════════════════════════════════════════════════════════ */
-.lp-section-head { text-align: center; margin-bottom: 64px; }
+.lp-section-head { text-align: center; margin-bottom: 48px; }
 
 .lp-section-eyebrow {
   display: inline-block; font-size: 10.5px; font-weight: 700;
@@ -687,7 +687,7 @@
   background: #FFFFFF;
   border-top: 1px solid #F0F0F0;
   border-bottom: 1px solid #F0F0F0;
-  padding: 120px 24px;
+  padding: 56px 24px;
 }
 .lp-strip-inner {
   max-width: 1400px; margin: 0 auto;
@@ -752,7 +752,7 @@
 /* ── Trust headline ─────────────────────────────────────────────────────── */
 .lp-trust-headline {
   text-align: center;
-  margin: 80px 0 48px;
+  margin: 56px 0 36px;
   font-size: 36px; font-weight: 700; color: #111827;
   letter-spacing: -0.8px; line-height: 1.2;
 }
@@ -790,16 +790,17 @@
   .lp-logos-row { flex-direction: column; align-items: flex-start; }
   .lp-logos-divider { width: 44px; height: 1px; }
   .lp-logos-list { gap: 16px 28px; }
-  .lp-trust-headline { font-size: 28px; margin: 60px 0 36px; }
+  .lp-trust-headline { font-size: 26px; margin: 40px 0 28px; }
   .lp-stat-card-val { font-size: 44px; }
   .lp-stat-card-label { font-size: 17px; }
+  .lp-strip-section { padding: 40px 16px; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
    HOW IT WORKS
    ══════════════════════════════════════════════════════════════════════════ */
 .lp-how-section {
-  padding: 112px 24px;
+  padding: 72px 24px;
   background: #FFFFFF;
   border-top: 1px solid rgba(0,0,0,0.06);
 }
@@ -849,7 +850,7 @@
    FEATURES
    ══════════════════════════════════════════════════════════════════════════ */
 .lp-features-section {
-  padding: 112px 24px;
+  padding: 72px 24px;
   background: #FAFAFA;
   border-top: 1px solid rgba(0,0,0,0.06);
   position: relative; overflow: hidden;
@@ -992,7 +993,7 @@
    TESTIMONIALS
    ══════════════════════════════════════════════════════════════════════════ */
 .lp-testimonials-section {
-  padding: 112px 24px; background: #FFFFFF;
+  padding: 72px 24px; background: #FFFFFF;
 }
 .lp-testimonials-inner { max-width: 1100px; margin: 0 auto; }
 .lp-testimonials-grid {
@@ -1032,7 +1033,7 @@
    INTERACTIVE DEMO
    ══════════════════════════════════════════════════════════════════════════ */
 .lp-demo-section {
-  padding: 112px 24px;
+  padding: 72px 24px;
   background: #FAFAFA;
   border-top: 1px solid rgba(0,0,0,0.06);
   position: relative; overflow: hidden;
@@ -1199,7 +1200,7 @@
   background: #FAFAFA;
   border-top: 1px solid rgba(0,0,0,0.06);
   border-bottom: 1px solid rgba(0,0,0,0.06);
-  padding: 80px 24px;
+  padding: 48px 24px;
 }
 .lp-metrics-inner {
   max-width: 1060px; margin: 0 auto;
@@ -1241,7 +1242,7 @@
    PRICING
    ══════════════════════════════════════════════════════════════════════════ */
 .lp-pricing-section {
-  padding: 112px 24px 96px; background: #FFFFFF;
+  padding: 80px 24px 64px; background: #FFFFFF;
   border-top: 1px solid rgba(0,0,0,0.06);
 }
 .lp-pricing-inner { max-width: 1060px; margin: 0 auto; }
@@ -1408,7 +1409,7 @@
    FINAL CTA
    ══════════════════════════════════════════════════════════════════════════ */
 .lp-cta-section {
-  padding: 120px 24px;
+  padding: 80px 24px;
   background: linear-gradient(180deg, #FFFFFF 0%, #FFFBF0 50%, #FFFFFF 100%);
   text-align: center; position: relative; overflow: hidden;
   border-top: 1px solid rgba(245,158,11,0.12);
