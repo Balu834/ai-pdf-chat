@@ -14,7 +14,6 @@ export async function POST(request) {
       razorpay_payment_id,
       razorpay_signature,
       pack_id,
-      user_id: bodyUserId,
     } = body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -34,16 +33,18 @@ export async function POST(request) {
     const pack = CREDIT_PACKS.find((p) => p.id === pack_id);
     if (!pack) return NextResponse.json({ error: "Invalid pack" }, { status: 400 });
 
-    // Resolve user
+    // Resolve the authenticated user — session cookie only (no body fallback).
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    let userId = user?.id ?? null;
+    const userId = user?.id ?? null;
 
-    if (!userId && bodyUserId) {
-      const { data: adminUser } = await getAdminClient().auth.admin.getUserById(bodyUserId);
-      userId = adminUser?.user?.id ?? null;
+    if (!userId) {
+      console.warn("[verify-credits] No active session — HMAC verified but user unidentifiable");
+      return NextResponse.json(
+        { error: "Session expired. Please refresh the page and complete the payment again." },
+        { status: 401 }
+      );
     }
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     // Idempotency
     const { data: existing } = await getAdminClient()
