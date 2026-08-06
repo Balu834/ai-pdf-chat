@@ -1360,3 +1360,63 @@
 .ds-dash.dark .ix-planner-meta-pill { background: var(--bg-secondary); border-color: var(--border); }
 .ds-dash.dark .ix-planner-day-hours { background: rgba(245,185,66,0.15); color: #F5B942; border-color: rgba(245,185,66,0.25); }
 .ds-dash.dark .ix-welcome-sub { color: var(--text-tertiary); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DARK SIDEBAR — light content (Shiney-style hybrid theme)
+   Always-dark sidebar regardless of page theme.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ds-dash .ds-sidebar {
+  background: #0C0C0F;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: none;
+}
+.ds-dash .ds-logo {
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+.ds-dash .ds-logo-name { color: #F8FAFC; }
+.ds-dash .ds-logo-mark {
+  background: transparent;
+  box-shadow: none;
+}
+.ds-dash .ds-plan-badge.free { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.38); }
+.ds-dash .ds-plan-badge.pro  { background: rgba(245,158,11,0.18); color: #F59E0B; }
+
+.ds-dash .ds-nav-label { color: rgba(255,255,255,0.28); }
+.ds-dash .ds-nav-item  { color: rgba(255,255,255,0.52); }
+.ds-dash .ds-nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.90); }
+.ds-dash .ds-nav-item.is-active {
+  background: rgba(255,255,255,0.10);
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: none;
+}
+.ds-dash .ds-nav-item.is-active::before { background: #F59E0B; }
+.ds-dash .ds-nav-badge { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.38); }
+.ds-dash .ds-nav-item.is-active .ds-nav-badge { background: rgba(245,158,11,0.20); color: #F59E0B; }
+
+.ds-dash .ds-sidebar-foot { border-top-color: rgba(255,255,255,0.06); }
+
+.ds-dash .ds-usage-head    { color: rgba(255,255,255,0.48); }
+.ds-dash .ds-usage-meta    { color: rgba(255,255,255,0.28); }
+.ds-dash .ds-usage-track   { background: rgba(255,255,255,0.09); }
+.ds-dash .ds-usage-fill    { background: linear-gradient(90deg, #F59E0B, #F97316); }
+.ds-dash .ds-usage-upgrade { color: #F59E0B; }
+
+.ds-dash .ds-profile:hover { background: rgba(255,255,255,0.06); }
+.ds-dash .ds-profile-name  { color: #F8FAFC; }
+.ds-dash .ds-profile-email { color: rgba(255,255,255,0.36); }
+.ds-dash .ds-profile-gear  { color: rgba(255,255,255,0.28); }
+.ds-dash .ds-avatar        { background: rgba(245,158,11,0.16); color: #F59E0B; }
+.ds-dash .ds-profile-menu  {
+  background: #1A1A1E;
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.40);
+}
+.ds-dash .ds-profile-menu-item       { color: rgba(255,255,255,0.80); }
+.ds-dash .ds-profile-menu-item:hover { background: rgba(255,255,255,0.07); }
+.ds-dash .ds-profile-menu-logout     { color: #F87171; }
+.ds-dash .ds-profile-menu-logout:hover { background: rgba(248,113,113,0.09); }
+
+.ds-dash .ds-ai-btn       { background: rgba(139,92,246,0.18); color: #C4B5FD; }
+.ds-dash .ds-ai-btn:hover { background: rgba(139,92,246,0.26); }
