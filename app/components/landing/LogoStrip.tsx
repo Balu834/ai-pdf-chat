@@ -97,7 +97,7 @@ function StatCard({ icon: Icon, val, label, desc }: typeof STATS[number]) {
   return (
     <motion.div className="lp-stat-card" variants={cardVariant}>
       <div className="lp-stat-card-icon">
-        <Icon size={40} strokeWidth={1.5} />
+        <Icon size={24} strokeWidth={1.75} />
       </div>
       <div className="lp-stat-card-val">{val}</div>
       <div className="lp-stat-card-label">{label}</div>
