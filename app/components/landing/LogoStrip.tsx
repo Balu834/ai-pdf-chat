@@ -5,7 +5,7 @@ import { ShieldCheck, FileText, Lock, CreditCard } from "lucide-react";
 /* ── Honest stats — product facts only, no fabricated user counts ──────── */
 const STATS = [
   { icon: ShieldCheck, val: "100%",  label: "Citation Accuracy",        desc: "Every answer sourced directly from your document"  },
-  { icon: FileText,    val: "120+",  label: "File Formats",              desc: "PDF, DOCX, XLSX, PPTX, HTML and more"             },
+  { icon: FileText,    val: "PDF",   label: "Supported Format",           desc: "DOCX, XLSX and more formats coming soon"           },
   { icon: Lock,        val: "Zero",  label: "AI Training on Your Data",  desc: "Your documents are never used to train models"     },
   { icon: CreditCard,  val: "Free",  label: "To Start — No Card",        desc: "Try on real documents with no commitment"          },
 ];

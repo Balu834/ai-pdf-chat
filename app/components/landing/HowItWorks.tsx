@@ -6,23 +6,23 @@ const STEPS = [
   {
     num: "01",
     icon: Upload,
-    title: "Upload any document",
-    desc: "Drop in a PDF, DOCX, scanned image, or academic paper. Intellixy processes it in seconds — including OCR for scanned and handwritten pages.",
-    detail: "PDF · DOCX · PNG · Scans · LaTeX",
+    title: "Upload your PDF",
+    desc: "Drop in any PDF — contracts, investment memos, regulatory filings. Intellixy processes it in seconds and makes every page searchable by AI.",
+    detail: "PDF · up to 100 pages free · 500 pages on Pro",
   },
   {
     num: "02",
     icon: MessageSquare,
     title: "Ask in plain English",
     desc: "Type your question naturally. \"What are the key risks in clause 7?\" or \"Summarise the financials.\" No special syntax, no training required.",
-    detail: "Works in 40+ languages",
+    detail: "Ask anything about your document",
   },
   {
     num: "03",
     icon: BookOpen,
     title: "Get cited, verified answers",
     desc: "Every response includes exact page and section references. Click any citation to jump directly to the source and verify every claim in seconds.",
-    detail: "100% accuracy · avg. 3.4s response",
+    detail: "100% citation accuracy · no hallucinated sources",
   },
 ];
 

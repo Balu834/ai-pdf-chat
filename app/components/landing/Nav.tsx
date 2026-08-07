@@ -1,18 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, ChevronDown, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 
 // Raw string so dangerouslySetInnerHTML + suppressHydrationWarning can shield it
 // from browser extensions (e.g. PDF viewers) that replace SVGs before hydration.
 const NAV_BRAIN_HTML = `<svg width="26" height="22" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="nav-ilx-g" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox"><stop offset="0%" stop-color="#F59E0B"/><stop offset="25%" stop-color="#F97316"/><stop offset="52%" stop-color="#EC4899"/><stop offset="78%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient></defs><path d="M27 7 C22 7 15 8 11 13 C7 18 6 25 8 31 C10 37 15 41 20 43 C23 44 27 43 27 43" stroke="url(#nav-ilx-g)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M27 7 C32 7 38 9 41 14 C44 20 43 28 40 33 C38 37 34 41 27 43" stroke="url(#nav-ilx-g)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 43 C18 46 19 48 22 48 C25 48 28 46 27 43" stroke="url(#nav-ilx-g)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 17 L27 11 L39 18" stroke="url(#nav-ilx-g)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 17 L23 27 L39 18" stroke="url(#nav-ilx-g)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 17 L17 32" stroke="url(#nav-ilx-g)" stroke-width="2.4" stroke-linecap="round"/><path d="M17 32 L23 27" stroke="url(#nav-ilx-g)" stroke-width="2.4" stroke-linecap="round"/><circle cx="27" cy="11" r="3.2" stroke="url(#nav-ilx-g)" stroke-width="2.2" fill="white"/><circle cx="15" cy="17" r="3.2" stroke="url(#nav-ilx-g)" stroke-width="2.2" fill="white"/><circle cx="39" cy="18" r="3.2" stroke="url(#nav-ilx-g)" stroke-width="2.2" fill="white"/><circle cx="23" cy="27" r="3.2" stroke="url(#nav-ilx-g)" stroke-width="2.2" fill="white"/><circle cx="17" cy="32" r="2.8" stroke="url(#nav-ilx-g)" stroke-width="2.2" fill="white"/></svg>`;
 
 const LINKS = [
-  { label: "Features",  href: "#features", dropdown: true  },
-  { label: "Demo",      href: "#demo",     dropdown: false },
-  { label: "Pricing",   href: "#pricing",  dropdown: false },
-  { label: "Resources", href: "#",         dropdown: true  },
-  { label: "Company",   href: "#",         dropdown: true  },
+  { label: "Features", href: "#features" },
+  { label: "Demo",     href: "#demo"     },
+  { label: "Pricing",  href: "#pricing"  },
 ];
 
 export default function Nav() {
@@ -58,12 +56,7 @@ export default function Nav() {
           <ul className="lp-nav-links" role="list">
             {LINKS.map(l => (
               <li key={l.label}>
-                <a href={l.href} className="lp-nav-link">
-                  {l.label}
-                  {l.dropdown && (
-                    <ChevronDown size={12} strokeWidth={2.5} className="lp-nav-chevron" />
-                  )}
-                </a>
+                <a href={l.href} className="lp-nav-link">{l.label}</a>
               </li>
             ))}
           </ul>

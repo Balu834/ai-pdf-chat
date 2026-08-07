@@ -5,28 +5,23 @@ const COLS = [
   {
     head: "Product",
     links: [
-      { label: "Features", href: "#features" },
+      { label: "Features",  href: "#features" },
       { label: "Live demo", href: "#demo"     },
-      { label: "Pricing",  href: "#pricing"   },
-      { label: "Changelog", href: "#"         },
+      { label: "Pricing",   href: "#pricing"  },
     ],
   },
   {
-    head: "Use cases",
+    head: "Legal",
     links: [
-      { label: "Legal contracts",    href: "#" },
-      { label: "Financial reports",  href: "#" },
-      { label: "Research papers",    href: "#" },
-      { label: "Compliance reviews", href: "#" },
+      { label: "Privacy policy",   href: "/privacy"  },
+      { label: "Terms of service", href: "/terms"    },
+      { label: "Refund policy",    href: "/refunds"  },
     ],
   },
   {
-    head: "Company",
+    head: "Contact",
     links: [
-      { label: "About",   href: "#" },
-      { label: "Blog",    href: "#" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "hello@intellixy.com", href: "mailto:hello@intellixy.com" },
     ],
   },
 ];
@@ -62,7 +57,7 @@ export default function Footer() {
       <div className="lp-footer-bottom">
         <span suppressHydrationWarning>© {new Date().getFullYear()} Intellixy. All rights reserved.</span>
         <span>
-          <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Security</a>
+          <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="mailto:hello@intellixy.com">Contact</a>
         </span>
       </div>
     </footer>

@@ -45,3 +45,10 @@ android/local.properties
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Uploaded user files — never commit real documents to the repo
+/public/uploads/
+/uploads/
+temp.pdf
+*.upload.pdf
+dev.log

@@ -29,7 +29,6 @@ const PLANS = [
       "Up to 500 pages per PDF",
       "Unlimited AI questions",
       "Citations + exact page references",
-      "OCR for scanned PDFs",
       "Faster AI responses",
       "Priority support",
     ],

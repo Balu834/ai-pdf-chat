@@ -14,11 +14,11 @@ const FAQS = [
   },
   {
     q: "What document types do you support?",
-    a: "120+ formats including PDFs (including scanned OCR), DOCX, XLSX, PPTX, EPUB, HTML, and LaTeX. We handle handwritten notes and multi-column academic layouts. If your format isn't listed, contact us.",
+    a: "Currently PDF only. DOCX, XLSX, and other formats are on the roadmap. If you have a specific format you need, email us — it helps us prioritise.",
   },
   {
     q: "Is there a document size limit?",
-    a: "Free plans support documents up to 50 MB (roughly 500 pages). Pro supports up to 500 MB per document. Enterprise supports unlimited size with chunked processing for very large document sets.",
+    a: "Free plan supports PDFs up to 100 pages. Pro plan supports up to 500 pages per PDF. Very large documents (500+ pages) are on the Pro roadmap — contact us if you need to process them today.",
   },
   {
     q: "Can I cancel anytime?",
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "Do you work offline?",
-    a: "Not currently — Intellixy requires an internet connection to process documents and run AI inference. Offline mode is on our roadmap for Enterprise customers. Subscribe to our changelog for updates.",
+    a: "Not currently — Intellixy requires an internet connection to process documents and run AI inference. Offline mode is on our roadmap.",
   },
 ];
 

@@ -17,9 +17,9 @@ const METRICS = [
   },
   {
     icon: FileText,
-    val: "PDF · DOCX · OCR",
-    label: "All major formats",
-    sub: "Including scanned pages",
+    val: "PDF",
+    label: "File format",
+    sub: "More formats coming soon",
     wide: true,
   },
   {
