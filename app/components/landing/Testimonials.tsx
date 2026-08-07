@@ -1,37 +1,13 @@
 "use client";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
 
-const QUOTES = [
-  {
-    text: "I reviewed a 90-page investment memo in 20 minutes. The citations let me verify every claim instantly. This is the tool I didn't know I needed.",
-    name: "Arjun Mehta",
-    role: "Investment Analyst",
-    company: "Sequoia Capital India",
-    initials: "AM",
-    color: "#2563eb",
-  },
-  {
-    text: "Contract review used to take my team two days. Now we flag risks in under an hour. The citation accuracy is what makes it production-ready.",
-    name: "Priya Sharma",
-    role: "Legal Counsel",
-    company: "Cyril Amarchand Mangaldas",
-    initials: "PS",
-    color: "#7c3aed",
-  },
-  {
-    text: "We process 50+ quarterly reports every earnings season. Intellixy cut our analysis time by 70%. I can't imagine going back to manual reading.",
-    name: "Rahul Verma",
-    role: "Head of Research",
-    company: "IIFL Securities",
-    initials: "RV",
-    color: "#059669",
-  },
+const PROMISES = [
+  "Your feedback directly shapes the product",
+  "Direct line to the founding team",
+  "Priority access to every new feature",
 ];
-
-const card = {
-  hidden: { opacity: 0, y: 20 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
-};
 
 export default function Testimonials() {
   return (
@@ -44,38 +20,34 @@ export default function Testimonials() {
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="lp-section-eyebrow">Testimonials</p>
-          <h2 className="lp-section-title">Professionals who read smarter</h2>
+          <p className="lp-section-eyebrow">Early access</p>
+          <h2 className="lp-section-title">New — and built honestly</h2>
         </motion.div>
 
         <motion.div
-          className="lp-testimonials-grid"
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
-          initial="hidden"
-          whileInView="show"
+          className="lp-early-card"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          {QUOTES.map((q, i) => (
-            <motion.div key={i} className="lp-testimonial-card" variants={card}>
-              <div className="lp-testimonial-stars" aria-label="5 stars">
-                {"★★★★★"}
-              </div>
-              <p className="lp-testimonial-text">&ldquo;{q.text}&rdquo;</p>
-              <div className="lp-testimonial-author">
-                <div
-                  className="lp-testimonial-avatar"
-                  style={{ background: q.color }}
-                  aria-hidden
-                >
-                  {q.initials}
-                </div>
-                <div>
-                  <div className="lp-testimonial-name">{q.name}</div>
-                  <div className="lp-testimonial-role">{q.role} · {q.company}</div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+          <p className="lp-early-lead">
+            We don&apos;t have a wall of reviews yet — and that&apos;s intentional. We&apos;d rather earn your trust on your own documents than borrow it from fabricated quotes attributed to people at firms you know.
+          </p>
+          <p className="lp-early-sub">
+            Be among the first legal and finance teams in India to use Intellixy on real documents — full-length MSAs, investment memos, regulatory filings.
+          </p>
+          <ul className="lp-early-promises">
+            {PROMISES.map(p => (
+              <li key={p} className="lp-early-promise">
+                <CheckCircle2 size={16} strokeWidth={2} className="lp-early-check" aria-hidden />
+                <span>{p}</span>
+              </li>
+            ))}
+          </ul>
+          <Link href="/login" className="lp-btn-green lp-early-cta">
+            Get early access — it&apos;s free
+          </Link>
         </motion.div>
       </div>
     </section>

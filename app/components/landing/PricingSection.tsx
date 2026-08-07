@@ -11,7 +11,7 @@ const PLANS = [
     desc: "Try Intellixy on your own documents. No credit card required.",
     feats: [
       "3 PDFs per month",
-      "Up to 50 pages per PDF",
+      "Up to 100 pages per PDF",
       "Basic AI chat",
       "Basic citation links",
     ],
@@ -127,15 +127,20 @@ export default function PricingSection() {
           ))}
         </motion.div>
 
-        <motion.p
-          className="lp-pricing-footnote"
+        <motion.div
+          className="lp-pricing-trust"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          All plans include SSL encryption · No setup fees · Cancel any time
-        </motion.p>
+          <p className="lp-pricing-security">
+            🔒 Your documents are encrypted end-to-end and <strong>never used to train AI models.</strong> We process your files in isolated environments and do not retain them after your session.
+          </p>
+          <p className="lp-pricing-footnote-inline">
+            All plans include SSL encryption · No setup fees · Cancel any time
+          </p>
+        </motion.div>
       </div>
     </section>
   );
