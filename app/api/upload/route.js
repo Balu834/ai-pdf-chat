@@ -114,13 +114,38 @@ export async function POST(req) {
       return NextResponse.json({ error: "Only PDF files are supported" }, { status: 400 });
     }
 
+    // ── Parse PDF early (reject oversized docs before any storage/DB writes) ──
+    const buffer = Buffer.from(await file.arrayBuffer());
+    let pdfData;
+    try {
+      pdfData = await pdf(buffer);
+    } catch (parseErr) {
+      return NextResponse.json(
+        { error: "Could not read PDF. The file may be corrupted or password-protected." },
+        { status: 400 }
+      );
+    }
+
+    const pageLimit = limitCheck.isPro ? LIMITS.pro.pagesPerPdf : LIMITS.free.pagesPerPdf;
+    if (pdfData.numpages > pageLimit) {
+      return NextResponse.json(
+        {
+          error: limitCheck.isPro
+            ? `This PDF has ${pdfData.numpages} pages. Pro plan supports up to ${LIMITS.pro.pagesPerPdf} pages per PDF.`
+            : `This PDF has ${pdfData.numpages} pages. Free plan supports up to ${LIMITS.free.pagesPerPdf} pages per PDF. Upgrade to Pro for up to ${LIMITS.pro.pagesPerPdf} pages.`,
+          pageLimitExceeded: true,
+        },
+        { status: 400 }
+      );
+    }
+
     // ── Storage upload ────────────────────────────────────────
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const fileName = `${user.id}/${Date.now()}-${safeName}`;
 
     const { error: storageError } = await supabase.storage
       .from("pdfs")
-      .upload(fileName, file, { contentType: "application/pdf", upsert: false });
+      .upload(fileName, buffer, { contentType: "application/pdf", upsert: false });
 
     if (storageError) {
       logger.error({ ...ctx, route: "api/upload", message: `Storage upload failed: ${storageError.message}`, userId: user.id, adminClient }).catch(() => {});
@@ -168,8 +193,7 @@ export async function POST(req) {
     if (process.env.OPENAI_API_KEY) {
       try {
         const openai = getOpenAI();
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const pdfData = await pdf(buffer);
+        // pdfData + buffer already parsed above — reuse, no second read
         console.log("[UPLOAD] Extracted text length:", pdfData.text.length, "pages:", pdfData.numpages);
 
         if (pdfData.text.trim()) {

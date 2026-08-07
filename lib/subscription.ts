@@ -48,8 +48,12 @@ export interface QuestionLimitCheck {
 
 export const LIMITS = {
   free: {
-    pdfs:      3,   // lifetime — matches insert_document_if_under_limit DB function
-    questions: 5,   // lifetime
+    pdfs:        3,    // lifetime — matches insert_document_if_under_limit DB function
+    questions:   5,    // lifetime
+    pagesPerPdf: 100,  // matches pricing page ("Up to 100 pages per PDF")
+  },
+  pro: {
+    pagesPerPdf: 500,  // matches pricing page ("Up to 500 pages per PDF")
   },
 } as const;
 
