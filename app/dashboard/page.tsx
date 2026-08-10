@@ -103,7 +103,7 @@ const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transi
    TAB CONTENT — rendered for every tab except "overview"
    ════════════════════════════════════════════════════════════════════════════ */
 function TabContent({
-  tab, user, docs, displayDocs, plan, usage, uploading, deleting,
+  tab, user, docs, displayDocs, plan, planTier, usage, uploading, deleting,
   menuOpenId, setMenuOpenId, handleOpenDoc, handleDeleteDoc, onUpload,
   inviteCopied, handleCopyInvite, onTabChange, onUpgrade,
 }: {
@@ -112,6 +112,7 @@ function TabContent({
   docs: { id: string; file_name: string; file_url: string; created_at: string }[];
   displayDocs: { id: string; file_name: string; file_url: string; created_at: string; pages: number; questions: number; isNew: boolean; timeLabel?: string }[];
   plan: "free" | "pro";
+  planTier: "free" | "pro" | "team";
   usage: { pdfs: number; questions: number; maxPdfs: number; maxQuestions: number; loading: boolean };
   uploading: boolean;
   deleting: string | null;
@@ -123,7 +124,7 @@ function TabContent({
   inviteCopied: boolean;
   handleCopyInvite: () => void;
   onTabChange: (tab: import("@/app/components/dashboard/Sidebar").DashTab) => void;
-  onUpgrade: () => void;
+  onUpgrade: (tier?: "pro" | "team") => void;
 }) {
   function timeAgoLocal(iso: string) {
     const diff = Date.now() - new Date(iso).getTime();
@@ -226,7 +227,7 @@ function TabContent({
             { label: "Documents", val: String(docs.length || 0).padStart(2,"0"), sub: "Total uploaded" },
             { label: "Questions", val: String(usage.questions).padStart(2,"0"), sub: "Asked this month" },
             { label: "Remaining", val: Math.max(0, (usage.maxQuestions||5) - usage.questions) === Infinity ? "∞" : String(Math.max(0,(usage.maxQuestions||5)-usage.questions)).padStart(2,"0"), sub: "Questions left" },
-            { label: "Plan",      val: plan === "pro" ? "Pro" : "Free", sub: usage.maxPdfs === Infinity ? "Unlimited" : `${usage.maxPdfs} PDF limit` },
+            { label: "Plan",      val: planTier === "team" ? "Team" : planTier === "pro" ? "Pro" : "Free", sub: usage.maxPdfs === Infinity ? "Unlimited" : `${usage.maxPdfs} PDF limit` },
           ].map(s => (
             <div key={s.label} className="ix-stat-card">
               <div className="ix-stat-val">{s.val}</div>
@@ -260,17 +261,29 @@ function TabContent({
           <div className="ix-banner-left">
             <div className="ix-banner-icon"><Shield size={20} /></div>
             <div>
-              <div className="ix-banner-title">Current plan: {plan === "pro" ? "Pro" : "Free"}</div>
+              <div className="ix-banner-title">Current plan: {planTier === "team" ? "Team" : planTier === "pro" ? "Pro" : "Free"}</div>
               <div className="ix-banner-sub">
                 {plan === "pro"
-                  ? "You have unlimited documents and questions."
+                  ? planTier === "team"
+                    ? "Team workspace + unlimited PDFs and questions for your whole team."
+                    : "You have unlimited documents and questions."
                   : `${usage.pdfs}/${usage.maxPdfs} PDFs used · ${usage.questions}/${usage.maxQuestions} questions used this month.`}
               </div>
             </div>
           </div>
           {plan === "free" && (
-            <button className="ix-banner-cta" onClick={onUpgrade} style={{ border: "none", cursor: "pointer" }}>
-              <ArrowUpRight size={14} /> Upgrade to Pro — ₹299/month
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button className="ix-banner-cta" onClick={() => onUpgrade("pro")} style={{ border: "none", cursor: "pointer" }}>
+                <ArrowUpRight size={14} /> Upgrade to Pro — ₹299/month
+              </button>
+              <button className="ix-banner-cta" onClick={() => onUpgrade("team")} style={{ border: "none", cursor: "pointer", background: "linear-gradient(135deg,#7C3AED,#4F46E5)" }}>
+                <Users size={14} /> Upgrade to Team — ₹999/month
+              </button>
+            </div>
+          )}
+          {plan === "pro" && planTier === "pro" && (
+            <button className="ix-banner-cta" onClick={() => onUpgrade("team")} style={{ border: "none", cursor: "pointer", background: "linear-gradient(135deg,#7C3AED,#4F46E5)" }}>
+              <Users size={14} /> Upgrade to Team — ₹999/month
             </button>
           )}
         </div>
@@ -577,7 +590,7 @@ function PlannerTab() {
 /* ════════════════════════════════════════════════════════════════════════════
    SETTINGS PANEL
    ════════════════════════════════════════════════════════════════════════════ */
-function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "free" | "pro"; onUpgrade: () => void }) {
+function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "free" | "pro"; onUpgrade: (tier?: "pro" | "team") => void }) {
   const router = useRouter();
 
   const [displayName, setDisplayName] = useState(user?.user_metadata?.full_name ?? "");
@@ -733,6 +746,7 @@ export default function DashboardPage() {
   const [loading,               setLoading]              = useState(true);
   const [docs,                  setDocs]                 = useState<Doc[]>([]);
   const [plan,                  setPlan]                 = useState<"free" | "pro">("free");
+  const [planTier,              setPlanTier]             = useState<"free" | "pro" | "team">("free");
   const [proExpiresAt,          setProExpiresAt]         = useState<string | null>(null);
   const [graceUntil,            setGraceUntil]           = useState<string | null>(null);
   const [isTrial,               setIsTrial]              = useState(false);
@@ -849,6 +863,13 @@ export default function DashboardPage() {
     if (params.get("upgraded") === "1") window.history.replaceState({}, "", "/dashboard");
     const viewParam = params.get("view");
     if (viewParam) window.history.replaceState({}, "", "/dashboard");
+    const planParam = params.get("plan");
+    if (planParam === "team" || planParam === "pro") {
+      window.history.replaceState({}, "", "/dashboard");
+      // Auto-open checkout after a brief delay to let auth + plan state settle
+      setTimeout(() => handleUpgrade(planParam as "pro" | "team"), 1200);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -860,12 +881,13 @@ export default function DashboardPage() {
           const row = payload.new;
           if (!row) return;
           const now = new Date();
-          const isActive = row.plan === "pro" && (
+          const isActive = (row.plan === "pro" || row.plan === "team") && (
             row.subscription_status === "active" || row.subscription_status === "trial" ||
             (row.pro_expires_at && new Date(row.pro_expires_at as string) > now) ||
             (row.grace_until    && new Date(row.grace_until    as string) > now)
           );
           setPlan(isActive ? "pro" : "free");
+          setPlanTier(isActive ? (row.plan as "pro" | "team") : "free");
           setProExpiresAt((row.pro_expires_at as string) ?? null);
           setGraceUntil((row.grace_until as string) ?? null);
           setIsTrial((row.is_trial as boolean) ?? false);
@@ -934,12 +956,13 @@ export default function DashboardPage() {
         .maybeSingle();
       if (data?.plan) {
         const now = new Date();
-        const isActive = data.plan === "pro" && (
+        const isActive = (data.plan === "pro" || data.plan === "team") && (
           data.subscription_status === "active" || data.subscription_status === "trial" ||
           (data.pro_expires_at && new Date(data.pro_expires_at) > now) ||
           (data.grace_until    && new Date(data.grace_until)    > now)
         );
         setPlan(isActive ? "pro" : "free");
+        setPlanTier(isActive ? (data.plan as "pro" | "team") : "free");
         setProExpiresAt(data.pro_expires_at ?? null);
         setGraceUntil(data.grace_until ?? null);
         if (data.subscription_status === "cancelled") setSubscriptionCancelled(true);
@@ -960,12 +983,13 @@ export default function DashboardPage() {
       const data = await res.json();
       if (data.plan) {
         const now = new Date();
-        const isActive = data.is_pro_active === true || (data.plan === "pro" && (
+        const isActive = data.is_pro_active === true || ((data.plan === "pro" || data.plan === "team") && (
           data.subscription_status === "active" || data.subscription_status === "trial" ||
           (data.pro_expires_at && new Date(data.pro_expires_at) > now) ||
           (data.grace_until    && new Date(data.grace_until)    > now)
         ));
         setPlan(isActive ? "pro" : "free");
+        if (isActive && (data.plan === "pro" || data.plan === "team")) setPlanTier(data.plan as "pro" | "team");
         setProExpiresAt(data.pro_expires_at ?? null);
         if (isActive) {
           setUsage({ pdfs: 0, questions: 0, maxPdfs: Infinity, maxQuestions: Infinity, loading: false });
@@ -1082,13 +1106,28 @@ export default function DashboardPage() {
     if (action === "settings") setActiveTab("settings");
   }
 
-  async function handleUpgrade() {
-    if (plan === "pro") { setActiveTab("billing"); return; }
+  async function handleUpgrade(targetTier: "pro" | "team" = "pro") {
+    // If already on the target tier or higher, just navigate to billing
+    if (planTier === "team" || (planTier === "pro" && targetTier === "pro")) {
+      setActiveTab("billing"); return;
+    }
     Events.upgradeClick();
     Events.paymentStart();
+
+    const TIER_META = {
+      pro:  { description: "Pro Plan — ₹299/month",  amount: 29900, successMsg: "Welcome to Pro! Unlimited reading unlocked." },
+      team: { description: "Team Plan — ₹999/month", amount: 99900, successMsg: "Welcome to Team! Your workspace is ready." },
+    };
+    const meta = TIER_META[targetTier];
+
     try {
       // 1. Create Razorpay subscription on the server
-      const res = await fetch("/api/create-subscription", { method: "POST", credentials: "include" });
+      const res = await fetch("/api/create-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: targetTier }),
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok || !data.subscription_id) throw new Error(data.error ?? "Failed to create subscription");
 
@@ -1110,7 +1149,7 @@ export default function DashboardPage() {
         key:             process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         subscription_id: data.subscription_id,
         name:            "Intellixy",
-        description:     "Pro Plan — ₹299/month",
+        description:     meta.description,
         image:           "/logo.png",
         prefill: {
           name:  user?.user_metadata?.full_name ?? "",
@@ -1126,16 +1165,17 @@ export default function DashboardPage() {
                 razorpay_payment_id:      response.razorpay_payment_id,
                 razorpay_subscription_id: response.razorpay_subscription_id,
                 razorpay_signature:       response.razorpay_signature,
-                user_id:                  user?.id,
               }),
               credentials: "include",
             });
             const verifyData = await verifyRes.json();
             if (!verifyRes.ok || !verifyData.success) throw new Error(verifyData.error ?? "Verification failed");
-            Events.paymentSuccess(response.razorpay_payment_id, 29900);
+            const activatedTier = (verifyData.tier as "pro" | "team") ?? targetTier;
+            Events.paymentSuccess(response.razorpay_payment_id, meta.amount);
             setPlan("pro");
+            setPlanTier(activatedTier);
             setUsage(p => ({ ...p, maxPdfs: Infinity, maxQuestions: Infinity }));
-            showToast("Welcome to Pro! Unlimited reading unlocked.");
+            showToast(meta.successMsg);
             setActiveTab("billing");
           } catch (e: unknown) {
             const msg = (e as Error).message ?? "Payment verification failed. Contact support.";
@@ -1365,6 +1405,7 @@ export default function DashboardPage() {
                 docs={docs}
                 displayDocs={displayDocs}
                 plan={plan}
+                planTier={planTier}
                 usage={usage}
                 uploading={uploading}
                 deleting={deleting}
@@ -1492,7 +1533,7 @@ export default function DashboardPage() {
               <motion.div className="ix-stat-card" variants={fadeUp}>
                 <div className="ix-stat-icon-row">
                   <div className="ix-stat-icon purple"><Shield size={16} /></div>
-                  <span className="ix-stat-delta up">{plan === "pro" ? "Pro" : "Free"}</span>
+                  <span className="ix-stat-delta up">{planTier === "team" ? "Team" : planTier === "pro" ? "Pro" : "Free"}</span>
                 </div>
                 <div className="ix-stat-val">{qLeft === Infinity ? "∞" : qLeft}</div>
                 <div className="ix-stat-label">Questions left</div>

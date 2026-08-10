@@ -15,7 +15,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type Plan = "free" | "pro";
+export type Plan = "free" | "pro" | "team";
 export type SubStatus = "active" | "inactive" | "cancelled" | "expired" | "halted";
 
 export interface Subscription {
@@ -145,19 +145,19 @@ export async function getSubscription(userId: string): Promise<Subscription> {
   const periodActive  = !!periodEnd && periodEnd > now;
   const inGracePeriod = !!graceEnd  && graceEnd  > now;
 
-  const isPro = data.plan === "pro" && (statusActive || periodActive || inGracePeriod);
+  const isPro = (data.plan === "pro" || data.plan === "team") && (statusActive || periodActive || inGracePeriod);
 
   // Derive a clean status for reporting (does not affect the isPro gate above)
   let status: SubStatus;
   if (dbStatus === "cancelled")                 status = "cancelled";
   else if (dbStatus === "halted")               status = "halted";
   else if (!isPro && data.plan === "pro")       status = "expired";
-  else if (data.plan === "pro")                 status = "active";
+  else if (data.plan === "pro" || data.plan === "team") status = "active";
   else                                          status = "inactive";
 
   return {
     userId,
-    plan:             isPro ? "pro" : "free",
+    plan:             isPro ? (data.plan as Plan) : "free",
     status,
     isPro,
     currentPeriodEnd: data.pro_expires_at ?? null,

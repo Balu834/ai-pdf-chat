@@ -38,7 +38,7 @@ const PLANS = [
     name: "Team",
     price: "999",
     priceNote: "per month",
-    desc: "Team collaboration features are in active development. Reach out for early access and to help shape what we build.",
+    desc: "For teams that read, research, and collaborate on documents together.",
     feats: [
       "Everything in Pro",
       "Team workspaces — coming soon",
@@ -47,7 +47,7 @@ const PLANS = [
       "Audit logs — coming soon",
       "Priority support",
     ],
-    cta: { label: "Get early access", href: "mailto:hello@intellixy.com?subject=Team%20plan%20early%20access", style: "outline" },
+    cta: { label: "Start with Team", href: "/login?plan=team", style: "outline" },
   },
 ];
 

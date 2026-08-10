@@ -3,6 +3,7 @@ import { getAdminClient } from "@/lib/admin-client";
 import crypto from "crypto";
 import { getUserIdByRazorpaySubscription } from "@/lib/user-plan";
 import { logger, reqCtx } from "@/lib/logger";
+import { resolveTierFromPlanId } from "@/lib/razorpay-plans";
 
 /**
  * POST /api/razorpay/webhook
@@ -192,7 +193,8 @@ export async function POST(request) {
 
   switch (event) {
     case "subscription.charged": {
-      // Auto-renewal or first charge: ensure user is Pro and extend expiry.
+      // Auto-renewal or first charge: ensure user is on the correct plan and extend expiry.
+      const tier = resolveTierFromPlanId(subscription.plan_id);
       const nextBillingUnix = subscription.charge_at;
       const nextBillingDate = nextBillingUnix
         ? new Date(nextBillingUnix * 1000).toISOString()
@@ -204,7 +206,7 @@ export async function POST(request) {
       await getAdminClient().from("user_plans").upsert(
         {
           user_id:                   userId,
-          plan:                      "pro",
+          plan:                      tier,
           is_trial:                  false,
           subscription_status:       "active",
           razorpay_subscription_id:  subscriptionId,
@@ -220,6 +222,7 @@ export async function POST(request) {
       const { error } = await getAdminClient().rpc("extend_pro_subscription", {
         p_user_id:      userId,
         p_next_billing: nextBillingDate,
+        p_plan:         tier,
       });
 
       if (error) {
