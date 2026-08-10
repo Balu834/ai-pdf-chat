@@ -19,6 +19,7 @@ import { reportError } from "@/lib/reportError";
 import OAuthSignupTracker from "@/app/components/OAuthSignupTracker";
 import ErrorBoundary from "@/app/components/ErrorBoundary";
 import Sidebar, { type DashTab } from "@/app/components/dashboard/Sidebar";
+import WorkspaceTab from "@/app/components/dashboard/WorkspaceTab";
 import { Events } from "@/lib/analytics";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
@@ -279,26 +280,7 @@ function TabContent({
 
   /* ── Members tab ───────────────────────────────────────────── */
   if (tab === "members") {
-    return (
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div className="ix-doc-section-head">
-          <div className="ix-section-title"><Users size={16} /> Team Members</div>
-        </div>
-        <div className="ix-banner">
-          <div className="ix-banner-glow" />
-          <div className="ix-banner-left">
-            <div className="ix-banner-icon"><Users size={20} /></div>
-            <div>
-              <div className="ix-banner-title">Invite your team</div>
-              <div className="ix-banner-sub">Share Intellixy with colleagues and analyse documents together.</div>
-            </div>
-          </div>
-          <button className={`ix-banner-cta${inviteCopied ? " copied" : ""}`} onClick={handleCopyInvite}>
-            {inviteCopied ? <><CheckCircle2 size={14} /> Copied!</> : <><Upload size={14} /> Copy invite link</>}
-          </button>
-        </div>
-      </motion.div>
-    );
+    return <WorkspaceTab userId={user?.id ?? ""} />;
   }
 
   /* ── Conversations tab ─────────────────────────────────────── */

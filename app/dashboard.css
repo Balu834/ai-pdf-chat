@@ -1420,3 +1420,155 @@
 
 .ds-dash .ds-ai-btn       { background: rgba(139,92,246,0.18); color: #C4B5FD; }
 .ds-dash .ds-ai-btn:hover { background: rgba(139,92,246,0.26); }
+
+/* ── WORKSPACE TAB ────────────────────────────────────────────────────────── */
+.ix-ws-notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 13px 16px; border-radius: 12px;
+  background: var(--orange-pale); border: 1px solid rgba(249,115,22,0.18);
+}
+.ix-ws-notice p {
+  margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.55;
+}
+.ix-ws-notice strong { color: var(--text); }
+
+.ix-ws-empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48px 24px; gap: 16px; text-align: center;
+}
+.ix-ws-empty-icon {
+  width: 72px; height: 72px; border-radius: 20px; flex-shrink: 0;
+  background: rgba(139,92,246,0.10); border: 1.5px solid rgba(139,92,246,0.22);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.ix-ws-create-form {
+  display: flex; flex-direction: column; gap: 12px;
+  width: 100%; max-width: 360px;
+}
+.ix-ws-field { display: flex; flex-direction: column; gap: 5px; }
+.ix-ws-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.ix-ws-name-input {
+  padding: 10px 12px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-size: 14px;
+  font-family: inherit; outline: none; transition: border-color .15s;
+}
+.ix-ws-name-input:focus { border-color: rgba(139,92,246,0.5); }
+
+.ix-ws-header {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px;
+}
+.ix-ws-header-icon {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  background: rgba(139,92,246,0.10); border: 1px solid rgba(139,92,246,0.18);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--purple);
+}
+.ix-ws-name { font-size: 16px; font-weight: 700; color: var(--text); }
+.ix-ws-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+.ix-ws-role-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 99px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.ix-ws-role-pill.owner  { background: rgba(245,158,11,0.12); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+.ix-ws-role-pill.admin  { background: var(--purple-pale); color: var(--purple); border: 1px solid rgba(139,92,246,0.25); }
+.ix-ws-role-pill.member { background: rgba(16,185,129,0.10); color: #10B981; border: 1px solid rgba(16,185,129,0.22); }
+
+.ix-ws-members {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+}
+.ix-ws-members-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 18px; border-bottom: 1px solid var(--border);
+}
+.ix-ws-member-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 18px; border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.ix-ws-member-row:last-child { border-bottom: none; }
+.ix-ws-member-row:hover { background: var(--bg-hover); }
+.ix-ws-member-av {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bg-hover); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--text-secondary);
+}
+.ix-ws-member-email { font-size: 13px; font-weight: 500; color: var(--text); }
+.ix-ws-member-joined { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+.ix-ws-remove-btn {
+  margin-left: auto; flex-shrink: 0;
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1px solid var(--border); background: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text-tertiary); transition: all .15s;
+}
+.ix-ws-remove-btn:hover { background: var(--red-pale); color: var(--red); border-color: rgba(239,68,68,0.3); }
+.ix-ws-remove-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ix-ws-invite-section {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;
+}
+.ix-ws-invite-row {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.ix-ws-email-input {
+  flex: 1; min-width: 160px; padding: 9px 12px;
+  border-radius: 9px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-size: 13px;
+  font-family: inherit; outline: none; transition: border-color .15s;
+}
+.ix-ws-email-input:focus { border-color: rgba(139,92,246,0.5); }
+.ix-ws-email-input::placeholder { color: var(--text-tertiary); }
+.ix-ws-role-select {
+  padding: 9px 10px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-size: 13px;
+  font-family: inherit; outline: none; cursor: pointer;
+}
+.ix-ws-invite-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 9px; border: none;
+  background: var(--accent); color: var(--accent-fg);
+  font-size: 13px; font-weight: 700; font-family: inherit;
+  cursor: pointer; white-space: nowrap; transition: opacity .15s;
+}
+.ix-ws-invite-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ix-ws-copy-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 14px; border-radius: 9px;
+  border: 1px solid var(--border); background: none;
+  color: var(--text-secondary); font-size: 12px; font-weight: 600;
+  font-family: inherit; cursor: pointer; white-space: nowrap; transition: all .15s;
+}
+.ix-ws-copy-btn:hover { background: var(--bg-hover); color: var(--text); }
+.ix-ws-copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+.ix-ws-pending-head {
+  font-size: 11.5px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.ix-ws-pending-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 9px;
+  border: 1px solid var(--border); background: var(--bg);
+}
+.ix-ws-pending-email {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; font-size: 13px; color: var(--text);
+}
+.ix-ws-pending-exp { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+.ix-ws-revoke-btn {
+  width: 28px; height: 28px; border-radius: 7px;
+  border: 1px solid var(--border); background: none; flex-shrink: 0;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text-tertiary); transition: all .15s;
+}
+.ix-ws-revoke-btn:hover { background: var(--red-pale); color: var(--red); border-color: rgba(239,68,68,0.3); }
+.ix-ws-revoke-btn:disabled { opacity: 0.4; cursor: not-allowed; }
