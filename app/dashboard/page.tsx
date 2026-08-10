@@ -241,7 +241,7 @@ function TabContent({
             Detailed analytics are available on the Pro plan.
           </div>
           {plan === "free" && (
-            <button className="ix-btn-primary" style={{ width: "fit-content" }} onClick={onUpgrade}>
+            <button className="ix-btn-primary" style={{ width: "fit-content" }} onClick={() => onUpgrade("pro")}>
               <ArrowUpRight size={14} /> Upgrade to Pro
             </button>
           )}
@@ -707,7 +707,7 @@ function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "fr
             </p>
           </div>
           {plan === "free" && (
-            <button className="ix-btn-primary" style={{ fontSize: 13, padding: "8px 16px", cursor: "pointer" }} onClick={onUpgrade}>
+            <button className="ix-btn-primary" style={{ fontSize: 13, padding: "8px 16px", cursor: "pointer" }} onClick={() => onUpgrade("pro")}>
               <ArrowUpRight size={13} /> Upgrade to Pro
             </button>
           )}
@@ -1443,7 +1443,7 @@ export default function DashboardPage() {
                   Your library has <strong>{docs.length || 2} document{(docs.length || 2) !== 1 ? "s" : ""}</strong> ready for
                   inspection.{" "}
                   {qLeft === 0 ? (
-                    <>No questions left this month — <button className="ix-hero-upgrade-link" onClick={handleUpgrade}>upgrade to continue →</button></>
+                    <>No questions left this month — <button className="ix-hero-upgrade-link" onClick={() => handleUpgrade("pro")}>upgrade to continue →</button></>
                   ) : (
                     <>You have <strong>{qLeft === Infinity ? "unlimited" : qLeft} question{qLeft !== 1 ? "s" : ""}</strong> remaining this month.</>
                   )}
@@ -1654,7 +1654,7 @@ export default function DashboardPage() {
                         ))}
                       </div>
                     </div>
-                    <button className="ix-pro-cta ix-pro-cta-row" onClick={handleUpgrade} style={{ border: "none", cursor: "pointer" }}>Go Pro — ₹299/month <ArrowUpRight size={13} /></button>
+                    <button className="ix-pro-cta ix-pro-cta-row" onClick={() => handleUpgrade("pro")} style={{ border: "none", cursor: "pointer" }}>Go Pro — ₹299/month <ArrowUpRight size={13} /></button>
                   </div>
                 </motion.div>
               )}
