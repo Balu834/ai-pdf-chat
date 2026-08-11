@@ -241,9 +241,14 @@ function TabContent({
             Detailed analytics are available on the Pro plan.
           </div>
           {plan === "free" && (
-            <button className="ix-btn-primary" style={{ width: "fit-content" }} onClick={() => onUpgrade("pro")}>
-              <ArrowUpRight size={14} /> Upgrade to Pro
-            </button>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button className="ix-btn-primary" style={{ width: "fit-content" }} onClick={() => onUpgrade("pro")}>
+                <ArrowUpRight size={14} /> Go Pro — ₹299/month
+              </button>
+              <button className="ix-btn-primary" style={{ width: "fit-content", background: "var(--bg-card)", color: "var(--text-1)", border: "1px solid var(--border)" }} onClick={() => onUpgrade("team")}>
+                <ArrowUpRight size={14} /> Go Team — ₹999/month
+              </button>
+            </div>
           )}
         </div>
       </motion.div>
@@ -1654,7 +1659,10 @@ export default function DashboardPage() {
                         ))}
                       </div>
                     </div>
-                    <button className="ix-pro-cta ix-pro-cta-row" onClick={() => handleUpgrade("pro")} style={{ border: "none", cursor: "pointer" }}>Go Pro — ₹299/month <ArrowUpRight size={13} /></button>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      <button className="ix-pro-cta ix-pro-cta-row" onClick={() => handleUpgrade("pro")} style={{ border: "none", cursor: "pointer" }}>Go Pro — ₹299/month <ArrowUpRight size={13} /></button>
+                      <button className="ix-pro-cta ix-pro-cta-row" onClick={() => handleUpgrade("team")} style={{ border: "1px solid var(--border)", cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "var(--text-1)" }}>Go Team — ₹999/month <ArrowUpRight size={13} /></button>
+                    </div>
                   </div>
                 </motion.div>
               )}
