@@ -346,7 +346,7 @@ function TabContent({
 
   /* ── Settings tab ───────────────────────────────────────────── */
   if (tab === "settings") {
-    return <SettingsPanel user={user} plan={plan} onUpgrade={onUpgrade} />;
+    return <SettingsPanel user={user} plan={plan} onUpgrade={onUpgrade} usage={usage} />;
   }
 
   return null;
@@ -595,7 +595,12 @@ function PlannerTab() {
 /* ════════════════════════════════════════════════════════════════════════════
    SETTINGS PANEL
    ════════════════════════════════════════════════════════════════════════════ */
-function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "free" | "pro"; onUpgrade: (tier?: "pro" | "team") => void }) {
+function SettingsPanel({ user, plan, onUpgrade, usage }: {
+  user: User | null;
+  plan: "free" | "pro";
+  onUpgrade: (tier?: "pro" | "team") => void;
+  usage: { pdfs: number; questions: number; maxPdfs: number; maxQuestions: number; loading: boolean };
+}) {
   const router = useRouter();
 
   const [displayName, setDisplayName] = useState(user?.user_metadata?.full_name ?? "");
@@ -603,6 +608,15 @@ function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "fr
   const [saveMsg,     setSaveMsg]     = useState<{ ok: boolean; text: string } | null>(null);
   const [pwdSent,     setPwdSent]     = useState(false);
   const [pwdSending,  setPwdSending]  = useState(false);
+
+  interface MemoryData { preferences: string; topics: string[]; summary: string; }
+  const [memory,    setMemory]    = useState<MemoryData | null>(null);
+  const [memReset,  setMemReset]  = useState(false);
+
+  useEffect(() => {
+    fetch("/api/memory", { credentials: "include" })
+      .then(r => r.json()).then(d => setMemory(d)).catch(() => {});
+  }, []);
 
   const email = user?.email ?? "";
 
@@ -717,6 +731,86 @@ function SettingsPanel({ user, plan, onUpgrade }: { user: User | null; plan: "fr
             </button>
           )}
         </div>
+      </div>
+
+      {/* ── Usage ─────────────────────────────────────────────── */}
+      <div style={section}>
+        <div style={sectionTitle}><BarChart2 size={15} color="var(--accent)" /> Usage this month</div>
+        <hr style={divider} />
+        {usage.loading ? (
+          <p style={{ fontSize: 13, color: "var(--text-tertiary)", margin: 0 }}>Loading…</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {[
+              { label: "Documents", used: usage.pdfs, max: usage.maxPdfs },
+              { label: "Questions", used: usage.questions, max: usage.maxQuestions },
+            ].map(({ label, used, max }) => {
+              const pct = plan === "pro" ? 100 : Math.min(100, Math.round((used / Math.max(max, 1)) * 100));
+              return (
+                <div key={label}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>{label}</span>
+                    <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>
+                      {plan === "pro" ? `${used} (unlimited)` : `${used} / ${max}`}
+                    </span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 4, background: "var(--border)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, borderRadius: 4, background: pct >= 90 ? "var(--red, #ef4444)" : "var(--accent)" }} />
+                  </div>
+                </div>
+              );
+            })}
+            {plan === "free" && (
+              <button className="ix-btn-primary" style={{ width: "fit-content", fontSize: 12, padding: "6px 14px", marginTop: 2 }}
+                onClick={() => onUpgrade("pro")}>
+                <ArrowUpRight size={12} /> Upgrade for unlimited
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Personalization ───────────────────────────────────── */}
+      <div style={section}>
+        <div style={sectionTitle}><Sparkles size={15} color="var(--accent)" /> Personalization</div>
+        <hr style={divider} />
+        {memory === null ? (
+          <p style={{ fontSize: 13, color: "var(--text-tertiary)", margin: 0 }}>Loading…</p>
+        ) : memory.summary ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 4px" }}>What Intellixy knows about you</p>
+              <p style={{ fontSize: 13, color: "var(--text)", margin: 0 }}>{memory.summary}</p>
+            </div>
+            {memory.topics && memory.topics.length > 0 && (
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 6px" }}>Topics you explore</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {memory.topics.map((t, i) => (
+                    <span key={i} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: "rgba(245,185,66,0.1)", color: "var(--accent)", border: "1px solid rgba(245,185,66,0.2)" }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <button
+              style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid var(--border)", background: "none",
+                color: "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", width: "fit-content" }}
+              onClick={async () => {
+                setMemReset(true);
+                await fetch("/api/memory", { method: "DELETE", credentials: "include" }).catch(() => {});
+                setMemory({ preferences: "", topics: [], summary: "" });
+                setMemReset(false);
+              }}
+              disabled={memReset}
+            >
+              {memReset ? "Resetting…" : "Reset memory"}
+            </button>
+          </div>
+        ) : (
+          <p style={{ fontSize: 13, color: "var(--text-tertiary)", margin: 0 }}>
+            No personalization data yet. Chat with a document to let Intellixy learn your preferences.
+          </p>
+        )}
       </div>
 
       {/* ── Danger zone ───────────────────────────────────────── */}

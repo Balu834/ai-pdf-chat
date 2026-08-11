@@ -291,6 +291,23 @@ function ViewerContent() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const shareMessage = async (id: number, text: string) => {
+    if (currentDoc) {
+      try {
+        const res = await fetch("/api/share", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ documentId: currentDoc.id }),
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (data.url) {
+          await navigator.clipboard.writeText(data.url);
+          setSharedId(id);
+          setTimeout(() => setSharedId(null), 2000);
+          return;
+        }
+      } catch {}
+    }
     const shareText = `${text}\n\n— via Intellixy AI (${window.location.host})`;
     if (navigator.share) {
       try { await navigator.share({ text: shareText }); } catch {}
@@ -779,6 +796,17 @@ function ViewerContent() {
             });
           }
         }
+      }
+      if (full && currentDoc) {
+        fetch("/api/memory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [{ role: "user", text: q }, { role: "ai", text: full }],
+            documentTitle: currentDoc.file_name,
+          }),
+          credentials: "include",
+        }).catch(() => {});
       }
     } catch (err: unknown) {
       const msg = (err as Error)?.message ?? "Unknown error";
