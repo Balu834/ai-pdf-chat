@@ -55,7 +55,7 @@ export default function Terms() {
           <li style={S.li}>You must provide accurate and complete information when creating an account.</li>
           <li style={S.li}>You are responsible for maintaining the confidentiality of your password.</li>
           <li style={S.li}>You are responsible for all activity that occurs under your account.</li>
-          <li style={S.li}>Notify us immediately at <a href="mailto:support@intellixy.app" style={S.a}>support@intellixy.app</a> if you suspect unauthorized access.</li>
+          <li style={S.li}>Notify us immediately at <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a> if you suspect unauthorized access.</li>
         </ul>
 
         <h2 style={S.h2}>4. Free and Pro Plans</h2>
@@ -113,7 +113,7 @@ export default function Terms() {
         <h2 style={S.h2}>13. Contact</h2>
         <p style={S.p}>
           Questions about these Terms? Contact us:<br />
-          📧 <a href="mailto:support@intellixy.app" style={S.a}>support@intellixy.app</a>
+          📧 <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a>
         </p>
       </div>
     </div>

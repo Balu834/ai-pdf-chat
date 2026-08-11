@@ -38,7 +38,7 @@ export default function RefundPolicy() {
         <div style={S.box}>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", margin: 0, lineHeight: 1.7 }}>
             <strong style={{ color: "white" }}>Summary:</strong> We offer a 7-day refund for first-time Pro subscribers if you are not satisfied. Cancellations stop future billing immediately. Contact us within 7 days at{" "}
-            <a href="mailto:support@intellixy.app" style={S.a}>support@intellixy.app</a>.
+            <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a>.
           </p>
         </div>
 
@@ -54,7 +54,7 @@ export default function RefundPolicy() {
           <li style={S.li}>You may cancel your Pro subscription at any time.</li>
           <li style={S.li}>After cancellation, you will retain Pro access until the end of the current billing period.</li>
           <li style={S.li}>No charges will be made after cancellation.</li>
-          <li style={S.li}>To cancel, email us at <a href="mailto:support@intellixy.app" style={S.a}>support@intellixy.app</a> with your registered email.</li>
+          <li style={S.li}>To cancel, email us at <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a> with your registered email.</li>
         </ul>
 
         <h2 style={S.h2}>3. Refund Policy</h2>
@@ -76,7 +76,7 @@ export default function RefundPolicy() {
         <h2 style={S.h2}>4. How to Request a Refund</h2>
         <p style={S.p}>To request a refund:</p>
         <ul style={S.ul}>
-          <li style={S.li}>Email <a href="mailto:support@intellixy.app" style={S.a}>support@intellixy.app</a> within 7 days of payment.</li>
+          <li style={S.li}>Email <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a> within 7 days of payment.</li>
           <li style={S.li}>Include your registered email address and Razorpay payment ID.</li>
           <li style={S.li}>Describe the reason for your refund request.</li>
         </ul>
@@ -97,7 +97,7 @@ export default function RefundPolicy() {
         <h2 style={S.h2}>7. Contact Us</h2>
         <p style={S.p}>
           For refund or cancellation requests:<br />
-          📧 <a href="mailto:support@intellixy.app" style={S.a}>support@intellixy.app</a><br />
+          📧 <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a><br />
           We respond within 24 hours on business days.
         </p>
       </div>
