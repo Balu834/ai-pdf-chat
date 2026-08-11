@@ -103,7 +103,7 @@ const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transi
    TAB CONTENT — rendered for every tab except "overview"
    ════════════════════════════════════════════════════════════════════════════ */
 function TabContent({
-  tab, user, docs, displayDocs, plan, planTier, usage, uploading, deleting,
+  tab, user, docs, displayDocs, plan, planTier, subscriptionCancelled, usage, uploading, deleting,
   menuOpenId, setMenuOpenId, handleOpenDoc, handleDeleteDoc, onUpload,
   inviteCopied, handleCopyInvite, onTabChange, onUpgrade,
 }: {
@@ -113,6 +113,7 @@ function TabContent({
   displayDocs: { id: string; file_name: string; file_url: string; created_at: string; pages: number; questions: number; isNew: boolean; timeLabel?: string }[];
   plan: "free" | "pro";
   planTier: "free" | "pro" | "team";
+  subscriptionCancelled: boolean;
   usage: { pdfs: number; questions: number; maxPdfs: number; maxQuestions: number; loading: boolean };
   uploading: boolean;
   deleting: string | null;
@@ -346,7 +347,7 @@ function TabContent({
 
   /* ── Settings tab ───────────────────────────────────────────── */
   if (tab === "settings") {
-    return <SettingsPanel user={user} plan={plan} onUpgrade={onUpgrade} usage={usage} />;
+    return <SettingsPanel user={user} plan={plan} planTier={planTier} subscriptionCancelled={subscriptionCancelled} onUpgrade={onUpgrade} usage={usage} />;
   }
 
   return null;
@@ -595,9 +596,11 @@ function PlannerTab() {
 /* ════════════════════════════════════════════════════════════════════════════
    SETTINGS PANEL
    ════════════════════════════════════════════════════════════════════════════ */
-function SettingsPanel({ user, plan, onUpgrade, usage }: {
+function SettingsPanel({ user, plan, planTier, subscriptionCancelled, onUpgrade, usage }: {
   user: User | null;
   plan: "free" | "pro";
+  planTier: "free" | "pro" | "team";
+  subscriptionCancelled: boolean;
   onUpgrade: (tier?: "pro" | "team") => void;
   usage: { pdfs: number; questions: number; maxPdfs: number; maxQuestions: number; loading: boolean };
 }) {
@@ -610,8 +613,19 @@ function SettingsPanel({ user, plan, onUpgrade, usage }: {
   const [pwdSending,  setPwdSending]  = useState(false);
 
   interface MemoryData { preferences: string; topics: string[]; summary: string; }
-  const [memory,    setMemory]    = useState<MemoryData | null>(null);
-  const [memReset,  setMemReset]  = useState(false);
+  const [memory,      setMemory]      = useState<MemoryData | null>(null);
+  const [memReset,    setMemReset]    = useState(false);
+  const [cancelLoad,  setCancelLoad]  = useState(false);
+  const [cancelMsg,   setCancelMsg]   = useState<{ ok: boolean; text: string } | null>(null);
+
+  const handleCancelSub = async () => {
+    if (!confirm("Cancel your subscription? You keep access until the current period ends.")) return;
+    setCancelLoad(true); setCancelMsg(null);
+    const res = await fetch("/api/razorpay/cancel-subscription", { method: "POST", credentials: "include" }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
+    setCancelLoad(false);
+    setCancelMsg(res?.ok ? { ok: true, text: data.message || "Subscription cancelled." } : { ok: false, text: data.error || "Failed to cancel." });
+  };
 
   useEffect(() => {
     fetch("/api/memory", { credentials: "include" })
@@ -719,18 +733,36 @@ function SettingsPanel({ user, plan, onUpgrade, usage }: {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div>
             <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>
-              {plan === "pro" ? "Pro plan" : "Free plan"}
+              {planTier === "team" ? "Team plan" : planTier === "pro" ? "Pro plan" : "Free plan"}
+              {subscriptionCancelled && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--text-tertiary)", fontWeight: 400 }}>(cancels at period end)</span>}
             </p>
             <p style={{ fontSize: 12, color: "var(--text-tertiary)", margin: "3px 0 0" }}>
-              {plan === "pro" ? "Unlimited documents and questions." : "3 PDFs · 5 questions per month."}
+              {planTier === "team" ? "Team workspace — unlimited everything." : planTier === "pro" ? "Unlimited documents and questions." : "3 PDFs · 5 questions per month."}
             </p>
           </div>
-          {plan === "free" && (
-            <button className="ix-btn-primary" style={{ fontSize: 13, padding: "8px 16px", cursor: "pointer" }} onClick={() => onUpgrade("pro")}>
-              <ArrowUpRight size={13} /> Upgrade to Pro
-            </button>
-          )}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {plan === "free" ? (
+              <>
+                <button className="ix-btn-primary" style={{ fontSize: 13, padding: "8px 16px", cursor: "pointer" }} onClick={() => onUpgrade("pro")}>
+                  <ArrowUpRight size={13} /> Upgrade to Pro
+                </button>
+                <button className="ix-btn-secondary" style={{ fontSize: 13, padding: "8px 16px", cursor: "pointer" }} onClick={() => onUpgrade("team")}>
+                  <ArrowUpRight size={13} /> Go Team
+                </button>
+              </>
+            ) : !subscriptionCancelled ? (
+              <button
+                style={{ padding: "8px 16px", borderRadius: 9, border: "1px solid rgba(239,68,68,0.3)", background: "none",
+                  color: "var(--red)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                onClick={handleCancelSub} disabled={cancelLoad}>
+                {cancelLoad ? "Cancelling…" : "Cancel subscription"}
+              </button>
+            ) : null}
+          </div>
         </div>
+        {cancelMsg && (
+          <p style={{ fontSize: 12, margin: "4px 0 0", color: cancelMsg.ok ? "var(--accent)" : "var(--red)" }}>{cancelMsg.text}</p>
+        )}
       </div>
 
       {/* ── Usage ─────────────────────────────────────────────── */}
@@ -881,6 +913,8 @@ export default function DashboardPage() {
   const [deleting,     setDeleting]     = useState<string | null>(null);
   const [dueCards,     setDueCards]     = useState<number>(0);
   const [lastSync,     setLastSync]     = useState<Date | null>(null);
+  const [alerts,       setAlerts]       = useState<{ id: string; message: string; type: string; read: boolean; created_at: string }[]>([]);
+  const [bellOpen,     setBellOpen]     = useState(false);
 
   const proCardRef   = useRef<HTMLDivElement>(null);
   const cmdInputRef  = useRef<HTMLInputElement>(null);
@@ -942,6 +976,8 @@ export default function DashboardPage() {
       fetchUsage().then(() => setLastSync(new Date()));
       fetch("/api/flashcards?dueCount=true", { credentials: "include" })
         .then(r => r.json()).then(d => { if (typeof d.count === "number") setDueCards(d.count); }).catch(() => {});
+      fetch("/api/alerts", { credentials: "include" })
+        .then(r => r.json()).then(d => { if (Array.isArray(d)) setAlerts(d); }).catch(() => {});
       try {
         const pendingRef = sessionStorage.getItem("pendingRefCode");
         if (pendingRef) {
@@ -1485,10 +1521,49 @@ export default function DashboardPage() {
               <button className="ds-bell" aria-label="Toggle theme" onClick={toggleDark} style={{ color: darkMode ? "#F5B942" : undefined }}>
                 {darkMode ? <Sun size={15} /> : <Moon size={15} />}
               </button>
-              <button className="ds-bell" aria-label="Notifications">
-                <Bell size={15} />
-                <span className="ds-bell-dot" />
-              </button>
+              <div style={{ position: "relative" }}>
+                <button className="ds-bell" aria-label="Notifications" onClick={() => {
+                  setBellOpen(o => !o);
+                  if (!bellOpen && alerts.some(a => !a.read)) {
+                    fetch("/api/alerts", { method: "PATCH", credentials: "include" }).catch(() => {});
+                    setAlerts(a => a.map(x => ({ ...x, read: true })));
+                  }
+                }}>
+                  <Bell size={15} />
+                  {alerts.some(a => !a.read) && <span className="ds-bell-dot" />}
+                </button>
+                {bellOpen && (
+                  <div onClick={e => e.stopPropagation()} style={{
+                    position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 200,
+                    width: 300, maxHeight: 360, overflowY: "auto",
+                    background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                    borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                  }}>
+                    <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
+                      Notifications
+                    </div>
+                    {alerts.length === 0 ? (
+                      <div style={{ padding: "24px 16px", textAlign: "center", color: "var(--text-tertiary)", fontSize: 13 }}>
+                        No notifications yet
+                      </div>
+                    ) : alerts.map(a => (
+                      <div key={a.id} style={{
+                        padding: "10px 16px", borderBottom: "1px solid var(--border)",
+                        background: a.read ? "transparent" : "rgba(245,185,66,0.04)",
+                        display: "flex", gap: 10, alignItems: "flex-start",
+                      }}>
+                        {!a.read && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0, marginTop: 5 }} />}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: 13, color: "var(--text)", lineHeight: 1.4 }}>{a.message}</p>
+                          <p style={{ margin: "3px 0 0", fontSize: 11, color: "var(--text-tertiary)" }}>
+                            {new Date(a.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="ds-topbar-av" title={userName}>{avatarLetter}</div>
             </div>
           </header>
@@ -1505,6 +1580,7 @@ export default function DashboardPage() {
                 displayDocs={displayDocs}
                 plan={plan}
                 planTier={planTier}
+                subscriptionCancelled={subscriptionCancelled}
                 usage={usage}
                 uploading={uploading}
                 deleting={deleting}
