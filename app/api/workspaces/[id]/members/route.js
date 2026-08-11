@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-client";
 import { createClient } from "@/lib/supabase-server-client";
-import { requireWorkspaceMember, addWorkspaceMember } from "@/lib/workspace";
+import { requireWorkspaceMember, addWorkspaceMember, logAudit } from "@/lib/workspace";
 
 /* GET → list workspace members with email */
 export async function GET(req, { params }) {
@@ -76,6 +76,7 @@ export async function PATCH(req, { params }) {
       .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logAudit(id, user.id, "role_change", data?.user_id, { role });
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 403 });
@@ -118,6 +119,7 @@ export async function DELETE(req, { params }) {
       .eq("workspace_id", id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logAudit(id, user.id, "member_remove", target.user_id);
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 403 });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-client";
 import { createClient } from "@/lib/supabase-server-client";
-import { requireWorkspaceMember, addWorkspaceMember } from "@/lib/workspace";
+import { requireWorkspaceMember, addWorkspaceMember, logAudit } from "@/lib/workspace";
 import { sendWorkspaceInviteEmail } from "@/lib/email";
 
 /* GET → list pending invites for workspace (admin/owner) */
@@ -65,6 +65,7 @@ export async function POST(req, { params }) {
       sendWorkspaceInviteEmail(email, workspace?.name || "a workspace", inviteUrl).catch(() => {});
     }
 
+    logAudit(id, user.id, "invite_sent", null, { email: email || null, role });
     return NextResponse.json({ ...invite, url: inviteUrl }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 403 });
@@ -92,6 +93,7 @@ export async function DELETE(req, { params }) {
       .eq("workspace_id", id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logAudit(id, user.id, "invite_revoked", null, { inviteId });
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 403 });

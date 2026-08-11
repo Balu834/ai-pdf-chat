@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
-import { requireWorkspaceMember } from "@/lib/workspace";
+import { requireWorkspaceMember, logAudit } from "@/lib/workspace";
 
 /* PATCH { name }  → rename workspace (owner only) */
 export async function PATCH(req, { params }) {
@@ -23,6 +23,7 @@ export async function PATCH(req, { params }) {
       .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logAudit(id, user.id, "workspace_rename", null, { name: name.trim() });
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 403 });

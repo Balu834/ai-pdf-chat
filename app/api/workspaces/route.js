@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
-import { requireWorkspaceMember } from "@/lib/workspace";
+import { requireWorkspaceMember, logAudit } from "@/lib/workspace";
 
 /* GET → list all workspaces the authenticated user belongs to */
 export async function GET() {
@@ -67,6 +67,7 @@ export async function POST(req) {
       role: "owner",
     });
 
+    logAudit(workspace.id, user.id, "workspace_created");
     return NextResponse.json({ ...workspace, role: "owner" }, { status: 201 });
   } catch (err) {
     console.error("[workspaces POST]", err.message);

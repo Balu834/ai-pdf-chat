@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  Users, UserPlus, Copy, CheckCircle2, Trash2, X,
-  Link2, Crown, Shield, AlertCircle, Plus,
+  Users, UserPlus, CheckCircle2, Trash2, X,
+  Link2, Crown, Shield, AlertCircle, Plus, Clock, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 interface Workspace {
@@ -35,6 +35,16 @@ interface Invite {
   url?: string;
 }
 
+interface AuditEntry {
+  id: string;
+  action: string;
+  actor_id: string | null;
+  actor_email: string | null;
+  target_id: string | null;
+  meta: Record<string, unknown>;
+  created_at: string;
+}
+
 interface WorkspaceTabProps {
   userId: string;
 }
@@ -61,6 +71,21 @@ function timeAgo(iso: string) {
   return `${Math.floor(d / 30)}mo ago`;
 }
 
+function auditLabel(entry: AuditEntry): string {
+  const actor = entry.actor_email ? entry.actor_email.split("@")[0] : "Someone";
+  switch (entry.action) {
+    case "workspace_created": return `${actor} created the workspace`;
+    case "workspace_rename":  return `${actor} renamed the workspace to "${entry.meta.name}"`;
+    case "invite_sent":       return entry.meta.email ? `${actor} invited ${entry.meta.email}` : `${actor} created an invite link`;
+    case "invite_revoked":    return `${actor} revoked an invite`;
+    case "invite_accepted":   return `${actor} joined the workspace`;
+    case "member_join":       return `${actor} joined the workspace`;
+    case "role_change":       return `${actor} changed a member's role to ${entry.meta.role}`;
+    case "member_remove":     return `${actor} removed a member`;
+    default:                  return `${actor} performed: ${entry.action}`;
+  }
+}
+
 function daysUntil(iso: string) {
   const diff = new Date(iso).getTime() - Date.now();
   const d = Math.ceil(diff / 86400000);
@@ -85,6 +110,9 @@ export default function WorkspaceTab({ userId }: WorkspaceTabProps) {
   const [copied,      setCopied]      = useState(false);
   const [removing,    setRemoving]    = useState<string | null>(null);
   const [revoking,    setRevoking]    = useState<string | null>(null);
+  const [auditLog,    setAuditLog]    = useState<AuditEntry[]>([]);
+  const [auditLoad,   setAuditLoad]   = useState(false);
+  const [showAudit,   setShowAudit]   = useState(false);
 
   const ws        = workspaces?.[0] ?? null;
   const myRole    = ws?.role ?? "member";
@@ -213,6 +241,20 @@ export default function WorkspaceTab({ userId }: WorkspaceTabProps) {
     finally { setRevoking(null); }
   }
 
+  async function handleToggleAudit() {
+    if (!ws) return;
+    setShowAudit(prev => !prev);
+    if (!showAudit && auditLog.length === 0) {
+      setAuditLoad(true);
+      try {
+        const res = await fetch(`/api/workspaces/${ws.id}/audit`, { credentials: "include" });
+        const data = await res.json();
+        setAuditLog(Array.isArray(data) ? data : []);
+      } catch {}
+      finally { setAuditLoad(false); }
+    }
+  }
+
   /* ── Loading ──────────────────────────────────────────────────────────── */
   if (loading) {
     return (
@@ -242,8 +284,8 @@ export default function WorkspaceTab({ userId }: WorkspaceTabProps) {
       <div className="ix-ws-notice">
         <AlertCircle size={15} style={{ color: "var(--orange)", flexShrink: 0, marginTop: 1 }} />
         <p>
-          <strong>Early access</strong> — Workspace management is live now. Shared chats,
-          document permissions, and audit logs are coming soon as part of the Team plan.
+          <strong>Early access</strong> — Workspace management and activity audit log are live.
+          Shared document permissions are coming soon as part of the Team plan.
         </p>
       </div>
 
@@ -436,6 +478,54 @@ export default function WorkspaceTab({ userId }: WorkspaceTabProps) {
               )}
             </div>
           )}
+          {/* ── Audit log ── */}
+          <div className="ix-ws-audit">
+            <button
+              className="ix-ws-audit-toggle"
+              onClick={handleToggleAudit}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: "4px 0", color: "var(--text-secondary)", fontSize: 13 }}
+            >
+              <Clock size={13} />
+              Activity log
+              {showAudit ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            </button>
+
+            {showAudit && (
+              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 0 }}>
+                {auditLoad && (
+                  <div style={{ padding: "16px 0", color: "var(--text-tertiary)", fontSize: 12 }}>Loading…</div>
+                )}
+                {!auditLoad && auditLog.length === 0 && (
+                  <div style={{ padding: "16px 0", color: "var(--text-tertiary)", fontSize: 12 }}>No activity yet.</div>
+                )}
+                {!auditLoad && auditLog.map((entry, i) => (
+                  <div
+                    key={entry.id}
+                    style={{
+                      display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0",
+                      borderTop: i === 0 ? "none" : "1px solid var(--border)",
+                    }}
+                  >
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                      background: "var(--bg-secondary)", display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", marginTop: 1,
+                    }}>
+                      {(entry.actor_email?.[0] ?? "?").toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, color: "var(--text)", lineHeight: 1.4 }}>
+                        {auditLabel(entry)}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>
+                        {timeAgo(entry.created_at)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </>
       )}
     </motion.div>

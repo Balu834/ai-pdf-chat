@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-client";
 import { createClient } from "@/lib/supabase-server-client";
-import { addWorkspaceMember, getWorkspaceMember } from "@/lib/workspace";
+import { addWorkspaceMember, getWorkspaceMember, logAudit } from "@/lib/workspace";
 
 /* GET → fetch invite metadata (public — no auth needed) */
 export async function GET(req, { params }) {
@@ -93,6 +93,7 @@ export async function POST(req, { params }) {
       .update({ accepted_at: new Date().toISOString() })
       .eq("id", invite.id);
 
+    logAudit(invite.workspace_id, user.id, "invite_accepted", user.id, { role: invite.role });
     return NextResponse.json({ workspaceId: invite.workspace_id, role: invite.role });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
