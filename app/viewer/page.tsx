@@ -208,8 +208,8 @@ function ViewerContent() {
   const [allDocs,   setAllDocs]   = useState<DocItem[]>([]);
   const [showFiles, setShowFiles] = useState(true);
 
-  /* Right panel: insights / compare / quiz / cards / tutor */
-  const [rightTab,      setRightTab]      = useState<"insights" | "compare" | "quiz" | "cards" | "tutor" | null>(null);
+  /* Right panel: insights / compare / quiz / cards / tutor / risks / financials */
+  const [rightTab,      setRightTab]      = useState<"insights" | "compare" | "quiz" | "cards" | "tutor" | "risks" | "financials" | null>(null);
   const [insights,      setInsights]      = useState<Insights | null>(null);
   const [insightsLoad,  setInsightsLoad]  = useState(false);
   const [insightsErr,   setInsightsErr]   = useState<string | null>(null);
@@ -247,6 +247,19 @@ function ViewerContent() {
   const [fcIdx,         setFcIdx]         = useState(0);               // current card index
   const [fcFlipped,     setFcFlipped]     = useState(false);           // is card flipped?
   const [fcDone,        setFcDone]        = useState(false);           // session complete
+
+  /* Risk flags state */
+  const [risks,        setRisks]        = useState<object[] | null>(null);
+  const [risksLoad,    setRisksLoad]    = useState(false);
+  const [risksErr,     setRisksErr]     = useState<string | null>(null);
+
+  /* Financials state */
+  const [financials,     setFinancials]     = useState<Record<string, unknown> | null>(null);
+  const [financialsLoad, setFinancialsLoad] = useState(false);
+  const [financialsErr,  setFinancialsErr]  = useState<string | null>(null);
+
+  /* Export Q&A state */
+  const [exportLoad, setExportLoad] = useState(false);
 
   /* Mic / voice input */
   const [listening, setListening] = useState(false);
@@ -333,6 +346,10 @@ function ViewerContent() {
     setTargetPage(undefined);
     setSummaryOpen(false);
     setSummaryText("");
+    setRisks(null);
+    setRisksErr(null);
+    setFinancials(null);
+    setFinancialsErr(null);
   }, [rawUrl]);
 
   /* Load insights */
@@ -354,6 +371,50 @@ function ViewerContent() {
       setInsightsErr((e as Error).message ?? "Could not load insights.");
     } finally {
       setInsightsLoad(false);
+    }
+  }, [currentDoc, rawUrl]);
+
+  /* Load clause & risk flags */
+  const loadRisks = useCallback(async () => {
+    if (!currentDoc) { setRisksErr("Document not found in your library."); return; }
+    setRisksLoad(true);
+    setRisksErr(null);
+    try {
+      const res = await fetch("/api/clause-risks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: currentDoc.id, fileUrl: rawUrl }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok || (data as { error?: string })?.error) throw new Error((data as { error?: string })?.error ?? "Analysis failed");
+      setRisks(data as object[]);
+    } catch (e: unknown) {
+      setRisksErr((e as Error).message ?? "Could not analyse document.");
+    } finally {
+      setRisksLoad(false);
+    }
+  }, [currentDoc, rawUrl]);
+
+  /* Load financial data */
+  const loadFinancials = useCallback(async () => {
+    if (!currentDoc) { setFinancialsErr("Document not found in your library."); return; }
+    setFinancialsLoad(true);
+    setFinancialsErr(null);
+    try {
+      const res = await fetch("/api/financials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: currentDoc.id, fileUrl: rawUrl }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok || (data as { error?: string })?.error) throw new Error((data as { error?: string })?.error ?? "Extraction failed");
+      setFinancials(data as Record<string, unknown>);
+    } catch (e: unknown) {
+      setFinancialsErr((e as Error).message ?? "Could not extract financials.");
+    } finally {
+      setFinancialsLoad(false);
     }
   }, [currentDoc, rawUrl]);
 
@@ -690,13 +751,40 @@ function ViewerContent() {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   }, [send]);
 
-  /* Open right tab and auto-load insights */
-  const openRightTab = useCallback((tab: "insights" | "compare" | "quiz" | "cards" | "tutor") => {
+  /* Open right tab and auto-load data */
+  const openRightTab = useCallback((tab: "insights" | "compare" | "quiz" | "cards" | "tutor" | "risks" | "financials") => {
     setRightTab(prev => prev === tab ? null : tab);
-    if (tab === "insights" && !insights && !insightsLoad) {
-      loadInsights();
+    if (tab === "insights" && !insights && !insightsLoad) loadInsights();
+    if (tab === "risks" && !risks && !risksLoad) loadRisks();
+    if (tab === "financials" && !financials && !financialsLoad) loadFinancials();
+  }, [insights, insightsLoad, loadInsights, risks, risksLoad, loadRisks, financials, financialsLoad, loadFinancials]);
+
+  /* Export chat Q&A as Word document */
+  const handleExport = useCallback(async () => {
+    if (exportLoad) return;
+    setExportLoad(true);
+    try {
+      const exportMessages = messages.filter(m => m.done).map(m => ({ role: m.role, text: m.text }));
+      const res = await fetch("/api/export-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: fileName.replace(/\.pdf$/i, ""), messages: exportMessages }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileName.replace(/\.pdf$/i, "")}-qa.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: unknown) {
+      alert((e as Error).message ?? "Export failed");
+    } finally {
+      setExportLoad(false);
     }
-  }, [insights, insightsLoad, loadInsights]);
+  }, [exportLoad, messages, fileName]);
 
   /* ── No URL ─────────────────────────────────────────────────────────────── */
   if (!rawUrl) {
@@ -846,6 +934,51 @@ function ViewerContent() {
               <line x1="8" y1="22" x2="16" y2="22"/>
             </svg>
             Tutor
+          </button>
+
+          {/* Risk Flags button */}
+          <button
+            className={`vw-topbar-btn${rightTab === "risks" ? " vw-topbar-btn-active" : ""}`}
+            onClick={() => openRightTab("risks")}
+            title="Clause & Risk Analysis"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Risks
+          </button>
+
+          {/* Financials button */}
+          <button
+            className={`vw-topbar-btn${rightTab === "financials" ? " vw-topbar-btn-active" : ""}`}
+            onClick={() => openRightTab("financials")}
+            title="Financial Data Extraction"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Financials
+          </button>
+
+          {/* Export Q&A button */}
+          <button
+            className="vw-topbar-btn"
+            onClick={handleExport}
+            disabled={exportLoad || messages.length === 0}
+            title="Export Q&A as Word document"
+          >
+            {exportLoad ? (
+              <div className="vw-url-spinner" style={{ width: 12, height: 12 }} />
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+            )}
+            Export
           </button>
 
           <a className="vw-topbar-btn" href={rawUrl} target="_blank" rel="noreferrer" download>
@@ -1399,6 +1532,24 @@ function ViewerContent() {
                 </svg>
                 Tutor
               </button>
+              <button
+                className={`vw-right-tab${rightTab === "risks" ? " active" : ""}`}
+                onClick={() => { setRightTab("risks"); if (!risks && !risksLoad) loadRisks(); }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                </svg>
+                Risks
+              </button>
+              <button
+                className={`vw-right-tab${rightTab === "financials" ? " active" : ""}`}
+                onClick={() => { setRightTab("financials"); if (!financials && !financialsLoad) loadFinancials(); }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                Financials
+              </button>
               <button className="vw-right-close" onClick={() => setRightTab(null)} title="Close">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -1948,6 +2099,130 @@ function ViewerContent() {
                         </button>
                       )}
                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Risks tab ──────────────────────────────────── */}
+            {rightTab === "risks" && (
+              <div className="vw-right-body">
+                {risksLoad && (
+                  <div className="vw-right-loading">
+                    <div className="vw-url-spinner" />
+                    <span>Analysing clauses &amp; risks…</span>
+                  </div>
+                )}
+                {risksErr && !risksLoad && (
+                  <div className="vw-right-err">
+                    {risksErr}
+                    <button className="vw-right-retry" onClick={loadRisks}>Retry</button>
+                  </div>
+                )}
+                {!risks && !risksLoad && !risksErr && (
+                  <div className="vw-right-loading">
+                    <div className="vw-url-spinner" />
+                    <span>Analysing clauses &amp; risks…</span>
+                  </div>
+                )}
+                {risks && risks.length === 0 && (
+                  <div className="vw-right-loading" style={{ flexDirection: "column", gap: 8 }}>
+                    <span style={{ fontSize: 13, color: "var(--text-2)" }}>No significant risks found.</span>
+                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>This may not be a legal or contractual document.</span>
+                  </div>
+                )}
+                {risks && risks.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px 14px" }}>
+                    {(risks as Array<{ title: string; severity: string; type: string; description: string; suggestion: string }>).map((flag, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          borderRadius: 8,
+                          border: `1px solid ${flag.severity === "high" ? "rgba(239,68,68,0.3)" : flag.severity === "medium" ? "rgba(245,158,11,0.3)" : "rgba(107,114,128,0.25)"}`,
+                          background: flag.severity === "high" ? "rgba(239,68,68,0.06)" : flag.severity === "medium" ? "rgba(245,158,11,0.06)" : "rgba(107,114,128,0.04)",
+                          padding: "10px 12px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+                          <span style={{
+                            fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
+                            textTransform: "uppercase", letterSpacing: "0.5px",
+                            background: flag.severity === "high" ? "rgba(239,68,68,0.15)" : flag.severity === "medium" ? "rgba(245,158,11,0.15)" : "rgba(107,114,128,0.12)",
+                            color: flag.severity === "high" ? "#ef4444" : flag.severity === "medium" ? "#f59e0b" : "var(--text-3)",
+                          }}>
+                            {flag.severity}
+                          </span>
+                          <span style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{flag.type}</span>
+                        </div>
+                        <div style={{ fontWeight: 600, fontSize: 12, color: "var(--text-1)", marginBottom: 4 }}>{flag.title}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5, marginBottom: 6 }}>{flag.description}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.4 }}>
+                          <span style={{ fontWeight: 600, color: "var(--accent)" }}>Suggestion: </span>{flag.suggestion}
+                        </div>
+                      </div>
+                    ))}
+                    <p style={{ fontSize: 10, color: "var(--text-3)", textAlign: "center", margin: "4px 0 8px" }}>
+                      ⚠️ Not legal advice. Consult a qualified lawyer.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Financials tab ─────────────────────────────── */}
+            {rightTab === "financials" && (
+              <div className="vw-right-body">
+                {financialsLoad && (
+                  <div className="vw-right-loading">
+                    <div className="vw-url-spinner" />
+                    <span>Extracting financial data…</span>
+                  </div>
+                )}
+                {financialsErr && !financialsLoad && (
+                  <div className="vw-right-err">
+                    {financialsErr}
+                    <button className="vw-right-retry" onClick={loadFinancials}>Retry</button>
+                  </div>
+                )}
+                {!financials && !financialsLoad && !financialsErr && (
+                  <div className="vw-right-loading">
+                    <div className="vw-url-spinner" />
+                    <span>Extracting financial data…</span>
+                  </div>
+                )}
+                {financials && (
+                  <div style={{ padding: "12px 14px" }}>
+                    {Object.entries(financials).map(([key, val]) => {
+                      if (key === "document_type" || val === null || val === undefined) return null;
+                      const label = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+                      if (Array.isArray(val)) {
+                        if (val.length === 0) return null;
+                        return (
+                          <div key={key} className="vw-right-section">
+                            <div className="vw-right-section-label">{label}</div>
+                            {(val as Array<Record<string, unknown>>).map((item, i) => (
+                              <div key={i} style={{ fontSize: 12, color: "var(--text-2)", padding: "4px 0", borderBottom: "1px solid var(--border)", lineHeight: 1.5 }}>
+                                {typeof item === "object" && item !== null
+                                  ? Object.entries(item).filter(([, v]) => v !== null).map(([k, v]) => (
+                                      <span key={k} style={{ marginRight: 10 }}>
+                                        <span style={{ color: "var(--text-3)" }}>{k.replace(/_/g, " ")}: </span>
+                                        <strong>{String(v)}</strong>
+                                      </span>
+                                    ))
+                                  : String(item)
+                                }
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={key} className="vw-right-section" style={{ paddingBottom: 8 }}>
+                          <div className="vw-right-section-label">{label}</div>
+                          <p style={{ fontSize: 12, color: "var(--text-2)", margin: 0, lineHeight: 1.5 }}>{String(val)}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
