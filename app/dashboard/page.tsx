@@ -1661,7 +1661,7 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                       <button className="ix-pro-cta ix-pro-cta-row" onClick={() => handleUpgrade("pro")} style={{ border: "none", cursor: "pointer" }}>Go Pro — ₹299/month <ArrowUpRight size={13} /></button>
-                      <button className="ix-pro-cta ix-pro-cta-row" onClick={() => handleUpgrade("team")} style={{ border: "1px solid var(--border)", cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "var(--text-1)" }}>Go Team — ₹999/month <ArrowUpRight size={13} /></button>
+                      <button className="ix-pro-cta ix-pro-cta-row" onClick={() => handleUpgrade("team")} style={{ border: "1.5px solid rgba(255,255,255,0.35)", cursor: "pointer", background: "rgba(255,255,255,0.08)", color: "#ffffff" }}>Go Team — ₹999/month <ArrowUpRight size={13} /></button>
                     </div>
                   </div>
                 </motion.div>
