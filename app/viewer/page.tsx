@@ -44,6 +44,20 @@ interface CompareResult {
   doc1: { id: string; name: string };
   doc2: { id: string; name: string };
 }
+interface RedlineChange {
+  section: string;
+  type: "added" | "removed" | "modified";
+  significance: "high" | "medium" | "low";
+  doc1_text: string | null;
+  doc2_text: string | null;
+  notes: string;
+}
+interface RedlineResult {
+  doc1: string;
+  doc2: string;
+  summary: string;
+  changes: RedlineChange[];
+}
 interface QuizQuestion {
   question: string;
   options: string[];
@@ -208,8 +222,8 @@ function ViewerContent() {
   const [allDocs,   setAllDocs]   = useState<DocItem[]>([]);
   const [showFiles, setShowFiles] = useState(true);
 
-  /* Right panel: insights / compare / quiz / cards / tutor / risks / financials */
-  const [rightTab,      setRightTab]      = useState<"insights" | "compare" | "quiz" | "cards" | "tutor" | "risks" | "financials" | null>(null);
+  /* Right panel: insights / compare / redline / quiz / cards / tutor / risks / financials */
+  const [rightTab,      setRightTab]      = useState<"insights" | "compare" | "redline" | "quiz" | "cards" | "tutor" | "risks" | "financials" | null>(null);
   const [insights,      setInsights]      = useState<Insights | null>(null);
   const [insightsLoad,  setInsightsLoad]  = useState(false);
   const [insightsErr,   setInsightsErr]   = useState<string | null>(null);
@@ -218,6 +232,10 @@ function ViewerContent() {
   const [compareResult, setCompareResult] = useState<CompareResult | null>(null);
   const [compareLoad,   setCompareLoad]   = useState(false);
   const [compareErr,    setCompareErr]    = useState<string | null>(null);
+  const [redlineDocId,  setRedlineDocId]  = useState<string>("");
+  const [redlineResult, setRedlineResult] = useState<RedlineResult | null>(null);
+  const [redlineLoad,   setRedlineLoad]   = useState(false);
+  const [redlineErr,    setRedlineErr]    = useState<string | null>(null);
 
   /* Quiz state */
   const [quizQuestions,  setQuizQuestions]  = useState<QuizQuestion[]>([]);
@@ -350,6 +368,9 @@ function ViewerContent() {
     setRisksErr(null);
     setFinancials(null);
     setFinancialsErr(null);
+    setRedlineResult(null);
+    setRedlineErr(null);
+    setRedlineDocId("");
   }, [rawUrl]);
 
   /* Load insights */
@@ -440,6 +461,29 @@ function ViewerContent() {
       setCompareLoad(false);
     }
   }, [currentDoc, compareDocId, compareQ]);
+
+  /* Run redline */
+  const runRedline = useCallback(async () => {
+    if (!currentDoc || !redlineDocId) return;
+    setRedlineLoad(true);
+    setRedlineErr(null);
+    setRedlineResult(null);
+    try {
+      const res = await fetch("/api/redline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doc1Id: currentDoc.id, doc2Id: redlineDocId }),
+        credentials: "include",
+      });
+      const data = await res.json() as RedlineResult & { error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "Failed");
+      setRedlineResult(data);
+    } catch (e: unknown) {
+      setRedlineErr((e as Error).message ?? "Redline failed.");
+    } finally {
+      setRedlineLoad(false);
+    }
+  }, [currentDoc, redlineDocId]);
 
   /* Tutor: send message and get AI response with auto-TTS */
   const sendToTutor = useCallback(async (overrideMsg?: string) => {
@@ -892,6 +936,18 @@ function ViewerContent() {
               <rect x="14" y="3" width="7" height="18" rx="1"/>
             </svg>
             Compare
+          </button>
+
+          {/* Redline button */}
+          <button
+            className={`vw-topbar-btn${rightTab === "redline" ? " vw-topbar-btn-active" : ""}`}
+            onClick={() => setRightTab(prev => prev === "redline" ? null : "redline")}
+            title="Contract redline — clause-by-clause diff"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            Redline
           </button>
 
           {/* Quiz button */}
@@ -1506,6 +1562,15 @@ function ViewerContent() {
                 Compare
               </button>
               <button
+                className={`vw-right-tab${rightTab === "redline" ? " active" : ""}`}
+                onClick={() => setRightTab("redline")}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+                Redline
+              </button>
+              <button
                 className={`vw-right-tab${rightTab === "quiz" ? " active" : ""}`}
                 onClick={() => setRightTab("quiz")}
               >
@@ -2098,6 +2163,94 @@ function ViewerContent() {
                           Generate New Quiz
                         </button>
                       )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Redline tab ────────────────────────────────── */}
+            {rightTab === "redline" && (
+              <div className="vw-right-body">
+                <div className="vw-right-section">
+                  <div className="vw-right-section-label">Base document (v1)</div>
+                  <div className="vw-compare-current">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span>{fileName.replace(/\.pdf$/i, "")}</span>
+                  </div>
+                </div>
+                <div className="vw-right-section">
+                  <div className="vw-right-section-label">Compare against (v2)</div>
+                  {otherDocs.length === 0 ? (
+                    <p style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.5 }}>Upload another document version to redline.</p>
+                  ) : (
+                    <div className="vw-compare-list">
+                      {otherDocs.map(doc => (
+                        <button
+                          key={doc.id}
+                          className={`vw-compare-doc${redlineDocId === doc.id ? " selected" : ""}`}
+                          onClick={() => setRedlineDocId(doc.id)}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          <span>{doc.file_name.replace(/\.pdf$/i, "")}</span>
+                          {redlineDocId === doc.id && (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ marginLeft: "auto", flexShrink: 0 }}>
+                              <path d="M2 6l3 3 5-5" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {redlineDocId && (
+                  <div className="vw-right-section">
+                    <button className="vw-compare-btn" onClick={runRedline} disabled={redlineLoad}>
+                      {redlineLoad ? "Analysing…" : "Run redline"}
+                    </button>
+                  </div>
+                )}
+                {redlineErr && <div className="vw-right-err">{redlineErr}</div>}
+                {redlineResult && (
+                  <div className="vw-right-section">
+                    <div className="vw-right-section-label" style={{ marginBottom: 6 }}>
+                      {redlineResult.doc1.replace(/\.pdf$/i, "")} → {redlineResult.doc2.replace(/\.pdf$/i, "")}
+                    </div>
+                    {redlineResult.summary && (
+                      <p style={{ fontSize: 12, color: "var(--text-2)", margin: "0 0 12px", lineHeight: 1.5 }}>{redlineResult.summary}</p>
+                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {redlineResult.changes.map((c, i) => (
+                        <div key={i} style={{
+                          borderRadius: 7,
+                          border: `1px solid ${c.type === "added" ? "rgba(34,197,94,0.3)" : c.type === "removed" ? "rgba(239,68,68,0.3)" : "rgba(234,179,8,0.3)"}`,
+                          background: c.type === "added" ? "rgba(34,197,94,0.06)" : c.type === "removed" ? "rgba(239,68,68,0.06)" : "rgba(234,179,8,0.06)",
+                          padding: "9px 11px",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                            <span style={{
+                              fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase",
+                              background: c.type === "added" ? "rgba(34,197,94,0.15)" : c.type === "removed" ? "rgba(239,68,68,0.15)" : "rgba(234,179,8,0.15)",
+                              color: c.type === "added" ? "#22c55e" : c.type === "removed" ? "#ef4444" : "#eab308",
+                            }}>{c.type}</span>
+                            {c.significance === "high" && (
+                              <span style={{ fontSize: 10, color: "#ef4444", fontWeight: 600 }}>● HIGH</span>
+                            )}
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-1)", flex: 1 }}>{c.section}</span>
+                          </div>
+                          {c.notes && <p style={{ fontSize: 11.5, color: "var(--text-2)", margin: 0, lineHeight: 1.5 }}>{c.notes}</p>}
+                          {c.doc1_text && c.type === "modified" && (
+                            <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 5, padding: "4px 6px", background: "rgba(239,68,68,0.06)", borderRadius: 4, textDecoration: "line-through" }}>
+                              {c.doc1_text.slice(0, 120)}{c.doc1_text.length > 120 ? "…" : ""}
+                            </div>
+                          )}
+                          {c.doc2_text && c.type === "modified" && (
+                            <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 4, padding: "4px 6px", background: "rgba(34,197,94,0.06)", borderRadius: 4 }}>
+                              {c.doc2_text.slice(0, 120)}{c.doc2_text.length > 120 ? "…" : ""}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
