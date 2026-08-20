@@ -33,8 +33,14 @@ async function checkSupabase() {
   try {
     const admin = getAdminClient();
     const start = Date.now();
-    // Use the production table; fall back to any accessible table
+    // Connectivity is measured against a core table. The monitoring schema is
+    // reported separately so a missing migration stays visible without
+    // making a healthy database look unreachable.
     const { error } = await admin
+      .from("profiles")
+      .select("id")
+      .limit(1);
+    const { error: monitoringError } = await admin
       .from("production_error_logs")
       .select("id")
       .limit(1);
@@ -42,6 +48,10 @@ async function checkSupabase() {
       ok:      !error,
       latency: Date.now() - start,
       error:   error?.message ?? null,
+      monitoring_schema: {
+        ok:    !monitoringError,
+        error: monitoringError?.message ?? null,
+      },
     };
   } catch (e) {
     return { ok: false, error: e?.message ?? "threw" };
@@ -100,9 +110,9 @@ async function checkOpenAI() {
 function isAuthed(request) {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return false;
-  const auth  = request.headers.get("authorization");
-  const param = new URL(request.url).searchParams.get("key");
-  return auth === `Bearer ${cronSecret}` || param === cronSecret;
+  // Header only — a ?key= query param leaks the secret into access logs,
+  // browser history and outbound Referer headers.
+  return request.headers.get("authorization") === `Bearer ${cronSecret}`;
 }
 
 export async function GET(request) {
@@ -110,11 +120,13 @@ export async function GET(request) {
 
   // ── Public response — safe minimal status ────────────────────────────────
   if (!isAuthed(request)) {
-    // Perform a lightweight DB ping only — don't reveal service details
+    // Lightweight DB connectivity ping — don't reveal service details.
+    // Uses a core table so a missing optional schema (e.g. the monitoring
+    // tables) can't make a healthy app report itself as down.
     let dbOk = false;
     try {
       const { error } = await getAdminClient()
-        .from("production_error_logs")
+        .from("profiles")
         .select("id")
         .limit(1);
       dbOk = !error;
