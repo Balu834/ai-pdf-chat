@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {},
+
+  // pdf-parse pulls in pdf.js, which expects optional native deps (canvas) and
+  // its own worker. Bundling it breaks those lookups. The webpack() block below
+  // aliased canvas away, but Next 16 defaults to Turbopack and ignores webpack()
+  // entirely — so that fix silently stopped applying. serverExternalPackages is
+  // honoured by both bundlers: pdf-parse stays a plain runtime require.
+  serverExternalPackages: ["pdf-parse"],
+
   experimental: {
     optimizePackageImports: [
       "lucide-react",

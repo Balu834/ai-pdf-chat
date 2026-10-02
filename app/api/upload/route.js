@@ -120,6 +120,22 @@ export async function POST(req) {
     try {
       pdfData = await pdf(buffer);
     } catch (parseErr) {
+      // Log the real reason. Every parse failure used to return the same
+      // message with the cause discarded, so a corrupt file, an encrypted
+      // file and a bundler/runtime problem were indistinguishable in prod.
+      console.error("[UPLOAD] pdf-parse failed:", parseErr?.message ?? parseErr, {
+        name: file?.name,
+        size: file?.size,
+        stack: parseErr?.stack?.split("\n").slice(0, 3).join(" | "),
+      });
+      logger.error({
+        ...ctx,
+        route: "api/upload",
+        message: `pdf-parse failed: ${parseErr?.message ?? parseErr}`,
+        userId: user.id,
+        adminClient,
+      }).catch(() => {});
+
       return NextResponse.json(
         { error: "Could not read PDF. The file may be corrupted or password-protected." },
         { status: 400 }
