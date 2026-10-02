@@ -1150,7 +1150,27 @@ export default function DashboardPage() {
       .select("id, file_name, file_url, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
-    if (!error && data) setDocs(data);
+
+    // Previously this swallowed `error` entirely: on any failure docs stayed
+    // empty and the UI silently fell back to PLACEHOLDER_DOCS, so a real user
+    // with real uploads saw "sample.pdf / Q3 Financial Report" instead of their
+    // own files, with nothing logged anywhere.
+    if (error) {
+      console.error("[dashboard] fetchDocs failed:", error.message, {
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        userId,
+      });
+      return [];
+    }
+
+    if (!data?.length) {
+      console.warn("[dashboard] fetchDocs returned 0 rows for", userId,
+        "— showing placeholders. If documents exist for this user, the session uid and user_id disagree.");
+    }
+
+    setDocs(data ?? []);
     return data ?? [];
   }, []);
 
