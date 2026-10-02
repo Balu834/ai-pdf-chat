@@ -3,6 +3,7 @@ import pdf from "pdf-parse";
 import { createClient } from "@/lib/supabase-server-client";
 import { getOpenAI } from "@/lib/openai-client";
 import { checkQuestionLimit, recordQuestion, FREE_PLAN } from "@/lib/limits";
+import { chatLimiter } from "@/lib/rate-limit";
 import { logUsage } from "@/lib/credits";
 import { withErrorHandler } from "@/lib/with-error-handler";
 
@@ -241,6 +242,19 @@ export async function POST(req) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // ── Rate limit ────────────────────────────────────────────────
+    // Pro plans have no question cap (checkQuestionLimit returns Infinity), so
+    // without this the only bound on OpenAI spend per subscriber is how fast
+    // they can call us. Burst protection, not a quota — the plan limit below
+    // still does the real gating for free users.
+    const rl = chatLimiter.check(user.id);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "Too many messages. Please wait a moment before asking again." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+      );
     }
 
     // ── Question limit ────────────────────────────────────────────
