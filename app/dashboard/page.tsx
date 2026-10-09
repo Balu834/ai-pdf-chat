@@ -39,45 +39,14 @@ interface Usage {
 }
 
 /* ── Static data ────────────────────────────────────────────────────────── */
-const CHART_DATA = [
-  { day: "M", pct: 12, count: 1 },
-  { day: "T", pct: 0,  count: 0 },
-  { day: "W", pct: 32, count: 3 },
-  { day: "T", pct: 18, count: 2 },
-  { day: "F", pct: 0,  count: 0 },
-  { day: "S", pct: 42, count: 4 },
-  { day: "S", pct: 75, count: 7 },
-  { day: "M", pct: 28, count: 3 },
-  { day: "T", pct: 52, count: 5 },
-  { day: "W", pct: 8,  count: 1 },
-  { day: "T", pct: 62, count: 6 },
-  { day: "F", pct: 88, count: 8 },
-  { day: "T", pct: 100, count: 11 },
-];
-
-const CMD_ITEMS = [
+const CMD_ITEMS: { section: string; icon: string; label: string; kbd?: string; meta?: string; action: string }[] = [
   { section: "Actions",  icon: "↑", label: "Upload a new PDF",            kbd: "⌘U", action: "upload"   },
   { section: "Actions",  icon: "+", label: "Start a new conversation",    kbd: "⌘N", action: "new-conv" },
   { section: "Actions",  icon: "★", label: "Go Pro — unlimited everything",kbd: "⌘P", action: "pro"    },
-  { section: "Recent",   icon: "·", label: "sample.pdf",                  meta: "1H AGO",    action: "doc-1" },
-  { section: "Recent",   icon: "·", label: "Q3 Financial Report",         meta: "YESTERDAY", action: "doc-2" },
   { section: "Navigate", icon: "₹", label: "Billing & subscription",      kbd: "⌘B", action: "billing"  },
   { section: "Navigate", icon: "⚙", label: "Settings",                    kbd: "⌘,", action: "settings" },
 ];
 
-/* Placeholder docs: created_at is a fixed ISO string to avoid SSR/client Date.now() divergence.
-   timeAgo() treats anything older than 1h as "Xh ago" so the labels below are deterministic. */
-const PLACEHOLDER_DOCS = [
-  { id: "p1", file_name: "sample.pdf",              file_url: "", created_at: "2000-01-01T00:00:00.000Z", timeLabel: "1h ago",    pages: 12, questions: 2, isNew: true  },
-  { id: "p2", file_name: "Q3 Financial Report.pdf", file_url: "", created_at: "2000-01-01T00:00:00.000Z", timeLabel: "Yesterday", pages: 42, questions: 7, isNew: false },
-  { id: "p3", file_name: "Research Notes — May.pdf",file_url: "", created_at: "2000-01-01T00:00:00.000Z", timeLabel: "3d ago",    pages: 8,  questions: 5, isNew: false },
-];
-
-const DOC_SUMMARIES: Record<string, string> = {
-  "sample.pdf":               "A sample document used for testing Intellixy's citation accuracy and AI response quality.",
-  "Q3 Financial Report.pdf":  "Revenue reached ₹423.7 Cr (+23.4% YoY). Enterprise segment drove 68.2% of total revenue.",
-  "Research Notes — May.pdf": "Key research findings on RAG pipeline optimization and embedding model comparisons.",
-};
 
 const TEMPLATES = [
   { n: "01", title: "Analyse a contract",        body: "Key clauses, renewal terms, and risk flags extracted in seconds." },
@@ -103,14 +72,13 @@ const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transi
    TAB CONTENT — rendered for every tab except "overview"
    ════════════════════════════════════════════════════════════════════════════ */
 function TabContent({
-  tab, user, docs, displayDocs, plan, planTier, subscriptionCancelled, usage, uploading, deleting,
-  menuOpenId, setMenuOpenId, handleOpenDoc, handleDeleteDoc, onUpload,
+  tab, user, docs, plan, planTier, subscriptionCancelled, usage, uploading, deleting,
+  menuOpenId, setMenuOpenId, handleOpenDoc, handleDownloadDoc, handleDeleteDoc, onUpload,
   inviteCopied, handleCopyInvite, onTabChange, onUpgrade,
 }: {
   tab: import("@/app/components/dashboard/Sidebar").DashTab;
   user: User | null;
   docs: { id: string; file_name: string; file_url: string; created_at: string }[];
-  displayDocs: { id: string; file_name: string; file_url: string; created_at: string; pages: number; questions: number; isNew: boolean; timeLabel?: string }[];
   plan: "free" | "pro";
   planTier: "free" | "pro" | "team";
   subscriptionCancelled: boolean;
@@ -120,6 +88,7 @@ function TabContent({
   menuOpenId: string | null;
   setMenuOpenId: (id: string | null) => void;
   handleOpenDoc: (url: string) => void;
+  handleDownloadDoc: (url: string) => void;
   handleDeleteDoc: (id: string, url: string) => void;
   onUpload: () => void;
   inviteCopied: boolean;
@@ -137,7 +106,7 @@ function TabContent({
     return `${d}d ago`;
   }
 
-  const allDocs = docs.length > 0 ? docs : displayDocs;
+  const allDocs = docs;
 
   /* ── Documents tab ─────────────────────────────────────────── */
   if (tab === "documents") {
@@ -172,19 +141,19 @@ function TabContent({
         ) : (
           <motion.div className="ix-doc-grid" variants={staggerContainer}>
             {allDocs.map((doc, i) => {
-              const d = doc as typeof displayDocs[number];
+              const isNew = i === 0;
               const cleanName = doc.file_name.replace(/\.pdf$/i, "");
               return (
                 <motion.div key={doc.id} variants={fadeUp}>
                   <div className="ix-doc-card">
                     <div className="ix-doc-thumb" style={{ height: 80 }}>
                       <div className="ix-doc-thumb-icon"><FileText size={20} /></div>
-                      <span className={`ix-doc-badge ${d.isNew ? "new" : "read"}`}>{d.isNew ? "New" : "Read"}</span>
+                      <span className={`ix-doc-badge ${isNew ? "new" : "read"}`}>{isNew ? "New" : "Read"}</span>
                     </div>
                     <div className="ix-doc-body">
                       <div className="ix-doc-name" title={cleanName}>{cleanName}</div>
                       <div className="ix-doc-meta">
-                        <span>{d.timeLabel ?? timeAgoLocal(doc.created_at)}</span>
+                        <span>{timeAgoLocal(doc.created_at)}</span>
                       </div>
                     </div>
                     <div className="ix-doc-footer">
@@ -198,7 +167,7 @@ function TabContent({
                             {menuOpenId === doc.id && (
                               <div className="ix-doc-menu" onClick={e => e.stopPropagation()}>
                                 <button className="ix-doc-menu-item" onClick={() => { setMenuOpenId(null); handleOpenDoc(doc.file_url); }}><ExternalLink size={13} /> Open</button>
-                                <a className="ix-doc-menu-item" href={doc.file_url} target="_blank" rel="noreferrer" onClick={() => setMenuOpenId(null)}><Download size={13} /> Download</a>
+                                <button className="ix-doc-menu-item" onClick={() => { setMenuOpenId(null); handleDownloadDoc(doc.file_url); }}><Download size={13} /> Download</button>
                                 <button className={`ix-doc-menu-item danger${plan !== "pro" ? " locked" : ""}`} onClick={() => handleDeleteDoc(doc.id, doc.file_url)}><Trash2 size={13} /> Delete</button>
                               </div>
                             )}
@@ -876,6 +845,7 @@ export default function DashboardPage() {
   const [user,                  setUser]                 = useState<User | null>(null);
   const [loading,               setLoading]              = useState(true);
   const [docs,                  setDocs]                 = useState<Doc[]>([]);
+  const [docsLoaded,            setDocsLoaded]           = useState(false);
   const [plan,                  setPlan]                 = useState<"free" | "pro">("free");
   const [planTier,              setPlanTier]             = useState<"free" | "pro" | "team">("free");
   const [proExpiresAt,          setProExpiresAt]         = useState<string | null>(null);
@@ -894,14 +864,12 @@ export default function DashboardPage() {
   const [cmdOpen,      setCmdOpen]      = useState(false);
   const [cmdQuery,     setCmdQuery]     = useState("");
   const [cmdIdx,       setCmdIdx]       = useState(0);
-  const [chartTab,     setChartTab]     = useState<"week"|"month"|"year">("week");
   const [glowPos,      setGlowPos]      = useState({ x: 100, y: 100 });
   const [toastShow,    setToastShow]    = useState(false);
   const [toastIn,      setToastIn]      = useState(false);
   const [toastMsg,     setToastMsg]     = useState("sample.pdf processed · 12 pages indexed");
   const [toastVariant, setToastVariant] = useState<"ok"|"err">("ok");
   const [inviteCopied, setInviteCopied] = useState(false);
-  const [barsReady,    setBarsReady]    = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardStep,    setOnboardStep]    = useState(0);
   const [uploading,    setUploading]    = useState(false);
@@ -927,18 +895,10 @@ export default function DashboardPage() {
   const qPct         = Math.min(100, Math.round((usage.questions / (usage.maxQuestions || 5)) * 100));
   const qLeft        = Math.max(0, (usage.maxQuestions || 5) - usage.questions);
 
-  const displayDocs = docs.length > 0
-    ? docs.slice(0, 3).map((d, i) => ({
-        id:        d.id,
-        file_name: d.file_name,
-        file_url:  d.file_url,
-        created_at:d.created_at,
-        pages:     PLACEHOLDER_DOCS[i]?.pages ?? 10,
-        questions: PLACEHOLDER_DOCS[i]?.questions ?? 0,
-        isNew:     i === 0,
-        timeLabel: undefined as string | undefined,
-      }))
-    : PLACEHOLDER_DOCS;
+  // Only ever the user's real documents. This used to fall back to three
+  // invented files (and copied their page/Q&A counts onto real ones), so a new
+  // or slow-loading account looked like it held someone else's reports.
+  const recentDocs = docs.slice(0, 3);
 
   const filteredCmds = cmdQuery
     ? CMD_ITEMS.filter(it => it.label.toLowerCase().includes(cmdQuery.toLowerCase()))
@@ -1047,10 +1007,6 @@ export default function DashboardPage() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => setBarsReady(true), 400);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -1151,10 +1107,8 @@ export default function DashboardPage() {
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    // Previously this swallowed `error` entirely: on any failure docs stayed
-    // empty and the UI silently fell back to PLACEHOLDER_DOCS, so a real user
-    // with real uploads saw "sample.pdf / Q3 Financial Report" instead of their
-    // own files, with nothing logged anywhere.
+    // Never swallow this error: an empty list here is indistinguishable, on
+    // screen, from a user who has uploaded nothing.
     if (error) {
       console.error("[dashboard] fetchDocs failed:", error.message, {
         code: error.code,
@@ -1162,15 +1116,12 @@ export default function DashboardPage() {
         hint: error.hint,
         userId,
       });
+      setDocsLoaded(true);
       return [];
     }
 
-    if (!data?.length) {
-      console.warn("[dashboard] fetchDocs returned 0 rows for", userId,
-        "— showing placeholders. If documents exist for this user, the session uid and user_id disagree.");
-    }
-
     setDocs(data ?? []);
+    setDocsLoaded(true);
     return data ?? [];
   }, []);
 
@@ -1228,6 +1179,26 @@ export default function DashboardPage() {
 
   function handleOpenDoc(fileUrl: string) {
     router.push(`/viewer?url=${encodeURIComponent(fileUrl)}`);
+  }
+
+  // The pdfs bucket is private, so the stored URL no longer downloads on its
+  // own; ask the server for a short-lived signed link to the caller's file.
+  async function handleDownloadDoc(fileUrl: string) {
+    // Open the tab synchronously so popup blockers allow it, then point it at the file.
+    const win = window.open("", "_blank");
+    try {
+      const res = await fetch(`/api/pdf-signed-url?fileUrl=${encodeURIComponent(fileUrl)}`, { credentials: "include" });
+      const json = await res.json();
+      if (!res.ok || !json.signedUrl) throw new Error(json.error || `HTTP ${res.status}`);
+      if (win) win.location.href = json.signedUrl; else window.location.href = json.signedUrl;
+    } catch (err) {
+      win?.close();
+      console.error("[dashboard] download failed:", err);
+      setToastVariant("err");
+      setToastMsg("Couldn't download this file. Please try again.");
+      setToastIn(true);
+      setTimeout(() => setToastIn(false), 3000);
+    }
   }
 
   async function handleDeleteDoc(docId: string, fileUrl: string) {
@@ -1597,7 +1568,7 @@ export default function DashboardPage() {
                 tab={activeTab}
                 user={user}
                 docs={docs}
-                displayDocs={displayDocs}
+                handleDownloadDoc={handleDownloadDoc}
                 plan={plan}
                 planTier={planTier}
                 subscriptionCancelled={subscriptionCancelled}
@@ -1635,8 +1606,11 @@ export default function DashboardPage() {
                   {greeting},&nbsp;<em>{userName}.</em>
                 </div>
                 <p className="ix-hero-sub">
-                  Your library has <strong>{docs.length || 2} document{(docs.length || 2) !== 1 ? "s" : ""}</strong> ready for
-                  inspection.{" "}
+                  {!docsLoaded
+                    ? <>Loading your library…{" "}</>
+                    : docs.length === 0
+                      ? <>Upload your first PDF to start asking questions.{" "}</>
+                      : <>Your library has <strong>{docs.length} document{docs.length !== 1 ? "s" : ""}</strong> ready for inspection.{" "}</>}
                   {qLeft === 0 ? (
                     <>No questions left this month — <button className="ix-hero-upgrade-link" onClick={() => handleUpgrade("pro")}>upgrade to continue →</button></>
                   ) : (
@@ -1680,11 +1654,10 @@ export default function DashboardPage() {
               <motion.div className="ix-stat-card" variants={fadeUp}>
                 <div className="ix-stat-icon-row">
                   <div className="ix-stat-icon orange"><FileText size={16} /></div>
-                  <span className="ix-stat-delta up">+{docs.length || 2}</span>
                 </div>
-                <div className="ix-stat-val">{docs.length || 2}</div>
+                <div className="ix-stat-val">{docsLoaded ? docs.length : "–"}</div>
                 <div className="ix-stat-label">Documents</div>
-                <div className="ix-stat-sub">{usage.maxPdfs === Infinity ? "Unlimited plan" : `of ${usage.maxPdfs} max · this month`}</div>
+                <div className="ix-stat-sub">{usage.maxPdfs === Infinity ? "Unlimited plan" : `of ${usage.maxPdfs} on the Free plan`}</div>
                 {usage.maxPdfs !== Infinity && (
                   <div className="ix-stat-bar-wrap">
                     <div className="ix-stat-bar-fill" style={{ width: `${pdfPct}%`, background: "var(--orange)" }} />
@@ -1695,7 +1668,6 @@ export default function DashboardPage() {
               <motion.div className="ix-stat-card" variants={fadeUp}>
                 <div className="ix-stat-icon-row">
                   <div className="ix-stat-icon blue"><MessageCircle size={16} /></div>
-                  <span className="ix-stat-delta up">+14</span>
                 </div>
                 <div className="ix-stat-val">{usage.questions}</div>
                 <div className="ix-stat-label">Questions asked</div>
@@ -1748,15 +1720,37 @@ export default function DashboardPage() {
                 <button className="ix-section-action" onClick={() => setActiveTab("documents")}>View all →</button>
               </div>
 
+              {docsLoaded && recentDocs.length === 0 && (
+                <div className="ix-doc-card" style={{ padding: "28px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                  <div>
+                    <div className="ix-doc-name" style={{ marginBottom: 4 }}>No documents yet</div>
+                    <div className="ix-doc-summary">Upload a PDF and ask anything about it. Every answer cites the page it came from.</div>
+                  </div>
+                  <button className="ix-btn-primary" onClick={() => { if (!uploading) { setUploadError(null); fileInputRef.current?.click(); } }} disabled={uploading}>
+                    <Upload size={14} /> {uploading ? "Uploading…" : "Upload your first PDF"}
+                  </button>
+                </div>
+              )}
+
               <motion.div
                 className="ix-doc-grid"
                 variants={staggerContainer}
                 initial="hidden"
                 animate="show"
               >
-                {displayDocs.map((doc, i) => {
+                {!docsLoaded && [0, 1, 2].map(i => (
+                  <div key={`sk-${i}`} className="ix-doc-card" aria-hidden="true" style={{ opacity: 0.55 }}>
+                    <div className="ix-doc-thumb"><div className="ix-doc-thumb-icon"><FileText size={28} /></div></div>
+                    <div className="ix-doc-body">
+                      <div className="ix-doc-name" style={{ background: "var(--bg-3)", borderRadius: 6, color: "transparent", width: "70%" }}>Loading</div>
+                      <div className="ix-doc-meta" style={{ background: "var(--bg-3)", borderRadius: 6, color: "transparent", width: "40%", marginTop: 8 }}>Loading</div>
+                    </div>
+                  </div>
+                ))}
+                {recentDocs.map((doc, i) => {
+                  const isNew = i === 0;
                   const cleanName = doc.file_name.replace(/\.pdf$/i, "");
-                  const summary = DOC_SUMMARIES[doc.file_name] ?? "AI-powered document ready for questions and citations.";
+                  const summary = "Ready for questions. Every answer cites the page it came from.";
                   return (
                     <motion.div key={doc.id} variants={fadeUp}>
                       <div className="ix-doc-card">
@@ -1764,28 +1758,21 @@ export default function DashboardPage() {
                           <div className="ix-doc-thumb-icon">
                             <FileText size={28} />
                           </div>
-                          <span className={`ix-doc-badge ${doc.isNew ? "new" : "read"}`}>
-                            {doc.isNew ? "New" : "Read"}
+                          <span className={`ix-doc-badge ${isNew ? "new" : "read"}`}>
+                            {isNew ? "New" : "Read"}
                           </span>
                         </div>
 
                         <div className="ix-doc-body">
                           <div className="ix-doc-name" title={cleanName}>{cleanName}</div>
                           <div className="ix-doc-meta">
-                            <span>{doc.pages}p</span>
-                            <span className="ix-doc-meta-sep">·</span>
-                            <span>{(doc as {timeLabel?: string}).timeLabel ?? timeAgo(doc.created_at)}</span>
-                            <span className="ix-doc-meta-sep">·</span>
-                            <span>{doc.questions} Q&amp;A</span>
+                            <span>{timeAgo(doc.created_at)}</span>
                           </div>
                           <div className="ix-doc-summary">{summary}</div>
                         </div>
 
                         <div className="ix-doc-footer">
-                          <div className="ix-doc-cite-count">
-                            <CheckCircle2 size={12} color="var(--green)" />
-                            {doc.questions * 3 + 2} citations
-                          </div>
+                          <div />
                           <div className="ix-doc-actions">
                             <button
                               className="ix-doc-open-btn"
@@ -1806,9 +1793,9 @@ export default function DashboardPage() {
                                     <button className="ix-doc-menu-item" onClick={() => { setMenuOpenId(null); handleOpenDoc(doc.file_url); }}>
                                       <ExternalLink size={13} /> Open
                                     </button>
-                                    <a className="ix-doc-menu-item" href={doc.file_url} target="_blank" rel="noreferrer" onClick={() => setMenuOpenId(null)}>
+                                    <button className="ix-doc-menu-item" onClick={() => { setMenuOpenId(null); handleDownloadDoc(doc.file_url); }}>
                                       <Download size={13} /> Download
-                                    </a>
+                                    </button>
                                     <button
                                       className={`ix-doc-menu-item danger${plan !== "pro" ? " locked" : ""}`}
                                       onClick={() => handleDeleteDoc(doc.id, doc.file_url)}
@@ -1856,162 +1843,6 @@ export default function DashboardPage() {
                   </div>
                 </motion.div>
               )}
-            </div>
-
-            {/* ── 4. ANALYTICS ROW ──────────────────────────────────── */}
-            <div className="ix-analytics-row">
-              {/* Chart card */}
-              <motion.div
-                className="ix-chart-card"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="ix-chart-hdr">
-                  <div className="ix-chart-title">
-                    <BarChart2 size={15} style={{ color: "var(--accent)", marginRight: 6 }} />
-                    AI Activity
-                  </div>
-                  <div className="ix-chart-tabs">
-                    {(["week","month","year"] as const).map(t => (
-                      <button
-                        key={t}
-                        className={`ix-chart-tab${chartTab === t ? " active" : ""}`}
-                        onClick={() => setChartTab(t)}
-                      >
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="ix-bars-wrap">
-                  {CHART_DATA.map((b, i) => (
-                    <div key={i} className="ix-bar-col">
-                      <div
-                        className={`ix-bar ${i === CHART_DATA.length - 1 ? "today" : b.pct < 10 ? "base" : "accent"}`}
-                        title={`${b.day} · ${b.count} question${b.count !== 1 ? "s" : ""}`}
-                        style={{
-                          height:     barsReady ? `${b.pct}%` : "0%",
-                          transition: `height .65s cubic-bezier(.22,1,.36,1) ${i * 50}ms`,
-                        }}
-                      />
-                      <div className="ix-bar-day">{b.day}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="ix-chart-meta">
-                  <div className="ix-chart-meta-item">
-                    <div className="ix-chart-meta-val">14h</div>
-                    <div className="ix-chart-meta-lbl">Time saved</div>
-                  </div>
-                  <div className="ix-chart-meta-item">
-                    <div className="ix-chart-meta-val">+24%</div>
-                    <div className="ix-chart-meta-lbl">vs last month</div>
-                  </div>
-                  <div className="ix-chart-meta-item">
-                    <div className="ix-chart-meta-val">3.4s</div>
-                    <div className="ix-chart-meta-lbl">Avg. answer</div>
-                  </div>
-                  <div className="ix-chart-meta-item">
-                    <div className="ix-chart-meta-val">100%</div>
-                    <div className="ix-chart-meta-lbl">Citation accuracy</div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Quick metrics col */}
-              <motion.div
-                className="ix-metrics-col"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {[
-                  { icon: <Clock size={18} />,       color:"orange", bg:"var(--accent-pale)", val:"0.3s",  label:"Fastest answer",   sub:"This session" },
-                  { icon: <TrendingUp size={18} />,   color:"green",  bg:"var(--green-pale)",  val:"23%",  label:"Revenue growth",   sub:"Found in Q3 report" },
-                  { icon: <FileSearch size={18} />,   color:"blue",   bg:"var(--blue-pale)",   val:"127",  label:"Passages cited",   sub:"Across all docs" },
-                  { icon: <CheckCircle2 size={18} />, color:"purple", bg:"#f3e8ff",             val:"100%", label:"AI accuracy",      sub:"Independently audited" },
-                ].map((m, i) => (
-                  <div key={i} className="ix-metric-card">
-                    <div className="ix-metric-icon" style={{ background: m.bg, color: `var(--${m.color})` }}>
-                      {m.icon}
-                    </div>
-                    <div>
-                      <div className="ix-metric-val">{m.val}</div>
-                      <div className="ix-metric-label">{m.label}</div>
-                      <div className="ix-metric-sub">{m.sub}</div>
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* ── 5. AI CONVERSATIONS + TIMELINE ───────────────────── */}
-            <div className="ix-conv-row">
-              {/* Conversations */}
-              <motion.div
-                className="ix-card"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="ix-card-hdr">
-                  <div className="ix-card-title"><MessageCircle size={15} /> Recent Conversations</div>
-                  <button className="ix-card-link" onClick={() => setActiveTab("conversations")}>View all →</button>
-                </div>
-                <div className="ix-conv-list">
-                  {[
-                    {
-                      q: '"What was Q3 revenue compared to Q2?"',
-                      a: <>Q3 revenue reached <mark>₹423.7 Cr</mark>, up <mark>23.4% YoY</mark>. This beat analyst consensus by 4.2 percentage points.</>,
-                      cite: "Q3 Report · p.14, §3.2",
-                    },
-                    {
-                      q: '"Are there any risks in the appendix?"',
-                      a: <>Three risks flagged: (1) currency exposure to USD, (2) regulatory uncertainty, (3) top-3 clients = <mark>54% of revenue</mark>.</>,
-                      cite: "Q3 Report · p.38–41",
-                    },
-                  ].map((c, i) => (
-                    <div key={i} className="ix-conv-item">
-                      <div className="ix-conv-q">{c.q}</div>
-                      <div className="ix-conv-bubble">{c.a}</div>
-                      <span className="ix-conv-cite">📎 {c.cite}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Activity timeline */}
-              <motion.div
-                className="ix-card"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="ix-card-hdr">
-                  <div className="ix-card-title"><Clock size={15} /> Activity</div>
-                </div>
-                <div className="ix-card-body">
-                  <div className="ix-timeline">
-                    {[
-                      { dot: "accent", text: `Uploaded ${displayDocs[0]?.file_name.replace(/\.pdf$/i,"")} · ${displayDocs[0]?.pages}p indexed`, time: displayDocs[0]?.created_at ? timeAgo(displayDocs[0].created_at) : "Just now" },
-                      { dot: "",      text: `Asked ${displayDocs[1]?.questions ?? 7} questions on Q3 Financial Report`, time: "Yesterday" },
-                      { dot: "green", text: `Free plan activated · 5 questions added`, time: "2 days ago" },
-                      { dot: "",      text: `Account created. Welcome to Intellixy.`, time: "2 days ago" },
-                    ].map((item, i) => (
-                      <div key={i} className="ix-tl-item">
-                        <div className={`ix-tl-dot ${item.dot}`} />
-                        <div>
-                          <div className="ix-tl-text">{item.text}</div>
-                          <div className="ix-tl-time">{item.time}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
             </div>
 
             {/* ── 7. SMART TEMPLATES ────────────────────────────────── */}
