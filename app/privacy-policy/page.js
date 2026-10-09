@@ -114,6 +114,7 @@ export default function PrivacyPolicy() {
         <h2 style={S.h2}>11. Contact Us</h2>
         <p style={S.p}>
           For privacy-related questions, contact us at:<br />
+          📧 <a href="mailto:support@originutech.in" style={S.a}>support@originutech.in</a><br />
           📧 <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a><br />
           🌐 <a href="https://intellixy.vercel.app" style={S.a}>intellixy.vercel.app</a>
         </p>

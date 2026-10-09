@@ -113,6 +113,7 @@ export default function Terms() {
         <h2 style={S.h2}>13. Contact</h2>
         <p style={S.p}>
           Questions about these Terms? Contact us:<br />
+          📧 <a href="mailto:support@originutech.in" style={S.a}>support@originutech.in</a><br />
           📧 <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a>
         </p>
       </div>

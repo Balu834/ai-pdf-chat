@@ -97,6 +97,7 @@ export default function RefundPolicy() {
         <h2 style={S.h2}>7. Contact Us</h2>
         <p style={S.p}>
           For refund or cancellation requests:<br />
+          📧 <a href="mailto:support@originutech.in" style={S.a}>support@originutech.in</a><br />
           📧 <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a><br />
           We respond within 24 hours on business days.
         </p>

@@ -21,6 +21,7 @@ const COLS = [
   {
     head: "Contact",
     links: [
+      { label: "support@originutech.in", href: "mailto:support@originutech.in" },
       { label: "intellixy54@gmail.com", href: "mailto:intellixy54@gmail.com" },
     ],
   },
