@@ -115,25 +115,32 @@ export async function POST(req) {
       if (!isPro) {
         return NextResponse.json({ error: "Pro required for summarization without embeddings." }, { status: 403 });
       }
-      // SSRF guard: only allow Supabase storage URLs
-      let parsedUrl;
-      try { parsedUrl = new URL(fileUrl); } catch { parsedUrl = null; }
-      const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
-        ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-        : null;
-      const allowedHost = supabaseHost && parsedUrl?.hostname === supabaseHost;
-      if (!allowedHost) {
+      // Only the caller's own document, read through the storage client. The
+      // "pdfs" bucket is private, so fetching the stored public URL would 400,
+      // and an unchecked fetch let any Pro user summarize any URL they pasted.
+      if (!doc?.id) {
+        return NextResponse.json({ error: "Document not found." }, { status: 404 });
+      }
+      let storagePath = null;
+      try {
+        const m = new URL(fileUrl).pathname.match(/\/object\/(?:public|sign|authenticated)\/pdfs\/(.+)$/);
+        if (m) storagePath = decodeURIComponent(m[1]).split("?")[0];
+      } catch { /* invalid URL */ }
+      if (!storagePath) {
         return NextResponse.json({ error: "Invalid file URL." }, { status: 400 });
       }
       try {
-        const res = await fetch(fileUrl);
-        if (res.ok) {
-          const buf = Buffer.from(await res.arrayBuffer());
+        const { data: blob, error: dlError } = await supabase.storage.from("pdfs").download(storagePath);
+        if (dlError) console.warn("[SUMMARIZE] Storage download failed:", dlError.message);
+        if (blob) {
+          const buf = Buffer.from(await blob.arrayBuffer());
           const pdf = (await import("pdf-parse")).default;
           const data = await pdf(buf);
           context = data.text.replace(/\s+/g, " ").trim().slice(0, 14000);
         }
-      } catch { /* non-fatal */ }
+      } catch (err) {
+        console.warn("[SUMMARIZE] PDF read failed:", err.message);
+      }
     }
 
     if (!context) return NextResponse.json({ error: "Could not extract document content." }, { status: 400 });
