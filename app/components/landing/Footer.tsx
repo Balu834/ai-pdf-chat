@@ -22,7 +22,6 @@ const COLS = [
     head: "Contact",
     links: [
       { label: "support@originutech.in", href: "mailto:support@originutech.in" },
-      { label: "intellixy54@gmail.com", href: "mailto:intellixy54@gmail.com" },
     ],
   },
 ];
@@ -58,7 +57,7 @@ export default function Footer() {
       <div className="lp-footer-bottom">
         <span suppressHydrationWarning>© {new Date().getFullYear()} Intellixy. All rights reserved.</span>
         <span>
-          <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="mailto:intellixy54@gmail.com">Contact</a>
+          <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="mailto:support@originutech.in">Contact</a>
         </span>
       </div>
     </footer>

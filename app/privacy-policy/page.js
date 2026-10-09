@@ -99,7 +99,7 @@ export default function PrivacyPolicy() {
           <li style={S.li}>Request deletion of your account and data.</li>
           <li style={S.li}>Opt out of non-essential communications.</li>
         </ul>
-        <p style={S.p}>To exercise these rights, email us at <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a>.</p>
+        <p style={S.p}>To exercise these rights, email us at <a href="mailto:support@originutech.in" style={S.a}>support@originutech.in</a>.</p>
 
         <h2 style={S.h2}>9. Children's Privacy</h2>
         <p style={S.p}>
@@ -115,7 +115,6 @@ export default function PrivacyPolicy() {
         <p style={S.p}>
           For privacy-related questions, contact us at:<br />
           📧 <a href="mailto:support@originutech.in" style={S.a}>support@originutech.in</a><br />
-          📧 <a href="mailto:intellixy54@gmail.com" style={S.a}>intellixy54@gmail.com</a><br />
           🌐 <a href="https://intellixy.vercel.app" style={S.a}>intellixy.vercel.app</a>
         </p>
       </div>
