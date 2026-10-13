@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server-client";
 import { getOpenAI } from "@/lib/openai-client";
+import { checkStudyLimit, recordStudySet, STUDY_LIMIT_MESSAGE } from "@/lib/limits";
 
 export const maxDuration = 60;
 
@@ -9,6 +10,11 @@ export async function POST(req) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const study = await checkStudyLimit(user.id);
+    if (study.exceeded) {
+      return NextResponse.json({ error: STUDY_LIMIT_MESSAGE, limitExceeded: true }, { status: 403 });
+    }
 
     const { documentId, fileUrl, count = 15 } = await req.json();
     if (!documentId || !fileUrl) {
@@ -120,6 +126,8 @@ export async function POST(req) {
       .select("id, front, back, next_review, interval_days, ease_factor, reps");
 
     if (insertErr) throw new Error(insertErr.message);
+
+    if (study.plan === "free") await recordStudySet(user.id, study.count);
 
     return NextResponse.json({ flashcards: inserted, count: inserted.length });
   } catch (err) {
