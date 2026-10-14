@@ -39,9 +39,9 @@ const FEATURES = [
 ];
 
 const STATS = [
-  { value: "10K+", label: "Users" },
-  { value: "50K+", label: "Docs Analyzed" },
-  { value: "4.9★", label: "Rating" },
+  { value: "Free", label: "To Start" },
+  { value: "Page", label: "Cited Answers" },
+  { value: "PDF", label: "Upload & Ask" },
 ];
 
 export default function LoginPage() {

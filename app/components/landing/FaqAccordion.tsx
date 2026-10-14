@@ -6,11 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 const FAQS = [
   {
     q: "Is my data private?",
-    a: "Yes. Your documents are encrypted at rest and in transit. We process them in isolated compute environments and never use your documents to train our models. Enterprise customers can opt for on-premise deployment.",
+    a: "Yes. Your documents are encrypted in transit and at rest, and we never use them to train AI models. To have your documents removed from our servers, email support@originutech.in.",
   },
   {
     q: "How accurate are the citations?",
-    a: "Intellixy achieves 100% citation accuracy — every answer is grounded in the exact passage from your document, with page and section references you can verify instantly. We never fabricate or hallucinate sources.",
+    a: "Every answer is drawn from your document and shows the page it came from, so you can check it in seconds. Like any AI tool, Intellixy can occasionally misread a passage — which is exactly why every answer links back to its source.",
   },
   {
     q: "What document types do you support?",

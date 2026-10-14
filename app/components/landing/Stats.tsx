@@ -5,15 +5,15 @@ import { BookOpen, Zap, FileText, ShieldCheck } from "lucide-react";
 const METRICS = [
   {
     icon: BookOpen,
-    val: "100%",
-    label: "Citation accuracy",
-    sub: "Every answer sourced",
+    val: "Page",
+    label: "Cited on every answer",
+    sub: "Check the source yourself",
   },
   {
     icon: Zap,
-    val: "3.4s",
-    label: "Avg. response time",
-    sub: "Even on 500-page docs",
+    val: "Seconds",
+    label: "Typical answer time",
+    sub: "Longer documents take a little more",
   },
   {
     icon: FileText,
@@ -24,9 +24,9 @@ const METRICS = [
   },
   {
     icon: ShieldCheck,
-    val: "100%",
-    label: "End-to-end encrypted",
-    sub: "Your data stays private",
+    val: "TLS",
+    label: "Encrypted in transit",
+    sub: "And stored encrypted at rest",
   },
 ];
 

@@ -80,12 +80,12 @@ export default function Hero() {
           <div className="lp-hero-trust">
             <div className="lp-hero-trust-item">
               <Zap size={18} strokeWidth={2} />
-              Answers in 3.4s avg
+              Answers in seconds
             </div>
             <div className="lp-hero-trust-sep" />
             <div className="lp-hero-trust-item">
               <Shield size={18} strokeWidth={2} />
-              End-to-end encrypted
+              Encrypted in transit
             </div>
             <div className="lp-hero-trust-sep" />
             <div className="lp-hero-trust-item">

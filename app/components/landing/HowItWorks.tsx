@@ -22,7 +22,7 @@ const STEPS = [
     icon: BookOpen,
     title: "Get cited, verified answers",
     desc: "Every response includes exact page and section references. Click any citation to jump directly to the source and verify every claim in seconds.",
-    detail: "100% citation accuracy · no hallucinated sources",
+    detail: "Page and section references on every answer",
   },
 ];
 

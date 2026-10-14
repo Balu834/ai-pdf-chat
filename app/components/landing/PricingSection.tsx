@@ -133,7 +133,7 @@ export default function PricingSection() {
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           <p className="lp-pricing-security">
-            🔒 Your documents are encrypted end-to-end and <strong>never used to train AI models.</strong> We process your files in isolated environments and do not retain them after your session.
+            🔒 Your documents are encrypted in transit and at rest and <strong>never used to train AI models.</strong> Email support@originutech.in any time to have them deleted.
           </p>
           <p className="lp-pricing-footnote-inline">
             All plans include SSL encryption · No setup fees · Cancel any time

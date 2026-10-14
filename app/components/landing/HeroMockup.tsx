@@ -97,24 +97,19 @@ export default function HeroMockup() {
       >
         <div className="hm-check-icon">✓</div>
         <div>
-          <div className="hm-badge-val">100%</div>
-          <div className="hm-badge-lbl">Citation accuracy</div>
+          <div className="hm-badge-val">Page</div>
+          <div className="hm-badge-lbl">Cited on every answer</div>
         </div>
       </motion.div>
 
-      {/* Badge — users */}
+      {/* Badge — early access */}
       <motion.div
         className="hm-badge hm-badge-users"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0  }}
         transition={{ duration: 0.6, delay: 1.2, ease }}
       >
-        <div className="hm-avatars">
-          {["#10A37F","#6366f1","#0d8c6e","#f59e0b"].map((c, i) => (
-            <div key={i} className="hm-avatar" style={{ background: c, zIndex: 4 - i }} />
-          ))}
-        </div>
-        <span className="hm-users-text">1,200+ teams</span>
+        <span className="hm-users-text">Early access · free to start</span>
       </motion.div>
     </div>
   );
