@@ -20,6 +20,7 @@ import OAuthSignupTracker from "@/app/components/OAuthSignupTracker";
 import ErrorBoundary from "@/app/components/ErrorBoundary";
 import Sidebar, { type DashTab } from "@/app/components/dashboard/Sidebar";
 import WorkspaceTab from "@/app/components/dashboard/WorkspaceTab";
+import { CountUp, FillBar, DocCover } from "@/app/components/dashboard/StatAnim";
 import { Events } from "@/lib/analytics";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
@@ -926,8 +927,20 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push("/login"); return; }
+    let started = false;
+    // Render from the locally stored session straight away (no network round trip),
+    // then confirm it with Supabase in the background. API routes verify auth server-side.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) start(session.user);
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) { router.push("/login"); return; }
+        if (!started) start(user);
+      });
+    });
+
+    function start(user: User) {
+      if (started) return;
+      started = true;
       setUser(user);
       setLoading(false);
       fetchDocs(user.id);
@@ -948,7 +961,7 @@ export default function DashboardPage() {
           }).then(r => r.json()).then(result => { if (result?.ok) fetchUsage(); }).catch(() => {});
         }
       } catch {}
-    });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1653,30 +1666,24 @@ export default function DashboardPage() {
             >
               <motion.div className="ix-stat-card" variants={fadeUp}>
                 <div className="ix-stat-icon-row">
-                  <div className="ix-stat-icon orange"><FileText size={16} /></div>
+                  <div className="ix-stat-icon gold"><FileText size={16} /></div>
                 </div>
-                <div className="ix-stat-val">{docsLoaded ? docs.length : "–"}</div>
+                <div className="ix-stat-val">{docsLoaded ? <CountUp value={docs.length} /> : "–"}</div>
                 <div className="ix-stat-label">Documents</div>
                 <div className="ix-stat-sub">{usage.maxPdfs === Infinity ? "Unlimited plan" : `of ${usage.maxPdfs} on the Free plan`}</div>
-                {usage.maxPdfs !== Infinity && (
-                  <div className="ix-stat-bar-wrap">
-                    <div className="ix-stat-bar-fill" style={{ width: `${pdfPct}%`, background: "var(--orange)" }} />
-                  </div>
-                )}
+                {usage.maxPdfs !== Infinity && <FillBar pct={pdfPct} delay={0.25} />}
               </motion.div>
 
               <motion.div className="ix-stat-card" variants={fadeUp}>
                 <div className="ix-stat-icon-row">
-                  <div className="ix-stat-icon blue"><MessageCircle size={16} /></div>
+                  <div className="ix-stat-icon gold"><MessageCircle size={16} /></div>
                 </div>
-                <div className="ix-stat-val">{usage.questions}</div>
-                <div className="ix-stat-label">Questions asked</div>
-                <div className="ix-stat-sub">{usage.maxQuestions === Infinity ? "Unlimited plan" : `of ${usage.maxQuestions} monthly limit`}</div>
-                {usage.maxQuestions !== Infinity && (
-                  <div className="ix-stat-bar-wrap">
-                    <div className="ix-stat-bar-fill" style={{ width: `${qPct}%`, background: "var(--blue)" }} />
-                  </div>
-                )}
+                <div className="ix-stat-val">
+                  {qLeft === Infinity ? "∞" : <CountUp value={qLeft} />} <span>left</span>
+                </div>
+                <div className="ix-stat-label">Questions</div>
+                <div className="ix-stat-sub">{usage.maxQuestions === Infinity ? "Unlimited plan" : `${usage.questions} of ${usage.maxQuestions} used this month`}</div>
+                {usage.maxQuestions !== Infinity && <FillBar pct={qPct} delay={0.35} />}
               </motion.div>
 
               <motion.div
@@ -1687,29 +1694,31 @@ export default function DashboardPage() {
                 title={dueCards > 0 ? "Go review your flashcards" : "No flashcards due"}
               >
                 <div className="ix-stat-icon-row">
-                  <div className="ix-stat-icon green"><Zap size={16} /></div>
+                  <div className="ix-stat-icon gold"><Zap size={16} /></div>
                   {dueCards > 0
                     ? <span className="ix-stat-delta up">{dueCards} due</span>
                     : <span className="ix-stat-delta up">All done</span>}
                 </div>
-                <div className="ix-stat-val">{dueCards}</div>
+                <div className="ix-stat-val"><CountUp value={dueCards} /></div>
                 <div className="ix-stat-label">Flashcards due</div>
                 <div className="ix-stat-sub">{dueCards > 0 ? "Tap to start review session" : "All cards reviewed!"}</div>
               </motion.div>
 
-              <motion.div className="ix-stat-card" variants={fadeUp}>
+              <motion.div
+                className={`ix-stat-card${plan === "free" ? " ix-stat-plan-free" : ""}`}
+                variants={fadeUp}
+                style={{ cursor: "pointer" }}
+                onClick={() => setActiveTab("billing")}
+                title="Plan and billing"
+              >
                 <div className="ix-stat-icon-row">
-                  <div className="ix-stat-icon purple"><Shield size={16} /></div>
-                  <span className="ix-stat-delta up">{planTier === "team" ? "Team" : planTier === "pro" ? "Pro" : "Free"}</span>
+                  <div className="ix-stat-icon gold"><Shield size={16} /></div>
                 </div>
-                <div className="ix-stat-val">{qLeft === Infinity ? "∞" : qLeft}</div>
-                <div className="ix-stat-label">Questions left</div>
-                <div className="ix-stat-sub">{plan === "pro" ? "Unlimited plan active" : `${usage.questions} of ${usage.maxQuestions} used`}</div>
-                {plan === "free" && (
-                  <div className="ix-stat-bar-wrap">
-                    <div className="ix-stat-bar-fill" style={{ width: `${qPct}%`, background: "var(--purple)" }} />
-                  </div>
-                )}
+                <div className="ix-stat-val">{planTier === "team" ? "Team" : planTier === "pro" ? "Pro" : "Free"}</div>
+                <div className="ix-stat-label">Your plan</div>
+                <div className="ix-stat-sub">
+                  {plan === "pro" ? "Unlimited PDFs and questions" : <span className="ix-stat-upgrade">Upgrade for unlimited →</span>}
+                </div>
               </motion.div>
             </motion.div>
 
@@ -1739,8 +1748,8 @@ export default function DashboardPage() {
                 animate="show"
               >
                 {!docsLoaded && [0, 1, 2].map(i => (
-                  <div key={`sk-${i}`} className="ix-doc-card" aria-hidden="true" style={{ opacity: 0.55 }}>
-                    <div className="ix-doc-thumb"><div className="ix-doc-thumb-icon"><FileText size={28} /></div></div>
+                  <div key={`sk-${i}`} className="ix-doc-card ix-skeleton" aria-hidden="true">
+                    <div className="ix-doc-thumb" />
                     <div className="ix-doc-body">
                       <div className="ix-doc-name" style={{ background: "var(--bg-3)", borderRadius: 6, color: "transparent", width: "70%" }}>Loading</div>
                       <div className="ix-doc-meta" style={{ background: "var(--bg-3)", borderRadius: 6, color: "transparent", width: "40%", marginTop: 8 }}>Loading</div>
@@ -1755,9 +1764,7 @@ export default function DashboardPage() {
                     <motion.div key={doc.id} variants={fadeUp}>
                       <div className="ix-doc-card">
                         <div className="ix-doc-thumb">
-                          <div className="ix-doc-thumb-icon">
-                            <FileText size={28} />
-                          </div>
+                          <DocCover name={cleanName} />
                           <span className={`ix-doc-badge ${isNew ? "new" : "read"}`}>
                             {isNew ? "New" : "Read"}
                           </span>
