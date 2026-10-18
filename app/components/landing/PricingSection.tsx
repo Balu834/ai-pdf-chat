@@ -37,17 +37,16 @@ const PLANS = [
   {
     name: "Team",
     price: "999",
-    priceNote: "per month",
-    desc: "For teams that read, research, and collaborate on documents together.",
+    priceNote: "per month · coming soon",
+    desc: "For teams that read, research, and collaborate on documents together. Not available yet.",
     feats: [
       "Everything in Pro",
-      "Team workspaces — coming soon",
-      "Shared chats & history — coming soon",
-      "Admin controls — coming soon",
-      "Audit logs — coming soon",
-      "Priority support",
+      "Team workspaces",
+      "Shared chats & history",
+      "Admin controls",
+      "Audit logs",
     ],
-    cta: { label: "Start with Team", href: "/login?plan=team", style: "outline" },
+    cta: { label: "Join the waitlist", href: "mailto:support@originutech.in?subject=Intellixy%20Team%20waitlist", style: "outline" },
   },
 ];
 

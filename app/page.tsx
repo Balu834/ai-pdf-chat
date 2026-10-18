@@ -15,7 +15,7 @@ import Footer          from "@/app/components/landing/Footer";
 export const metadata: Metadata = {
   title: { absolute: "Intellixy – Chat with your PDFs, get cited answers instantly" },
   description:
-    "Upload a PDF and ask questions in plain English. Every answer includes exact page citations you can verify. Built for legal and finance teams. Free to start.",
+    "Upload a PDF and ask questions in plain English. Every answer includes exact page citations you can verify. For legal and finance work, and for students revising from their notes. Free to start.",
 };
 
 export default function Page() {
@@ -42,10 +42,10 @@ export default function Page() {
         <section className="lp-demo-section" id="demo">
           <div className="lp-demo-inner">
             <div className="lp-section-head">
-              <p className="lp-section-eyebrow">Live demo</p>
-              <h2 className="lp-section-title">Try it — right now</h2>
+              <p className="lp-section-eyebrow">Sample demo</p>
+              <h2 className="lp-section-title">See how answers look</h2>
               <p className="lp-section-sub">
-                No sign-up required. Ask anything about a real financial report.
+                A made-up sample report with pre-written answers, so you can see the format. Sign up free to ask anything about your own PDF.
               </p>
             </div>
             <InteractiveDemo />

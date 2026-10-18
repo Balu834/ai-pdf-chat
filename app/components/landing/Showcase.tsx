@@ -34,7 +34,7 @@ export default function Showcase() {
               <span className="lp-showcase-dot" style={{ background: "#febc2e" }} />
               <span className="lp-showcase-dot" style={{ background: "#28c840" }} />
             </div>
-            <div className="lp-showcase-url">app.intellixy.com/dashboard</div>
+            <div className="lp-showcase-url">intellixy.vercel.app/dashboard</div>
           </div>
 
           {/* Body */}

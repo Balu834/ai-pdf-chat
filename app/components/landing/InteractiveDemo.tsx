@@ -37,7 +37,7 @@ function getResponse(q: string) {
   if (lq.includes("risk") || lq.includes("challenge"))   return RESPONSES.risk;
   if (lq.includes("growth") || lq.includes("driver"))    return RESPONSES.growth;
   if (lq.includes("customer") || lq.includes("retention")) return RESPONSES.customer;
-  return { text: "Based on the document, that relates to Q3 FY24 financial performance data. The report provides detailed breakdowns by segment, geography, and product line.", cite: "§1.0 introduction · p.2" };
+  return { text: "This sample only has pre-written answers for a few questions. Try one of the buttons below, or sign up free to ask anything about your own PDF.", cite: "" };
 }
 
 const CHIPS = ["Summarise this", "Revenue breakdown?", "All risks?"];
@@ -80,14 +80,14 @@ export default function InteractiveDemo() {
           <span className="lp-demo-dot" style={{ background: "#FEBC2E" }} />
           <span className="lp-demo-dot" style={{ background: "#28C840" }} />
         </div>
-        <div className="lp-demo-url">app.intellixy.com/chat/q3-financial-report</div>
+        <div className="lp-demo-url">Sample report · pre-written answers</div>
       </div>
 
       <div className="lp-demo-panels">
         {/* PDF panel */}
         <div className="lp-demo-pdf-panel">
           <div className="lp-demo-pdf-hdr">
-            Q3_Financial_Report.pdf · PAGE{" "}
+            Sample_Q3_Report.pdf · PAGE{" "}
             <span className="lp-demo-hdr-page">14/42</span>
             {" "}· §3.2 REVENUE
           </div>

@@ -43,7 +43,7 @@ export default function Features() {
             <p className="lp-feat-eyebrow">Built for professionals</p>
             <h2 className="lp-feat-title">AI that understands complex documents</h2>
             <p className="lp-feat-desc">
-              From financial reports to legal contracts, research papers to policy docs — Intellixy understands it all.
+              From financial reports to legal contracts, research papers to class notes. Students can also turn a chapter into flashcards and a quiz.
             </p>
             <a href="#demo" className="lp-feat-cta">
               Explore use cases <ArrowRight size={17} strokeWidth={2.5} />
@@ -61,23 +61,22 @@ export default function Features() {
 
             {/* Panel 1: Contract Review */}
             <motion.div className="lp-feat-doc-card" variants={panel}>
-              <div className="lp-feat-contract-hdr">Contract Review</div>
+              <div className="lp-feat-contract-hdr">Clause risk check</div>
               <div className="lp-feat-risk-row">
                 <div className="lp-feat-risk-icon">{CHECK_SVG}</div>
-                <span className="lp-feat-risk-label">Low Risk</span>
-                <span className="lp-feat-risk-score">16 / 100</span>
+                <span className="lp-feat-risk-label">Example output</span>
               </div>
               <div className="lp-feat-stat-row">
                 <div className="lp-feat-stat-item">
-                  <span className="lp-feat-stat-label">Clauses Analyzed</span>
-                  <strong className="lp-feat-stat-val">128</strong>
-                </div>
-                <div className="lp-feat-stat-item">
-                  <span className="lp-feat-stat-label">Issues Found</span>
+                  <span className="lp-feat-stat-label">Clauses flagged</span>
                   <strong className="lp-feat-stat-val">3</strong>
                 </div>
+                <div className="lp-feat-stat-item">
+                  <span className="lp-feat-stat-label">Highest severity</span>
+                  <strong className="lp-feat-stat-val">Low</strong>
+                </div>
               </div>
-              <button className="lp-feat-view-btn">View full report →</button>
+              <p className="lp-feat-clause-text">Flags risky, one-sided or missing clauses. Not legal advice.</p>
             </motion.div>
 
             {/* Panel 2: Document Viewer */}
@@ -100,13 +99,10 @@ export default function Features() {
 
             {/* Panel 3: AI Suggestion */}
             <motion.div className="lp-feat-doc-card" variants={panel}>
-              <div className="lp-feat-ai-hdr">AI Suggestion</div>
+              <div className="lp-feat-ai-hdr">What to ask about it</div>
               <p className="lp-feat-ai-text">
-                Consider adding a cap on liability to reduce potential financial exposure.
+                Consider asking for a cap on liability to reduce potential financial exposure.
               </p>
-              <button className="lp-feat-apply-btn">
-                Apply suggestion <ArrowRight size={11} strokeWidth={2.5} />
-              </button>
               <div className="lp-feat-related-hdr">Related Sections</div>
               <div>
                 {RELATED.map((r, i) => (

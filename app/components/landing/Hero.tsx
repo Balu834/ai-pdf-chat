@@ -61,7 +61,7 @@ export default function Hero() {
           </h1>
 
           <p className="lp-hero-sub">
-            Upload any document. Ask in plain English. Intellixy returns exact, cited answers in seconds — with page and section references you can verify instantly. No hallucinations. No guessing.
+            Upload any document. Ask in plain English. Intellixy returns exact, cited answers in seconds — with page and section references, so you can check every answer against the page it came from.
           </p>
 
           <div className="lp-hero-actions">
