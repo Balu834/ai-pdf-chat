@@ -1,39 +1,45 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight, Shield, Zap, CreditCard } from "lucide-react";
+import HeroDemo from "./HeroDemo";
 
 const ease = [0.22, 1, 0.36, 1] as const;
+const WORDS = ["notes", "contracts", "reports", "textbooks"];
 
-const LOGO_SVG = (
-  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-    <rect x="3"  y="3"  width="8" height="11" rx="1.5" fill="currentColor" opacity=".9"/>
-    <rect x="13" y="3"  width="8" height="5"  rx="1.5" fill="currentColor" opacity=".5"/>
-    <rect x="13" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity=".7"/>
-    <rect x="3"  y="16" width="8" height="5"  rx="1.5" fill="currentColor" opacity=".4"/>
-  </svg>
-);
+/* Gold word that swaps every few seconds: "Ask your notes / contracts / …" */
+function KineticWord() {
+  const reduce = useReducedMotion();
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (reduce) return;
+    const id = setInterval(() => setI(n => (n + 1) % WORDS.length), 2400);
+    return () => clearInterval(id);
+  }, [reduce]);
+  return (
+    <span className="lp-kw lp-hero-h1-accent" aria-label={WORDS.join(", ")}>
+      {/* invisible longest word reserves the width so the line never jumps */}
+      <span aria-hidden style={{ visibility: "hidden" }}>contracts.</span>
+      {/* mode="wait": the old word fully leaves before the next enters, so words can
+          never pile up even when the browser throttles animation (background tabs) */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={WORDS[i]}
+          aria-hidden
+          initial={{ y: "45%", opacity: 0, filter: "blur(6px)" }}
+          animate={{ y: "0%", opacity: 1, filter: "blur(0px)", transition: { duration: 0.42, ease } }}
+          exit={{ y: "-45%", opacity: 0, filter: "blur(6px)", transition: { duration: 0.22, ease: "easeIn" } }}
+        >
+          {WORDS[i]}.
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
 
-const PDF_SM = (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/>
-    <polyline points="15 3 15 9 21 9"/>
-  </svg>
-);
-
-const BAR_HEIGHTS = [5, 8, 6, 11, 7, 9, 13, 8, 11, 7];
-
-const SOURCES = [
-  { name: "Q3 Financial Report.pdf",        pages: "24 pages" },
-  { name: "Earnings Call Transcript.pdf",   pages: "18 pages" },
-  { name: "Investor Presentation.pdf",      pages: "32 pages" },
-];
-
-const FINDINGS = [
-  { text: "Revenue grew 23.4% YoY",         page: "p.14" },
-  { text: "Operating expenses down 8.7%",   page: "p.22" },
-  { text: "Strong cash flow increase",      page: "p.31" },
-];
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } } };
+const rise = { hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } };
 
 export default function Hero() {
   return (
@@ -41,30 +47,22 @@ export default function Hero() {
       <div className="lp-hero-inner">
 
         {/* ── LEFT: Copy ─────────────────────────────────────────────── */}
-        <motion.div
-          className="lp-hero-copy"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease }}
-        >
-          <div className="lp-hero-eyebrow">
+        <motion.div className="lp-hero-copy" variants={stagger} initial="hidden" animate="show">
+          <motion.div className="lp-hero-eyebrow" variants={rise}>
             <span className="lp-hero-eyebrow-live" aria-hidden />
             AI Document Intelligence
-          </div>
+          </motion.div>
 
-          <h1 className="lp-hero-h1">
-            Stop Searching Through PDFs.<br />
-            <span className="lp-hero-h1-accent">
-              Just Ask.
-              <span className="lp-hero-h1-glow" aria-hidden />
-            </span>
-          </h1>
+          <motion.h1 className="lp-hero-h1" variants={rise}>
+            Ask your <KineticWord /><br />
+            Get answers with the page.
+          </motion.h1>
 
-          <p className="lp-hero-sub">
-            Upload any document. Ask in plain English. Intellixy returns exact, cited answers in seconds — with page and section references, so you can check every answer against the page it came from.
-          </p>
+          <motion.p className="lp-hero-sub" variants={rise}>
+            Upload any PDF and ask in plain English. Intellixy answers in seconds and shows the exact page and section each answer came from, so you can check it yourself.
+          </motion.p>
 
-          <div className="lp-hero-actions">
+          <motion.div className="lp-hero-actions" variants={rise}>
             <Link href="/login" className="lp-hero-cta-primary">
               Start for free <ArrowRight size={14} strokeWidth={2.5} />
             </Link>
@@ -75,9 +73,9 @@ export default function Hero() {
               </svg>
               See live demo
             </a>
-          </div>
+          </motion.div>
 
-          <div className="lp-hero-trust">
+          <motion.div className="lp-hero-trust" variants={rise}>
             <div className="lp-hero-trust-item">
               <Zap size={18} strokeWidth={2} />
               Answers in seconds
@@ -92,142 +90,13 @@ export default function Hero() {
               <CreditCard size={18} strokeWidth={2} />
               No credit card required
             </div>
-          </div>
+          </motion.div>
         </motion.div>
 
-        {/* ── RIGHT: Multi-panel AI mockup ─────────────────────────── */}
-        <motion.div
-          className="lp-hero-preview"
-          initial={{ opacity: 0, y: 24, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.65, delay: 0.12, ease }}
-        >
-          <div className="lp-mp-wrap">
-
-            {/* Orbit rings */}
-            <div className="lp-orbit-wrap" aria-hidden>
-              <div className="lp-orbit-ring lp-orbit-1" />
-              <div className="lp-orbit-ring lp-orbit-2" />
-              <div className="lp-orbit-ring lp-orbit-3" />
-            </div>
-
-            {/* Golden glow orb */}
-            <div className="lp-mp-glow-orb" aria-hidden />
-
-            {/* Intellixy AI Chat (center, large, dark) */}
-            <motion.div
-              className="lp-mp-panel lp-mp-dark lp-mp-chat"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.28, duration: 0.55, ease }}
-            >
-              <div className="lp-mp-chat-hdr">
-                <div className="lp-mp-chat-logo">{LOGO_SVG}</div>
-                <span className="lp-mp-chat-title">Intellixy AI</span>
-                <span className="lp-mp-chat-badge">PDF Pro</span>
-              </div>
-
-              <div className="lp-mp-msgs">
-                <motion.div
-                  className="lp-mp-msg-user"
-                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.62, duration: 0.28, ease }}
-                >
-                  What drove Q3 revenue growth?
-                </motion.div>
-
-                <motion.div
-                  className="lp-mp-msg-ai"
-                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.74, duration: 0.28, ease }}
-                >
-                  <div className="lp-mp-ai-icon">{LOGO_SVG}</div>
-                  <div className="lp-mp-msg-ai-body">
-                    <p>Revenue reached ₹423.7 Cr (+23.4% YoY), beating consensus by 4.2pp. Enterprise contributed 68%, led by BFSI and healthcare verticals.<span className="lp-mp-cursor" aria-hidden /></p>
-                    <span className="lp-mp-cite">{PDF_SM} p.14 · §3.2 · chart 3.2.1</span>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  className="lp-mp-msg-user"
-                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.86, duration: 0.28, ease }}
-                >
-                  What are the main risks?
-                </motion.div>
-
-                <motion.div
-                  className="lp-mp-msg-ai"
-                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.98, duration: 0.28, ease }}
-                >
-                  <div className="lp-mp-ai-icon">{LOGO_SVG}</div>
-                  <div className="lp-mp-msg-ai-body">
-                    <p>Three key risks: margin pressure (R&D ₹42 Cr), client concentration (top 5 = 34%), and 22% USD exposure.</p>
-                    <span className="lp-mp-cite">{PDF_SM} p.42 · §7.1 · Annex B</span>
-                  </div>
-                </motion.div>
-              </div>
-
-              <div className="lp-mp-chat-input">
-                <span className="lp-mp-chat-placeholder">Ask about this document…</span>
-                <button className="lp-mp-send" aria-label="Send">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <line x1="12" y1="19" x2="12" y2="5"/>
-                    <polyline points="5 12 12 5 19 12"/>
-                  </svg>
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Sources (top-right, white) */}
-            <motion.div
-              className="lp-mp-panel lp-mp-light lp-mp-sources"
-              initial={{ opacity: 0, x: 14 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.68, duration: 0.38, ease }}
-            >
-              <div className="lp-mp-sources-hdr">
-                <span>Sources</span>
-                <span className="lp-mp-sources-close" aria-hidden>×</span>
-              </div>
-              {SOURCES.map((s, i) => (
-                <div key={i} className="lp-mp-source-item">
-                  <div className="lp-mp-source-icon">{PDF_SM}</div>
-                  <div>
-                    <div className="lp-mp-source-name">{s.name}</div>
-                    <div className="lp-mp-source-meta">{s.pages}</div>
-                  </div>
-                </div>
-              ))}
-              <button className="lp-mp-upload-btn">+ Upload more</button>
-            </motion.div>
-
-            {/* Key Findings (bottom-left, white) */}
-            <motion.div
-              className="lp-mp-panel lp-mp-light lp-mp-findings"
-              initial={{ opacity: 0, x: -14 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.9, duration: 0.38, ease }}
-            >
-              <div className="lp-mp-findings-hdr">Key findings</div>
-              {FINDINGS.map((f, i) => (
-                <div key={i} className="lp-mp-finding-item">
-                  <span className="lp-mp-finding-dot" />
-                  <span>
-                    {f.text}{" "}
-                    <span className="lp-mp-finding-page">· {f.page}</span>
-                  </span>
-                </div>
-              ))}
-              <a href="#demo" className="lp-mp-findings-link">View all insights →</a>
-            </motion.div>
-
-            {/* Holographic glow line */}
-            <div className="lp-mp-platform" aria-hidden />
-
-          </div>
-        </motion.div>
+        {/* ── RIGHT: live product demo ───────────────────────────────── */}
+        <div className="lp-hero-preview">
+          <HeroDemo />
+        </div>
 
       </div>
     </section>

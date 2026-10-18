@@ -507,7 +507,9 @@
 
 /* Key Findings — bottom-left */
 .lp-mp-findings {
-  bottom: 68px; left: 0; width: 174px; z-index: 8;
+  /* bottom-right, layered above the chat card so it reads in full */
+  bottom: 40px; right: -12px; width: 184px; z-index: 14;
+  box-shadow: 0 18px 40px rgba(15,23,42,0.14), 0 2px 6px rgba(15,23,42,0.06);
   padding: 14px; border-radius: 20px;
   animation: lp-float 5.5s ease-in-out infinite 1.6s;
 }
@@ -1796,3 +1798,101 @@
 .lp-page.dark .lp-mobile-nav { background: #0C0C0F; border-color: rgba(255,255,255,0.07); }
 .lp-page.dark .lp-mobile-link { color: rgba(255,255,255,0.62); border-bottom-color: rgba(255,255,255,0.06); }
 .lp-page.dark .lp-mobile-link:hover { color: #F1F5F9; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HERO DEMO — animated PDF + chat with citation connector (HeroDemo.tsx)
+   ══════════════════════════════════════════════════════════════════════════ */
+.lp-hd { position: relative; width: 100%; max-width: 560px; aspect-ratio: 1.12 / 1; margin-left: auto; }
+.lp-hd::before {
+  content: ""; position: absolute; inset: 8% 4%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(247,181,0,0.22), rgba(247,181,0,0) 70%);
+  filter: blur(20px); pointer-events: none;
+}
+.lp-hd-stage { position: absolute; inset: 0; }
+
+.lp-hd-pdf {
+  position: absolute; left: 0; top: 6%; width: 46%; height: 82%;
+  background: #FBFAF6; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
+  display: flex; flex-direction: column;
+}
+.lp-hd-pdf-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #ECE8DE; }
+.lp-hd-pdf-tag { font-size: 9px; font-weight: 800; color: #fff; background: #DC4C3E; padding: 2px 6px; border-radius: 4px; letter-spacing: .04em; }
+.lp-hd-pdf-name { font-size: 11px; font-weight: 600; color: #3B3A36; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-hd-pdf-body { flex: 1; padding: 14px 14px 0; display: flex; flex-direction: column; gap: 9px; }
+.lp-hd-pdf-h { height: 10px; width: 55%; border-radius: 3px; background: #2A2925; margin-bottom: 6px; }
+.lp-hd-line { height: 6px; border-radius: 3px; background: #DAD5C8; }
+.lp-hd-hl { display: flex; flex-direction: column; gap: 9px; margin: -4px -6px; padding: 4px 6px; border-radius: 6px; transition: background .5s ease, box-shadow .5s ease; }
+.lp-hd-hl.on { background: rgba(247,181,0,0.28); box-shadow: 0 0 0 1px rgba(247,181,0,0.55), 0 0 22px rgba(247,181,0,0.35); }
+.lp-hd-hl.on .lp-hd-line { background: #B98A12; }
+.lp-hd-pdf-foot { font-size: 9.5px; color: #8E897C; text-align: center; padding: 8px 0 10px; }
+
+.lp-hd-chat {
+  position: absolute; right: 0; top: 0; width: 54%; height: 100%;
+  background: linear-gradient(180deg, rgba(20,24,36,0.96), rgba(10,12,20,0.98));
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(247,181,0,0.06), 0 0 60px rgba(247,181,0,0.08);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.lp-hd-chat-hdr { display: flex; align-items: center; gap: 8px; padding: 13px 16px; font-size: 12.5px; font-weight: 700; color: #F4F4F5; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.lp-hd-dot { width: 8px; height: 8px; border-radius: 50%; background: #F7B500; box-shadow: 0 0 10px #F7B500; }
+.lp-hd-msgs { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.lp-hd-q { align-self: flex-end; max-width: 88%; font-size: 12px; line-height: 1.45; color: #0A0A0A; background: linear-gradient(135deg, #F7B500, #FFC94D); padding: 8px 12px; border-radius: 14px 14px 4px 14px; font-weight: 600; }
+.lp-hd-a { align-self: flex-start; max-width: 96%; font-size: 12px; line-height: 1.6; color: #D4D4D8; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); padding: 10px 12px; border-radius: 14px 14px 14px 4px; }
+.lp-hd-cite { display: flex; width: fit-content; margin-top: 8px; font-size: 10.5px; font-weight: 700; color: #FFD56B; background: rgba(247,181,0,0.12); border: 1px solid rgba(247,181,0,0.35); padding: 3px 9px; border-radius: 999px; transition: box-shadow .4s ease; }
+.lp-hd-cite.on { box-shadow: 0 0 16px rgba(247,181,0,0.45); }
+.lp-hd-think { display: flex; gap: 5px; padding: 10px 12px; align-self: flex-start; background: rgba(255,255,255,0.05); border-radius: 12px; }
+.lp-hd-think span { width: 6px; height: 6px; border-radius: 50%; background: #A1A1AA; animation: lp-hd-bounce 1s infinite ease-in-out; }
+.lp-hd-think span:nth-child(2) { animation-delay: .15s; } .lp-hd-think span:nth-child(3) { animation-delay: .3s; }
+@keyframes lp-hd-bounce { 0%, 80%, 100% { transform: translateY(0); opacity: .5; } 40% { transform: translateY(-4px); opacity: 1; } }
+.lp-hd-caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: #F7B500; animation: lp-hd-blink 1s steps(2) infinite; }
+@keyframes lp-hd-blink { to { opacity: 0; } }
+.lp-hd-input { display: flex; align-items: center; gap: 8px; margin: 0 12px 12px; padding: 8px 8px 8px 14px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
+.lp-hd-input > span:first-child { flex: 1; font-size: 11.5px; white-space: nowrap; overflow: hidden; }
+.lp-hd-ph { color: rgba(255,255,255,0.3); }
+.lp-hd-typed { color: #F4F4F5; }
+.lp-hd-send { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #0A0A0A; background: linear-gradient(135deg, #F7B500, #FFC94D); transition: transform .15s ease; }
+.lp-hd-send.press { transform: scale(0.82); }
+.lp-hd-link { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; filter: drop-shadow(0 0 4px rgba(247,181,0,0.7)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hd-think span, .lp-hd-caret { animation: none; }
+}
+
+/* ── Dark premium defaults for the hero ─────────────────────────────────── */
+.lp-page.dark { background: #07080C; }
+.lp-page.dark .lp-hero-cta-primary {
+  background: linear-gradient(135deg, #F7B500, #FFC94D); color: #0A0A0A; border: none;
+  box-shadow: 0 10px 30px rgba(247,181,0,0.28), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.lp-page.dark .lp-hero-cta-primary:hover { box-shadow: 0 14px 40px rgba(247,181,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4); transform: translateY(-1px); }
+
+/* Kinetic word in the headline */
+.lp-kw { display: inline-grid; vertical-align: bottom; }
+.lp-kw > span { grid-area: 1 / 1; }
+/* Hero preview now holds HeroDemo: size to content, and show it on phones too */
+.lp-hero-preview { height: auto; display: flex; align-items: center; justify-content: center; }
+@media (max-width: 980px) {
+  .lp-hero-preview { display: flex; }
+  .lp-hd { max-width: 520px; margin: 0 auto; }
+}
+@media (max-width: 480px) {
+  .lp-hd { aspect-ratio: 0.95 / 1; }
+  .lp-hd-pdf { width: 44%; }
+  .lp-hd-chat { width: 60%; }
+  .lp-hd-q, .lp-hd-a { font-size: 11px; }
+  .lp-hd-pdf-name { font-size: 9.5px; }
+}
+/* Primary buttons are gold in the dark theme */
+.lp-page.dark .lp-btn-green {
+  background: linear-gradient(135deg, #F7B500, #FFC94D); color: #0A0A0A; border-color: transparent;
+  box-shadow: 0 6px 20px rgba(247,181,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.lp-page.dark .lp-btn-green:hover { box-shadow: 0 10px 28px rgba(247,181,0,0.38), inset 0 1px 0 rgba(255,255,255,0.4); }
+/* Hero demo on the white theme: softer shadows, crisp edges */
+.lp-page:not(.dark) .lp-hd-pdf { background: #FFFFFF; box-shadow: 0 24px 50px rgba(15,23,42,0.14), 0 2px 6px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.06); }
+.lp-page:not(.dark) .lp-hd-chat { box-shadow: 0 30px 70px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.08), 0 0 50px rgba(247,181,0,0.10); }
+.lp-page:not(.dark) .lp-hd::before { background: radial-gradient(closest-side, rgba(247,181,0,0.16), rgba(247,181,0,0) 70%); }
+/* Grid children must be allowed to shrink below their content width (prevents phone overflow) */
+.lp-hero-inner > * { min-width: 0; }
+.lp-hd { width: 100%; }

@@ -15,11 +15,13 @@ const LINKS = [
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
+  // Light is the default look; dark only if the visitor chose it before.
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("lp-theme");
+    let saved: string | null = null;
+    try { saved = localStorage.getItem("lp-theme"); } catch {}
     if (saved === "dark") {
       setDark(true);
       document.querySelector(".lp-page")?.classList.add("dark");
@@ -36,7 +38,7 @@ export default function Nav() {
     const next = !dark;
     setDark(next);
     document.querySelector(".lp-page")?.classList.toggle("dark", next);
-    localStorage.setItem("lp-theme", next ? "dark" : "light");
+    try { localStorage.setItem("lp-theme", next ? "dark" : "light"); } catch {}
   };
 
   return (

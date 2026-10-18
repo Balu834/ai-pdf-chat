@@ -7,7 +7,6 @@ import HowItWorks      from "@/app/components/landing/HowItWorks";
 import Features        from "@/app/components/landing/Features";
 import Testimonials    from "@/app/components/landing/Testimonials";
 import InteractiveDemo from "@/app/components/landing/InteractiveDemo";
-import Stats           from "@/app/components/landing/Stats";
 import PricingSection  from "@/app/components/landing/PricingSection";
 import FinalCTA        from "@/app/components/landing/FinalCTA";
 import Footer          from "@/app/components/landing/Footer";
@@ -52,10 +51,7 @@ export default function Page() {
           </div>
         </section>
 
-        {/* 7. Stats / metrics bar */}
-        <Stats />
-
-        {/* 8. Pricing */}
+        {/* 7. Pricing */}
         <PricingSection />
 
         {/* 9. Final CTA */}
